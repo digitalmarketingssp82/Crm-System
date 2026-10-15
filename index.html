@@ -137,7 +137,7 @@
       <form onsubmit="handleLogin(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-muted-custom mb-1.5">Work Email / User ID</label>
-          <input type="email" id="login-email" required placeholder="name@srisriply.com" class="w-full px-4 py-3 rounded-xl border border-main bg-subtle text-main font-semibold text-sm focus:border-gold focus:outline-none transition">
+          <input type="text" id="login-email" required placeholder="sriplywoodsgm@gmail.com or admin" class="w-full px-4 py-3 rounded-xl border border-main bg-subtle text-main font-semibold text-sm focus:border-gold focus:outline-none transition">
         </div>
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-muted-custom mb-1.5">Password</label>
@@ -1678,6 +1678,22 @@
               <p class="text-[10px] text-muted-custom font-semibold">SITE ADDRESS</p>
               <p class="text-[11px] text-main font-medium" id="modal-lead-address">Not specified</p>
             </div>
+            <div>
+              <p class="text-[10px] text-muted-custom font-semibold">SOURCE & DETAILS</p>
+              <p class="font-bold text-blue-400" id="modal-lead-source-details">—</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-muted-custom font-semibold">TAGS / LABELS</p>
+              <div id="modal-lead-tags" class="flex flex-wrap gap-1 mt-0.5">—</div>
+            </div>
+            <div>
+              <p class="text-[10px] text-muted-custom font-semibold">CREATED AT</p>
+              <p class="font-bold text-main font-mono text-[11px]" id="modal-lead-created-at">—</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-muted-custom font-semibold">OUTCOME / WON / LOST</p>
+              <p class="font-bold text-main" id="modal-lead-outcome">—</p>
+            </div>
           </div>
 
           <!-- Pipeline & Transfer Section -->
@@ -2282,7 +2298,7 @@
         </div>
         <div>
           <p class="text-xs font-bold text-main" id="import-file-name-label">Click or Drag & Drop Excel (.xlsx, .xls) or CSV file</p>
-          <p class="text-[10px] text-muted-custom">Supports Opportunity, Phone, Email, Stage, Deal Value, Close Date, Source, Priority, Address, City & Custom Fields</p>
+          <p class="text-[10px] text-muted-custom">Supports Name, Phone, Email, Company, Value, Source, Source De, Priority, Stage, Pipeline, Assigned To, Tags, Notes, Expected, Lost Reason, Created At, Won At, Lost At</p>
         </div>
       </div>
 
@@ -3987,7 +4003,7 @@
       let user = users.find(u => u.email && u.email.toLowerCase() === email);
 
       // Super admin alias
-      if (!user && (email === 'admin@srisriply.com' || email === 'sriplywoodsgm@gmail.com')) {
+      if (!user && (email === 'admin@srisriply.com' || email === 'sriplywoodsgm@gmail.com' || email === 'admin')) {
         user = users.find(u => u.role === 'Organization Admin' || u.email.toLowerCase() === 'sriplywoodsgm@gmail.com') || defaultSuperAdmin;
       }
 
@@ -4944,7 +4960,37 @@
       const mCity = document.getElementById('modal-lead-city');
       if (mCity) mCity.innerText = lead.city || lead.stateCity || '—';
       const mClose = document.getElementById('modal-lead-close-date');
-      if (mClose) mClose.innerText = lead.closeDate || '—';
+      if (mClose) mClose.innerText = lead.closeDate || lead.expectedCloseDate || '—';
+
+      const mSrcDe = document.getElementById('modal-lead-source-details');
+      if (mSrcDe) {
+        const srcText = (lead.source || '—') + (lead.sourceDetails ? ' (' + lead.sourceDetails + ')' : '');
+        mSrcDe.innerText = srcText;
+      }
+
+      const mTags = document.getElementById('modal-lead-tags');
+      if (mTags) {
+        if (lead.tags) {
+          const tagsArr = typeof lead.tags === 'string' ? lead.tags.split(/[,;]+/).map(t => t.trim()).filter(Boolean) : (Array.isArray(lead.tags) ? lead.tags : []);
+          mTags.innerHTML = tagsArr.map(t => `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-gold border border-gold/30">${t}</span>`).join('') || '—';
+        } else {
+          mTags.innerText = '—';
+        }
+      }
+
+      const mCreated = document.getElementById('modal-lead-created-at');
+      if (mCreated) mCreated.innerText = formatFollowupDate(lead.createdAt || lead.lastActivityAt);
+
+      const mOutcome = document.getElementById('modal-lead-outcome');
+      if (mOutcome) {
+        if (lead.wonAt) {
+          mOutcome.innerHTML = '<span class="text-emerald-400 font-bold flex items-center gap-1">🏆 Won: ' + lead.wonAt + '</span>';
+        } else if (lead.lostAt || lead.lossReason) {
+          mOutcome.innerHTML = '<span class="text-rose-400 font-bold">❌ Lost: ' + (lead.lostAt || '') + (lead.lossReason ? ' (' + lead.lossReason + ')' : '') + '</span>';
+        } else {
+          mOutcome.innerHTML = '<span class="text-blue-400 font-bold">⏳ Active in Pipeline</span>';
+        }
+      }
 
       const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
       document.getElementById('modal-lead-pipeline-name').innerText = p.name;
@@ -8200,20 +8246,22 @@
     }
 
     function downloadSampleCSVTemplate() {
-      const csvContent = "Opportunity,Company,Phone,Email,Stage,Deal Value,Close Date,Source,Priority,Assigned To,Customer Type,Material Type,Requirement DateTime,Customer Address,State/City\n" +
-        "Deepika Sood,Sharma Interiors,917580013001,deepika@example.com,New Lead,₹ 45000,2026-10-25,facebook,Medium,Sri Sri Admin,home_owner_/_family_member,home_furniture,within_7_days,Khoo Bazar,Mohali\n" +
-        "Pankaj Mohan,,917056115511,pankaj@example.com,Validated/Follow up,₹ 85000,2026-10-30,facebook,High,Sri Sri Admin,home_owner_/_family_member,modular_kitchen,immediately,Hno 133b Sector 4,Delhi\n" +
-        "Kuldeep Singh,Kuldeep Contractors,9855185075,,Not Qualified,,2026-11-05,cold_call,Medium,,carpenter,plywood_hardware,within_1_month,Industrial Area Phase 2,Chandigarh";
+      // Exactly matches the user's 18 columns: Name,Phone,Email,Company,Value,Source,Source De,Priority,Stage,Pipeline,Assigned To,Tags,Notes,Expected,Lost Reasc,Created A,Won At,Lost At
+      const headers = "Name,Phone,Email,Company,Value,Source,Source De,Priority,Stage,Pipeline,Assigned To,Tags,Notes,Expected,Lost Reasc,Created A,Won At,Lost At\n";
+      const row1 = "Ramesh Plywood & Hardware,9813840800,ramesh@example.com,Ramesh Woodworks,₹ 85000,Facebook Ads,Campaign Model Town,High,Quotation shared(Follow-up),Facebook Leads,Sri Sri Admin,Contractor,19mm Marine Gurjan plywood requirement,2026-10-25,,2026-10-14,,\n";
+      const row2 = "Ajay Sharma,9876543210,ajay@example.com,Sharma Interiors,₹ 120000,Walk-in,Showroom Visit,High,Purchased,Walkin-Sheet,Sri Sri Admin,Architect;VIP,Purchased 50 sheets 1mm Teak Laminates,2026-10-20,,2026-10-12,2026-10-14,\n";
+      const row3 = "Mohit Verma,9988776655,mohit@example.com,Verma Timber,₹ 35000,Google Ads,Search Mohali,Low,Not Qualified,Google Leads,Sri Sri Admin,Retail,Looking for cheap MDF not in catalog,2026-10-30,Out of budget,2026-10-10,,2026-10-12";
 
+      const csvContent = headers + row1 + row2 + row3;
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", "Sri_Sri_Plywoods_Leads_Template.csv");
+      link.setAttribute("download", "Sri_Sri_Plywoods_18_Columns_Leads_Template.csv");
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showToast('Sample Excel/CSV template downloaded!', 'success');
+      showToast('18-Column Excel/CSV template downloaded successfully!', 'success');
     }
 
     function handleImportFile(input) {
@@ -8326,16 +8374,24 @@
     }
 
     const CRM_IMPORTABLE_FIELDS = [
-      { id: 'name', label: 'Opportunity / Client Name *', match: ['name', 'opportunity', 'lead', 'client', 'customer'] },
+      { id: 'name', label: 'Name / Client Name *', match: ['name', 'opportunity', 'client', 'customer'] },
       { id: 'phone', label: 'Phone Number', match: ['phone', 'mobile', 'contact', 'whatsapp', 'number', 'tel'] },
-      { id: 'company', label: 'Company / Firm Name', match: ['company', 'firm', 'business', 'org'] },
       { id: 'email', label: 'Email Address', match: ['email', 'mail'] },
-      { id: 'stage', label: 'Stage / Deal Status', match: ['stage', 'status'] },
-      { id: 'dealValue', label: 'Deal Value / Budget', match: ['deal', 'value', 'budget', 'amount', 'price'] },
-      { id: 'closeDate', label: 'Target Close Date', match: ['close', 'target date', 'closing', 'date'] },
-      { id: 'source', label: 'Source', match: ['source', 'campaign', 'channel'] },
+      { id: 'company', label: 'Company / Firm Name', match: ['company', 'firm', 'business', 'org'] },
+      { id: 'dealValue', label: 'Value / Deal Amount', match: ['value', 'deal value', 'deal', 'budget', 'amount', 'price'] },
+      { id: 'sourceDetails', label: 'Source Details (Source De)', match: ['source de', 'source details', 'sub-source', 'adset', 'ad', 'campaign'] },
+      { id: 'source', label: 'Source', match: ['source', 'lead source', 'channel'] },
       { id: 'priority', label: 'Priority (High/Med/Low)', match: ['priority'] },
-      { id: 'assignedTo', label: 'Assigned Staff', match: ['assigned', 'executive', 'owner', 'agent'] },
+      { id: 'stage', label: 'Stage / Deal Status', match: ['stage', 'status'] },
+      { id: 'pipeline', label: 'Pipeline / Target Pipeline', match: ['pipeline', 'pipe', 'target pipeline', 'sheet'] },
+      { id: 'assignedTo', label: 'Assigned To / Executive', match: ['assigned to', 'assigned', 'executive', 'owner', 'agent', 'staff'] },
+      { id: 'tags', label: 'Tags / Labels', match: ['tags', 'tag', 'labels', 'label'] },
+      { id: 'notes', label: 'Notes / Description', match: ['notes', 'note', 'description', 'remarks', 'remark', 'comments'] },
+      { id: 'closeDate', label: 'Expected Close Date (Expected)', match: ['expected', 'expected close date', 'close date', 'target date', 'closing', 'due date'] },
+      { id: 'lossReason', label: 'Lost Reason (Lost Reasc)', match: ['lost reasc', 'lost reason', 'loss reason', 'reason'] },
+      { id: 'createdAt', label: 'Created At (Created A)', match: ['created a', 'created at', 'created', 'entry date', 'creation', 'date'] },
+      { id: 'wonAt', label: 'Won At (Won Date)', match: ['won at', 'won date', 'won time'] },
+      { id: 'lostAt', label: 'Lost At (Lost Date)', match: ['lost at', 'lost date', 'lost time'] },
       { id: 'customerType', label: 'Customer Type', match: ['customer type', 'client type', 'type'] },
       { id: 'materialType', label: 'Material Type', match: ['material', 'product', 'item', 'furniture'] },
       { id: 'requirementDateTime', label: 'Requirement Timeline', match: ['requirement', 'timeline', 'time', 'duration'] },
@@ -8344,6 +8400,26 @@
       { id: '_skip', label: '— Do Not Import / Skip Column —', match: [] }
     ];
 
+    function matchHeaderToField(header) {
+      if (!header) return '_skip';
+      const cleanHeader = header.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      // Pass 1: Exact match
+      for (const f of CRM_IMPORTABLE_FIELDS) {
+        if (f.id === '_skip') continue;
+        if (f.match.some(m => m === cleanHeader)) {
+          return f.id;
+        }
+      }
+      // Pass 2: Substring match
+      for (const f of CRM_IMPORTABLE_FIELDS) {
+        if (f.id === '_skip') continue;
+        if (f.match.some(m => cleanHeader.includes(m))) {
+          return f.id;
+        }
+      }
+      return '_skip';
+    }
+
     function renderFieldMappingTable(headers, sampleRow) {
       const tbody = document.getElementById('import-mapping-tbody');
       if (!tbody) return;
@@ -8351,16 +8427,7 @@
 
       headers.forEach((header, colIdx) => {
         const sampleVal = sampleRow[colIdx] || '—';
-        const cleanHeader = header.toLowerCase().replace(/[^a-z0-9]/g, ' ');
-
-        let bestMatch = '_skip';
-        for (const f of CRM_IMPORTABLE_FIELDS) {
-          if (f.id === '_skip') continue;
-          if (f.match.some(m => cleanHeader.includes(m))) {
-            bestMatch = f.id;
-            break;
-          }
-        }
+        const bestMatch = matchHeaderToField(header);
 
         const tr = document.createElement('tr');
         tr.className = 'border-b border-main/30 hover:bg-card/50 transition';
@@ -8413,7 +8480,7 @@
       }
 
       const pipId = document.getElementById('import-target-pipeline').value;
-      const targetPip = pipelines.find(p => p.id === pipId) || pipelines[0];
+      const defaultPip = pipelines.find(p => p.id === pipId) || pipelines[0];
 
       const mappers = document.querySelectorAll('.import-col-mapper');
       const mappingDict = {};
@@ -8422,8 +8489,8 @@
       });
 
       const mappedFields = Object.values(mappingDict);
-      if (!mappedFields.includes('name') && !mappedFields.includes('phone')) {
-        showToast('You must map at least "Opportunity / Name" or "Phone" to import leads!', 'error');
+      if (!mappedFields.includes('name') && !mappedFields.includes('phone') && !mappedFields.includes('company')) {
+        showToast('You must map at least "Name", "Phone", or "Company" to import leads!', 'error');
         return;
       }
 
@@ -8435,34 +8502,134 @@
         Object.keys(mappingDict).forEach(colIdx => {
           const fieldId = mappingDict[colIdx];
           if (fieldId && fieldId !== '_skip') {
-            leadObj[fieldId] = (rowCells[colIdx] || '').trim();
+            leadObj[fieldId] = (rowCells[colIdx] || '').toString().trim();
           }
         });
 
-        const leadName = leadObj.name || (leadObj.company ? leadObj.company : ('Client ' + (leadObj.phone || importedCount + 1)));
+        const leadName = leadObj.name || leadObj.company || ('Client ' + (leadObj.phone || (importedCount + 1)));
         if (!leadName && !leadObj.phone) return;
 
-        let assignedStageId = targetPip.stages[0].id;
+        // 1. Resolve Target Pipeline (row level takes priority if present, otherwise default dropdown pipeline)
+        let rowPip = defaultPip;
+        if (leadObj.pipeline) {
+          const matchedPip = pipelines.find(p => 
+            p.name.toLowerCase() === leadObj.pipeline.toLowerCase() || 
+            p.id.toLowerCase() === leadObj.pipeline.toLowerCase() ||
+            leadObj.pipeline.toLowerCase().includes(p.name.toLowerCase())
+          );
+          if (matchedPip) rowPip = matchedPip;
+        }
+
+        // 2. Resolve Stage in that pipeline
+        let assignedStageId = rowPip.stages[0].id;
         if (leadObj.stage) {
-          const matchedStg = targetPip.stages.find(s => s.name.toLowerCase() === leadObj.stage.toLowerCase());
-          if (matchedStg) assignedStageId = matchedStg.id;
+          const matchedStg = rowPip.stages.find(s => 
+            s.name.toLowerCase() === leadObj.stage.toLowerCase() || 
+            s.id.toLowerCase() === leadObj.stage.toLowerCase()
+          );
+          if (matchedStg) {
+            assignedStageId = matchedStg.id;
+          } else if (leadObj.stage.toLowerCase().includes('won') || leadObj.stage.toLowerCase().includes('purchas')) {
+            const wonStg = rowPip.stages.find(s => s.isWon);
+            if (wonStg) assignedStageId = wonStg.id;
+          } else if (leadObj.stage.toLowerCase().includes('lost') || leadObj.stage.toLowerCase().includes('not qual')) {
+            const lostStg = rowPip.stages.find(s => s.isLost);
+            if (lostStg) assignedStageId = lostStg.id;
+          }
+        }
+
+        // 3. Resolve Assigned Staff
+        let assigneeName = loggedInUser ? loggedInUser.name : 'Sri Sri Admin';
+        let assigneeEmail = loggedInUser ? loggedInUser.email : 'sriplywoodsgm@gmail.com';
+        if (leadObj.assignedTo) {
+          const foundUser = users.find(u => 
+            (u.name && u.name.toLowerCase() === leadObj.assignedTo.toLowerCase()) || 
+            (u.email && u.email.toLowerCase() === leadObj.assignedTo.toLowerCase()) ||
+            (u.name && leadObj.assignedTo.toLowerCase().includes(u.name.toLowerCase()))
+          );
+          if (foundUser) {
+            assigneeName = foundUser.name;
+            assigneeEmail = foundUser.email;
+          } else {
+            assigneeName = leadObj.assignedTo;
+          }
+        }
+
+        // 4. Resolve Won At / Lost At
+        if (leadObj.wonAt) {
+          const wonStg = rowPip.stages.find(s => s.isWon);
+          if (wonStg) assignedStageId = wonStg.id;
+        }
+        if (leadObj.lostAt) {
+          const lostStg = rowPip.stages.find(s => s.isLost);
+          if (lostStg) assignedStageId = lostStg.id;
+        }
+
+        const createdAtStr = leadObj.createdAt || now.toISOString();
+
+        // 5. Construct activities array
+        const activities = [];
+        if (leadObj.notes) {
+          activities.push({
+            id: 'act-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            userName: assigneeName,
+            type: 'NOTE',
+            notes: leadObj.notes,
+            time: formatFollowupDate(createdAtStr),
+            timestamp: createdAtStr,
+            imageUrl: null
+          });
+        }
+        if (leadObj.wonAt) {
+          activities.push({
+            id: 'act-won-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            userName: assigneeName,
+            type: 'DEAL_WON',
+            notes: 'Deal marked as Won at ' + leadObj.wonAt,
+            time: leadObj.wonAt,
+            timestamp: leadObj.wonAt
+          });
+        }
+        if (leadObj.lostAt) {
+          activities.push({
+            id: 'act-lost-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            userName: assigneeName,
+            type: 'DEAL_LOST',
+            notes: 'Deal marked as Lost at ' + leadObj.lostAt + (leadObj.lossReason ? ' - Reason: ' + leadObj.lossReason : ''),
+            time: leadObj.lostAt,
+            timestamp: leadObj.lostAt
+          });
+        }
+
+        // Format Deal Value
+        let formattedValue = leadObj.dealValue || '';
+        if (formattedValue && !formattedValue.startsWith('₹') && !isNaN(parseFloat(formattedValue.replace(/,/g, '')))) {
+          formattedValue = '₹ ' + formattedValue;
         }
 
         const newLead = {
-          id: 'lead-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
+          id: 'lead-' + Date.now() + '-' + Math.floor(Math.random() * 10000) + '-' + importedCount,
           name: leadName,
-          company: leadObj.company || '',
           phone: leadObj.phone || '',
           email: leadObj.email || '',
-          pipelineId: targetPip.id,
-          stageId: assignedStageId,
-          dealValue: leadObj.dealValue || '',
-          budget: leadObj.dealValue || 'Imported via Excel',
-          closeDate: leadObj.closeDate || '',
-          source: leadObj.source || 'facebook',
+          company: leadObj.company || '',
+          dealValue: formattedValue || 'Not set',
+          budget: leadObj.notes || formattedValue || 'Imported via Excel',
+          source: leadObj.source || 'Excel Import',
+          sourceDetails: leadObj.sourceDetails || '',
           priority: leadObj.priority || 'Medium',
-          assignedToName: leadObj.assignedTo || (loggedInUser ? loggedInUser.name : 'Sri Sri Admin'),
-          assignedToEmail: loggedInUser ? loggedInUser.email : 'sriplywoodsgm@gmail.com',
+          pipelineId: rowPip.id,
+          stageId: assignedStageId,
+          assignedToName: assigneeName,
+          assignedToEmail: assigneeEmail,
+          tags: leadObj.tags || '',
+          notes: leadObj.notes || '',
+          closeDate: leadObj.closeDate || '',
+          expectedCloseDate: leadObj.closeDate || '',
+          lossReason: leadObj.lossReason || '',
+          createdAt: createdAtStr,
+          wonAt: leadObj.wonAt || '',
+          lostAt: leadObj.lostAt || '',
           clientType: leadObj.customerType || 'Existing Customer',
           customerType: leadObj.customerType || 'Existing Customer',
           materialType: leadObj.materialType || '',
@@ -8470,20 +8637,10 @@
           address: leadObj.customerAddress || '',
           customerAddress: leadObj.customerAddress || '',
           city: leadObj.city || '',
-          createdAt: now.toISOString(),
           lastActivityAt: now.toISOString(),
-          lastActivityText: 'Imported via Excel into ' + targetPip.name,
+          lastActivityText: 'Imported into ' + rowPip.name,
           lastActivityUser: loggedInUser ? loggedInUser.name : 'Admin',
-          activities: [
-            {
-              id: 'act-' + Date.now(),
-              userName: loggedInUser ? loggedInUser.name : 'Admin',
-              type: 'EXCEL_IMPORT',
-              notes: 'Imported spreadsheet record',
-              time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              timestamp: now.toISOString()
-            }
-          ]
+          activities: activities
         };
 
         leads.unshift(newLead);
@@ -8492,12 +8649,11 @@
       });
 
       localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
-
       closeModal('import-modal');
       renderOpportunities();
       renderPhonebookTable();
       initDashboard();
-      showToast(`Successfully imported ${importedCount} leads into "${targetPip.name}"!`, 'success');
+      showToast('Successfully imported ' + importedCount + ' leads with all 18 details!', 'success');
     }
 
         function exportLeadsCSV() {
