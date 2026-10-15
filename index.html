@@ -509,6 +509,243 @@
           </div>
         </div>
 
+        <!-- ============================================================= -->
+        <!-- ===== WORK PENDING, OVERDUE & 30-MIN ALERT DASHBOARD CENTER = -->
+        <!-- ============================================================= -->
+        <div class="p-5 rounded-3xl bg-card border border-main space-y-4 shadow-sm" id="dash-pending-work-center">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-main">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0"></span>
+                <h3 class="text-sm font-extrabold text-main flex items-center gap-2">
+                  <i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>
+                  <span>Pending Work & Overdue Follow-up Center (काम का स्टेटस व अलर्ट)</span>
+                </h3>
+              </div>
+              <p class="text-xs text-muted-custom mt-0.5">Overdue follow-ups, 30-min urgent alerts, missed leads aur WhatsApp notifications</p>
+            </div>
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+              <button type="button" onclick="checkAndTrigger30MinReminders(true)" class="px-3 py-1.5 rounded-xl border border-main bg-subtle hover:border-gold text-xs font-bold text-main transition flex items-center gap-1.5" title="Scan Reminders Now">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-gold"></i>
+                <span>Scan Now</span>
+              </button>
+              <button type="button" onclick="sendPendingWorkWhatsAppSummaryToAll()" id="btn-admin-wa-all-summary" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5" title="Send WhatsApp Summary to Staff">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                <span>Send WhatsApp Alerts</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2-Tier Work Status Cards: Today's Live Work vs Yesterday & Older Backlog -->
+          
+          <!-- TIER 1: ☀️ TODAY'S LIVE OPERATIONS (आज का काम - Present Day) -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-gold flex items-center gap-1.5">
+                <span>☀️ आज का लाइव वर्क (Today's Present Day Work)</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-gold border border-gold/30">Live Today</span>
+              </span>
+              <span class="text-[11px] text-muted-custom font-medium">Daily Target & Urgent Follow-ups</span>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <!-- 1. Today Overdue -->
+              <div onclick="filterDashboardPendingView('TODAY_OVERDUE')" class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 hover:border-rose-500 cursor-pointer transition space-y-1 shadow-xs group">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-rose-400">Today Overdue</span>
+                  <span class="p-1 rounded-lg bg-rose-500/20 text-rose-400 group-hover:scale-110 transition"><i data-lucide="clock" class="w-3.5 h-3.5"></i></span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                  <p class="text-2xl md:text-3xl font-extrabold text-rose-400" id="dash-today-overdue-count">0</p>
+                  <!-- Legacy compatibility id -->
+                  <span class="hidden" id="dash-overdue-count">0</span>
+                </div>
+                <p class="text-[10px] text-muted-custom font-medium">Due earlier today, missed time</p>
+              </div>
+
+              <!-- 2. Due in 30 Mins -->
+              <div onclick="filterDashboardPendingView('UPCOMING_30M')" class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 hover:border-gold cursor-pointer transition space-y-1 shadow-xs group">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-gold">Due in 30 Mins</span>
+                  <span class="p-1 rounded-lg bg-amber-500/20 text-gold group-hover:scale-110 transition"><i data-lucide="bell" class="w-3.5 h-3.5"></i></span>
+                </div>
+                <p class="text-2xl md:text-3xl font-extrabold text-gold" id="dash-upcoming-30m-count">0</p>
+                <p class="text-[10px] text-muted-custom font-medium">Urgent upcoming today</p>
+              </div>
+
+              <!-- 3. Due Today Remaining -->
+              <div onclick="filterDashboardPendingView('DUE_TODAY')" class="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 hover:border-blue-500 cursor-pointer transition space-y-1 shadow-xs group">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-blue-400">Due Today</span>
+                  <span class="p-1 rounded-lg bg-blue-500/20 text-blue-400 group-hover:scale-110 transition"><i data-lucide="calendar" class="w-3.5 h-3.5"></i></span>
+                </div>
+                <p class="text-2xl md:text-3xl font-extrabold text-blue-400" id="dash-due-today-count">0</p>
+                <p class="text-[10px] text-muted-custom font-medium">Scheduled for rest of today</p>
+              </div>
+
+              <!-- 4. Missed / Untouched Today -->
+              <div onclick="filterDashboardPendingView('MISSED_TODAY')" class="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30 hover:border-purple-500 cursor-pointer transition space-y-1 shadow-xs group">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-purple-400">Missed Today</span>
+                  <span class="p-1 rounded-lg bg-purple-500/20 text-purple-400 group-hover:scale-110 transition"><i data-lucide="phone-off" class="w-3.5 h-3.5"></i></span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                  <p class="text-2xl md:text-3xl font-extrabold text-purple-400" id="dash-missed-today-count">0</p>
+                  <!-- Legacy compatibility id -->
+                  <span class="hidden" id="dash-missed-leads-count">0</span>
+                </div>
+                <p class="text-[10px] text-muted-custom font-medium">Arrived today, 0 contact made</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TIER 2: ⏳ YESTERDAY & OLDER BACKLOG (कल व पिछले दिनों का पेंडिंग काम - कॉलिंग लिस्ट) -->
+          <div class="space-y-2 pt-2 border-t border-main/50">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
+                <span>⏳ कल व पुराने दिनों का बैकलाग (Yesterday & Older Backlog - Calling Queue)</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">Backlog Queue</span>
+              </span>
+              <button type="button" onclick="sendBacklogCallingWhatsAppAlerts()" id="btn-admin-wa-backlog" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1">
+                <i data-lucide="send" class="w-3 h-3"></i>
+                <span>Alert Calling Team on WhatsApp</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <!-- 1. Yesterday & Older Overdue -->
+              <div onclick="filterDashboardPendingView('BACKLOG_OVERDUE')" class="p-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/30 hover:border-orange-500 cursor-pointer transition space-y-1 shadow-xs group">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-orange-400">Past Overdue</span>
+                  <span class="p-1 rounded-lg bg-orange-500/20 text-orange-400 group-hover:scale-110 transition"><i data-lucide="history" class="w-3.5 h-3.5"></i></span>
+                </div>
+                <p class="text-2xl md:text-3xl font-extrabold text-orange-400" id="dash-backlog-overdue-count">0</p>
+                <p class="text-[10px] text-muted-custom font-medium">Yesterday & older follow-ups missed</p>
+              </div>
+
+              <!-- 2. Old Untouched Inquiries -->
+              <div onclick="filterDashboardPendingView('BACKLOG_MISSED')" class="p-3.5 rounded-2xl bg-slate-500/10 border border-slate-500/30 hover:border-slate-400 cursor-pointer transition space-y-1 shadow-xs group">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Old Untouched</span>
+                  <span class="p-1 rounded-lg bg-slate-500/20 text-slate-300 group-hover:scale-110 transition"><i data-lucide="user-x" class="w-3.5 h-3.5"></i></span>
+                </div>
+                <p class="text-2xl md:text-3xl font-extrabold text-slate-300" id="dash-backlog-missed-count">0</p>
+                <p class="text-[10px] text-muted-custom font-medium">Past inquiries with 0 contact</p>
+              </div>
+
+              <!-- 3. Total Calling Person Queue -->
+              <div onclick="filterDashboardPendingView('CALLING_QUEUE')" class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500 cursor-pointer transition space-y-1 shadow-xs group">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Calling Queue</span>
+                  <span class="p-1 rounded-lg bg-emerald-500/20 text-emerald-400 group-hover:scale-110 transition"><i data-lucide="phone-call" class="w-3.5 h-3.5"></i></span>
+                </div>
+                <p class="text-2xl md:text-3xl font-extrabold text-emerald-400" id="dash-calling-queue-count">0</p>
+                <p class="text-[10px] text-muted-custom font-medium">Total leads needing calls now</p>
+              </div>
+
+              <!-- 4. Quick Action: Alert Calling Team -->
+              <div onclick="sendBacklogCallingWhatsAppAlerts()" class="p-3.5 rounded-2xl bg-gold/10 border border-gold/30 hover:bg-gold/20 cursor-pointer transition flex flex-col justify-between shadow-xs">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-gold">Calling Team Alert</span>
+                    <span class="p-1 rounded-lg bg-gold/20 text-gold"><i data-lucide="message-square" class="w-3.5 h-3.5"></i></span>
+                  </div>
+                  <p class="text-[10px] text-muted-custom font-medium mt-1">Send WhatsApp list of pending backlog to calling staff</p>
+                </div>
+                <button type="button" class="mt-2 w-full py-1.5 rounded-xl bg-gold text-slate-950 font-extrabold text-xs shadow-xs hover:brightness-105 transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="send" class="w-3 h-3"></i>
+                  <span>Send Alert Now</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Realtime 30-Minute Priority Alert Banner in Dashboard -->
+          <div id="dash-30m-alert-box" class="hidden p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border-2 border-gold/70 shadow-lg space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-gold animate-ping"></span>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-gold flex items-center gap-1.5">
+                  <i data-lucide="clock" class="w-4 h-4 text-gold"></i>
+                  <span>URGENT: 30-MINUTE FOLLOW-UP REMINDER (फॉलो-अप का समय आ गया है)</span>
+                </span>
+              </div>
+              <span id="dash-30m-timer-pill" class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-gold text-slate-950 font-mono">Due in 15 mins</span>
+            </div>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
+              <div>
+                <p class="text-sm font-bold text-main" id="dash-30m-lead-name">Client Name</p>
+                <p class="text-xs text-muted-custom mt-0.5" id="dash-30m-lead-details">Phone: +91 9876543210 • Assigned: Staff Name • Note: Rate discussion</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button type="button" id="dash-30m-btn-call" class="px-3.5 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                  <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                  <span>Call & Log</span>
+                </button>
+                <button type="button" id="dash-30m-btn-wa-client" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                  <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                  <span>WhatsApp Client</span>
+                </button>
+                <button type="button" id="dash-30m-btn-wa-staff" class="px-3 py-2 rounded-xl border border-gold/50 bg-gold/10 hover:bg-gold hover:text-slate-950 text-gold font-bold text-xs transition flex items-center gap-1.5" title="Alert Staff on WhatsApp">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                  <span>Alert Staff</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Urgent Pending Leads Feed -->
+          <div class="space-y-2.5 pt-1">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-main flex items-center gap-1.5">
+                <i data-lucide="list" class="w-3.5 h-3.5 text-gold"></i>
+                <span id="dash-pending-list-title">Pending & Overdue Work List</span>
+              </h4>
+              <span id="dash-pending-active-filter-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-subtle text-muted-custom">All Active</span>
+            </div>
+
+            <!-- Quick Stream Filter Pills -->
+            <div class="flex items-center gap-1.5 flex-wrap pt-0.5" id="dash-stream-filter-pills">
+              <span class="text-[10px] font-bold uppercase text-muted-custom mr-1">Filter View:</span>
+              <button type="button" onclick="filterDashboardPendingView('TODAY_ALL')" id="p-filter-today-all" class="px-2.5 py-1 rounded-xl text-[11px] font-bold border border-main bg-subtle hover:border-gold text-main transition">☀️ Today's Work</button>
+              <button type="button" onclick="filterDashboardPendingView('TODAY_OVERDUE')" id="p-filter-today-overdue" class="px-2.5 py-1 rounded-xl text-[11px] font-bold border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:border-rose-500 transition">⚠️ Today Overdue</button>
+              <button type="button" onclick="filterDashboardPendingView('UPCOMING_30M')" id="p-filter-upcoming-30m" class="px-2.5 py-1 rounded-xl text-[11px] font-bold border border-amber-500/30 bg-amber-500/10 text-gold hover:border-gold transition">⚡ Due in 30m</button>
+              <button type="button" onclick="filterDashboardPendingView('DUE_TODAY')" id="p-filter-due-today" class="px-2.5 py-1 rounded-xl text-[11px] font-bold border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:border-blue-500 transition">📅 Due Today</button>
+              <button type="button" onclick="filterDashboardPendingView('BACKLOG_OVERDUE')" id="p-filter-backlog-overdue" class="px-2.5 py-1 rounded-xl text-[11px] font-bold border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:border-orange-500 transition">⏳ Older Backlog</button>
+              <button type="button" onclick="filterDashboardPendingView('CALLING_QUEUE')" id="p-filter-calling-queue" class="px-2.5 py-1 rounded-xl text-[11px] font-bold border border-purple-500/30 bg-purple-500/10 text-purple-400 hover:border-purple-500 transition">📞 Calling Person Queue</button>
+              <button type="button" onclick="filterDashboardPendingView('ALL')" id="p-filter-all" class="px-2.5 py-1 rounded-xl text-[11px] font-bold border border-main bg-card text-muted-custom hover:text-main transition">📋 All Active</button>
+            </div>
+            <div id="dash-pending-leads-stream" class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar"></div>
+          </div>
+
+          <!-- Admin View: Staff-Wise Pending Work Breakdown -->
+          <div id="dash-admin-staff-breakdown-container" class="hidden pt-3 border-t border-main space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-main flex items-center gap-1.5">
+                <i data-lucide="users" class="w-3.5 h-3.5 text-purple-400"></i>
+                <span>Team Pending Work Breakdown (किस कर्मचारी का कितना काम पेंडिंग है)</span>
+              </h4>
+              <span class="text-[11px] text-muted-custom font-bold">Admin Oversight</span>
+            </div>
+            <div class="overflow-x-auto rounded-2xl border border-main">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-subtle text-muted-custom text-[11px] font-bold">
+                  <tr>
+                    <th class="p-3">Staff Member</th>
+                    <th class="p-3">Mobile No.</th>
+                    <th class="p-3 text-center">Today Overdue</th>
+                    <th class="p-3 text-center">Older Backlog</th>
+                    <th class="p-3 text-center">Due Today</th>
+                    <th class="p-3 text-center">Total Calling Queue</th>
+                    <th class="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-staff-breakdown-tbody" class="divide-y divide-main/40 bg-card"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- KPI Metrics Grid (STRICT: Real data only, 0 if nothing entered!) -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           
@@ -1898,18 +2135,26 @@
               <i data-lucide="phone-call" class="w-3 h-3"></i> CONTACT & ACTIONS
             </span>
             <div class="flex items-center gap-2 pt-1">
-              <a id="modal-btn-call" href="#" class="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition" title="Call"><i data-lucide="phone" class="w-4 h-4"></i></a>
-              <a id="modal-btn-whatsapp" href="#" target="_blank" class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="WhatsApp"><i data-lucide="message-circle" class="w-4 h-4"></i></a>
-              <!-- QUICK REATTEMPT BUTTON -->
-              <button onclick="quickReattemptCall()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/10 text-gold hover:bg-gold hover:text-slate-950 font-bold transition flex items-center gap-1" title="Log Reattempt Call">
-                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-                <span>Reattempt</span>
-              </button>
+              <a id="modal-btn-call" href="#" onclick="initiateCallWithLogging(currentSelectedLead ? currentSelectedLead.id : null); return false;" class="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition" title="Call & Log Outcome"><i data-lucide="phone" class="w-4 h-4"></i></a>
+              <a id="modal-btn-whatsapp" href="#" onclick="openWhatsAppComposerModal(currentSelectedLead ? currentSelectedLead.id : null); return false;" class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Send WhatsApp Message & Log Text"><i data-lucide="message-circle" class="w-4 h-4"></i></a>
+
             </div>
             <div>
               <p class="text-[10px] uppercase font-bold text-muted-custom">Phone Number</p>
               <p class="font-bold text-main text-sm" id="modal-lead-phone">9813840800</p>
               <p class="text-[11px] text-muted-custom italic">Direct verified mobile</p>
+            </div>
+
+            <!-- LAST CONTACT ATTEMPT & OUTCOME BADGE -->
+            <div class="p-2.5 rounded-2xl bg-card border border-main space-y-1.5 mt-2" id="modal-last-attempt-container">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] font-bold uppercase tracking-wider text-muted-custom flex items-center gap-1">
+                  <i data-lucide="history" class="w-3 h-3 text-gold"></i> LAST ATTEMPT
+                </span>
+                <span id="modal-last-attempt-badge" class="px-2 py-0.5 rounded text-[9px] font-bold bg-subtle text-muted-custom">No Attempt</span>
+              </div>
+              <p id="modal-last-attempt-text" class="text-xs font-semibold text-main leading-snug">No contact attempt recorded yet</p>
+              <p id="modal-last-attempt-time" class="text-[10px] text-muted-custom font-mono">Click Call or WhatsApp to connect</p>
             </div>
           </div>
 
@@ -2053,9 +2298,9 @@
                   </span>
                   <p class="font-bold text-main text-sm mt-0.5" id="modal-main-next-date">No upcoming action scheduled</p>
                 </div>
-                <button type="button" onclick="openFollowupScheduleModal()" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition">
-                  <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
-                  <span>Re-attempt</span>
+                <button type="button" onclick="openFollowupScheduleModal()" id="btn-due-action-schedule" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition">
+                  <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                  <span>Schedule Next Follow-up / Reattempt</span>
                 </button>
               </div>
               <div class="pt-2 border-t border-main/50 text-[11px] text-muted-custom flex flex-wrap items-center justify-between gap-1">
@@ -2233,8 +2478,12 @@
         </div>
 
         <div>
-          <label class="block text-muted-custom font-bold mb-1">Staff Note / Instruction</label>
-          <input type="text" id="fu-modal-note" placeholder="e.g. Call customer again after 4 PM regarding 19mm ply" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+          <label class="block font-bold text-main mb-1 flex items-center justify-between">
+            <span>Mandatory Note / Reason (कारण / नोट) *</span>
+            <span class="text-rose-500 font-extrabold text-[10px] uppercase">Compulsory</span>
+          </label>
+          <textarea id="fu-modal-note" rows="3" required placeholder="कस्टमर से क्या बात हुई / रीअटेम्प्ट या फॉलो-अप का कारण यहाँ लिखें (जैसे: फ़ोन नहीं उठाया, 4 बजे दोबारा बात होगी)..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-semibold outline-none focus:border-gold"></textarea>
+          <p class="text-[10px] text-muted-custom mt-0.5">⚠️ बिना नोट लिखे रीअटेम्प्ट या अगला फॉलो-अप शेड्यूल नहीं होगा।</p>
         </div>
       </div>
 
@@ -2278,8 +2527,25 @@
               <select id="nl-pipeline" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold"></select>
             </div>
           </div>
-          <div>
-            <label class="block text-muted-custom font-bold mb-1">Assign Lead to Team Member</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-main mb-1">Lead Source (लीड कहाँ से आई) *</label>
+              <select id="nl-source" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold outline-none focus:border-gold">
+                <option value="Manual Entry">✍️ Manual Entry (सीधा जोड़ा गया)</option>
+                <option value="Walk-in">🏬 Walk-in / Direct Visit (दुकान पर आए)</option>
+                <option value="Meta Ads">🎯 Meta Ads (Facebook / Instagram)</option>
+                <option value="Google Ads">🔍 Google Ads (सर्च / यूट्यूब एड्स)</option>
+                <option value="Phone Call">📞 Inbound Phone Call (कॉल आई)</option>
+                <option value="Excel Import">📊 Excel / CSV Import</option>
+                <option value="Website Webhook">🌐 Website / Online Form</option>
+                <option value="Reference">🤝 Reference / Referral (सिफारिश)</option>
+                <option value="IndiaMART">🛍️ IndiaMART Inbound</option>
+                <option value="Justdial">☎️ Justdial Inquiry</option>
+                <option value="TradeIndia">💼 TradeIndia Inquiry</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-muted-custom font-bold mb-1">Assign Lead to Team Member</label>
             <select id="nl-assignee" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold outline-none focus:border-gold">
               <!-- Dynamically populated with active staff -->
             </select>
@@ -2416,6 +2682,22 @@
             <option value="Walk-in Visitor">Walk-in Visitor</option>
             <option value="Architect / Interior">Architect / Designer</option>
             <option value="New Lead">New Lead</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-muted-custom font-bold mb-1">Lead Source (लीड का सोर्स)</label>
+          <select id="edit-source" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold outline-none focus:border-gold">
+            <option value="Manual Entry">✍️ Manual Entry (सीधा जोड़ा गया)</option>
+            <option value="Walk-in">🏬 Walk-in / Direct Visit (दुकान पर आए)</option>
+            <option value="Meta Ads">🎯 Meta Ads (Facebook / Instagram)</option>
+            <option value="Google Ads">🔍 Google Ads (सर्च / यूट्यूब एड्स)</option>
+            <option value="Phone Call">📞 Inbound Phone Call (कॉल आई)</option>
+            <option value="Excel Import">📊 Excel / CSV Import</option>
+            <option value="Website Webhook">🌐 Website / Online Form</option>
+            <option value="Reference">🤝 Reference / Referral (सिफारिश)</option>
+            <option value="IndiaMART">🛍️ IndiaMART Inbound</option>
+            <option value="Justdial">☎️ Justdial Inquiry</option>
+            <option value="TradeIndia">💼 TradeIndia Inquiry</option>
           </select>
         </div>
         <div>
@@ -3869,13 +4151,234 @@
     </div>
   </div>
 
-  <div id="toast-container" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+  
+  <!-- ============================================================= -->
+  <!-- ============= MODAL: CALL OUTCOME & ACTIVITY LOGGER ========= -->
+  <!-- ============================================================= -->
+  <div id="call-log-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-card w-full max-w-lg rounded-3xl shadow-2xl p-6 border border-main space-y-4 animate-in fade-in duration-150">
+      <div class="flex items-center justify-between pb-3 border-b border-main">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold">
+            <i data-lucide="phone-call" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-main" id="call-log-title">Log Call Activity</h3>
+            <p class="text-[11px] text-muted-custom">कॉल का नतीजा व बातचीत का विवरण दर्ज करें</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('call-log-modal')" class="text-muted-custom hover:text-gold transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Client Info Banner -->
+      <div class="p-3 rounded-2xl bg-subtle/50 border border-main flex items-center justify-between">
+        <div>
+          <span class="text-[10px] uppercase font-bold text-muted-custom block">Client</span>
+          <span id="call-log-client-name" class="font-extrabold text-sm text-main">Client Name</span>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] uppercase font-bold text-muted-custom block">Dialed Number</span>
+          <span id="call-log-client-phone" class="font-mono text-xs text-gold font-bold">+91 98765 43210</span>
+        </div>
+      </div>
+
+      <div class="space-y-3.5 text-xs">
+        <!-- 1-Tap Call Outcome Selector -->
+        <div>
+          <label class="block font-bold text-main mb-2">Call Status / Outcome (चुनें क्या हुआ) *</label>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="call-log-outcome-buttons">
+            <button type="button" onclick="selectCallOutcome('Baat Hui (Connected)', this)" class="call-outcome-btn p-2.5 rounded-xl border border-emerald-500/50 bg-emerald-500/10 text-left font-bold text-[11px] text-emerald-400 transition flex items-center gap-1.5 shadow-xs">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+              <span>Baat Hui (Connected)</span>
+            </button>
+            <button type="button" onclick="selectCallOutcome('Call Nahi Lag Rahi', this)" class="call-outcome-btn p-2.5 rounded-xl border border-main bg-card hover:border-rose-500 hover:bg-rose-500/10 text-left font-bold text-[11px] text-rose-400 transition flex items-center gap-1.5 shadow-xs">
+              <span class="w-2 h-2 rounded-full bg-rose-400 shrink-0"></span>
+              <span>Call Nahi Lag Rahi</span>
+            </button>
+            <button type="button" onclick="selectCallOutcome('Call Not Picked', this)" class="call-outcome-btn p-2.5 rounded-xl border border-main bg-card hover:border-amber-500 hover:bg-amber-500/10 text-left font-bold text-[11px] text-amber-400 transition flex items-center gap-1.5 shadow-xs">
+              <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+              <span>Call Not Picked</span>
+            </button>
+            <button type="button" onclick="selectCallOutcome('User Busy', this)" class="call-outcome-btn p-2.5 rounded-xl border border-main bg-card hover:border-orange-500 hover:bg-orange-500/10 text-left font-bold text-[11px] text-orange-400 transition flex items-center gap-1.5 shadow-xs">
+              <span class="w-2 h-2 rounded-full bg-orange-400 shrink-0"></span>
+              <span>User Busy</span>
+            </button>
+            <button type="button" onclick="selectCallOutcome('Switched Off / Network', this)" class="call-outcome-btn p-2.5 rounded-xl border border-main bg-card hover:border-rose-400 hover:bg-rose-400/10 text-left font-bold text-[11px] text-muted-custom transition flex items-center gap-1.5 shadow-xs">
+              <span class="w-2 h-2 rounded-full bg-rose-400 shrink-0"></span>
+              <span>Switched Off</span>
+            </button>
+            <button type="button" onclick="selectCallOutcome('Call Back Later', this)" class="call-outcome-btn p-2.5 rounded-xl border border-main bg-card hover:border-blue-400 hover:bg-blue-400/10 text-left font-bold text-[11px] text-blue-400 transition flex items-center gap-1.5 shadow-xs">
+              <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
+              <span>Call Back Later</span>
+            </button>
+          </div>
+          <input type="hidden" id="call-log-selected-outcome" value="Baat Hui (Connected)">
+        </div>
+
+        <!-- Call Notes / Conversation Details -->
+        <div>
+          <label class="block font-bold text-main mb-1">Call Notes / Discussion (क्या बात हुई या क्या हुआ) *</label>
+          <textarea id="call-log-notes" rows="3" placeholder="e.g. 19mm Gurjan BWR Ply ka rate discuss hua, kal site measurement par aane ko bola..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main text-xs focus:ring-1 focus:ring-gold outline-hidden"></textarea>
+        </div>
+
+        <!-- Optional Follow-up & Stage Selection -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div>
+            <label class="block font-bold text-muted-custom text-[11px] mb-1">Next Follow-up (Optional)</label>
+            <input type="datetime-local" id="call-log-next-followup" class="w-full p-2 rounded-xl border border-main bg-card text-main text-xs font-semibold">
+          </div>
+          <div>
+            <label class="block font-bold text-muted-custom text-[11px] mb-1">Update Pipeline Stage</label>
+            <select id="call-log-update-stage" class="w-full p-2 rounded-xl border border-main bg-card text-main text-xs font-bold focus:ring-1 focus:ring-gold outline-hidden">
+              <option value="">— Keep Current Stage —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-main">
+        <button type="button" onclick="closeModal('call-log-modal')" class="px-4 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main">
+          Skip / Close
+        </button>
+        <button type="button" onclick="saveCallLogEntry()" class="px-5 py-2 rounded-xl bg-gold text-slate-950 font-bold text-xs shadow-md hover:brightness-105 transition flex items-center gap-1.5">
+          <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+          <span>Save Call Record (कॉल सेव करें)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- ============= MODAL: WHATSAPP COMPOSER & LOGGER ============= -->
+  <!-- ============================================================= -->
+  <div id="whatsapp-composer-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-card w-full max-w-lg rounded-3xl shadow-2xl p-6 border border-emerald-500/30 space-y-4 animate-in fade-in duration-150">
+      <div class="flex items-center justify-between pb-3 border-b border-main">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+            <i data-lucide="message-circle" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-main" id="wa-composer-title">Send WhatsApp & Log Message</h3>
+            <p class="text-[11px] text-muted-custom">WhatsApp पर मैसेज भेजें और उसकी हिस्ट्री टाइमलाइन में सेव रखें</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('whatsapp-composer-modal')" class="text-muted-custom hover:text-gold transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Client Info Banner -->
+      <div class="p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] uppercase font-bold text-muted-custom block">Recipient</span>
+          <span id="wa-composer-client-name" class="font-extrabold text-sm text-main">Client Name</span>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] uppercase font-bold text-muted-custom block">WhatsApp Number</span>
+          <span id="wa-composer-client-phone" class="font-mono text-xs text-emerald-400 font-bold">+91 98765 43210</span>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <!-- Quick Template Selector -->
+        <div>
+          <label class="block font-bold text-main mb-1.5">Quick Message Templates (सुझाए गए मैसेज):</label>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="applyWhatsAppTemplatePreset('catalog')" class="px-2.5 py-1 rounded-lg border border-main bg-subtle hover:border-gold text-[10px] font-bold text-main transition">
+              📋 Catalog & Rates
+            </button>
+            <button type="button" onclick="applyWhatsAppTemplatePreset('quotation')" class="px-2.5 py-1 rounded-lg border border-main bg-subtle hover:border-gold text-[10px] font-bold text-main transition">
+              💰 Quotation Follow-Up
+            </button>
+            <button type="button" onclick="applyWhatsAppTemplatePreset('site_visit')" class="px-2.5 py-1 rounded-lg border border-main bg-subtle hover:border-gold text-[10px] font-bold text-main transition">
+              🏢 Visit / Sample Delivery
+            </button>
+            <button type="button" onclick="applyWhatsAppTemplatePreset('payment')" class="px-2.5 py-1 rounded-lg border border-main bg-subtle hover:border-gold text-[10px] font-bold text-main transition">
+              💳 Payment & Invoice
+            </button>
+          </div>
+        </div>
+
+        <!-- Editable Message Content -->
+        <div>
+          <label class="block font-bold text-main mb-1">Message Content (यह मैसेज क्लाइंट को भेजा जाएगा) *</label>
+          <textarea id="wa-composer-text" rows="5" class="w-full p-3 rounded-2xl border border-main bg-card text-main text-xs font-sans leading-relaxed focus:ring-1 focus:ring-emerald-500 outline-hidden"></textarea>
+          <p class="text-[10px] text-muted-custom mt-1">
+            💡 Yeh exact message WhatsApp par open hoga aur lead ke timeline & notes mein permanently record ho jayega.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-main">
+        <button type="button" onclick="closeModal('whatsapp-composer-modal')" class="px-4 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main">
+          Cancel
+        </button>
+        <button type="button" onclick="sendAndLogWhatsAppMessage()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <span>Send on WhatsApp & Save (मैसेज भेजें व सेव करें)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- ============================================================= -->
+  <!-- ===== GLOBAL 30-MINUTE UPCOMING FOLLOW-UP FLOATING BANNER === -->
+  <!-- ============================================================= -->
+  <div id="global-30m-reminder-banner" class="hidden fixed top-5 left-1/2 -translate-x-1/2 z-[110] w-[92%] max-w-xl p-4 rounded-2xl bg-slate-950/95 border-2 border-gold text-white shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-start gap-3">
+        <div class="p-2.5 rounded-xl bg-gold text-slate-950 font-bold shrink-0 animate-bounce">
+          <i data-lucide="clock" class="w-5 h-5"></i>
+        </div>
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-gold border border-gold/40 uppercase">⏰ 30-Min Reminder</span>
+            <span id="global-30m-time-pill" class="text-xs text-amber-400 font-extrabold font-mono">Due in 15 mins</span>
+          </div>
+          <h4 id="global-30m-lead-name" class="font-extrabold text-sm text-white">Client Name</h4>
+          <p id="global-30m-note" class="text-xs text-slate-300 line-clamp-2">Follow-up due: rate discussion</p>
+        </div>
+      </div>
+      <button type="button" onclick="dismissGlobal30mBanner()" class="text-slate-400 hover:text-white p-1">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="flex items-center justify-end gap-2 pt-3 mt-2 border-t border-white/10">
+      <button type="button" id="global-30m-btn-call" class="px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs flex items-center gap-1 shadow-xs">
+        <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+        <span>Call & Log</span>
+      </button>
+      <button type="button" id="global-30m-btn-wa" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1 shadow-xs">
+        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+        <span>WhatsApp Client</span>
+      </button>
+      <button type="button" id="global-30m-btn-wa-staff" class="px-3 py-1.5 rounded-lg border border-gold/40 text-gold hover:bg-gold hover:text-slate-950 font-bold text-xs flex items-center gap-1">
+        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+        <span>Alert Staff</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2.5 pointer-events-none max-w-md"></div>
 
   <!-- ============================================================= -->
   <!-- ======================== JAVASCRIPT LOGIC =================== -->
   <!-- ============================================================= -->
   <script>
-    // ==================== DATA STORES & CONFIG ====================
+// ==================== DATA STORES & CONFIG ====================
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
     const defaultStagesTemplate = [
       { id: 'stg-1', name: 'New Lead', color: '#38BDF8', isWon: false, isLost: false },
       { id: 'stg-2', name: 'Call Not Pick/User Busy', color: '#60A5FA', isWon: false, isLost: false },
@@ -4296,6 +4799,7 @@
 
     let loggedInUser = JSON.parse(sessionStorage.getItem('sri_sri_active_session') || 'null');
     let currentSelectedLead = null;
+    let currentActiveLogLeadId = null;
     let selectedImageBase64 = null;
     let currentActiveConvChannel = 'whatsapp';
     let pendingLostStageId = null;
@@ -4309,21 +4813,37 @@
       const container = document.getElementById('toast-container');
       if (!container) return;
       const toast = document.createElement('div');
-      const bgClass = type === 'error' ? 'bg-rose-950/95 border-rose-500/60 text-rose-200' :
-                      type === 'info' ? 'bg-indigo-950/95 border-indigo-500/60 text-indigo-200' :
-                      'bg-slate-900/95 border-gold/60 text-gold';
-      const iconName = type === 'error' ? 'alert-triangle' : type === 'info' ? 'info' : 'check-circle';
-      toast.className = 'p-3 rounded-2xl border shadow-2xl flex items-center gap-2.5 text-xs font-bold pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0 ' + bgClass;
-      toast.innerHTML = '<i data-lucide="' + iconName + '" class="w-4 h-4 shrink-0"></i><span class="text-main">' + message + '</span>';
+      
+      let bgStyle = 'background: #0f172a; color: #ffffff; border: 2px solid #d4af37; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);';
+      let iconHtml = '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-400 shrink-0"></i>';
+
+      if (type === 'error') {
+        bgStyle = 'background: #881337; color: #ffffff; border: 2px solid #f43f5e; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);';
+        iconHtml = '<i data-lucide="alert-triangle" class="w-5 h-5 text-rose-300 shrink-0"></i>';
+      } else if (type === 'info') {
+        bgStyle = 'background: #1e1b4b; color: #ffffff; border: 2px solid #6366f1; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);';
+        iconHtml = '<i data-lucide="info" class="w-5 h-5 text-indigo-300 shrink-0"></i>';
+      } else if (type === 'warning') {
+        bgStyle = 'background: #78350f; color: #ffffff; border: 2px solid #f59e0b; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);';
+        iconHtml = '<i data-lucide="alert-circle" class="w-5 h-5 text-amber-300 shrink-0"></i>';
+      }
+
+      if (toast.style) toast.style.cssText = bgStyle;
+      if (typeof toast.setAttribute === 'function') toast.setAttribute('style', bgStyle);
+      toast.className = 'px-4 py-3 rounded-2xl flex items-center gap-3 text-xs font-extrabold pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0 z-[9999] max-w-md';
+      toast.innerHTML = iconHtml + '<span style="color: #ffffff !important; font-size: 13px; font-weight: 700; line-height: 1.4;">' + escapeHtml(message) + '</span>';
+      
       container.appendChild(toast);
-      lucide.createIcons({ root: toast });
+      if (window.lucide) lucide.createIcons({ root: toast });
+      
       requestAnimationFrame(() => {
         toast.classList.remove('translate-y-2', 'opacity-0');
       });
+      
       setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-2');
         setTimeout(() => toast.remove(), 350);
-      }, 3500);
+      }, 4000);
     }
 
     function copyToClipboard(text) {
@@ -5194,6 +5714,8 @@
 
       renderRealCharts(userLeads);
       renderDashboardRecentActivities(userLeads);
+      updatePendingWorkDashboard();
+      checkAndTrigger30MinReminders(false);
     }
 
     function renderRealCharts(userLeads) {
@@ -5356,6 +5878,8 @@
           </td>
           <td class="p-3.5 text-right text-xs" onclick="event.stopPropagation()">
             <div class="flex items-center justify-end gap-1.5">
+              ${lead.phone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition" title="Call & Log Outcome"><i data-lucide="phone" class="w-3.5 h-3.5"></i></button>' : ''}
+              ${lead.phone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="WhatsApp & Log Text"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i></button>' : ''}
               <button onclick="openLeadModal('${lead.id}')" class="p-1.5 rounded-lg border border-main hover:border-gold text-main" title="Open Lead Details">
                 <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
               </button>
@@ -5437,6 +5961,126 @@
       renderOpportunities();
     }
 
+    
+    // ==================== LEAD SOURCE CATEGORIZATION ====================
+    function getLeadSourceInfo(lead) {
+      if (!lead) {
+        return {
+          key: 'Manual Entry',
+          label: 'Manual Entry',
+          badgeClass: 'bg-amber-500/15 text-gold border border-gold/30',
+          icon: '<i data-lucide="user-plus" class="w-3.5 h-3.5 text-gold"></i>'
+        };
+      }
+      const raw = ((lead.source || lead.adPlatform || '') + '').toLowerCase().trim();
+      const p = pipelines.find(x => x.id === lead.pipelineId);
+      const pipName = (p ? p.name : '').toLowerCase();
+
+      if (raw.includes('meta') || raw.includes('facebook') || raw.includes('fb') || raw.includes('instagram') || raw.includes('ig') || pipName.includes('facebook')) {
+        return {
+          key: 'Meta Ads',
+          label: 'Meta Ads',
+          badgeClass: 'bg-blue-500/15 text-blue-400 border border-blue-500/30',
+          icon: '<i data-lucide="facebook" class="w-3.5 h-3.5 text-blue-400"></i>'
+        };
+      }
+      if (raw.includes('google') || raw.includes('gads') || pipName.includes('google')) {
+        return {
+          key: 'Google Ads',
+          label: 'Google Ads',
+          badgeClass: 'bg-sky-500/15 text-sky-400 border border-sky-500/30',
+          icon: '<i data-lucide="search" class="w-3.5 h-3.5 text-sky-400"></i>'
+        };
+      }
+      if (raw.includes('excel') || raw.includes('csv') || raw.includes('import') || raw.includes('sheet')) {
+        return {
+          key: 'Excel Import',
+          label: 'Excel Import',
+          badgeClass: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+          icon: '<i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-400"></i>'
+        };
+      }
+      if (raw.includes('walk-in') || raw.includes('walkin') || raw.includes('visit') || raw.includes('store')) {
+        return {
+          key: 'Walk-in',
+          label: 'Walk-in Visit',
+          badgeClass: 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30',
+          icon: '<i data-lucide="store" class="w-3.5 h-3.5 text-indigo-400"></i>'
+        };
+      }
+      if (raw.includes('phone') || raw.includes('cold_call') || raw.includes('call')) {
+        return {
+          key: 'Phone Call',
+          label: 'Phone Call',
+          badgeClass: 'bg-rose-500/15 text-rose-400 border border-rose-500/30',
+          icon: '<i data-lucide="phone-call" class="w-3.5 h-3.5 text-rose-400"></i>'
+        };
+      }
+      if (raw.includes('website') || raw.includes('web') || raw.includes('webhook')) {
+        return {
+          key: 'Website Webhook',
+          label: 'Website Webhook',
+          badgeClass: 'bg-purple-500/15 text-purple-400 border border-purple-500/30',
+          icon: '<i data-lucide="globe" class="w-3.5 h-3.5 text-purple-400"></i>'
+        };
+      }
+      if (raw.includes('reference') || raw.includes('referral')) {
+        return {
+          key: 'Reference',
+          label: 'Reference',
+          badgeClass: 'bg-teal-500/15 text-teal-400 border border-teal-500/30',
+          icon: '<i data-lucide="users" class="w-3.5 h-3.5 text-teal-400"></i>'
+        };
+      }
+      if (raw.includes('indiamart')) {
+        return {
+          key: 'IndiaMART',
+          label: 'IndiaMART',
+          badgeClass: 'bg-amber-500/15 text-amber-300 border border-amber-500/30',
+          icon: '<i data-lucide="shopping-bag" class="w-3.5 h-3.5 text-amber-300"></i>'
+        };
+      }
+      if (raw.includes('justdial')) {
+        return {
+          key: 'Justdial',
+          label: 'Justdial',
+          badgeClass: 'bg-orange-500/15 text-orange-400 border border-orange-500/30',
+          icon: '<i data-lucide="phone" class="w-3.5 h-3.5 text-orange-400"></i>'
+        };
+      }
+      if (raw.includes('tradeindia')) {
+        return {
+          key: 'TradeIndia',
+          label: 'TradeIndia',
+          badgeClass: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30',
+          icon: '<i data-lucide="briefcase" class="w-3.5 h-3.5 text-cyan-400"></i>'
+        };
+      }
+
+      const fallback = lead.source || (pipName ? pipName.toUpperCase() : 'Manual Entry');
+      return {
+        key: fallback,
+        label: fallback,
+        badgeClass: 'bg-amber-500/15 text-gold border border-gold/30',
+        icon: '<i data-lucide="user-plus" class="w-3.5 h-3.5 text-gold"></i>'
+      };
+    }
+
+    function formatLeadSourceBadge(lead) {
+      const info = getLeadSourceInfo(lead);
+      let campHtml = '';
+      if (lead.campaignName) {
+        campHtml = '<span class="text-[9px] text-muted-custom font-mono truncate max-w-[130px] block" title="' + escapeHtml(lead.campaignName) + '">' + escapeHtml(lead.campaignName) + '</span>';
+      }
+      return '<div class="inline-flex flex-col items-start gap-0.5">' +
+        '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold ' + info.badgeClass + '">' +
+          info.icon +
+          '<span>' + info.label + '</span>' +
+        '</span>' +
+        campHtml +
+      '</div>';
+    }
+
     function renderOpportunityListTable(filteredLeads, pipeline, totalPipCount) {
       const tbody = document.getElementById('opp-table-body');
       if (!tbody) return;
@@ -5496,7 +6140,53 @@
 
         const displayDealVal = (lead.dealValue && lead.dealValue !== 'Not set') ? lead.dealValue : '—';
         const displayTags = lead.tags ? (typeof lead.tags === 'string' ? lead.tags.split(/[,;]+/).filter(Boolean).map(t => `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-gold border border-gold/30 mr-1">${t.trim()}</span>`).join('') : '—') : '—';
-        const displayNotes = lead.notes ? `<span class="truncate max-w-[140px] block font-sans text-main" title="${lead.notes}">${lead.notes}</span>` : '—';
+        
+        let displayNotes = '—';
+        if (lead.lastContactAttempt) {
+          const lca = lead.lastContactAttempt;
+          if (lca.type === 'CALL') {
+            const isConnected = (lca.outcome || lead.lastCallOutcome || '').includes('Baat Hui');
+            const outcomeColor = isConnected ? 'text-emerald-400' : 'text-rose-400';
+            const icon = isConnected ? 'phone-incoming' : 'phone-off';
+            displayNotes = `
+              <div class="space-y-0.5">
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold ${outcomeColor}">
+                  <i data-lucide="${icon}" class="w-3 h-3"></i>
+                  <span>${lca.outcome || lead.lastCallOutcome || 'Call Logged'}</span>
+                </span>
+                <span class="truncate block max-w-[150px] text-main font-medium" title="${lca.note || lead.notes || ''}">
+                  ${lca.note || lead.notes || 'Call completed'}
+                </span>
+              </div>
+            `;
+          } else if (lca.type === 'WHATSAPP') {
+            displayNotes = `
+              <div class="space-y-0.5">
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400">
+                  <i data-lucide="message-circle" class="w-3 h-3"></i>
+                  <span>WA Sent</span>
+                </span>
+                <span class="truncate block max-w-[150px] text-main font-medium" title="${lca.messageText || lca.note || lead.notes || ''}">
+                  ${lca.messageText || lca.note || lead.notes || 'WhatsApp delivered'}
+                </span>
+              </div>
+            `;
+          } else {
+            displayNotes = `
+              <div class="space-y-0.5">
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-gold">
+                  <i data-lucide="check-circle" class="w-3 h-3"></i>
+                  <span>${lca.outcome || 'Note'}</span>
+                </span>
+                <span class="truncate block max-w-[150px] text-main font-medium" title="${lca.note || lead.notes || ''}">
+                  ${lca.note || lead.notes || '—'}
+                </span>
+              </div>
+            `;
+          }
+        } else if (lead.notes) {
+          displayNotes = `<span class="truncate max-w-[150px] block font-sans text-main" title="${lead.notes}">${lead.notes}</span>`;
+        }
 
         // Campaign & AdSet formatted badges
         const rawCampaign = lead.campaignName || lead.campaign || '';
@@ -5524,14 +6214,15 @@
           </td>
           <td class="p-3 font-mono text-xs text-main col-phone opp-sticky-col-phone" onclick="openLeadModal('${lead.id}')">
             <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-              <a href="tel:${cleanPhone}" class="text-main hover:underline font-mono">${lead.phone || '—'}</a>
-              ${cleanPhone ? '<a href="https://wa.me/91' + cleanPhone + '" target="_blank" class="p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="WhatsApp"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i></a>' : ''}
+              <a href="javascript:void(0)" onclick="initiateCallWithLogging('${lead.id}'); return false;" class="text-main hover:underline font-mono" title="Click to Call & Log Outcome">${lead.phone || '—'}</a>
+              ${cleanPhone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Send WhatsApp Message & Log Text"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i></button>' : ''}
             </div>
           </td>
           <td class="p-3 opp-sticky-col-actions text-center" onclick="event.stopPropagation()">
             <div class="flex items-center justify-center gap-1.5">
-              ${cleanPhone ? '<a href="tel:' + cleanPhone + '" class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition" title="Direct Phone Call"><i data-lucide="phone" class="w-3.5 h-3.5"></i></a>' : ''}
-              <button onclick="openLeadModal('${lead.id}')" class="px-2.5 py-1 bg-gold/15 hover:bg-gold hover:text-slate-950 border border-gold/40 rounded-lg text-xs font-bold text-gold transition shadow-xs">Open</button>
+              ${cleanPhone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition" title="Direct Phone Call & Log Outcome"><i data-lucide="phone" class="w-3.5 h-3.5"></i></button>' : ''}
+              ${cleanPhone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Send WhatsApp Message & Log Text"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i></button>' : ''}
+              <button type="button" onclick="openLeadModal('${lead.id}')" class="px-2.5 py-1 bg-gold/15 hover:bg-gold hover:text-slate-950 border border-gold/40 rounded-lg text-xs font-bold text-gold transition shadow-xs">Open</button>
             </div>
           </td>
           <td class="p-3 text-muted-custom font-medium col-company" onclick="openLeadModal('${lead.id}')">${lead.company || '—'}</td>
@@ -5543,10 +6234,7 @@
           <td class="p-3 font-bold text-main font-mono col-dealValue" onclick="openLeadModal('${lead.id}')">${displayDealVal}</td>
           <td class="p-3 font-mono text-[11px] text-muted-custom col-closeDate" onclick="openLeadModal('${lead.id}')">${lead.closeDate || '—'}</td>
           <td class="p-3 text-[11px] col-source" onclick="openLeadModal('${lead.id}')">
-            <span class="inline-flex items-center gap-1 font-semibold text-muted-custom capitalize">
-              ${sourceIcon}
-              <span>${lead.source || pipeline.name.toLowerCase()}</span>
-            </span>
+            ${formatLeadSourceBadge(lead)}
           </td>
           <td class="p-3 col-priority" onclick="openLeadModal('${lead.id}')">
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${priorityColor}">${(lead.priority || 'Medium').toLowerCase()}</span>
@@ -6361,7 +7049,10 @@
         // Source / Campaign match
         if (oppFilterState.sourceText) {
           const st = oppFilterState.sourceText.toLowerCase();
+          const srcInfo = (typeof getLeadSourceInfo === 'function') ? getLeadSourceInfo(l) : {};
           const matchSrc = (l.source && l.source.toLowerCase().includes(st)) ||
+                           (srcInfo.key && srcInfo.key.toLowerCase().includes(st)) ||
+                           (srcInfo.label && srcInfo.label.toLowerCase().includes(st)) ||
                            (l.campaignName && l.campaignName.toLowerCase().includes(st)) ||
                            (l.adsetName && l.adsetName.toLowerCase().includes(st)) ||
                            (l.adPlatform && l.adPlatform.toLowerCase().includes(st));
@@ -6418,8 +7109,8 @@
             <div class="flex items-center justify-between text-[11px] font-mono text-muted-custom">
               <span>${lead.phone || 'No phone'}</span>
               <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-                ${lead.phone ? '<a href="tel:' + lead.phone + '" class="p-1 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition" title="Call"><i data-lucide="phone" class="w-3 h-3"></i></a>' : ''}
-                ${lead.phone ? '<a href="https://wa.me/91' + lead.phone.replace(/[^0-9]/g, '') + '" target="_blank" class="p-1 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="WhatsApp"><i data-lucide="message-circle" class="w-3 h-3"></i></a>' : ''}
+                ${lead.phone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="p-1 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition" title="Call & Log Outcome"><i data-lucide="phone" class="w-3 h-3"></i></button>' : ''}
+                ${lead.phone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Send WhatsApp Message & Log"><i data-lucide="message-circle" class="w-3 h-3"></i></button>' : ''}
               </div>
             </div>
             <div class="flex items-center justify-between pt-1 border-t border-main/40 text-[10px]">
@@ -6449,11 +7140,17 @@
       const btnWa = document.getElementById('modal-btn-whatsapp');
       if (lead.phone) {
         btnCall.href = 'tel:' + lead.phone;
+        btnCall.onclick = function(e) { if(e) e.preventDefault(); initiateCallWithLogging(lead.id); };
         btnWa.href = 'https://wa.me/91' + lead.phone.replace(/[^0-9]/g, '');
+        btnWa.onclick = function(e) { if(e) e.preventDefault(); openWhatsAppComposerModal(lead.id); };
       } else {
         btnCall.href = '#';
+        btnCall.onclick = function() { return false; };
         btnWa.href = '#';
+        btnWa.onclick = function() { return false; };
       }
+
+      updateModalLastAttemptCard(lead);
 
       document.getElementById('modal-lead-deal-value').innerText = lead.dealValue || lead.budget || 'Not set';
       document.getElementById('modal-lead-priority').innerText = '• ' + (lead.priority || 'Medium');
@@ -6472,8 +7169,7 @@
 
       const mSrcDe = document.getElementById('modal-lead-source-details');
       if (mSrcDe) {
-        const srcText = (lead.source || '—') + (lead.sourceDetails ? ' (' + lead.sourceDetails + ')' : '');
-        mSrcDe.innerText = srcText;
+        mSrcDe.innerHTML = formatLeadSourceBadge(lead);
       }
 
       const mTags = document.getElementById('modal-lead-tags');
@@ -6667,10 +7363,12 @@
 
     function quickReattemptCall() {
       if (!currentSelectedLead) return;
-      document.getElementById('fu-modal-action').value = 'Call Not Picked - Reattempt';
-      document.getElementById('fu-modal-note').value = 'Customer did not pick up call. Scheduled next reattempt.';
-      setModalFollowupPreset('2h');
-      document.getElementById('followup-schedule-modal').classList.remove('hidden');
+      initiateCallWithLogging(currentSelectedLead.id);
+      selectCallOutcome('Call Not Picked');
+      const fuInput = document.getElementById('call-log-next-followup');
+      if (fuInput) fuInput.value = calculateFollowupTime('2h');
+      const notesEl = document.getElementById('call-log-notes');
+      if (notesEl) notesEl.value = 'Call not picked up. Scheduled reattempt in 2 hours.';
     }
 
     function setModalFollowupPreset(type) {
@@ -6707,12 +7405,23 @@
       const note = document.getElementById('fu-modal-note').value.trim();
 
       if (!dtVal) {
-        showToast('Please select follow-up date and time!', 'error');
+        showToast('Follow-up Date & Time सेलेक्ट करना अनिवार्य है!', 'error');
+        return;
+      }
+
+      // Mandatory Note Check
+      if (!note) {
+        showToast('⚠️ Reattempt / Follow-up शेड्यूल करने के लिए Note / Reason लिखना compulsory है!', 'error');
+        const noteEl = document.getElementById('fu-modal-note');
+        if (noteEl) {
+          noteEl.focus();
+          noteEl.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/50');
+        }
         return;
       }
 
       currentSelectedLead.nextFollowUp = dtVal;
-      currentSelectedLead.nextFollowUpNote = (action + (note ? ': ' + note : ''));
+      currentSelectedLead.nextFollowUpNote = action + ': ' + note;
 
       const now = new Date();
       currentSelectedLead.lastActivityAt = now.toISOString();
@@ -6724,11 +7433,14 @@
         id: 'act-' + Date.now(),
         userName: loggedInUser ? loggedInUser.name : 'Admin',
         type: 'FOLLOWUP_SCHEDULED',
-        notes: 'Follow-up / Reattempt scheduled for ' + formatFollowupDate(dtVal) + ' (' + action + ')' + (note ? ' - Note: ' + note : ''),
+        notes: 'Follow-up / Reattempt scheduled for ' + formatFollowupDate(dtVal) + ' (' + action + ') - Reason: ' + note,
         time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         timestamp: now.toISOString(),
         imageUrl: null
       });
+
+      // Append to lead overall notes
+      currentSelectedLead.notes = (currentSelectedLead.notes ? currentSelectedLead.notes + '\n\n' : '') + '[Reattempt Scheduled for ' + formatFollowupDate(dtVal) + ' (' + action + ')]: ' + note;
 
       // Automatically register task in tasks store
       tasks.unshift({
@@ -6737,7 +7449,7 @@
         leadName: currentSelectedLead.name,
         phone: currentSelectedLead.phone || '',
         action: action,
-        note: note || 'Reattempt required',
+        note: note,
         dueDate: dtVal,
         status: 'PENDING'
       });
@@ -6751,7 +7463,8 @@
       renderOpportunities();
       renderTasksList('PENDING');
       initDashboard();
-      showToast('Next follow-up scheduled for ' + formatFollowupDate(dtVal) + '!', 'success');
+      updatePendingWorkDashboard();
+      showToast('✓ Follow-up / Reattempt successfully scheduled with note!', 'success');
     }
 
     // ==================== IMAGES & NOTES ====================
@@ -6827,21 +7540,28 @@
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const btn = document.getElementById('btn-voice-dictation');
       const textarea = document.getElementById('modal-note-textarea');
+      const micIcon = document.getElementById('icon-voice-mic');
+      const micLabel = document.getElementById('lbl-voice-dictation');
 
       if (!SpeechRecognition) {
-        showToast('Voice dictation is supported in Google Chrome, Microsoft Edge, and modern mobile browsers.', 'warning');
+        showToast('Voice dictation Google Chrome या Microsoft Edge ब्राउज़र में चलती है।', 'warning');
         return;
       }
 
       if (isVoiceDictationActive && voiceRecognitionInstance) {
-        voiceRecognitionInstance.stop();
+        try { voiceRecognitionInstance.stop(); } catch(e){}
         isVoiceDictationActive = false;
         if (btn) {
-          btn.classList.remove('bg-rose-500/20', 'text-rose-400', 'border-rose-500');
-          btn.innerHTML = '<i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i><span>Voice Type</span>';
-          if (window.lucide) lucide.createIcons();
+          btn.classList.remove('bg-rose-500', 'text-white', 'border-rose-500', 'animate-pulse');
+          btn.classList.add('bg-subtle', 'text-main', 'border-main');
         }
-        showToast('Voice typing stopped.', 'info');
+        if (micIcon) {
+          micIcon.setAttribute('data-lucide', 'mic');
+          micIcon.className = 'w-4 h-4 text-gold';
+        }
+        if (micLabel) micLabel.innerText = 'Voice Typing';
+        if (window.lucide) lucide.createIcons();
+        showToast('✓ Voice typing stopped. Note text ready.', 'success');
         return;
       }
 
@@ -6849,45 +7569,78 @@
         voiceRecognitionInstance = new SpeechRecognition();
         voiceRecognitionInstance.continuous = true;
         voiceRecognitionInstance.interimResults = true;
-        voiceRecognitionInstance.lang = 'hi-IN'; // Works for both Hindi & Indian English
+        voiceRecognitionInstance.maxAlternatives = 1;
+        voiceRecognitionInstance.lang = 'hi-IN'; // Works for Hindi & Indian English
+
+        const initialText = textarea ? textarea.value : '';
+        let finalizedSoFar = '';
 
         voiceRecognitionInstance.onstart = function() {
           isVoiceDictationActive = true;
           if (btn) {
-            btn.classList.add('bg-rose-500/20', 'text-rose-400', 'border-rose-500');
-            btn.innerHTML = '<i data-lucide="mic-off" class="w-4 h-4 text-rose-400 animate-pulse"></i><span class="animate-pulse">Listening... (Tap to stop)</span>';
-            if (window.lucide) lucide.createIcons();
+            btn.classList.remove('bg-subtle', 'text-main', 'border-main');
+            btn.classList.add('bg-rose-500', 'text-white', 'border-rose-500', 'animate-pulse');
           }
-          showToast('Mic on: Speak now in Hindi or English!', 'info');
+          if (micIcon) {
+            micIcon.setAttribute('data-lucide', 'mic-off');
+            micIcon.className = 'w-4 h-4 text-white';
+          }
+          if (micLabel) micLabel.innerText = 'Listening... (बोलिए / Tap to stop)';
+          if (window.lucide) lucide.createIcons();
+          showToast('🎙️ Mic चालू है: बोलिए (Speak in Hindi / English)...', 'info');
         };
 
         voiceRecognitionInstance.onresult = function(event) {
-          let interimTranscript = '';
-          let finalTranscript = '';
+          let interim = '';
+          let final = '';
 
           for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript;
+              final += transcript + ' ';
             } else {
-              interimTranscript += event.results[i][0].transcript;
+              interim += transcript;
             }
           }
 
-          if (finalTranscript && textarea) {
-            const currentVal = textarea.value;
-            textarea.value = (currentVal ? currentVal + ' ' : '') + finalTranscript.trim();
+          if (final) {
+            finalizedSoFar += final;
+          }
+
+          if (textarea) {
+            const combined = (initialText ? initialText.trim() + ' ' : '') + finalizedSoFar + interim;
+            textarea.value = combined;
+            textarea.scrollTop = textarea.scrollHeight;
           }
         };
 
         voiceRecognitionInstance.onerror = function(event) {
-          console.warn('Voice recognition error:', event.error);
+          console.warn('SpeechRecognition error:', event.error);
+          if (event.error === 'no-speech') {
+            return;
+          }
           isVoiceDictationActive = false;
           if (btn) {
-            btn.classList.remove('bg-rose-500/20', 'text-rose-400', 'border-rose-500');
-            btn.innerHTML = '<i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i><span>Voice Type</span>';
-            if (window.lucide) lucide.createIcons();
+            btn.classList.remove('bg-rose-500', 'text-white', 'border-rose-500', 'animate-pulse');
+            btn.classList.add('bg-subtle', 'text-main', 'border-main');
           }
-          if (event.error !== 'no-speech') {
+          if (micIcon) {
+            micIcon.setAttribute('data-lucide', 'mic');
+            micIcon.className = 'w-4 h-4 text-gold';
+          }
+          if (micLabel) micLabel.innerText = 'Voice Typing';
+          if (window.lucide) lucide.createIcons();
+
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            showToast('⚠️ Microphone Permission Blocked! Please allow microphone access in your browser address bar to use Voice Typing.', 'error');
+          } else if (event.error === 'language-not-supported') {
+            try {
+              voiceRecognitionInstance.lang = 'en-IN';
+              voiceRecognitionInstance.start();
+              return;
+            } catch(e) {}
+            showToast('Language not supported by browser.', 'warning');
+          } else {
             showToast('Voice typing: ' + event.error, 'warning');
           }
         };
@@ -6895,15 +7648,31 @@
         voiceRecognitionInstance.onend = function() {
           isVoiceDictationActive = false;
           if (btn) {
-            btn.classList.remove('bg-rose-500/20', 'text-rose-400', 'border-rose-500');
-            btn.innerHTML = '<i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i><span>Voice Type</span>';
-            if (window.lucide) lucide.createIcons();
+            btn.classList.remove('bg-rose-500', 'text-white', 'border-rose-500', 'animate-pulse');
+            btn.classList.add('bg-subtle', 'text-main', 'border-main');
           }
+          if (micIcon) {
+            micIcon.setAttribute('data-lucide', 'mic');
+            micIcon.className = 'w-4 h-4 text-gold';
+          }
+          if (micLabel) micLabel.innerText = 'Voice Typing';
+          if (window.lucide) lucide.createIcons();
         };
 
-        voiceRecognitionInstance.start();
-      } catch (err) {
-        console.error(err);
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+            stream.getTracks().forEach(track => track.stop());
+            voiceRecognitionInstance.start();
+          }).catch(function(err) {
+            console.warn('getUserMedia error, attempting start:', err);
+            voiceRecognitionInstance.start();
+          });
+        } else {
+          voiceRecognitionInstance.start();
+        }
+
+      } catch(err) {
+        console.error('Failed to start voice recognition:', err);
         showToast('Could not start microphone: ' + err.message, 'error');
       }
     }
@@ -6913,6 +7682,16 @@
       const text = document.getElementById('modal-note-textarea').value.trim();
       const callStatus = document.getElementById('modal-note-call-status').value;
       const followupDt = document.getElementById('modal-note-followup').value;
+
+      if (followupDt && !text) {
+        showToast('⚠️ Follow-up schedule karne ke liye Note likhna compulsory hai!', 'error');
+        const txtEl = document.getElementById('modal-note-textarea');
+        if (txtEl) {
+          txtEl.focus();
+          txtEl.classList.add('border-rose-500');
+        }
+        return;
+      }
 
       if (!text && !selectedImageBase64 && !selectedAudioBase64) {
         showToast('Please enter a note, attach a photo, or upload a call recording.', 'error');
@@ -6952,6 +7731,19 @@
         });
         localStorage.setItem('sri_sri_tasks', JSON.stringify(tasks));
       }
+
+      currentSelectedLead.lastContactAttempt = {
+        type: 'NOTE',
+        outcome: callStatus,
+        note: text,
+        text: text,
+        time: now.toISOString(),
+        formattedTime: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        user: loggedInUser ? loggedInUser.name : 'Sri Sri Admin'
+      };
+      currentSelectedLead.lastContactMethod = 'Note (' + callStatus + ')';
+      currentSelectedLead.lastContactedAt = now.toISOString();
+      updateModalLastAttemptCard(currentSelectedLead);
 
       localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
       syncLeadToCloud(currentSelectedLead);
@@ -7003,36 +7795,1149 @@
         const item = document.createElement('div');
         item.className = 'p-3.5 rounded-2xl bg-card border border-main space-y-2 shadow-xs';
 
-        const noteText = (act.notes || act.text || act.content || act.note || '').trim();
         const displayTime = act.time || (act.timestamp ? formatFollowupDate(act.timestamp) : 'Recently');
         const authorIdentifier = act.userEmail || act.userName || 'sales.ssply@gmail.com';
 
-        item.innerHTML = `
-          <div class="flex items-center justify-between text-[11px]">
-            <div class="flex items-center gap-2">
-              <span class="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">
-                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
-              </span>
-              <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
-            </div>
-            <span class="text-muted-custom text-[10px] font-mono flex items-center gap-1">
-              <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
-              <span>${displayTime}</span>
-            </span>
-          </div>
-          
-          ${noteText ? `
-            <div class="p-3 rounded-xl bg-subtle/60 border border-main text-xs text-main leading-relaxed break-words font-sans">
-              ${noteText}
-            </div>
-          ` : ''}
+        // Check if Call Log
+        if (act.type === 'CALL_LOG' || act.callOutcome) {
+          const outcome = act.callOutcome || 'Baat Hui (Connected)';
+          let outcomeBadge = '';
+          if (outcome.includes('Baat Hui')) {
+            outcomeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>' + outcome + '</span>';
+          } else if (outcome.includes('Call Nahi Lag Rahi') || outcome.includes('Switched Off')) {
+            outcomeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>' + outcome + '</span>';
+          } else if (outcome.includes('Not Picked')) {
+            outcomeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>' + outcome + '</span>';
+          } else {
+            outcomeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center gap-1 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>' + outcome + '</span>';
+          }
 
-          ${act.imageUrl ? '<div class="pt-1"><img src="' + act.imageUrl + '" class="max-h-60 rounded-xl border border-main object-contain bg-subtle cursor-pointer hover:opacity-95" onclick="window.open(\'' + act.imageUrl + '\')"></div>' : ''}
-          ${act.audioUrl ? '<div class="pt-1 space-y-1"><div class="text-[11px] font-bold text-purple-400 flex items-center gap-1.5"><i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Call Recording / Audio:</div><audio controls class="w-full rounded-xl bg-subtle border border-main p-1" src="' + act.audioUrl + '"></audio></div>' : ''}
-        `;
+          const callNotes = (act.notes || act.text || '').trim();
+
+          item.innerHTML = `
+            <div class="flex items-center justify-between text-[11px]">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center font-bold shrink-0">
+                  <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+                </span>
+                <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
+                ${outcomeBadge}
+              </div>
+              <span class="text-muted-custom text-[10px] font-mono flex items-center gap-1 shrink-0">
+                <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
+                <span>${displayTime}</span>
+              </span>
+            </div>
+            
+            ${callNotes ? `
+              <div class="p-3 rounded-xl bg-subtle/70 border border-main text-xs text-main leading-relaxed break-words font-sans">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-muted-custom mb-1 flex items-center gap-1">
+                  <i data-lucide="file-text" class="w-3 h-3 text-gold"></i> Call Notes & Discussion:
+                </div>
+                ${callNotes}
+              </div>
+            ` : ''}
+          `;
+        } else if (act.type === 'WHATSAPP_SENT' || act.messageText) {
+          // WhatsApp message item with exact text bubble
+          const waMessage = act.messageText || act.notes || act.text || '';
+          item.innerHTML = `
+            <div class="flex items-center justify-between text-[11px]">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold shrink-0">
+                  <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                </span>
+                <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shrink-0">
+                  <i data-lucide="send" class="w-2.5 h-2.5"></i> WhatsApp Sent
+                </span>
+              </div>
+              <span class="text-muted-custom text-[10px] font-mono flex items-center gap-1 shrink-0">
+                <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
+                <span>${displayTime}</span>
+              </span>
+            </div>
+            
+            <div class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 space-y-1.5">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-400/90 flex items-center gap-1">
+                <i data-lucide="corner-down-right" class="w-3 h-3"></i> Delivered Message Text:
+              </div>
+              <p class="text-xs text-main leading-relaxed font-sans whitespace-pre-wrap select-all">${waMessage}</p>
+            </div>
+          `;
+        } else {
+          // Standard comment or uploaded note
+          const noteText = (act.notes || act.text || act.content || act.note || '').trim();
+          item.innerHTML = `
+            <div class="flex items-center justify-between text-[11px]">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold shrink-0">
+                  <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                </span>
+                <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
+                ${act.type && act.type !== 'COMMENT' ? '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-subtle text-gold">' + act.type + '</span>' : ''}
+              </div>
+              <span class="text-muted-custom text-[10px] font-mono flex items-center gap-1 shrink-0">
+                <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
+                <span>${displayTime}</span>
+              </span>
+            </div>
+            
+            ${noteText ? `
+              <div class="p-3 rounded-xl bg-subtle/60 border border-main text-xs text-main leading-relaxed break-words font-sans">
+                ${noteText}
+              </div>
+            ` : ''}
+
+            ${act.imageUrl ? '<div class="pt-1"><img src="' + act.imageUrl + '" class="max-h-60 rounded-xl border border-main object-contain bg-subtle cursor-pointer hover:opacity-95" onclick="window.open(\'' + act.imageUrl + '\')"></div>' : ''}
+            ${act.audioUrl ? '<div class="pt-1 space-y-1"><div class="text-[11px] font-bold text-purple-400 flex items-center gap-1.5"><i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Call Recording / Audio:</div><audio controls class="w-full rounded-xl bg-subtle border border-main p-1" src="' + act.audioUrl + '"></audio></div>' : ''}
+          `;
+        }
+
         container.appendChild(item);
       });
       if (window.lucide) lucide.createIcons();
+    }
+
+
+    // ==================== ACTIVITY & CALL/WHATSAPP LOGGING SUITE ====================
+    function updateModalLastAttemptCard(lead) {
+      const container = document.getElementById('modal-last-attempt-container');
+      const badge = document.getElementById('modal-last-attempt-badge');
+      const textEl = document.getElementById('modal-last-attempt-text');
+      const timeEl = document.getElementById('modal-last-attempt-time');
+      if (!container || !badge || !textEl || !timeEl) return;
+
+      let attempt = lead.lastContactAttempt;
+      if (!attempt && lead.activities && lead.activities.length > 0) {
+        const act = lead.activities.find(a => a.type === 'CALL_LOG' || a.type === 'WHATSAPP_SENT' || a.callOutcome || a.messageText);
+        if (act) {
+          if (act.type === 'WHATSAPP_SENT' || act.messageText) {
+            attempt = {
+              type: 'WHATSAPP',
+              messageText: act.messageText || act.notes,
+              time: act.timestamp || act.time,
+              formattedTime: act.time,
+              user: act.userName || 'Sri Sri Admin'
+            };
+          } else {
+            attempt = {
+              type: 'CALL',
+              outcome: act.callOutcome || 'Call Record',
+              note: act.notes || act.text,
+              time: act.timestamp || act.time,
+              formattedTime: act.time,
+              user: act.userName || 'Sri Sri Admin'
+            };
+          }
+        }
+      }
+
+      if (attempt) {
+        if (attempt.type === 'CALL') {
+          const out = attempt.outcome || lead.lastCallOutcome || 'Call Logged';
+          badge.innerText = out;
+          if (out.includes('Baat Hui')) {
+            badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+          } else if (out.includes('Call Nahi Lag Rahi') || out.includes('Switched Off')) {
+            badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30';
+          } else if (out.includes('Not Picked')) {
+            badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30';
+          } else {
+            badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30';
+          }
+          textEl.innerText = attempt.note || attempt.text || 'Call completed';
+          const timeFormatted = attempt.formattedTime || formatFollowupDate(attempt.time || lead.lastContactedAt);
+          timeEl.innerHTML = `<span class="text-gold font-bold">${timeFormatted}</span> · by <strong class="text-main">${attempt.user || 'Sri Sri Admin'}</strong>`;
+        } else if (attempt.type === 'WHATSAPP') {
+          badge.innerText = 'WhatsApp Message Sent';
+          badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+          textEl.innerText = '💬 "' + (attempt.messageText || attempt.note || attempt.text || '').substring(0, 80) + '..."';
+          const timeFormatted = attempt.formattedTime || formatFollowupDate(attempt.time || lead.lastContactedAt);
+          timeEl.innerHTML = `<span class="text-emerald-400 font-bold">${timeFormatted}</span> · by <strong class="text-main">${attempt.user || 'Sri Sri Admin'}</strong>`;
+        } else {
+          badge.innerText = attempt.outcome || 'Attempt Logged';
+          badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-gold/15 text-gold border border-gold/30';
+          textEl.innerText = attempt.note || attempt.text || 'Contact activity recorded';
+          const timeFormatted = attempt.formattedTime || formatFollowupDate(attempt.time || lead.lastContactedAt);
+          timeEl.innerHTML = `<span class="text-gold font-bold">${timeFormatted}</span> · by <strong class="text-main">${attempt.user || 'Sri Sri Admin'}</strong>`;
+        }
+      } else {
+        badge.innerText = 'No Attempt';
+        badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-subtle text-muted-custom';
+        textEl.innerText = 'No contact attempt recorded yet';
+        timeEl.innerText = 'Click Call or WhatsApp to connect with client';
+      }
+    }
+
+    function initiateCallWithLogging(leadId) {
+      let lead = leads.find(l => l.id === leadId);
+      if (!lead && currentSelectedLead && (!leadId || currentSelectedLead.id === leadId)) {
+        lead = currentSelectedLead;
+      }
+      if (!lead) {
+        showToast('Lead record not found.', 'error');
+        return;
+      }
+      currentActiveLogLeadId = lead.id;
+
+      // 1. Dial phone number if present
+      const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
+      if (cleanPhone) {
+        try {
+          window.location.href = 'tel:' + cleanPhone;
+        } catch (e) {
+          console.warn('Could not auto-dial:', e);
+        }
+      }
+
+      // 2. Populate Call Log Modal
+      const nameEl = document.getElementById('call-log-client-name');
+      const phoneEl = document.getElementById('call-log-client-phone');
+      if (nameEl) nameEl.innerText = lead.name;
+      if (phoneEl) phoneEl.innerText = lead.phone ? (cleanPhone.length === 10 ? '+91 ' + cleanPhone : lead.phone) : 'No phone provided';
+
+      // 3. Reset outcome to default "Baat Hui (Connected)"
+      selectCallOutcome('Baat Hui (Connected)');
+
+      // 4. Reset notes & follow-up
+      const notesEl = document.getElementById('call-log-notes');
+      if (notesEl) {
+        notesEl.value = '';
+        notesEl.placeholder = 'e.g. 19mm Gurjan BWR Ply ka rate discuss hua, kal site measurement par aane ko bola...';
+      }
+      const fuEl = document.getElementById('call-log-next-followup');
+      if (fuEl) fuEl.value = '';
+
+      // 5. Populate stages in select
+      const stgSelect = document.getElementById('call-log-update-stage');
+      if (stgSelect) {
+        const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
+        const curStg = p.stages.find(s => s.id === lead.stageId) || p.stages[0];
+        stgSelect.innerHTML = '<option value="">— Keep Current Stage (' + curStg.name + ') —</option>';
+        p.stages.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.innerText = s.name + (s.id === lead.stageId ? ' (Current)' : '');
+          stgSelect.appendChild(opt);
+        });
+      }
+
+      // 6. Open Modal
+      openModal('call-log-modal');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function selectCallOutcome(outcome, btnEl) {
+      const hiddenInput = document.getElementById('call-log-selected-outcome');
+      if (hiddenInput) hiddenInput.value = outcome;
+
+      const container = document.getElementById('call-log-outcome-buttons');
+      if (container) {
+        const allBtns = container.querySelectorAll('.call-outcome-btn');
+        allBtns.forEach(b => {
+          b.classList.remove('border-emerald-500', 'bg-emerald-500/20', 'border-rose-500', 'bg-rose-500/20', 'border-amber-500', 'bg-amber-500/20', 'border-orange-500', 'bg-orange-500/20', 'border-blue-500', 'bg-blue-500/20', 'ring-2', 'ring-emerald-500/40', 'ring-rose-500/40', 'ring-amber-500/40', 'ring-orange-500/40', 'ring-blue-500/40');
+          b.classList.add('border-main', 'bg-card');
+        });
+
+        let targetBtn = btnEl;
+        if (!targetBtn) {
+          allBtns.forEach(b => {
+            if (b.innerText.includes(outcome)) targetBtn = b;
+          });
+        }
+        if (targetBtn) {
+          targetBtn.classList.remove('border-main', 'bg-card');
+          if (outcome.includes('Baat Hui')) {
+            targetBtn.classList.add('border-emerald-500', 'bg-emerald-500/20', 'ring-2', 'ring-emerald-500/40');
+          } else if (outcome.includes('Call Nahi Lag Rahi') || outcome.includes('Switched Off')) {
+            targetBtn.classList.add('border-rose-500', 'bg-rose-500/20', 'ring-2', 'ring-rose-500/40');
+          } else if (outcome.includes('Not Picked')) {
+            targetBtn.classList.add('border-amber-500', 'bg-amber-500/20', 'ring-2', 'ring-amber-500/40');
+          } else if (outcome.includes('User Busy')) {
+            targetBtn.classList.add('border-orange-500', 'bg-orange-500/20', 'ring-2', 'ring-orange-500/40');
+          } else {
+            targetBtn.classList.add('border-blue-500', 'bg-blue-500/20', 'ring-2', 'ring-blue-500/40');
+          }
+        }
+      }
+    }
+
+    function saveCallLogEntry() {
+      const leadId = currentActiveLogLeadId || (currentSelectedLead ? currentSelectedLead.id : null);
+      const lead = leads.find(l => l.id === leadId);
+      if (!lead) {
+        showToast('No active lead selected to save call record.', 'error');
+        return;
+      }
+
+      const outcome = (document.getElementById('call-log-selected-outcome') ? document.getElementById('call-log-selected-outcome').value : 'Baat Hui (Connected)') || 'Baat Hui (Connected)';
+      const rawNotes = (document.getElementById('call-log-notes') ? document.getElementById('call-log-notes').value.trim() : '');
+      const fuDate = (document.getElementById('call-log-next-followup') ? document.getElementById('call-log-next-followup').value : '');
+      const newStageId = (document.getElementById('call-log-update-stage') ? document.getElementById('call-log-update-stage').value : '');
+
+      const notes = rawNotes || (outcome + ' logged via phone dialer');
+      const now = new Date();
+      const timeStr = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const userName = loggedInUser ? loggedInUser.name : 'Sri Sri Admin';
+      const userEmail = loggedInUser ? loggedInUser.email : 'sales.ssply@gmail.com';
+
+      // 1. Add activity entry
+      if (!lead.activities) lead.activities = [];
+      const newActivity = {
+        id: 'act-call-' + Date.now(),
+        type: 'CALL_LOG',
+        callOutcome: outcome,
+        userName: userName,
+        userEmail: userEmail,
+        notes: notes,
+        text: outcome + ': ' + notes,
+        time: timeStr,
+        timestamp: now.toISOString()
+      };
+      lead.activities.unshift(newActivity);
+
+      // 2. Set last contact attempt attributes on lead
+      lead.lastContactAttempt = {
+        type: 'CALL',
+        outcome: outcome,
+        note: notes,
+        text: outcome + ': ' + notes,
+        time: now.toISOString(),
+        formattedTime: timeStr,
+        user: userName
+      };
+      lead.lastCallOutcome = outcome;
+      lead.lastContactMethod = 'Phone Call';
+      lead.lastContactedAt = now.toISOString();
+
+      lead.lastActivityAt = now.toISOString();
+      lead.lastActivityText = 'Call (' + outcome + '): ' + notes.substring(0, 35) + '...';
+      lead.lastActivityUser = userName;
+
+      // 3. Stage update if selected
+      if (newStageId && newStageId !== lead.stageId) {
+        const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
+        const targetStage = p.stages.find(s => s.id === newStageId);
+        if (targetStage) {
+          lead.stageId = newStageId;
+          lead.activities.unshift({
+            id: 'act-stage-' + Date.now(),
+            userName: userName,
+            userEmail: userEmail,
+            type: 'STAGE_CHANGE',
+            notes: 'Pipeline Stage updated to: ' + targetStage.name + ' after call (' + outcome + ')',
+            time: timeStr,
+            timestamp: now.toISOString()
+          });
+        }
+      }
+
+      // 4. Follow-up update if specified
+      if (fuDate) {
+        lead.nextFollowUp = fuDate;
+        lead.nextFollowUpNote = outcome + ' follow-up: ' + notes;
+        tasks.unshift({
+          id: 'task-' + Date.now(),
+          leadId: lead.id,
+          leadName: lead.name,
+          phone: lead.phone || '',
+          action: 'Call Follow-up (' + outcome + ')',
+          note: notes,
+          dueDate: fuDate,
+          status: 'PENDING'
+        });
+        localStorage.setItem('sri_sri_tasks', JSON.stringify(tasks));
+      }
+
+      // 5. Persist to localStorage & cloud
+      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      syncLeadToCloud(lead);
+
+      // 6. Close Modal & update UI
+      closeModal('call-log-modal');
+      if (currentSelectedLead && currentSelectedLead.id === lead.id) {
+        currentSelectedLead = lead;
+        updateModalLastAttemptCard(lead);
+        renderLeadTimeline(lead);
+        const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
+        renderLeadStagesBar(lead, p);
+      }
+      renderOpportunities();
+      renderPhonebookTable();
+      initDashboard();
+
+      showToast('Call logged: ' + outcome + ' successfully!', 'success');
+    }
+
+    function openWhatsAppComposerModal(leadId) {
+      let lead = leads.find(l => l.id === leadId);
+      if (!lead && currentSelectedLead && (!leadId || currentSelectedLead.id === leadId)) {
+        lead = currentSelectedLead;
+      }
+      if (!lead) {
+        showToast('Lead record not found.', 'error');
+        return;
+      }
+      currentActiveLogLeadId = lead.id;
+
+      const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
+      const nameEl = document.getElementById('wa-composer-client-name');
+      const phoneEl = document.getElementById('wa-composer-client-phone');
+      if (nameEl) nameEl.innerText = lead.name;
+      if (phoneEl) phoneEl.innerText = lead.phone ? (cleanPhone.length === 10 ? '+91 ' + cleanPhone : lead.phone) : 'No phone provided';
+
+      // Default message
+      const ta = document.getElementById('wa-composer-text');
+      if (ta) {
+        ta.value = 'Namaste ' + lead.name + ' ji, Sri Sri Ply & Hardware se connect kar rahe hain. Aapki inquiry ke baare mein baat karni thi. Kya abhi baat karne ka sahi samay hai?';
+      }
+
+      openModal('whatsapp-composer-modal');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function applyWhatsAppTemplatePreset(type) {
+      const leadId = currentActiveLogLeadId || (currentSelectedLead ? currentSelectedLead.id : null);
+      const lead = leads.find(l => l.id === leadId) || currentSelectedLead || { name: 'Sir/Madam' };
+      const ta = document.getElementById('wa-composer-text');
+      if (!ta) return;
+
+      if (type === 'catalog') {
+        ta.value = 'Namaste ' + lead.name + ' ji, Sri Sri Ply & Hardware se humara latest product catalog & rate list share kar rahe hain: Plywood (Gurjan BWR/BWP), Decorative Laminates, Hardware fittings & PVC Boards. Kripya apni requirement batayein.';
+      } else if (type === 'quotation') {
+        ta.value = 'Namaste ' + lead.name + ' ji, aapki requirement ka best wholesale quotation Sri Sri Ply & Hardware se taiyar hai. Kripya rate verify karein aur order confirm karne ke liye reply karein.';
+      } else if (type === 'site_visit') {
+        ta.value = 'Namaste ' + lead.name + ' ji, aapki site par measurement lene aur wood sample dikhane ke liye humari team taiyar hai. Kripya convenient time aur address confirm karein.';
+      } else if (type === 'payment') {
+        ta.value = 'Namaste ' + lead.name + ' ji, Sri Sri Ply & Hardware se aapka order dispatch ke liye taiyar hai. Kripya invoice amount check karke payment details confirm karein.';
+      }
+    }
+
+    function sendAndLogWhatsAppMessage() {
+      const leadId = currentActiveLogLeadId || (currentSelectedLead ? currentSelectedLead.id : null);
+      const lead = leads.find(l => l.id === leadId);
+      if (!lead) {
+        showToast('No active lead found for WhatsApp message.', 'error');
+        return;
+      }
+
+      const ta = document.getElementById('wa-composer-text');
+      const msgText = ta ? ta.value.trim() : '';
+      if (!msgText) {
+        showToast('Kripya WhatsApp message likhein ya template select karein.', 'error');
+        return;
+      }
+
+      const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
+      if (!cleanPhone) {
+        showToast('Client ka valid phone number maujood nahi hai.', 'error');
+        return;
+      }
+
+      // 1. Open WhatsApp in new tab
+      const waUrl = 'https://wa.me/91' + cleanPhone + '?text=' + encodeURIComponent(msgText);
+      try {
+        window.open(waUrl, '_blank');
+      } catch (e) {
+        console.warn('Could not launch WhatsApp window:', e);
+      }
+
+      const now = new Date();
+      const timeStr = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const userName = loggedInUser ? loggedInUser.name : 'Sri Sri Admin';
+      const userEmail = loggedInUser ? loggedInUser.email : 'sales.ssply@gmail.com';
+
+      // 2. Add activity entry with exact message text
+      if (!lead.activities) lead.activities = [];
+      const newActivity = {
+        id: 'act-wa-' + Date.now(),
+        type: 'WHATSAPP_SENT',
+        messageText: msgText,
+        userName: userName,
+        userEmail: userEmail,
+        notes: msgText,
+        text: msgText,
+        time: timeStr,
+        timestamp: now.toISOString()
+      };
+      lead.activities.unshift(newActivity);
+
+      // 3. Update lead last contact attempt
+      lead.lastContactAttempt = {
+        type: 'WHATSAPP',
+        messageText: msgText,
+        note: msgText,
+        text: msgText,
+        time: now.toISOString(),
+        formattedTime: timeStr,
+        user: userName
+      };
+      lead.lastContactMethod = 'WhatsApp Message';
+      lead.lastMessageSent = msgText;
+      lead.lastContactedAt = now.toISOString();
+
+      lead.lastActivityAt = now.toISOString();
+      lead.lastActivityText = 'WhatsApp Sent: ' + msgText.substring(0, 35) + '...';
+      lead.lastActivityUser = userName;
+
+      // 4. Save and sync
+      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      syncLeadToCloud(lead);
+
+      // 5. Close modal & refresh UI
+      closeModal('whatsapp-composer-modal');
+      if (currentSelectedLead && currentSelectedLead.id === lead.id) {
+        currentSelectedLead = lead;
+        updateModalLastAttemptCard(lead);
+        renderLeadTimeline(lead);
+      }
+      renderOpportunities();
+      renderPhonebookTable();
+      initDashboard();
+
+      showToast('WhatsApp message sent & logged in lead timeline!', 'success');
+    }
+
+
+    // ==================== WORK PENDING, OVERDUE & 30-MIN REMINDER ENGINE ====================
+    let currentPendingFilter = 'ALL';
+    let lastNotified30mLeadId = null;
+    let reminderWatcherInterval = null;
+
+    function playReminderSound() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.36);
+      } catch (e) {
+        console.warn('Audio chime notice:', e);
+      }
+    }
+
+    function dismissGlobal30mBanner() {
+      const b = document.getElementById('global-30m-reminder-banner');
+      if (b) b.classList.add('hidden');
+    }
+
+    function filterDashboardPendingView(filterType) {
+      currentPendingFilter = (currentPendingFilter === filterType) ? 'ALL' : filterType;
+      updatePendingWorkDashboard();
+    }
+
+    function checkAndTrigger30MinReminders(manualScan = false) {
+      const userLeads = getAccessibleLeads();
+      const now = new Date();
+      let urgentLead = null;
+      let minDiff = 999999;
+
+      userLeads.forEach(lead => {
+        if (!lead.nextFollowUp) return;
+        const p = pipelines.find(x => x.id === lead.pipelineId);
+        const stg = p ? p.stages.find(s => s.id === lead.stageId) : null;
+        if (stg && (stg.isWon || stg.isLost)) return;
+
+        const due = new Date(lead.nextFollowUp);
+        if (isNaN(due.getTime())) return;
+
+        const diffMins = Math.round((due - now) / 60000);
+        // Window: within next 30 minutes (1 to 30 mins remaining)
+        if (diffMins > 0 && diffMins <= 30) {
+          if (diffMins < minDiff) {
+            minDiff = diffMins;
+            urgentLead = lead;
+          }
+        }
+      });
+
+      const dashAlert = document.getElementById('dash-30m-alert-box');
+      const globalBanner = document.getElementById('global-30m-reminder-banner');
+
+      if (urgentLead) {
+        const timeText = 'Due in ' + minDiff + ' mins (' + formatFollowupDate(urgentLead.nextFollowUp) + ')';
+
+        // 1. Update Dashboard 30m Alert Box
+        if (dashAlert) {
+          dashAlert.classList.remove('hidden');
+          const pill = document.getElementById('dash-30m-timer-pill');
+          if (pill) pill.innerText = timeText;
+          const nameEl = document.getElementById('dash-30m-lead-name');
+          if (nameEl) nameEl.innerText = urgentLead.name;
+          const detailsEl = document.getElementById('dash-30m-lead-details');
+          if (detailsEl) {
+            detailsEl.innerText = 'Phone: ' + (urgentLead.phone || 'No phone') + ' • Assigned: ' + (urgentLead.assignedToName || 'Sri Sri Admin') + ' • Note: ' + (urgentLead.nextFollowUpNote || urgentLead.notes || 'Scheduled follow-up discussion');
+          }
+
+          const btnCall = document.getElementById('dash-30m-btn-call');
+          if (btnCall) btnCall.onclick = () => initiateCallWithLogging(urgentLead.id);
+          const btnWaClient = document.getElementById('dash-30m-btn-wa-client');
+          if (btnWaClient) btnWaClient.onclick = () => openWhatsAppComposerModal(urgentLead.id);
+          const btnWaStaff = document.getElementById('dash-30m-btn-wa-staff');
+          if (btnWaStaff) btnWaStaff.onclick = () => sendStaffFollowupAlertWhatsApp(urgentLead.id, '30M');
+        }
+
+        // 2. Update Global Floating Banner
+        if (globalBanner) {
+          globalBanner.classList.remove('hidden');
+          const gPill = document.getElementById('global-30m-time-pill');
+          if (gPill) gPill.innerText = timeText;
+          const gName = document.getElementById('global-30m-lead-name');
+          if (gName) gName.innerText = urgentLead.name;
+          const gNote = document.getElementById('global-30m-note');
+          if (gNote) gNote.innerText = 'Due in ' + minDiff + 'm: ' + (urgentLead.nextFollowUpNote || urgentLead.notes || 'Important follow-up action due');
+
+          const gCall = document.getElementById('global-30m-btn-call');
+          if (gCall) gCall.onclick = () => { dismissGlobal30mBanner(); initiateCallWithLogging(urgentLead.id); };
+          const gWa = document.getElementById('global-30m-btn-wa');
+          if (gWa) gWa.onclick = () => { dismissGlobal30mBanner(); openWhatsAppComposerModal(urgentLead.id); };
+          const gStaff = document.getElementById('global-30m-btn-wa-staff');
+          if (gStaff) gStaff.onclick = () => { dismissGlobal30mBanner(); sendStaffFollowupAlertWhatsApp(urgentLead.id, '30M'); };
+        }
+
+        // Audio chime and notification if new
+        if (lastNotified30mLeadId !== urgentLead.id) {
+          lastNotified30mLeadId = urgentLead.id;
+          playReminderSound();
+          showToast('⏰ Upcoming Follow-up: ' + urgentLead.name + ' (' + urgentLead.phone + ') is due in ' + minDiff + ' minutes!', 'warning');
+        }
+
+        if (manualScan) {
+          showToast('Found urgent reminder for ' + urgentLead.name + ' (' + minDiff + ' mins left)', 'info');
+        }
+      } else {
+        if (dashAlert) dashAlert.classList.add('hidden');
+        if (globalBanner) globalBanner.classList.add('hidden');
+        if (manualScan) {
+          showToast('All follow-ups scanned. No urgent 30-minute reminders right now.', 'info');
+        }
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function updatePendingWorkDashboard() {
+      const userLeads = getAccessibleLeads();
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+      // Present Day Lists
+      const todayOverdueLeads = [];      // Scheduled for today, but time has passed (> 1 min ago)
+      const upcoming30mLeads = [];       // Scheduled for today, due within next 30 mins
+      const dueTodayRemainingLeads = []; // Scheduled for today, due later today
+      const todayMissedLeads = [];       // Arrived TODAY with 0 contact attempts made and no followup scheduled
+
+      // Past Days Backlog Lists
+      const backlogOverdueLeads = [];    // Due yesterday or older dates (< startOfToday)
+      const backlogMissedLeads = [];     // Arrived before today with 0 contact attempts made and no followup scheduled
+
+      userLeads.forEach(lead => {
+        const p = pipelines.find(x => x.id === lead.pipelineId);
+        const stg = p ? p.stages.find(s => s.id === lead.stageId) : null;
+        if (stg && (stg.isWon || stg.isLost)) return;
+
+        const hasContact = lead.lastContactAttempt || (lead.activities && lead.activities.length > 0);
+        const createdDate = lead.createdAt ? new Date(lead.createdAt) : null;
+
+        if (lead.nextFollowUp) {
+          const due = new Date(lead.nextFollowUp);
+          if (!isNaN(due.getTime())) {
+            const diffMs = due - now;
+            const diffMins = Math.round(diffMs / 60000);
+
+            if (due < startOfToday) {
+              // Scheduled for yesterday or older days!
+              backlogOverdueLeads.push(lead);
+            } else if (due <= endOfToday) {
+              // Belongs to TODAY
+              if (diffMs < -60000) {
+                // More than 1 min past due earlier today
+                todayOverdueLeads.push(lead);
+              } else if (diffMins > 0 && diffMins <= 30) {
+                upcoming30mLeads.push(lead);
+              } else if (diffMs >= 0) {
+                dueTodayRemainingLeads.push(lead);
+              }
+            } else {
+              // Future days follow-up
+            }
+          }
+        } else if (!hasContact) {
+          // Untouched / Missed lead
+          if (createdDate && createdDate >= startOfToday) {
+            todayMissedLeads.push(lead);
+          } else {
+            backlogMissedLeads.push(lead);
+          }
+        }
+      });
+
+      // Total Calling Queue (Prioritized: Backlog Overdue + Today Overdue + Upcoming 30m + Due Today + Today Missed + Backlog Missed)
+      const callingQueueLeads = [
+        ...backlogOverdueLeads,
+        ...todayOverdueLeads,
+        ...upcoming30mLeads,
+        ...dueTodayRemainingLeads,
+        ...todayMissedLeads,
+        ...backlogMissedLeads
+      ];
+      // Deduplicate callingQueueLeads
+      const seenCalling = new Set();
+      const uniqueCallingQueueLeads = callingQueueLeads.filter(l => {
+        if (seenCalling.has(l.id)) return false;
+        seenCalling.add(l.id);
+        return true;
+      });
+
+      // Update Present Day Metric Badges
+      const elTodayOverdue = document.getElementById('dash-today-overdue-count');
+      if (elTodayOverdue) elTodayOverdue.innerText = todayOverdueLeads.length;
+      const elLegacyOverdue = document.getElementById('dash-overdue-count');
+      if (elLegacyOverdue) elLegacyOverdue.innerText = todayOverdueLeads.length;
+
+      const el30m = document.getElementById('dash-upcoming-30m-count');
+      if (el30m) el30m.innerText = upcoming30mLeads.length;
+
+      const elToday = document.getElementById('dash-due-today-count');
+      if (elToday) elToday.innerText = dueTodayRemainingLeads.length;
+
+      const elMissedToday = document.getElementById('dash-missed-today-count');
+      if (elMissedToday) elMissedToday.innerText = todayMissedLeads.length;
+      const elLegacyMissed = document.getElementById('dash-missed-leads-count');
+      if (elLegacyMissed) elLegacyMissed.innerText = todayMissedLeads.length;
+
+      // Update Backlog Metric Badges
+      const elBacklogOverdue = document.getElementById('dash-backlog-overdue-count');
+      if (elBacklogOverdue) elBacklogOverdue.innerText = backlogOverdueLeads.length;
+
+      const elBacklogMissed = document.getElementById('dash-backlog-missed-count');
+      if (elBacklogMissed) elBacklogMissed.innerText = backlogMissedLeads.length;
+
+      const elCallingQueue = document.getElementById('dash-calling-queue-count');
+      if (elCallingQueue) elCallingQueue.innerText = uniqueCallingQueueLeads.length;
+
+      // Update Quick Filter Pill active styles
+      const filterPills = [
+        { id: 'p-filter-today-all', key: 'TODAY_ALL' },
+        { id: 'p-filter-today-overdue', key: 'TODAY_OVERDUE' },
+        { id: 'p-filter-upcoming-30m', key: 'UPCOMING_30M' },
+        { id: 'p-filter-due-today', key: 'DUE_TODAY' },
+        { id: 'p-filter-backlog-overdue', key: 'BACKLOG_OVERDUE' },
+        { id: 'p-filter-calling-queue', key: 'CALLING_QUEUE' },
+        { id: 'p-filter-all', key: 'ALL' }
+      ];
+      filterPills.forEach(fp => {
+        const btn = document.getElementById(fp.id);
+        if (btn) {
+          if (currentPendingFilter === fp.key) {
+            btn.classList.add('ring-2', 'ring-gold', 'scale-105', 'font-extrabold');
+          } else {
+            btn.classList.remove('ring-2', 'ring-gold', 'scale-105', 'font-extrabold');
+          }
+        }
+      });
+
+      // Filter Pending Stream based on current selection
+      let displayLeads = [];
+      const filterBadge = document.getElementById('dash-pending-active-filter-badge');
+      const listTitle = document.getElementById('dash-pending-list-title');
+
+      if (currentPendingFilter === 'TODAY_OVERDUE' || currentPendingFilter === 'OVERDUE') {
+        displayLeads = todayOverdueLeads;
+        if (filterBadge) filterBadge.innerText = 'Showing ' + todayOverdueLeads.length + ' Today Overdue';
+        if (listTitle) listTitle.innerText = 'Today Overdue Work (आज का छूटा हुआ काम)';
+      } else if (currentPendingFilter === 'UPCOMING_30M') {
+        displayLeads = upcoming30mLeads;
+        if (filterBadge) filterBadge.innerText = 'Showing ' + upcoming30mLeads.length + ' Due in 30 Mins';
+        if (listTitle) listTitle.innerText = 'Urgent Due in 30 Mins (अगले 30 मिनट में आने वाले फॉलो-अप)';
+      } else if (currentPendingFilter === 'DUE_TODAY') {
+        displayLeads = dueTodayRemainingLeads;
+        if (filterBadge) filterBadge.innerText = 'Showing ' + dueTodayRemainingLeads.length + ' Due Today';
+        if (listTitle) listTitle.innerText = 'Due Today Schedule (आज का बाकी काम)';
+      } else if (currentPendingFilter === 'MISSED_TODAY' || currentPendingFilter === 'UNCONTACTED') {
+        displayLeads = todayMissedLeads;
+        if (filterBadge) filterBadge.innerText = 'Showing ' + todayMissedLeads.length + ' Missed Today';
+        if (listTitle) listTitle.innerText = 'Today Missed / Fresh Untouched Leads (आज आई नई अनटच्ड लीड्स)';
+      } else if (currentPendingFilter === 'BACKLOG_OVERDUE') {
+        displayLeads = backlogOverdueLeads;
+        if (filterBadge) filterBadge.innerText = 'Showing ' + backlogOverdueLeads.length + ' Past Backlog Overdue';
+        if (listTitle) listTitle.innerText = 'Yesterday & Older Backlog Overdue (कल व पुराने दिनों के छूटे फॉलो-अप)';
+      } else if (currentPendingFilter === 'BACKLOG_MISSED') {
+        displayLeads = backlogMissedLeads;
+        if (filterBadge) filterBadge.innerText = 'Showing ' + backlogMissedLeads.length + ' Old Untouched';
+        if (listTitle) listTitle.innerText = 'Older Neglected Backlog (पुराने दिनों की अनटच्ड लीड्स)';
+      } else if (currentPendingFilter === 'CALLING_QUEUE') {
+        displayLeads = uniqueCallingQueueLeads;
+        if (filterBadge) filterBadge.innerText = 'Calling Queue (' + uniqueCallingQueueLeads.length + ')';
+        if (listTitle) listTitle.innerText = 'Calling Person Action Queue (कॉलिंग टीम की कुल वर्क लिस्ट)';
+      } else if (currentPendingFilter === 'TODAY_ALL') {
+        displayLeads = [...todayOverdueLeads, ...upcoming30mLeads, ...dueTodayRemainingLeads, ...todayMissedLeads];
+        const s = new Set();
+        displayLeads = displayLeads.filter(l => { if (s.has(l.id)) return false; s.add(l.id); return true; });
+        if (filterBadge) filterBadge.innerText = 'Today Live Work (' + displayLeads.length + ')';
+        if (listTitle) listTitle.innerText = 'All Present Day Live Work (आज का कुल काम)';
+      } else {
+        // Combined All Active prioritized: Backlog Overdue -> Today Overdue -> 30m -> Today Due -> Today Missed -> Backlog Missed
+        displayLeads = [
+          ...backlogOverdueLeads,
+          ...todayOverdueLeads,
+          ...upcoming30mLeads,
+          ...dueTodayRemainingLeads,
+          ...todayMissedLeads,
+          ...backlogMissedLeads
+        ];
+        const seen = new Set();
+        displayLeads = displayLeads.filter(l => {
+          if (seen.has(l.id)) return false;
+          seen.add(l.id);
+          return true;
+        });
+        if (filterBadge) filterBadge.innerText = 'All Pending (' + displayLeads.length + ')';
+        if (listTitle) listTitle.innerText = 'All Pending & Overdue Work List';
+      }
+
+      // Render Pending Leads Stream
+      const stream = document.getElementById('dash-pending-leads-stream');
+      if (stream) {
+        stream.innerHTML = '';
+        if (displayLeads.length === 0) {
+          stream.innerHTML = '<div class="p-6 text-center text-xs text-muted-custom bg-subtle/30 rounded-2xl border border-main">🎉 Shabaash! No pending or overdue work in this category. All up to date!</div>';
+        } else {
+          displayLeads.slice(0, 20).forEach(lead => {
+            const due = lead.nextFollowUp ? new Date(lead.nextFollowUp) : null;
+            const isBacklogOverdue = due && (due < startOfToday);
+            const isTodayOverdue = due && (due >= startOfToday && due - now < -60000);
+            const is30m = due && ((due - now) / 60000 > 0 && (due - now) / 60000 <= 30);
+            const isDueToday = due && (due >= now && due <= endOfToday);
+            const isMissed = !lead.lastContactAttempt && (!lead.activities || lead.activities.length === 0);
+            const isTodayMissed = isMissed && (!lead.createdAt || new Date(lead.createdAt) >= startOfToday);
+
+            let tagHtml = '';
+            let borderClass = 'border-main';
+            if (isBacklogOverdue) {
+              tagHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/15 text-orange-400 border border-orange-500/30 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span>⏳ BACKLOG OVERDUE (' + formatFollowupDate(lead.nextFollowUp) + ')</span>';
+              borderClass = 'border-orange-500/30 bg-orange-500/5';
+            } else if (isTodayOverdue) {
+              tagHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>⚠️ TODAY OVERDUE (' + formatFollowupDate(lead.nextFollowUp) + ')</span>';
+              borderClass = 'border-rose-500/30 bg-rose-500/5';
+            } else if (is30m) {
+              const left = Math.round((due - now) / 60000);
+              tagHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-gold border border-gold/30 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span>⚡ DUE IN ' + left + ' MINS</span>';
+              borderClass = 'border-gold/40 bg-amber-500/5';
+            } else if (isDueToday) {
+              tagHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">☀️ DUE TODAY (' + formatFollowupDate(lead.nextFollowUp) + ')</span>';
+              borderClass = 'border-blue-500/30 bg-blue-500/5';
+            } else if (isTodayMissed) {
+              tagHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/30">☀️ MISSED TODAY (No Call Yet)</span>';
+              borderClass = 'border-purple-500/30 bg-purple-500/5';
+            } else if (isMissed) {
+              tagHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-500/15 text-slate-300 border border-slate-500/30">⏳ OLD UNTOUCHED (No Call Yet)</span>';
+              borderClass = 'border-slate-500/30 bg-slate-500/5';
+            } else {
+              tagHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">SCHEDULED (' + formatFollowupDate(lead.nextFollowUp) + ')</span>';
+            }
+
+            const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
+            const item = document.createElement('div');
+            item.className = 'p-3.5 rounded-2xl border ' + borderClass + ' flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs transition hover:border-gold';
+
+            item.innerHTML = `
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-extrabold text-xs text-main cursor-pointer hover:text-gold" onclick="openLeadModal('${lead.id}')">${escapeHtml(lead.name)}</span>
+                  ${tagHtml}
+                  ${formatLeadSourceBadge(lead)}
+                  <span class="text-[11px] font-bold text-gold">${escapeHtml(lead.dealValue || lead.budget || '')}</span>
+                </div>
+                <p class="text-[11px] text-muted-custom flex items-center gap-2 flex-wrap">
+                  <span class="font-mono text-main font-semibold">${lead.phone || 'No phone'}</span>
+                  <span>•</span>
+                  <span>Assigned: <strong class="text-main">${escapeHtml(lead.assignedToName || 'Sri Sri Admin')}</strong></span>
+                  <span>•</span>
+                  <span class="italic truncate max-w-[200px]" title="${escapeHtml(lead.nextFollowUpNote || lead.notes || '')}">${escapeHtml(lead.nextFollowUpNote || lead.notes || 'No notes')}</span>
+                </p>
+              </div>
+
+              <div class="flex items-center gap-1.5 self-end md:self-auto shrink-0" onclick="event.stopPropagation()">
+                ${cleanPhone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="px-2.5 py-1.5 rounded-xl bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white text-xs font-bold transition flex items-center gap-1" title="Call & Log Outcome"><i data-lucide="phone" class="w-3.5 h-3.5"></i><span>Call</span></button>' : ''}
+                ${cleanPhone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500 hover:text-white text-xs font-bold transition flex items-center gap-1" title="Send WhatsApp Message & Log"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i><span>WhatsApp</span></button>' : ''}
+                <button type="button" onclick="sendStaffFollowupAlertWhatsApp(\'' + lead.id + '\')" class="px-2.5 py-1.5 rounded-xl border border-gold/40 text-gold hover:bg-gold hover:text-slate-950 text-xs font-bold transition flex items-center gap-1" title="Send WhatsApp Alert to Staff">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                  <span>Alert Staff</span>
+                </button>
+                <button type="button" onclick="openLeadModal(\'' + lead.id + '\')" class="px-2.5 py-1.5 rounded-xl border border-main bg-subtle text-xs font-bold text-main hover:border-gold transition">Open</button>
+              </div>
+            `;
+            stream.appendChild(item);
+          });
+        }
+      }
+
+      // Admin & Manager View: Staff-Wise Pending Work Breakdown
+      const adminContainer = document.getElementById('dash-admin-staff-breakdown-container');
+      const adminBtnAll = document.getElementById('btn-admin-wa-all-summary');
+      const isOwnerOrManager = isCurrentUserSuperAdmin() || (loggedInUser && loggedInUser.role === 'Manager');
+
+      if (adminContainer) {
+        if (isOwnerOrManager) {
+          adminContainer.classList.remove('hidden');
+          if (adminBtnAll) adminBtnAll.classList.remove('hidden');
+
+          const tbody = document.getElementById('dash-staff-breakdown-tbody');
+          if (tbody) {
+            tbody.innerHTML = '';
+            const activeStaff = users.filter(u => u.status === 'Active');
+
+            activeStaff.forEach(u => {
+              const uEmail = (u.email || '').toLowerCase().trim();
+              const uName = (u.name || '').toLowerCase().trim();
+
+              const myLeads = leads.filter(l => {
+                const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
+                const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
+                return (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
+              });
+
+              let uTodayOverdue = 0, uBacklogOverdue = 0, uDueToday = 0, uCallingQueue = 0;
+              myLeads.forEach(l => {
+                const p = pipelines.find(x => x.id === l.pipelineId);
+                const stg = p ? p.stages.find(s => s.id === l.stageId) : null;
+                if (stg && (stg.isWon || stg.isLost)) return;
+
+                const hasContact = l.lastContactAttempt || (l.activities && l.activities.length > 0);
+                if (l.nextFollowUp) {
+                  const due = new Date(l.nextFollowUp);
+                  if (!isNaN(due.getTime())) {
+                    uCallingQueue++;
+                    if (due < startOfToday) {
+                      uBacklogOverdue++;
+                    } else if (due <= endOfToday) {
+                      if (due - now < -60000) uTodayOverdue++;
+                      else uDueToday++;
+                    }
+                  }
+                } else if (!hasContact) {
+                  uCallingQueue++;
+                }
+              });
+
+              const tr = document.createElement('tr');
+              tr.className = 'hover:bg-subtle/50 transition border-b border-main/30 text-xs';
+
+              const todayOverdueBadge = uTodayOverdue > 0 ?
+                '<span class="px-2 py-0.5 rounded-full font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">' + uTodayOverdue + ' Today</span>' :
+                '<span class="text-muted-custom">0</span>';
+
+              const backlogBadge = uBacklogOverdue > 0 ?
+                '<span class="px-2 py-0.5 rounded-full font-bold bg-orange-500/15 text-orange-400 border border-orange-500/30">' + uBacklogOverdue + ' Backlog</span>' :
+                '<span class="text-muted-custom">0</span>';
+
+              const todayBadge = uDueToday > 0 ?
+                '<span class="px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">' + uDueToday + ' Today</span>' :
+                '<span class="text-muted-custom">0</span>';
+
+              const queueBadge = uCallingQueue > 0 ?
+                '<span class="font-bold text-main font-mono px-2 py-0.5 rounded bg-amber-500/10 text-gold border border-gold/30">' + uCallingQueue + ' calls</span>' :
+                '<span class="text-emerald-400 font-bold">✓ Clear</span>';
+
+              tr.innerHTML = `
+                <td class="p-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full ${(uTodayOverdue > 0 || uBacklogOverdue > 0) ? 'bg-rose-500 animate-pulse' : 'bg-emerald-400'}"></span>
+                    <div>
+                      <p class="font-extrabold text-main">${escapeHtml(u.name)}</p>
+                      <p class="text-[10px] text-muted-custom">${escapeHtml(u.role || 'Staff')}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-3 font-mono text-muted-custom">${u.mobile || u.phone || '—'}</td>
+                <td class="p-3 text-center">${todayOverdueBadge}</td>
+                <td class="p-3 text-center">${backlogBadge}</td>
+                <td class="p-3 text-center">${todayBadge}</td>
+                <td class="p-3 text-center">${queueBadge}</td>
+                <td class="p-3 text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    ${uCallingQueue > 0 ? '<button type="button" onclick="sendStaffPendingWorkWhatsApp(\'' + u.id + '\')" class="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500 hover:text-white font-bold text-xs transition flex items-center gap-1" title="Send WhatsApp Work Summary to Staff"><i data-lucide="send" class="w-3 h-3"></i><span>WhatsApp</span></button>' : ''}
+                  </div>
+                </td>
+              `;
+              tbody.appendChild(tr);
+            });
+          }
+        } else {
+          adminContainer.classList.add('hidden');
+          if (adminBtnAll) adminBtnAll.classList.add('hidden');
+        }
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function sendBacklogCallingWhatsAppAlerts() {
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+      const backlogLeads = leads.filter(lead => {
+        const p = pipelines.find(x => x.id === lead.pipelineId);
+        const stg = p ? p.stages.find(s => s.id === lead.stageId) : null;
+        if (stg && (stg.isWon || stg.isLost)) return false;
+
+        const hasContact = lead.lastContactAttempt || (lead.activities && lead.activities.length > 0);
+        if (lead.nextFollowUp) {
+          const due = new Date(lead.nextFollowUp);
+          return due < startOfToday;
+        }
+        return !hasContact;
+      });
+
+      if (backlogLeads.length === 0) {
+        showToast('🎉 Shabaash! Koi bhi backlog pending nahi hai! All work is up-to-date.', 'success');
+        return;
+      }
+
+      const activeStaff = users.filter(u => u.status === 'Active');
+      let msg = '📢 *SRI SRI PLYWOODS - CALLING TEAM BACKLOG ALERT*\n';
+      msg += '⏰ Date: ' + now.toLocaleDateString('en-IN') + '\n';
+      msg += '📊 Kul Backlog Calling Leads: ' + backlogLeads.length + '\n\n';
+      msg += 'Kripya sabhi calling executive niche diye gaye puraane follow-ups aur uncontacted leads ko turant clear karein:\n';
+
+      activeStaff.forEach(u => {
+        const uEmail = (u.email || '').toLowerCase().trim();
+        const uName = (u.name || '').toLowerCase().trim();
+        const staffBacklog = backlogLeads.filter(l => {
+          const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
+          const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
+          return (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
+        });
+        if (staffBacklog.length > 0) {
+          msg += '👤 ' + u.name + ': ' + staffBacklog.length + ' backlog leads pending\n';
+        }
+      });
+
+      msg += '\nKripya CRM open karke Calling Queue se 1-by-1 call karein aur outcome save karein.';
+
+      const adminPhone = (defaultSuperAdmin && (defaultSuperAdmin.mobile || defaultSuperAdmin.phone)) ? (defaultSuperAdmin.mobile || defaultSuperAdmin.phone).replace(/[^0-9]/g, '') : '9813840800';
+      const waUrl = 'https://wa.me/91' + adminPhone + '?text=' + encodeURIComponent(msg);
+      window.open(waUrl, '_blank');
+      showToast('Calling Team Backlog alert prepared for WhatsApp!', 'success');
+    }
+
+    function sendStaffFollowupAlertWhatsApp(leadId, type = 'OVERDUE') {
+      const lead = leads.find(l => l.id === leadId);
+      if (!lead) {
+        showToast('Lead record not found.', 'error');
+        return;
+      }
+
+      // Find assigned staff user
+      const uEmail = (lead.assignedToEmail || '').toLowerCase().trim();
+      const uName = (lead.assignedToName || lead.assignedTo || '').toLowerCase().trim();
+      const staffUser = users.find(u => {
+        const email = (u.email || '').toLowerCase().trim();
+        const name = (u.name || '').toLowerCase().trim();
+        return (email && email === uEmail) || (name && name === uName);
+      }) || defaultSuperAdmin;
+
+      const staffPhone = (staffUser.mobile || staffUser.phone || defaultSuperAdmin.mobile || '7901856153').replace(/[^0-9]/g, '');
+      const staffName = staffUser.name || 'Team Member';
+      const scheduledTime = formatFollowupDate(lead.nextFollowUp);
+      const requirement = lead.nextFollowUpNote || lead.notes || lead.materialType || 'Plywood Inquiry';
+
+      let msg = '';
+      if (type === '30M') {
+        msg = '⏰ Sri Sri Ply Reminder: *' + staffName + '*, lead *' + lead.name + '* (' + (lead.phone || 'No phone') + ') ka follow-up agle 30 MINUTE mein scheduled hai! Due Time: *' + scheduledTime + '*. Notes: ' + requirement + '. Kripya ready rahein aur client se baat karein.';
+      } else {
+        msg = '🚨 Sri Sri Ply Alert: *' + staffName + '*, lead *' + lead.name + '* (' + (lead.phone || 'No phone') + ') ka follow-up OVERDUE ho chuka hai! Due Time tha: *' + scheduledTime + '*. Requirement: ' + requirement + '. Kripya turant is lead par call/action lein!';
+      }
+
+      const waUrl = 'https://wa.me/91' + staffPhone + '?text=' + encodeURIComponent(msg);
+      window.open(waUrl, '_blank');
+      showToast('WhatsApp alert opened for ' + staffName + ' (' + staffPhone + ')', 'success');
+    }
+
+    function sendStaffPendingWorkWhatsApp(userId) {
+      const staff = users.find(u => u.id === userId);
+      if (!staff) {
+        showToast('Staff profile not found.', 'error');
+        return;
+      }
+
+      const uEmail = (staff.email || '').toLowerCase().trim();
+      const uName = (staff.name || '').toLowerCase().trim();
+      const now = new Date();
+
+      const myPending = leads.filter(l => {
+        const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
+        const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
+        const matchesStaff = (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
+        if (!matchesStaff) return false;
+
+        const p = pipelines.find(x => x.id === l.pipelineId);
+        const stg = p ? p.stages.find(s => s.id === l.stageId) : null;
+        if (stg && (stg.isWon || stg.isLost)) return false;
+
+        if (l.nextFollowUp) return true;
+        if (!l.lastContactAttempt && (!l.activities || l.activities.length === 0)) return true;
+        return false;
+      });
+
+      if (myPending.length === 0) {
+        showToast(staff.name + ' has no pending or overdue work!', 'info');
+        return;
+      }
+
+      let summaryList = '';
+      myPending.slice(0, 8).forEach((l, idx) => {
+        const due = l.nextFollowUp ? formatFollowupDate(l.nextFollowUp) : 'Immediate action required';
+        summaryList += '\n' + (idx + 1) + '. *' + l.name + '* (' + (l.phone || 'No phone') + ') - ' + due + ' [' + (l.nextFollowUpNote || l.notes || 'Inquiry') + ']';
+      });
+
+      const staffPhone = (staff.mobile || staff.phone || defaultSuperAdmin.mobile || '7901856153').replace(/[^0-9]/g, '');
+      const msg = '📋 Sri Sri Ply CRM - Pending Work Summary for *' + staff.name + '*:\nAapke kul *' + myPending.length + ' leads* par work pending/overdue hai:' + summaryList + '\n\nKripya aaj inpar call karke status update karein. - Sri Sri Admin';
+
+      const waUrl = 'https://wa.me/91' + staffPhone + '?text=' + encodeURIComponent(msg);
+      window.open(waUrl, '_blank');
+      showToast('WhatsApp summary opened for ' + staff.name, 'success');
+    }
+
+    function sendPendingWorkWhatsAppSummaryToAll() {
+      const activeStaff = users.filter(u => u.status === 'Active');
+      let foundAny = false;
+      activeStaff.forEach(u => {
+        const uEmail = (u.email || '').toLowerCase().trim();
+        const uName = (u.name || '').toLowerCase().trim();
+        const count = leads.filter(l => {
+          const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
+          const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
+          return (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
+        }).length;
+        if (count > 0 && !foundAny) {
+          sendStaffPendingWorkWhatsApp(u.id);
+          foundAny = true;
+        }
+      });
+      if (!foundAny) {
+        showToast('No active staff member has pending leads right now.', 'info');
+      }
+    }
+
+    function startFollowupReminderWatcher() {
+      if (reminderWatcherInterval) clearInterval(reminderWatcherInterval);
+      // Run every 30 seconds to catch upcoming 30m reminders
+      reminderWatcherInterval = setInterval(() => {
+        checkAndTrigger30MinReminders(false);
+      }, 30000);
+      console.log('✓ Follow-up Reminder Watcher started (30s interval)');
     }
 
     // ==================== TASKS MANAGEMENT ====================
@@ -7199,6 +9104,8 @@
       if (!currentSelectedLead) return;
       document.getElementById('edit-name').value = currentSelectedLead.name;
       document.getElementById('edit-client-type').value = currentSelectedLead.clientType || 'Existing Customer';
+      const elEditPopSrc = document.getElementById('edit-source');
+      if (elEditPopSrc) elEditPopSrc.value = currentSelectedLead.source || 'Manual Entry';
       document.getElementById('edit-phone').value = currentSelectedLead.phone || '';
       document.getElementById('edit-deal-value').value = currentSelectedLead.dealValue || '';
       document.getElementById('edit-address').value = currentSelectedLead.address || '';
@@ -7224,6 +9131,8 @@
       if (!currentSelectedLead) return;
       currentSelectedLead.name = document.getElementById('edit-name').value.trim();
       currentSelectedLead.clientType = document.getElementById('edit-client-type').value;
+      const elEditSrc = document.getElementById('edit-source');
+      if (elEditSrc) currentSelectedLead.source = elEditSrc.value;
       currentSelectedLead.phone = document.getElementById('edit-phone').value.trim();
       currentSelectedLead.dealValue = document.getElementById('edit-deal-value').value.trim();
       currentSelectedLead.address = document.getElementById('edit-address').value.trim();
@@ -7297,6 +9206,7 @@
       const name = document.getElementById('nl-name').value.trim();
       const clientType = document.getElementById('nl-client-type').value;
       const pipelineId = document.getElementById('nl-pipeline').value;
+      const source = document.getElementById('nl-source') ? document.getElementById('nl-source').value : 'Manual Entry';
       const phone = document.getElementById('nl-phone').value.trim();
       const priority = document.getElementById('nl-priority').value;
       const dealValue = document.getElementById('nl-deal-value').value.trim();
@@ -7338,7 +9248,8 @@
         city,
         campaignName: campaignName || (pip.name.includes('Facebook') ? 'Meta Inbound Campaign' : (pip.name.includes('Google') ? 'Google Ads Campaign' : '')),
         adsetName: adsetName || '',
-        adPlatform: pip.name.includes('Facebook') ? 'Meta Ads' : (pip.name.includes('Google') ? 'Google Ads' : 'Direct Manual Entry'),
+        adPlatform: (source.includes('Meta') || pip.name.includes('Facebook')) ? 'Meta Ads' : ((source.includes('Google') || pip.name.includes('Google')) ? 'Google Ads' : 'Direct Manual Entry'),
+        source: source || 'Manual Entry',
         clientType,
         pipelineId: pip.id,
         stageId: pip.stages[0].id,
@@ -10806,6 +12717,7 @@
         renderFormsList();
         renderReports();
         renderTasksList('PENDING');
+        startFollowupReminderWatcher();
       }
       lucide.createIcons();
     });
