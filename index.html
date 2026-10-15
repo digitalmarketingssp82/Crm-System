@@ -118,7 +118,80 @@
     .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.3); border-radius: 4px; }
+    
     .touch-scroll { -webkit-overflow-scrolling: touch; }
+    
+    /* Enhanced Custom Scrollbars for Data Tables */
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: var(--bg-subtle); border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.45); border-radius: 4px; border: 1px solid var(--border-main); }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+    /* Sticky Frozen Columns for Opportunity Table (Name, Phone & Actions pinned on Left) */
+    .opp-sticky-col-cb {
+      position: sticky !important;
+      left: 0 !important;
+      z-index: 20;
+      background-color: var(--bg-card) !important;
+      min-width: 40px !important;
+      max-width: 40px !important;
+      width: 40px !important;
+    }
+    .opp-sticky-col-name {
+      position: sticky !important;
+      left: 40px !important;
+      z-index: 20;
+      background-color: var(--bg-card) !important;
+      min-width: 180px !important;
+      max-width: 210px !important;
+    }
+    .opp-sticky-col-phone {
+      position: sticky !important;
+      left: 220px !important;
+      z-index: 20;
+      background-color: var(--bg-card) !important;
+      min-width: 145px !important;
+      max-width: 155px !important;
+    }
+    .opp-sticky-col-actions {
+      position: sticky !important;
+      left: 365px !important;
+      z-index: 20;
+      background-color: var(--bg-card) !important;
+      min-width: 115px !important;
+      max-width: 125px !important;
+      border-right: 2px solid var(--border-main) !important;
+      box-shadow: 4px 0 10px -2px rgba(0, 0, 0, 0.22);
+    }
+    th.opp-sticky-col-cb {
+      z-index: 45 !important;
+      top: 0 !important;
+      background-color: var(--bg-card) !important;
+    }
+    th.opp-sticky-col-name {
+      z-index: 45 !important;
+      top: 0 !important;
+      background-color: var(--bg-card) !important;
+    }
+    th.opp-sticky-col-phone {
+      z-index: 45 !important;
+      top: 0 !important;
+      background-color: var(--bg-card) !important;
+    }
+    th.opp-sticky-col-actions {
+      z-index: 45 !important;
+      top: 0 !important;
+      background-color: var(--bg-card) !important;
+      border-right: 2px solid var(--border-main) !important;
+      box-shadow: 4px 0 10px -2px rgba(0, 0, 0, 0.22);
+    }
+    #opp-full-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 35;
+      background-color: var(--bg-card) !important;
+    }
+
   </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col select-none antialiased">
@@ -750,11 +823,118 @@
               <input type="text" id="opp-search-input" oninput="renderOpportunities()" placeholder="Search opportunities..." class="pl-8 pr-3 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-48 sm:w-56">
             </div>
 
-            <!-- Filters Button -->
-            <button type="button" onclick="toggleOppFilters()" class="px-3 py-2 rounded-xl bg-subtle border border-main hover:bg-card text-xs font-bold text-main flex items-center gap-1.5 transition">
-              <i data-lucide="filter" class="w-3.5 h-3.5 text-gold"></i>
-              <span>Filters</span>
-            </button>
+            <!-- Filters Button & Interactive Filter Dropdown Panel -->
+            <div class="relative">
+              <button type="button" id="btn-opp-filters" onclick="toggleOppFilters()" class="px-3 py-2 rounded-xl bg-subtle border border-main hover:bg-card text-xs font-bold text-main flex items-center gap-1.5 transition shadow-xs">
+                <i data-lucide="filter" class="w-3.5 h-3.5 text-gold"></i>
+                <span>Filters</span>
+                <span id="opp-filter-badge-count" class="hidden px-1.5 py-0.2 rounded-full bg-gold text-slate-950 font-extrabold text-[10px]">0</span>
+              </button>
+
+              <!-- INTERACTIVE ADVANCED FILTERS DROPDOWN PANEL -->
+              <div id="opp-filters-panel" class="hidden absolute left-0 mt-2 w-[340px] sm:w-[420px] p-4 rounded-3xl bg-card border border-main shadow-2xl z-50 space-y-3.5 text-xs animate-in fade-in duration-150">
+                
+                <!-- Panel Header -->
+                <div class="flex items-center justify-between pb-2 border-b border-main">
+                  <div class="flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-xl bg-amber-500/10 text-gold flex items-center justify-center">
+                      <i data-lucide="filter" class="w-4 h-4"></i>
+                    </span>
+                    <div>
+                      <h4 class="font-bold text-main text-xs sm:text-sm">Filter Opportunities</h4>
+                      <p class="text-[10px] text-muted-custom">Date wise aur criteria filters apply karein</p>
+                    </div>
+                  </div>
+                  <button type="button" onclick="clearOppFilters()" class="text-[11px] text-gold font-bold hover:underline">
+                    Reset All
+                  </button>
+                </div>
+
+                <!-- 1. DATE-WISE FILTER SECTION -->
+                <div class="p-3 rounded-2xl bg-subtle/50 border border-main space-y-2.5">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gold flex items-center gap-1">
+                      <i data-lucide="calendar" class="w-3.5 h-3.5"></i> DATE FILTER
+                    </span>
+                    <select id="filter-date-type" onchange="applyOppFilters()" class="p-1 px-2 rounded-lg bg-card border border-main text-[11px] font-bold text-main focus:ring-1 focus:ring-gold outline-none">
+                      <option value="created">Created Date</option>
+                      <option value="close">Close Date</option>
+                      <option value="followup">Follow-up Date</option>
+                    </select>
+                  </div>
+
+                  <!-- Quick Date Presets -->
+                  <div class="grid grid-cols-4 gap-1 text-[10px] font-bold">
+                    <button type="button" onclick="setFilterDatePreset('all')" id="f-preset-all" class="py-1 px-1.5 rounded-lg border border-gold bg-gold text-slate-950 font-extrabold transition text-center filter-preset-btn">All Time</button>
+                    <button type="button" onclick="setFilterDatePreset('today')" id="f-preset-today" class="py-1 px-1.5 rounded-lg border border-main bg-card text-main hover:border-gold transition text-center filter-preset-btn">Today</button>
+                    <button type="button" onclick="setFilterDatePreset('yesterday')" id="f-preset-yesterday" class="py-1 px-1.5 rounded-lg border border-main bg-card text-main hover:border-gold transition text-center filter-preset-btn">Yesterday</button>
+                    <button type="button" onclick="setFilterDatePreset('7d')" id="f-preset-7d" class="py-1 px-1.5 rounded-lg border border-main bg-card text-main hover:border-gold transition text-center filter-preset-btn">Last 7D</button>
+                    <button type="button" onclick="setFilterDatePreset('30d')" id="f-preset-30d" class="py-1 px-1.5 rounded-lg border border-main bg-card text-main hover:border-gold transition text-center filter-preset-btn">Last 30D</button>
+                    <button type="button" onclick="setFilterDatePreset('this_month')" id="f-preset-this_month" class="py-1 px-1.5 rounded-lg border border-main bg-card text-main hover:border-gold transition text-center filter-preset-btn">This Month</button>
+                    <button type="button" onclick="setFilterDatePreset('last_month')" id="f-preset-last_month" class="py-1 px-1.5 rounded-lg border border-main bg-card text-main hover:border-gold transition text-center filter-preset-btn">Last Month</button>
+                    <button type="button" onclick="setFilterDatePreset('custom')" id="f-preset-custom" class="py-1 px-1.5 rounded-lg border border-main bg-card text-main hover:border-gold transition text-center filter-preset-btn">Custom</button>
+                  </div>
+
+                  <!-- Custom Date Range Inputs -->
+                  <div class="grid grid-cols-2 gap-2 pt-1" id="filter-custom-date-container">
+                    <div>
+                      <label class="block text-[10px] text-muted-custom font-semibold mb-0.5">From Date</label>
+                      <input type="date" id="filter-date-from" onchange="onCustomDateChanged()" class="w-full p-2 rounded-xl bg-card border border-main text-main text-xs font-mono">
+                    </div>
+                    <div>
+                      <label class="block text-[10px] text-muted-custom font-semibold mb-0.5">To Date</label>
+                      <input type="date" id="filter-date-to" onchange="onCustomDateChanged()" class="w-full p-2 rounded-xl bg-card border border-main text-main text-xs font-mono">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. CRITERIA FILTERS: STAGE, ASSIGNEE, PRIORITY, SOURCE -->
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-[10px] uppercase font-bold text-muted-custom mb-1">Stage</label>
+                    <select id="filter-stage" onchange="applyOppFilters()" class="w-full p-2 rounded-xl bg-card border border-main text-main text-xs font-semibold focus:ring-1 focus:ring-gold outline-none">
+                      <option value="all">All Stages</option>
+                      <!-- Dynamically filled with pipeline stages -->
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] uppercase font-bold text-muted-custom mb-1">Assigned Executive</label>
+                    <select id="filter-assignee" onchange="applyOppFilters()" class="w-full p-2 rounded-xl bg-card border border-main text-main text-xs font-semibold focus:ring-1 focus:ring-gold outline-none">
+                      <option value="all">All Team Members</option>
+                      <!-- Dynamically filled with active users -->
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-[10px] uppercase font-bold text-muted-custom mb-1">Priority</label>
+                    <select id="filter-priority" onchange="applyOppFilters()" class="w-full p-2 rounded-xl bg-card border border-main text-main text-xs font-semibold focus:ring-1 focus:ring-gold outline-none">
+                      <option value="all">All Priorities</option>
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] uppercase font-bold text-muted-custom mb-1">Source / Campaign</label>
+                    <input type="text" id="filter-source" onkeyup="if(event.key==='Enter') applyOppFilters()" placeholder="e.g. Google, Facebook" class="w-full p-2 rounded-xl bg-card border border-main text-main text-xs">
+                  </div>
+                </div>
+
+                <!-- Panel Footer Buttons -->
+                <div class="flex items-center justify-between pt-2 border-t border-main">
+                  <button type="button" onclick="clearOppFilters()" class="px-3 py-1.5 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main">
+                    Reset
+                  </button>
+                  <button type="button" onclick="applyOppFilters(); toggleOppFilters(false);" class="px-5 py-2 rounded-xl bg-gold text-slate-950 text-xs font-bold shadow-md hover:brightness-105 transition flex items-center gap-1.5">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                    <span>Apply Filters</span>
+                  </button>
+                </div>
+
+              </div>
+            </div>
 
             <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-gold/10 text-gold border border-gold/30" id="opp-count-badge">0 Leads</span>
           </div>
@@ -791,27 +971,31 @@
                   <div class="flex items-center gap-1.5">
                     <button type="button" onclick="toggleAllColumns(true)" class="text-gold hover:underline font-bold">Select All</button>
                     <span>•</span>
-                    <button type="button" onclick="toggleAllColumns(false)" class="text-rose-400 hover:underline font-bold">Reset</button>
+                    <button type="button" onclick="resetColumnPreferences()" class="text-gold hover:underline font-bold">Reset to Default</button>
                   </div>
                 </div>
                 <div class="space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
-                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="company" onchange="toggleColumnVisibility('company', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Company</span></label>
+                                    <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="company" onchange="toggleColumnVisibility('company', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Company</span></label>
+                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="campaign" onchange="toggleColumnVisibility('campaign', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Campaign</span></label>
+                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="adset" onchange="toggleColumnVisibility('adset', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>AdSet / Ad Name</span></label>
                   <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="phone" onchange="toggleColumnVisibility('phone', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Phone</span></label>
-                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="email" onchange="toggleColumnVisibility('email', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Email</span></label>
+                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="email" onchange="toggleColumnVisibility('email', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold"><span>Email</span></label>
                   <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="stage" onchange="toggleColumnVisibility('stage', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Stage</span></label>
                   <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="dealValue" onchange="toggleColumnVisibility('dealValue', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Deal Value</span></label>
                   <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="closeDate" onchange="toggleColumnVisibility('closeDate', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Close Date</span></label>
                   <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="source" onchange="toggleColumnVisibility('source', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Source</span></label>
                   <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="priority" onchange="toggleColumnVisibility('priority', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Priority</span></label>
                   <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="assignedTo" onchange="toggleColumnVisibility('assignedTo', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Assigned To</span></label>
+                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="tags" onchange="toggleColumnVisibility('tags', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold"><span>Tags</span></label>
+                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="notes" onchange="toggleColumnVisibility('notes', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold"><span>Remarks / Notes</span></label>
                   <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="created" onchange="toggleColumnVisibility('created', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Created</span></label>
                   
                   <div class="pt-1.5 pb-1 border-t border-main text-[9px] font-bold uppercase text-gold">CUSTOM FIELDS</div>
-                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="customerType" onchange="toggleColumnVisibility('customerType', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Customer Type</span></label>
-                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="materialType" onchange="toggleColumnVisibility('materialType', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Material Type</span></label>
-                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="requirementDateTime" onchange="toggleColumnVisibility('requirementDateTime', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Requirement DateTime</span></label>
-                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="customerAddress" onchange="toggleColumnVisibility('customerAddress', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>Customer Address</span></label>
-                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="city" onchange="toggleColumnVisibility('city', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold" checked><span>State/City</span></label>
+                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="customerType" onchange="toggleColumnVisibility('customerType', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold"><span>Customer Type</span></label>
+                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="materialType" onchange="toggleColumnVisibility('materialType', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold"><span>Material Type</span></label>
+                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="requirementDateTime" onchange="toggleColumnVisibility('requirementDateTime', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold"><span>Requirement DateTime</span></label>
+                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="customerAddress" onchange="toggleColumnVisibility('customerAddress', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold"><span>Customer Address</span></label>
+                  <label class="flex items-center gap-2 p-1 rounded hover:bg-subtle cursor-pointer text-main font-semibold"><input type="checkbox" data-col="city" onchange="toggleColumnVisibility('city', this.checked)" class="col-toggle-cb rounded border-main text-gold focus:ring-gold"><span>State/City</span></label>
                 </div>
               </div>
             </div>
@@ -824,32 +1008,121 @@
           </div>
         </div>
 
-        <!-- 1. Table View Container (Exact Match to Screenshot) -->
-        <div id="opp-table-view-container" class="bg-card border border-main rounded-3xl overflow-hidden shadow-sm">
-          <div class="overflow-x-auto custom-scrollbar">
-            <table class="w-full text-left border-collapse text-xs whitespace-nowrap" id="opp-full-table">
+        <!-- Active Filter Badges Strip (shown when filters are active) -->
+        <div id="opp-active-filters-bar" class="hidden flex flex-wrap items-center gap-2 text-xs -mt-2 pb-1">
+          <span class="text-[11px] font-bold text-muted-custom flex items-center gap-1">
+            <i data-lucide="filter" class="w-3.5 h-3.5 text-gold"></i>
+            <span>Active Filters:</span>
+          </span>
+          <div id="opp-active-filter-chips" class="flex flex-wrap items-center gap-1.5"></div>
+          <button type="button" onclick="clearOppFilters()" class="text-[11px] text-rose-400 font-bold hover:underline flex items-center gap-0.5 ml-1">
+            <i data-lucide="x" class="w-3 h-3"></i> Clear all
+          </button>
+        </div>
+
+        <!-- 1. Table View Container (Enhanced with Sticky Left Pinned Columns & Dual Scrollbars) -->
+        <div id="opp-table-view-container" class="bg-card border border-main rounded-3xl overflow-hidden shadow-sm flex flex-col">
+          
+          <!-- BULK SELECTION ACTIONS TOOLBAR (Appears when 1 or more leads are ticked) -->
+          <div id="opp-bulk-actions-bar" class="hidden px-4 py-2.5 bg-gradient-to-r from-amber-500/20 via-card to-amber-500/10 border-b-2 border-gold flex flex-wrap items-center justify-between gap-3 text-xs animate-in slide-in-from-top duration-200">
+            <div class="flex items-center gap-2.5">
+              <span id="opp-bulk-count-badge" class="px-3 py-1 rounded-full bg-gold text-slate-950 font-extrabold text-xs shadow-xs">
+                0 Leads Selected
+              </span>
+              <span class="text-muted-custom text-[11px] font-medium hidden sm:inline">Bulk actions for selected client entries:</span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- Bulk Change Stage Button -->
+              <button type="button" onclick="openBulkChangeStageModal()" class="px-3 py-1.5 rounded-xl bg-card border border-main hover:border-gold text-main font-bold text-xs flex items-center gap-1.5 transition shadow-xs">
+                <i data-lucide="arrow-right-circle" class="w-3.5 h-3.5 text-gold"></i>
+                <span>Change Stage</span>
+              </button>
+
+              <!-- Bulk Assign Staff Button -->
+              <button type="button" onclick="openBulkAssignStaffModal()" class="px-3 py-1.5 rounded-xl bg-card border border-main hover:border-gold text-main font-bold text-xs flex items-center gap-1.5 transition shadow-xs">
+                <i data-lucide="user-check" class="w-3.5 h-3.5 text-blue-400"></i>
+                <span>Assign Staff</span>
+              </button>
+
+              <!-- Bulk Change Priority Button -->
+              <button type="button" onclick="openBulkPriorityModal()" class="px-3 py-1.5 rounded-xl bg-card border border-main hover:border-gold text-main font-bold text-xs flex items-center gap-1.5 transition shadow-xs">
+                <i data-lucide="flag" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Set Priority</span>
+              </button>
+
+              <!-- Bulk Delete Button -->
+              <button type="button" onclick="openBulkDeleteModal()" class="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Delete Selected</span>
+              </button>
+
+              <!-- Deselect All Button -->
+              <button type="button" onclick="deselectAllOpps()" class="px-2.5 py-1.5 rounded-xl text-muted-custom hover:text-main text-xs font-semibold">
+                Deselect All
+              </button>
+            </div>
+          </div>
+          
+          <!-- Top Horizontal Scroll Helper & Quick Nav Bar -->
+          <div id="opp-top-scroll-helper" class="px-4 py-2 border-b border-main bg-subtle/40 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-gold font-bold text-[11px] border border-amber-500/30">
+                <i data-lucide="pin" class="w-3.5 h-3.5"></i>
+                <span>Pinned: Client Name & Phone Frozen on Left</span>
+              </span>
+              <span class="text-[11px] text-muted-custom hidden md:inline">Slide left/right to view all columns:</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="scrollOppTable('start')" class="px-2.5 py-1 rounded-lg bg-card border border-main hover:border-gold text-main text-[11px] font-bold transition flex items-center gap-1" title="Scroll to First Column">
+                <i data-lucide="chevrons-left" class="w-3.5 h-3.5"></i> First
+              </button>
+              <button type="button" onclick="scrollOppTable('left')" class="px-2.5 py-1 rounded-lg bg-card border border-main hover:border-gold text-main text-[11px] font-bold transition flex items-center gap-1" title="Scroll Left">
+                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Left
+              </button>
+              <button type="button" onclick="scrollOppTable('right')" class="px-2.5 py-1 rounded-lg bg-card border border-main hover:border-gold text-main text-[11px] font-bold transition flex items-center gap-1" title="Scroll Right">
+                Right <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+              <button type="button" onclick="scrollOppTable('end')" class="px-2.5 py-1 rounded-lg bg-card border border-main hover:border-gold text-main text-[11px] font-bold transition flex items-center gap-1" title="Scroll to Last Column">
+                Last <i data-lucide="chevrons-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Synchronized Top Scroll Track Bar -->
+          <div id="opp-top-scroll-track" class="overflow-x-auto overflow-y-hidden custom-scrollbar bg-subtle/20 border-b border-main/40 h-3" onscroll="syncOppScroll(this, 'table')">
+            <div id="opp-top-scroll-dummy" style="width: 2200px; height: 1px;"></div>
+          </div>
+
+          <!-- Contained Table Viewport (max-h-[68vh]) -->
+          <div id="opp-table-scroll-body" class="overflow-x-auto overflow-y-auto max-h-[68vh] custom-scrollbar relative" onscroll="syncOppScroll(this, 'top')">
+            <table class="w-full min-w-[2100px] text-left border-collapse text-xs whitespace-nowrap" id="opp-full-table">
               <thead>
-                <tr class="border-b border-main bg-subtle/50 text-muted-custom uppercase tracking-wider text-[10px] font-bold">
-                  <th class="p-3 w-8 text-center">
+                <tr class="border-b border-main bg-card text-muted-custom uppercase tracking-wider text-[10px] font-bold">
+                  <th class="p-3 w-10 text-center opp-sticky-col-cb">
                     <input type="checkbox" id="opp-select-all" onchange="toggleSelectAllOpps(this.checked)" class="rounded border-main text-gold">
                   </th>
-                  <th class="p-3 col-opportunity cursor-pointer" onclick="sortOpportunitiesBy('name')">Opportunity ⇅</th>
+                  <th class="p-3 col-opportunity opp-sticky-col-name cursor-pointer" onclick="sortOpportunitiesBy('name')">Opportunity ⇅</th>
+                  <th class="p-3 col-phone opp-sticky-col-phone">Phone</th>
+                  <th class="p-3 opp-sticky-col-actions text-center">Actions</th>
                   <th class="p-3 col-company">Company</th>
-                  <th class="p-3 col-phone">Phone</th>
-                  <th class="p-3 col-email">Email</th>
+                  <th class="p-3 col-campaign cursor-pointer" onclick="sortOpportunitiesBy('campaignName')">Campaign ⇅</th>
+                  <th class="p-3 col-adset">AdSet / Ad Name</th>
                   <th class="p-3 col-stage">Stage</th>
                   <th class="p-3 col-dealValue cursor-pointer" onclick="sortOpportunitiesBy('dealValue')">Deal Value ⇅</th>
                   <th class="p-3 col-closeDate">Close Date</th>
                   <th class="p-3 col-source">Source</th>
                   <th class="p-3 col-priority">Priority</th>
                   <th class="p-3 col-assignedTo">Assigned To</th>
+                  <th class="p-3 col-tags">Tags</th>
+                  <th class="p-3 col-notes">Remarks / Notes</th>
                   <th class="p-3 col-created cursor-pointer" onclick="sortOpportunitiesBy('createdAt')">Created ⇅</th>
+                  <th class="p-3 col-email">Email</th>
                   <th class="p-3 col-customerType">Customer Type</th>
                   <th class="p-3 col-materialType">Material Type</th>
                   <th class="p-3 col-requirementDateTime">Requirement DateTime</th>
                   <th class="p-3 col-customerAddress">Customer Address</th>
                   <th class="p-3 col-city">State/City</th>
-                  <th class="p-3 text-right">Actions</th>
+                  
                 </tr>
               </thead>
               <tbody id="opp-table-body" class="divide-y divide-main/40">
@@ -1593,6 +1866,9 @@
             • Stage
           </span>
           <!-- EDIT DETAILS BUTTON -->
+          <button onclick="autoRepairCurrentLead()" id="btn-lead-modal-autofix" class="px-2.5 py-1.5 rounded-xl border border-gold/40 text-gold bg-amber-500/10 hover:bg-gold hover:text-slate-950 text-xs font-bold flex items-center gap-1 transition shadow-xs" title="Auto-clean remarks from name/phone into notes">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Clean Data
+          </button>
           <button onclick="openEditLeadModal()" id="btn-lead-modal-edit" class="px-3 py-1.5 rounded-xl border border-main bg-card text-xs font-bold flex items-center gap-1 text-main hover:border-gold transition">
             <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edit Details
           </button>
@@ -1696,6 +1972,29 @@
             </div>
           </div>
 
+          <!-- Ad Campaign & AdSet Attribution -->
+          <div class="space-y-2 pt-2 border-t border-main" id="modal-ad-attribution-container">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-muted-custom flex items-center gap-1 text-gold">
+              <i data-lucide="megaphone" class="w-3.5 h-3.5"></i> AD CAMPAIGN & ADSET
+            </span>
+            <div>
+              <p class="text-[10px] text-muted-custom font-semibold">CAMPAIGN NAME</p>
+              <p class="font-bold text-amber-400" id="modal-lead-campaign-name">—</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-muted-custom font-semibold">AD SET / AUDIENCE</p>
+              <p class="font-bold text-indigo-400" id="modal-lead-adset-name">—</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-muted-custom font-semibold">AD CREATIVE / NAME</p>
+              <p class="font-bold text-main" id="modal-lead-ad-name">—</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-muted-custom font-semibold">AD PLATFORM</p>
+              <p class="font-bold text-emerald-400" id="modal-lead-ad-platform">—</p>
+            </div>
+          </div>
+
           <!-- Pipeline & Transfer Section -->
           <div class="space-y-2 pt-2 border-t border-main">
             <span class="text-[10px] font-bold uppercase tracking-wider text-muted-custom flex items-center gap-1">
@@ -1737,18 +2036,43 @@
 
         <!-- RIGHT CONTENT -->
         <div class="flex-1 flex flex-col bg-card overflow-hidden">
-          <div class="px-5 py-2.5 border-b border-main flex items-center gap-4 text-xs font-bold text-muted-custom shrink-0">
-            <span class="text-gold border-b-2 border-gold pb-2 -mb-2.5 flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Notes & Chat Logs</span>
+          <div class="px-5 py-2.5 border-b border-main flex items-center justify-between text-xs font-bold text-muted-custom shrink-0">
+            <div class="flex items-center gap-4">
+              <span class="text-gold border-b-2 border-gold pb-2 -mb-2.5 flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Notes &amp; Comments</span>
+            </div>
+            <span class="text-[10px] text-muted-custom font-mono" id="modal-lead-created-date-badge"></span>
           </div>
 
           <div class="flex-1 p-4 sm:p-5 overflow-y-auto space-y-4 custom-scrollbar touch-scroll bg-subtle/20">
-            <!-- 1. Description Banner -->
-            <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-main text-xs space-y-1">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-gold">PLYWOOD & HARDWARE REQUIREMENT</span>
-              <p class="font-medium text-main" id="modal-lead-description">Curtain channel chiye the</p>
+            <!-- 1. NEXT / DUE ACTION & ATTEMPT HISTORY (Matches Image 1) -->
+            <div id="modal-next-due-action-box" class="p-4 rounded-2xl bg-card border border-main space-y-2.5 shadow-sm">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1">
+                    <i data-lucide="clock" class="w-3.5 h-3.5"></i> NEXT / DUE ACTION
+                  </span>
+                  <p class="font-bold text-main text-sm mt-0.5" id="modal-main-next-date">No upcoming action scheduled</p>
+                </div>
+                <button type="button" onclick="openFollowupScheduleModal()" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition">
+                  <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+                  <span>Re-attempt</span>
+                </button>
+              </div>
+              <div class="pt-2 border-t border-main/50 text-[11px] text-muted-custom flex flex-wrap items-center justify-between gap-1">
+                <span class="font-medium text-main" id="modal-main-attempt-history">Attempt history: Initial inquiry captured</span>
+              </div>
             </div>
 
-            <!-- 2. Loss Reason Box (If Lost) -->
+            <!-- 2. DESCRIPTION & NOTES Highlight Box (Matches Image 1) -->
+            <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-main space-y-1.5 shadow-xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-gold flex items-center gap-1.5">
+                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                <span>DESCRIPTION &amp; NOTES</span>
+              </span>
+              <p class="font-medium text-main text-sm leading-relaxed" id="modal-lead-description">Plywood / Hardware requirement discussion</p>
+            </div>
+
+            <!-- 3. Loss Reason Box (If Deal Lost) -->
             <div id="modal-outcome-box" class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs space-y-1 hidden">
               <div class="flex items-center gap-1.5 text-rose-500 font-bold text-[11px]">
                 <i data-lucide="x-circle" class="w-4 h-4"></i>
@@ -1760,12 +2084,12 @@
               </div>
             </div>
 
-            <!-- 3. Add Note / WhatsApp Screenshot Upload -->
+            <!-- 4. ADD NOTE / CONVERSATION UPDATE -->
             <div class="bg-card rounded-2xl border border-main p-4 shadow-sm space-y-3">
               <span class="text-xs font-bold uppercase tracking-wider text-main flex items-center gap-1.5">
-                <i data-lucide="message-square" class="w-3.5 h-3.5 text-gold"></i> ADD CONVERSATION UPDATE OR WHATSAPP CHAT NOTE
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-gold"></i> ADD NOTE / UPDATE
               </span>
-              <textarea id="modal-note-textarea" rows="3" placeholder="Write conversation notes, call summary, client quote discussion..." class="w-full p-3 rounded-xl border border-main bg-card text-main text-xs focus:border-gold focus:outline-none"></textarea>
+              <textarea id="modal-note-textarea" rows="3" placeholder="Write a note, update, or comment..." class="w-full p-3 rounded-xl border border-main bg-card text-main text-xs focus:border-gold focus:outline-none"></textarea>
 
               <!-- Scheduled follow-up selector with presets -->
               <div class="p-2.5 rounded-xl bg-subtle border border-main/60 space-y-1.5">
@@ -1850,8 +2174,17 @@
               </div>
             </div>
 
-            <!-- 4. Activity Stream -->
-            <div class="space-y-3" id="modal-timeline-stream"></div>
+            <!-- 5. COMMENTS / ACTIVITY STREAM (Matches Image 1) -->
+            <div class="space-y-3 pt-1">
+              <div class="flex items-center justify-between pb-1 border-b border-main/50">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-main flex items-center gap-2">
+                  <i data-lucide="message-square" class="w-4 h-4 text-purple-400"></i>
+                  <span>COMMENTS</span>
+                  <span id="modal-comments-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-subtle border border-main text-gold">0</span>
+                </h4>
+              </div>
+              <div class="space-y-3" id="modal-timeline-stream"></div>
+            </div>
 
           </div>
         </div>
@@ -2007,6 +2340,16 @@
               <input type="text" id="nl-city" placeholder="e.g. Mohali" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
             </div>
           </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-muted-custom font-medium mb-1">Ad Campaign Name</label>
+              <input type="text" id="nl-campaign-name" placeholder="e.g. Monsoon Kitchen Gurjan 2026" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+            </div>
+            <div>
+              <label class="block text-muted-custom font-medium mb-1">AdSet / Ad Name</label>
+              <input type="text" id="nl-adset-name" placeholder="e.g. Mohali Architects & Builders" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+            </div>
+          </div>
           <div>
             <label class="block text-muted-custom font-medium mb-1">Plywood Requirement / Discussion</label>
             <textarea id="nl-budget" rows="2" placeholder="e.g. Curtain channel chiye the, 19mm sheets..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main"></textarea>
@@ -2110,6 +2453,16 @@
         <div>
           <label class="block text-muted-custom font-bold mb-1">Target Close Date</label>
           <input type="date" id="edit-close-date" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-muted-custom font-bold mb-1">Ad Campaign Name</label>
+            <input type="text" id="edit-campaign-name" placeholder="e.g. Monsoon Kitchen Gurjan 2026" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+          </div>
+          <div>
+            <label class="block text-muted-custom font-bold mb-1">AdSet / Ad Name</label>
+            <input type="text" id="edit-adset-name" placeholder="e.g. Mohali Architects & Builders" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+          </div>
         </div>
         <div>
           <label class="block text-muted-custom font-bold mb-1">Requirement / Notes</label>
@@ -3154,6 +3507,35 @@
       <!-- Modal Body (Scrollable) -->
       <div class="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1 text-xs">
         
+        <!-- MULTI-CRM COEXISTENCE / ADD-ON MODE BANNER -->
+        <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-transparent border border-blue-500/30 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                <i data-lucide="layers" class="w-4 h-4"></i>
+              </span>
+              <div>
+                <h4 class="font-bold text-main text-xs sm:text-sm">Multi-CRM Coexistence Mode (Add-On Integration)</h4>
+                <p class="text-[11px] text-muted-custom">Existing CRM disconnect karne ki koi zaroorat nahi hai!</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              ⚡ Add-On Supported
+            </span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-card border border-main text-[11px] text-muted-custom space-y-2">
+            <p class="font-semibold text-main">
+              💡 Agar aapka Meta Ads, Google Ads ya Website already kisi doosre CRM/software se connected hai:
+            </p>
+            <ul class="list-disc list-inside space-y-1.5 pl-1 leading-relaxed">
+              <li><strong class="text-main">Meta / Facebook Ads:</strong> Meta Business Suite mein <span class="font-mono text-gold">Integrations → Leads Access</span> mein aap <em>Multiple CRMs</em> ko simultaneous lead delivery allow kar sakte hain. Purana CRM disconnect nahi hoga!</li>
+              <li><strong class="text-main">Zapier / Make.com / Pabbly (Sabse Aasan):</strong> Apne existing Zap / Scenario mein bas ek aur <em>Webhook POST Action</em> add karein jo niche diye gaye Callback URL par lead bheje. Dono CRMs ko parallel lead deliver hogi!</li>
+              <li><strong class="text-main">Website Lead Form:</strong> Website ke form submission code mein parallel asynchronous <code>fetch()</code> add karein. Existing form submission waise ka waisa rahega.</li>
+            </ul>
+          </div>
+        </div>
+
         <!-- Webhook Information Banner -->
         <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2.5">
           <div class="flex items-center gap-2 text-gold font-bold">
@@ -3212,18 +3594,32 @@
           </div>
         </div>
 
-        <!-- Test Simulator Box -->
+        <!-- Test Simulator Box with Campaign & AdSet Customization -->
         <div class="p-4 rounded-2xl bg-card border border-main space-y-3">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2 text-main font-bold">
               <i data-lucide="play-circle" class="w-4 h-4 text-indigo-400"></i>
-              <span>Live Campaign Simulator</span>
+              <span>Live Campaign Simulator & Ad Attribution</span>
             </div>
-            <span class="text-[11px] text-muted-custom">Test lead ingestion instantly</span>
+            <span class="text-[11px] text-muted-custom">Test lead with Campaign & AdSet instantly</span>
           </div>
           <p class="text-[11px] text-muted-custom">
-            Check how incoming leads from this ad campaign will appear in Sri Sri Plywoods CRM. Clicking "Send Test Ad Lead" will immediately push a live lead into the selected pipeline.
+            Check how incoming leads from this ad campaign will appear in Sri Sri Plywoods CRM. Enter custom campaign and ad details below and click "Send Test Ad Lead".
           </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+            <div>
+              <label class="block text-[10px] font-bold text-muted-custom mb-1 uppercase tracking-wider">Campaign Name</label>
+              <input type="text" id="ads-sim-campaign" value="Monsoon Kitchen Gurjan 2026" class="w-full p-2 rounded-xl border border-main bg-card text-main text-xs font-semibold">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-muted-custom mb-1 uppercase tracking-wider">AdSet / Audience</label>
+              <input type="text" id="ads-sim-adset" value="Mohali Architects & Builders 25-45" class="w-full p-2 rounded-xl border border-main bg-card text-main text-xs font-semibold">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-muted-custom mb-1 uppercase tracking-wider">Ad Creative Name</label>
+              <input type="text" id="ads-sim-adname" value="19mm Club BWR Video Ad" class="w-full p-2 rounded-xl border border-main bg-card text-main text-xs font-semibold">
+            </div>
+          </div>
           <button type="button" id="btn-send-test-ad-lead" onclick="sendTestAdLeadCurrent()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold flex items-center justify-center gap-2 text-xs shadow-md transition">
             <i data-lucide="send" class="w-4 h-4"></i>
             <span id="btn-send-test-ad-text">🚀 Send Test Meta Ad Lead into Pipeline</span>
@@ -3251,7 +3647,229 @@
     </div>
   </div>
 
-<div id="toast-container" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ============================================================= -->
+  <!-- ========== MODAL 1: STAGE CHANGE CONFIRMATION POPUP ========= -->
+  <!-- ============================================================= -->
+  <div id="stage-change-confirm-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-card w-full max-w-md rounded-3xl shadow-2xl p-6 border border-main space-y-4 animate-in fade-in duration-150">
+      <div class="flex items-center justify-between pb-3 border-b border-main">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-amber-500/10 text-gold border border-gold/30 flex items-center justify-center font-bold">
+            <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-main">Confirm Stage Change</h3>
+            <p class="text-[11px] text-muted-custom">स्टेज बदलने की पुष्टि करें</p>
+          </div>
+        </div>
+        <button type="button" onclick="cancelStageChange()" class="text-muted-custom hover:text-gold transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-subtle/50 border border-main space-y-3 text-xs">
+        <div>
+          <span class="text-[10px] uppercase font-bold text-muted-custom block">Client / Deal</span>
+          <span id="stage-confirm-lead-name" class="font-extrabold text-sm text-main block truncate">Client Name</span>
+        </div>
+
+        <div class="flex items-center justify-between gap-2 p-3 rounded-xl bg-card border border-main">
+          <div class="text-center flex-1">
+            <span class="text-[9px] uppercase font-bold text-muted-custom block mb-1">Current Stage</span>
+            <span id="stage-confirm-from-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border inline-block">Old Stage</span>
+          </div>
+          <div class="text-gold font-bold">
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </div>
+          <div class="text-center flex-1">
+            <span class="text-[9px] uppercase font-bold text-muted-custom block mb-1">New Stage</span>
+            <span id="stage-confirm-to-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border inline-block">New Stage</span>
+          </div>
+        </div>
+
+        <p id="stage-confirm-msg" class="text-xs text-main leading-relaxed text-center font-medium">
+          Kya aap confirm is lead ki stage change karna chahte hain?
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2">
+        <button type="button" onclick="cancelStageChange()" class="px-4 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main transition">
+          Cancel (रद्द करें)
+        </button>
+        <button type="button" onclick="confirmStageChangeProceed()" class="px-5 py-2 rounded-xl bg-gold text-slate-950 text-xs font-bold shadow-md hover:brightness-105 transition flex items-center gap-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Yes, Confirm (हाँ, बदलें)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- ========== MODAL 2: BULK DELETE CONFIRMATION ================ -->
+  <!-- ============================================================= -->
+  <div id="bulk-delete-confirm-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-card w-full max-w-md rounded-3xl shadow-2xl p-6 border border-rose-500/30 space-y-4 animate-in fade-in duration-150">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0">
+          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-main">Delete Selected Leads</h3>
+          <p class="text-[11px] text-rose-400 font-semibold">Caution: This cannot be undone</p>
+        </div>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-rose-500/5 border border-rose-500/20 text-xs text-muted-custom leading-relaxed space-y-2">
+        <p class="font-bold text-main">
+          Kya aap <span id="bulk-del-count-text" class="text-rose-400 font-extrabold text-sm">0</span> selected client entries ko CRM se permanently delete karna chahte hain?
+        </p>
+        <p class="text-[11px]">
+          In leads se related sabhi tasks aur follow-up reminders bhi delete ho jayenge.
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2">
+        <button type="button" onclick="closeModal('bulk-delete-confirm-modal')" class="px-4 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main transition">
+          Cancel (वापस जाएं)
+        </button>
+        <button type="button" onclick="confirmBulkDeleteProceed()" class="px-5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold shadow-md transition flex items-center gap-1.5">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <span>Delete <span id="bulk-del-btn-count">0</span> Leads</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- ========== MODAL 3: BULK STAGE CHANGE ======================= -->
+  <!-- ============================================================= -->
+  <div id="bulk-stage-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-card w-full max-w-md rounded-3xl shadow-2xl p-6 border border-main space-y-4 animate-in fade-in duration-150">
+      <div class="flex items-center justify-between pb-2 border-b border-main">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-amber-500/10 text-gold border border-gold/30 flex items-center justify-center font-bold">
+            <i data-lucide="layers" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-main">Bulk Stage Change</h3>
+            <p class="text-[11px] text-muted-custom">Selected leads ka stage badlein</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('bulk-stage-modal')" class="text-muted-custom hover:text-gold transition"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <p class="text-muted-custom">
+          Select target stage for <strong id="bulk-stage-count-text" class="text-gold font-bold">0</strong> selected leads:
+        </p>
+        <div>
+          <label class="block font-bold text-main mb-1.5">New Stage *</label>
+          <select id="bulk-target-stage" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold text-xs focus:ring-1 focus:ring-gold outline-hidden">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-main">
+        <button type="button" onclick="closeModal('bulk-stage-modal')" class="px-4 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main">
+          Cancel
+        </button>
+        <button type="button" onclick="confirmBulkStageChangeProceed()" class="px-5 py-2 rounded-xl bg-gold text-slate-950 text-xs font-bold shadow-md hover:brightness-105 transition flex items-center gap-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Update All Selected</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- ========== MODAL 4: BULK ASSIGN STAFF ======================= -->
+  <!-- ============================================================= -->
+  <div id="bulk-assign-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-card w-full max-w-md rounded-3xl shadow-2xl p-6 border border-main space-y-4 animate-in fade-in duration-150">
+      <div class="flex items-center justify-between pb-2 border-b border-main">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold">
+            <i data-lucide="user-check" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-main">Bulk Assign Staff</h3>
+            <p class="text-[11px] text-muted-custom">Sales executive reassign karein</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('bulk-assign-modal')" class="text-muted-custom hover:text-gold transition"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <p class="text-muted-custom">
+          Select executive to assign for <strong id="bulk-assign-count-text" class="text-gold font-bold">0</strong> selected leads:
+        </p>
+        <div>
+          <label class="block font-bold text-main mb-1.5">Assign To Staff *</label>
+          <select id="bulk-target-staff" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold text-xs focus:ring-1 focus:ring-gold outline-hidden">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-main">
+        <button type="button" onclick="closeModal('bulk-assign-modal')" class="px-4 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main">
+          Cancel
+        </button>
+        <button type="button" onclick="confirmBulkAssignStaffProceed()" class="px-5 py-2 rounded-xl bg-gold text-slate-950 text-xs font-bold shadow-md hover:brightness-105 transition flex items-center gap-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Assign Staff</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- ========== MODAL 5: BULK SET PRIORITY ======================= -->
+  <!-- ============================================================= -->
+  <div id="bulk-priority-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-card w-full max-w-md rounded-3xl shadow-2xl p-6 border border-main space-y-4 animate-in fade-in duration-150">
+      <div class="flex items-center justify-between pb-2 border-b border-main">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold">
+            <i data-lucide="flag" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-main">Bulk Set Priority</h3>
+            <p class="text-[11px] text-muted-custom">Priority level set karein</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('bulk-priority-modal')" class="text-muted-custom hover:text-gold transition"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <p class="text-muted-custom">
+          Select priority for <strong id="bulk-priority-count-text" class="text-gold font-bold">0</strong> selected leads:
+        </p>
+        <div>
+          <label class="block font-bold text-main mb-1.5">Priority Level *</label>
+          <select id="bulk-target-priority" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold text-xs focus:ring-1 focus:ring-gold outline-hidden">
+            <option value="High">🔴 High Priority</option>
+            <option value="Medium" selected>🔵 Medium Priority</option>
+            <option value="Low">⚪ Low Priority</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-main">
+        <button type="button" onclick="closeModal('bulk-priority-modal')" class="px-4 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main">
+          Cancel
+        </button>
+        <button type="button" onclick="confirmBulkPriorityProceed()" class="px-5 py-2 rounded-xl bg-gold text-slate-950 text-xs font-bold shadow-md hover:brightness-105 transition flex items-center gap-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Set Priority</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- ============================================================= -->
   <!-- ======================== JAVASCRIPT LOGIC =================== -->
@@ -3284,26 +3902,40 @@
     let activePipelineId = 'p-fb'; // Default to Facebook Leads as in user screenshot
     let opportunityViewMode = 'list';
 
-    // ==================== COLUMNS CUSTOMIZATION SYSTEM (Replica of Screenshot) ====================
+    // ==================== COLUMNS CUSTOMIZATION SYSTEM ====================
     const DEFAULT_COLUMN_PREFS = {
       company: true,
       phone: true,
-      email: true,
+      email: false,
       stage: true,
       dealValue: true,
       closeDate: true,
       source: true,
+      campaign: true,
+      adset: true,
       priority: true,
       assignedTo: true,
+      tags: false,
+      notes: false,
       created: true,
-      customerType: true,
-      materialType: true,
-      requirementDateTime: true,
-      customerAddress: true,
-      city: true
+      customerType: false,
+      materialType: false,
+      requirementDateTime: false,
+      customerAddress: false,
+      city: false
     };
 
-    let columnPrefs = JSON.parse(localStorage.getItem('sri_sri_column_prefs') || JSON.stringify(DEFAULT_COLUMN_PREFS));
+    let columnPrefs;
+    try {
+      const stored = JSON.parse(localStorage.getItem('sri_sri_column_prefs'));
+      if (stored && typeof stored === 'object' && stored.stage !== undefined && stored.phone !== undefined) {
+        columnPrefs = Object.assign({}, DEFAULT_COLUMN_PREFS, stored);
+      } else {
+        columnPrefs = Object.assign({}, DEFAULT_COLUMN_PREFS);
+      }
+    } catch (e) {
+      columnPrefs = Object.assign({}, DEFAULT_COLUMN_PREFS);
+    }
 
     function toggleColumnsDropdown() {
       const menu = document.getElementById('columns-dropdown-menu');
@@ -3317,15 +3949,56 @@
       applyColumnPreferences();
     }
 
+    function resetColumnPreferences() {
+      columnPrefs = Object.assign({}, DEFAULT_COLUMN_PREFS);
+      localStorage.setItem('sri_sri_column_prefs', JSON.stringify(columnPrefs));
+      applyColumnPreferences();
+      showToast('Columns reset to standard CRM view!', 'info');
+    }
+
     function toggleAllColumns(selectAll) {
-      Object.keys(columnPrefs).forEach(k => {
+      Object.keys(DEFAULT_COLUMN_PREFS).forEach(k => {
         columnPrefs[k] = selectAll;
       });
       localStorage.setItem('sri_sri_column_prefs', JSON.stringify(columnPrefs));
-      document.querySelectorAll('.col-toggle-cb').forEach(cb => {
-        cb.checked = selectAll;
-      });
       applyColumnPreferences();
+    }
+
+    // ==================== SYNCHRONIZED OPP TABLE SCROLL SYSTEM ====================
+    let isSyncingOppScroll = false;
+    function syncOppScroll(sourceEl, targetType) {
+      if (isSyncingOppScroll) return;
+      isSyncingOppScroll = true;
+      const tableContainer = document.getElementById('opp-table-scroll-body');
+      const topTrack = document.getElementById('opp-top-scroll-track');
+      const dummy = document.getElementById('opp-top-scroll-dummy');
+      const table = document.getElementById('opp-full-table');
+
+      if (table && dummy) {
+        dummy.style.width = table.scrollWidth + 'px';
+      }
+
+      if (targetType === 'top' && topTrack) {
+        topTrack.scrollLeft = sourceEl.scrollLeft;
+      } else if (targetType === 'table' && tableContainer) {
+        tableContainer.scrollLeft = sourceEl.scrollLeft;
+      }
+      setTimeout(() => { isSyncingOppScroll = false; }, 20);
+    }
+
+    function scrollOppTable(direction) {
+      const container = document.getElementById('opp-table-scroll-body');
+      if (!container) return;
+      const step = 380;
+      if (direction === 'left') {
+        container.scrollBy({ left: -step, behavior: 'smooth' });
+      } else if (direction === 'right') {
+        container.scrollBy({ left: step, behavior: 'smooth' });
+      } else if (direction === 'start') {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else if (direction === 'end') {
+        container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+      }
     }
 
     function applyColumnPreferences() {
@@ -3337,7 +4010,7 @@
       });
 
       Object.keys(columnPrefs).forEach(col => {
-        const isShown = columnPrefs[col];
+        const isShown = !!columnPrefs[col];
         const elements = document.querySelectorAll('.col-' + col);
         elements.forEach(el => {
           el.style.display = isShown ? '' : 'none';
@@ -3350,6 +4023,12 @@
       const menu = document.getElementById('columns-dropdown-menu');
       if (menu && !menu.classList.contains('hidden') && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
         menu.classList.add('hidden');
+      }
+
+      const fBtn = document.getElementById('btn-opp-filters');
+      const fPanel = document.getElementById('opp-filters-panel');
+      if (fPanel && !fPanel.classList.contains('hidden') && fBtn && !fBtn.contains(e.target) && !fPanel.contains(e.target)) {
+        fPanel.classList.add('hidden');
       }
     });
 
@@ -4719,9 +5398,16 @@
 
       const userLeads = getAccessibleLeads();
       const pipLeads = userLeads.filter(l => l.pipelineId === pipeline.id);
+      const filteredLeads = getFilteredPipelineLeads(pipLeads, pipeline);
 
       const countBadge = document.getElementById('opp-count-badge');
-      if (countBadge) countBadge.innerText = pipLeads.length + ' Leads';
+      if (countBadge) {
+        if (filteredLeads.length === pipLeads.length) {
+          countBadge.innerText = pipLeads.length + ' Leads';
+        } else {
+          countBadge.innerText = `Showing ${filteredLeads.length} of ${pipLeads.length} Leads`;
+        }
+      }
 
       const listContainer = document.getElementById('opp-table-view-container');
       const kanbanContainer = document.getElementById('opp-kanban-view-container');
@@ -4729,11 +5415,11 @@
       if (opportunityViewMode === 'list') {
         if (listContainer) listContainer.classList.remove('hidden');
         if (kanbanContainer) kanbanContainer.classList.add('hidden');
-        renderOpportunityListTable(pipLeads, pipeline);
+        renderOpportunityListTable(filteredLeads, pipeline, pipLeads.length);
       } else {
         if (listContainer) listContainer.classList.add('hidden');
         if (kanbanContainer) kanbanContainer.classList.remove('hidden');
-        renderOpportunityKanbanBoard(pipLeads, pipeline);
+        renderOpportunityKanbanBoard(filteredLeads, pipeline);
       }
       lucide.createIcons();
     }
@@ -4751,26 +5437,10 @@
       renderOpportunities();
     }
 
-    function renderOpportunityListTable(pipLeads, pipeline) {
+    function renderOpportunityListTable(filteredLeads, pipeline, totalPipCount) {
       const tbody = document.getElementById('opp-table-body');
       if (!tbody) return;
       tbody.innerHTML = '';
-
-      // Search filter
-      const searchInput = document.getElementById('opp-search-input');
-      const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
-
-      let filteredLeads = pipLeads.filter(l => {
-        if (!q) return true;
-        return (l.name && l.name.toLowerCase().includes(q)) ||
-               (l.phone && l.phone.includes(q)) ||
-               (l.email && l.email.toLowerCase().includes(q)) ||
-               (l.company && l.company.toLowerCase().includes(q)) ||
-               (l.address && l.address.toLowerCase().includes(q)) ||
-               (l.city && l.city.toLowerCase().includes(q)) ||
-               (l.materialType && l.materialType.toLowerCase().includes(q)) ||
-               (l.clientType && l.clientType.toLowerCase().includes(q));
-      });
 
       // Sorting
       filteredLeads.sort((a, b) => {
@@ -4786,7 +5456,27 @@
       });
 
       if (filteredLeads.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="18" class="p-8 text-center text-xs text-muted-custom">No client entries in ' + pipeline.name + '. Click "+ Add New" or "Import Excel" to start.</td></tr>';
+        if (!totalPipCount || totalPipCount === 0) {
+          tbody.innerHTML = '<tr><td colspan="22" class="p-8 text-center text-xs text-muted-custom">No client entries in ' + pipeline.name + '. Click "+ Add New" or "Import Excel" to start.</td></tr>';
+        } else {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="22" class="p-12 text-center text-xs">
+                <div class="max-w-md mx-auto space-y-3">
+                  <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-gold flex items-center justify-center mx-auto border border-amber-500/20">
+                    <i data-lucide="filter-x" class="w-6 h-6"></i>
+                  </div>
+                  <h4 class="font-bold text-main text-sm">No leads match the selected filter criteria</h4>
+                  <p class="text-muted-custom text-[11px]">Selected date range ya filter me koi lead nahi mili. Reset karke all leads dekh sakte hain.</p>
+                  <button type="button" onclick="clearOppFilters()" class="px-4 py-2 rounded-xl bg-gold text-slate-950 font-bold text-xs shadow-md hover:brightness-105 transition">
+                    Reset Filters & View All (${totalPipCount})
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+          if (window.lucide) lucide.createIcons();
+        }
         return;
       }
 
@@ -4801,31 +5491,56 @@
                               'bg-blue-500/10 text-blue-400 border border-blue-500/30';
 
         const sourceIcon = (lead.source === 'cold_call') ? '<i data-lucide="phone-call" class="w-3.5 h-3.5 text-rose-400"></i>' :
-                           (lead.source === 'facebook' || lead.source === 'fb') ? '<i data-lucide="facebook" class="w-3.5 h-3.5 text-blue-400"></i>' :
+                           (lead.source === 'facebook' || lead.source === 'fb' || (lead.adPlatform && lead.adPlatform.includes('Meta'))) ? '<i data-lucide="facebook" class="w-3.5 h-3.5 text-blue-400"></i>' :
                            '<i data-lucide="share-2" class="w-3.5 h-3.5 text-gold"></i>';
 
+        const displayDealVal = (lead.dealValue && lead.dealValue !== 'Not set') ? lead.dealValue : '—';
+        const displayTags = lead.tags ? (typeof lead.tags === 'string' ? lead.tags.split(/[,;]+/).filter(Boolean).map(t => `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-gold border border-gold/30 mr-1">${t.trim()}</span>`).join('') : '—') : '—';
+        const displayNotes = lead.notes ? `<span class="truncate max-w-[140px] block font-sans text-main" title="${lead.notes}">${lead.notes}</span>` : '—';
+
+        // Campaign & AdSet formatted badges
+        const rawCampaign = lead.campaignName || lead.campaign || '';
+        const displayCampaign = rawCampaign ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-gold border border-gold/30 truncate max-w-[170px]" title="${rawCampaign}"><i data-lucide="megaphone" class="w-3 h-3 shrink-0"></i><span class="truncate">${rawCampaign}</span></span>` : '—';
+
+        let displayAdset = '—';
+        if (lead.adsetName || lead.adName) {
+          displayAdset = `
+            <div class="space-y-0.5">
+              ${lead.adsetName ? `<span class="font-bold text-main block truncate max-w-[160px]" title="AdSet: ${lead.adsetName}">🎯 ${lead.adsetName}</span>` : ''}
+              ${lead.adName ? `<span class="text-[10px] text-muted-custom font-mono block truncate max-w-[160px]" title="Ad: ${lead.adName}">🖼️ ${lead.adName}</span>` : ''}
+            </div>
+          `;
+        }
+
         tr.innerHTML = `
-          <td class="p-3 text-center" onclick="event.stopPropagation()">
-            <input type="checkbox" class="opp-row-cb rounded border-main text-gold" data-lead-id="${lead.id}">
+          <td class="p-3 text-center opp-sticky-col-cb" onclick="event.stopPropagation()">
+            <input type="checkbox" class="opp-row-cb rounded border-main text-gold" data-lead-id="${lead.id}" onchange="updateBulkActionsState()">
           </td>
-          <td class="p-3 font-bold text-main col-opportunity" onclick="openLeadModal('${lead.id}')">
+          <td class="p-3 font-bold text-main col-opportunity opp-sticky-col-name" onclick="openLeadModal('${lead.id}')">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${stg.color}"></span>
-              <span class="font-extrabold hover:text-gold">${lead.name}</span>
+              <span class="font-extrabold hover:text-gold truncate max-w-[170px] block">${lead.name}</span>
             </div>
           </td>
-          <td class="p-3 text-muted-custom font-medium col-company" onclick="openLeadModal('${lead.id}')">${lead.company || '—'}</td>
-          <td class="p-3 font-mono text-xs text-main col-phone" onclick="openLeadModal('${lead.id}')">
+          <td class="p-3 font-mono text-xs text-main col-phone opp-sticky-col-phone" onclick="openLeadModal('${lead.id}')">
             <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
               <a href="tel:${cleanPhone}" class="text-main hover:underline font-mono">${lead.phone || '—'}</a>
               ${cleanPhone ? '<a href="https://wa.me/91' + cleanPhone + '" target="_blank" class="p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="WhatsApp"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i></a>' : ''}
             </div>
           </td>
-          <td class="p-3 font-mono text-[11px] text-muted-custom col-email" onclick="openLeadModal('${lead.id}')">${lead.email || '—'}</td>
+          <td class="p-3 opp-sticky-col-actions text-center" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-center gap-1.5">
+              ${cleanPhone ? '<a href="tel:' + cleanPhone + '" class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition" title="Direct Phone Call"><i data-lucide="phone" class="w-3.5 h-3.5"></i></a>' : ''}
+              <button onclick="openLeadModal('${lead.id}')" class="px-2.5 py-1 bg-gold/15 hover:bg-gold hover:text-slate-950 border border-gold/40 rounded-lg text-xs font-bold text-gold transition shadow-xs">Open</button>
+            </div>
+          </td>
+          <td class="p-3 text-muted-custom font-medium col-company" onclick="openLeadModal('${lead.id}')">${lead.company || '—'}</td>
+          <td class="p-3 col-campaign" onclick="openLeadModal('${lead.id}')">${displayCampaign}</td>
+          <td class="p-3 text-[11px] col-adset" onclick="openLeadModal('${lead.id}')">${displayAdset}</td>
           <td class="p-3 col-stage" onclick="openLeadModal('${lead.id}')">
             <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border" style="background-color: ${stg.color}15; color: ${stg.color}; border-color: ${stg.color}40">${stg.name}</span>
           </td>
-          <td class="p-3 font-bold text-main font-mono col-dealValue" onclick="openLeadModal('${lead.id}')">${lead.dealValue || lead.budget || '—'}</td>
+          <td class="p-3 font-bold text-main font-mono col-dealValue" onclick="openLeadModal('${lead.id}')">${displayDealVal}</td>
           <td class="p-3 font-mono text-[11px] text-muted-custom col-closeDate" onclick="openLeadModal('${lead.id}')">${lead.closeDate || '—'}</td>
           <td class="p-3 text-[11px] col-source" onclick="openLeadModal('${lead.id}')">
             <span class="inline-flex items-center gap-1 font-semibold text-muted-custom capitalize">
@@ -4837,7 +5552,10 @@
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${priorityColor}">${(lead.priority || 'Medium').toLowerCase()}</span>
           </td>
           <td class="p-3 text-xs text-main font-medium col-assignedTo" onclick="openLeadModal('${lead.id}')">${lead.assignedToName || '—'}</td>
+          <td class="p-3 col-tags" onclick="openLeadModal('${lead.id}')">${displayTags}</td>
+          <td class="p-3 text-muted-custom text-[11px] col-notes" onclick="openLeadModal('${lead.id}')">${displayNotes}</td>
           <td class="p-3 font-mono text-[11px] text-muted-custom col-created" onclick="openLeadModal('${lead.id}')">${formatCreatedDate(lead.createdAt)}</td>
+          <td class="p-3 font-mono text-[11px] text-muted-custom col-email" onclick="openLeadModal('${lead.id}')">${lead.email || '—'}</td>
           <td class="p-3 col-customerType" onclick="openLeadModal('${lead.id}')">
             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-subtle text-gold">${lead.clientType || lead.customerType || '—'}</span>
           </td>
@@ -4845,17 +5563,20 @@
           <td class="p-3 text-[11px] text-muted-custom col-requirementDateTime" onclick="openLeadModal('${lead.id}')">${lead.requirementTimeline || lead.requirementDateTime || '—'}</td>
           <td class="p-3 text-[11px] text-muted-custom truncate max-w-[150px] col-customerAddress" title="${lead.address || ''}" onclick="openLeadModal('${lead.id}')">${lead.address || lead.customerAddress || '—'}</td>
           <td class="p-3 text-[11px] text-muted-custom col-city" onclick="openLeadModal('${lead.id}')">${lead.city || lead.stateCity || '—'}</td>
-          <td class="p-3 text-right" onclick="event.stopPropagation()">
-            <div class="flex items-center justify-end gap-1.5">
-              ${cleanPhone ? '<a href="tel:' + cleanPhone + '" class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition" title="Direct Phone Call"><i data-lucide="phone" class="w-3.5 h-3.5"></i></a>' : ''}
-              <button onclick="openLeadModal('${lead.id}')" class="px-2.5 py-1 bg-subtle hover:bg-card border border-main rounded-lg text-xs font-bold text-gold">Open</button>
-            </div>
-          </td>
+
         `;
         tbody.appendChild(tr);
       });
 
+      // Synchronize top scrollbar track width with the table scrollWidth
+      const topDummy = document.getElementById('opp-top-scroll-dummy');
+      const fullTable = document.getElementById('opp-full-table');
+      if (topDummy && fullTable) {
+        topDummy.style.width = Math.max(fullTable.scrollWidth, 2100) + 'px';
+      }
+
       applyColumnPreferences();
+      if (typeof updateBulkActionsState === 'function') updateBulkActionsState();
       if (window.lucide) lucide.createIcons();
     }
 
@@ -4866,12 +5587,799 @@
       return d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
     }
 
-    function toggleSelectAllOpps(isChecked) {
-      document.querySelectorAll('.opp-row-cb').forEach(cb => cb.checked = isChecked);
+    // ==================== STAGE CHANGE CONFIRMATION ENGINE ====================
+    var pendingStageChange = null;
+
+    function requestLeadStageChange(newStageId) {
+      if (!isCurrentUserSuperAdmin() && !userHasPermission('opp_move_stage')) { 
+        showToast('Permission Denied: You cannot move deal stages.', 'error'); 
+        return; 
+      }
+      if (!currentSelectedLead) return;
+
+      const pipeline = pipelines.find(p => p.id === currentSelectedLead.pipelineId) || pipelines[0];
+      const oldStage = pipeline.stages.find(s => s.id === currentSelectedLead.stageId) || pipeline.stages[0];
+      const newStage = pipeline.stages.find(s => s.id === newStageId) || pipeline.stages[0];
+
+      if (oldStage.id === newStage.id) {
+        showToast('Lead already in stage: ' + newStage.name, 'info');
+        return;
+      }
+
+      pendingStageChange = {
+        leadId: currentSelectedLead.id,
+        newStageId: newStageId,
+        oldStageName: oldStage.name,
+        newStageName: newStage.name,
+        oldStageColor: oldStage.color,
+        newStageColor: newStage.color,
+        isLost: !!newStage.isLost
+      };
+
+      const nameEl = document.getElementById('stage-confirm-lead-name');
+      if (nameEl) nameEl.innerText = currentSelectedLead.name || 'This Client';
+
+      const fromBadge = document.getElementById('stage-confirm-from-badge');
+      if (fromBadge) {
+        fromBadge.innerText = oldStage.name;
+        fromBadge.style.backgroundColor = oldStage.color + '20';
+        fromBadge.style.borderColor = oldStage.color;
+        fromBadge.style.color = oldStage.color;
+      }
+
+      const toBadge = document.getElementById('stage-confirm-to-badge');
+      if (toBadge) {
+        toBadge.innerText = newStage.name;
+        toBadge.style.backgroundColor = newStage.color + '20';
+        toBadge.style.borderColor = newStage.color;
+        toBadge.style.color = newStage.color;
+      }
+
+      const msgEl = document.getElementById('stage-confirm-msg');
+      if (msgEl) {
+        msgEl.innerHTML = 'Kya aap confirm <strong>"' + currentSelectedLead.name + '"</strong> ki stage badal kar <span class="font-bold text-gold">"' + newStage.name + '"</span> karna chahte hain?';
+      }
+
+      openModal('stage-change-confirm-modal');
+      if (window.lucide) lucide.createIcons();
     }
 
-    function toggleOppFilters() {
-      showToast('Filters active: Filter by pipeline, search, or status.', 'info');
+    function confirmStageChangeProceed() {
+      if (!pendingStageChange) return;
+      const { newStageId, isLost } = pendingStageChange;
+      closeModal('stage-change-confirm-modal');
+
+      if (isLost) {
+        pendingLostStageId = newStageId;
+        openModal('lead-loss-reason-modal');
+        return;
+      }
+
+      executeStageUpdate(newStageId);
+      pendingStageChange = null;
+      showToast('Stage updated successfully!', 'success');
+    }
+
+    function cancelStageChange() {
+      pendingStageChange = null;
+      closeModal('stage-change-confirm-modal');
+    }
+
+    // ==================== BULK SELECTION & OPERATIONS ENGINE ====================
+    function getSelectedLeadIds() {
+      const cbs = document.querySelectorAll('.opp-row-cb:checked');
+      return Array.from(cbs).map(cb => cb.dataset.leadId).filter(Boolean);
+    }
+
+    function updateBulkActionsState() {
+      const selectedIds = getSelectedLeadIds();
+      const bar = document.getElementById('opp-bulk-actions-bar');
+      const countBadge = document.getElementById('opp-bulk-count-badge');
+      const selectAllCb = document.getElementById('opp-select-all');
+
+      const allRowCbs = document.querySelectorAll('.opp-row-cb');
+      if (selectAllCb) {
+        selectAllCb.checked = (allRowCbs.length > 0 && selectedIds.length === allRowCbs.length);
+        selectAllCb.indeterminate = (selectedIds.length > 0 && selectedIds.length < allRowCbs.length);
+      }
+
+      if (selectedIds.length > 0) {
+        if (bar) bar.classList.remove('hidden');
+        if (countBadge) countBadge.innerText = selectedIds.length + ' Lead' + (selectedIds.length > 1 ? 's' : '') + ' Selected';
+      } else {
+        if (bar) bar.classList.add('hidden');
+      }
+    }
+
+    function toggleSelectAllOpps(isChecked) {
+      document.querySelectorAll('.opp-row-cb').forEach(cb => cb.checked = isChecked);
+      updateBulkActionsState();
+    }
+
+    function deselectAllOpps() {
+      toggleSelectAllOpps(false);
+    }
+
+    // Bulk Delete
+    function openBulkDeleteModal() {
+      const selectedIds = getSelectedLeadIds();
+      if (selectedIds.length === 0) {
+        showToast('Please select at least one lead to delete.', 'info');
+        return;
+      }
+      pendingSingleDeleteLeadId = null;
+      const countText = document.getElementById('bulk-del-count-text');
+      if (countText) countText.innerText = selectedIds.length;
+      const btnCount = document.getElementById('bulk-del-btn-count');
+      if (btnCount) btnCount.innerText = selectedIds.length;
+
+      openModal('bulk-delete-confirm-modal');
+    }
+
+    function confirmBulkDeleteProceed() {
+      let idsToDelete = [];
+      if (pendingSingleDeleteLeadId) {
+        idsToDelete = [pendingSingleDeleteLeadId];
+        pendingSingleDeleteLeadId = null;
+      } else {
+        idsToDelete = getSelectedLeadIds();
+      }
+
+      if (idsToDelete.length === 0) return;
+      const count = idsToDelete.length;
+
+      idsToDelete.forEach(id => {
+        deleteLeadFromCloud(id);
+      });
+
+      leads = leads.filter(l => !idsToDelete.includes(l.id));
+      tasks = tasks.filter(t => !idsToDelete.includes(t.leadId));
+
+      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      localStorage.setItem('sri_sri_tasks', JSON.stringify(tasks));
+
+      closeModal('bulk-delete-confirm-modal');
+      closeModal('lead-modal');
+      deselectAllOpps();
+      renderOpportunities();
+      renderPhonebookTable();
+      initDashboard();
+
+      showToast(count + ' lead entry removed successfully!', 'success');
+    }
+
+    // Bulk Stage Change
+    function openBulkChangeStageModal() {
+      const selectedIds = getSelectedLeadIds();
+      if (selectedIds.length === 0) {
+        showToast('Please select at least one lead to change stage.', 'info');
+        return;
+      }
+      const countText = document.getElementById('bulk-stage-count-text');
+      if (countText) countText.innerText = selectedIds.length;
+
+      const currentPip = pipelines.find(p => p.id === activePipelineId) || pipelines[0];
+      const stageSelect = document.getElementById('bulk-target-stage');
+      if (stageSelect) {
+        stageSelect.innerHTML = currentPip.stages.map(s => 
+          '<option value="' + s.id + '">' + s.name + '</option>'
+        ).join('');
+      }
+
+      openModal('bulk-stage-modal');
+    }
+
+    function confirmBulkStageChangeProceed() {
+      const selectedIds = getSelectedLeadIds();
+      const stageSelect = document.getElementById('bulk-target-stage');
+      if (!stageSelect || selectedIds.length === 0) return;
+
+      const targetStageId = stageSelect.value;
+      const currentPip = pipelines.find(p => p.id === activePipelineId) || pipelines[0];
+      const targetStage = currentPip.stages.find(s => s.id === targetStageId) || currentPip.stages[0];
+
+      const now = new Date();
+      selectedIds.forEach(id => {
+        const lead = leads.find(l => l.id === id);
+        if (lead) {
+          lead.stageId = targetStageId;
+          lead.lastActivityAt = now.toISOString();
+          lead.lastActivityText = 'Bulk moved to ' + targetStage.name;
+          if (!lead.activities) lead.activities = [];
+          lead.activities.push({
+            id: 'act-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+            userName: loggedInUser ? loggedInUser.name : 'Admin',
+            type: 'STAGE_CHANGE',
+            notes: 'Bulk moved to stage: ' + targetStage.name,
+            time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            timestamp: now.toISOString()
+          });
+          syncLeadToCloud(lead);
+        }
+      });
+
+      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      closeModal('bulk-stage-modal');
+      deselectAllOpps();
+      renderOpportunities();
+      renderPhonebookTable();
+      initDashboard();
+
+      showToast(selectedIds.length + ' leads moved to "' + targetStage.name + '"!', 'success');
+    }
+
+    // Bulk Assign Staff
+    function openBulkAssignStaffModal() {
+      const selectedIds = getSelectedLeadIds();
+      if (selectedIds.length === 0) {
+        showToast('Please select at least one lead.', 'info');
+        return;
+      }
+      const countText = document.getElementById('bulk-assign-count-text');
+      if (countText) countText.innerText = selectedIds.length;
+
+      const staffSelect = document.getElementById('bulk-target-staff');
+      if (staffSelect) {
+        staffSelect.innerHTML = users.filter(u => u.status === 'Active').map(u => 
+          '<option value="' + u.email + '">' + u.name + ' (' + u.role + ')</option>'
+        ).join('');
+      }
+
+      openModal('bulk-assign-modal');
+    }
+
+    function confirmBulkAssignStaffProceed() {
+      const selectedIds = getSelectedLeadIds();
+      const staffSelect = document.getElementById('bulk-target-staff');
+      if (!staffSelect || selectedIds.length === 0) return;
+
+      const userEmail = staffSelect.value;
+      const assignedUser = users.find(u => u.email === userEmail);
+      if (!assignedUser) return;
+
+      selectedIds.forEach(id => {
+        const lead = leads.find(l => l.id === id);
+        if (lead) {
+          lead.assignedToName = assignedUser.name;
+          lead.assignedToEmail = assignedUser.email;
+          syncLeadToCloud(lead);
+        }
+      });
+
+      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      closeModal('bulk-assign-modal');
+      deselectAllOpps();
+      renderOpportunities();
+      showToast(selectedIds.length + ' leads assigned to ' + assignedUser.name + '!', 'success');
+    }
+
+    // Bulk Priority
+    function openBulkPriorityModal() {
+      const selectedIds = getSelectedLeadIds();
+      if (selectedIds.length === 0) {
+        showToast('Please select at least one lead.', 'info');
+        return;
+      }
+      const countText = document.getElementById('bulk-priority-count-text');
+      if (countText) countText.innerText = selectedIds.length;
+      openModal('bulk-priority-modal');
+    }
+
+    function confirmBulkPriorityProceed() {
+      const selectedIds = getSelectedLeadIds();
+      const prioSelect = document.getElementById('bulk-target-priority');
+      if (!prioSelect || selectedIds.length === 0) return;
+
+      const newPrio = prioSelect.value;
+      selectedIds.forEach(id => {
+        const lead = leads.find(l => l.id === id);
+        if (lead) {
+          lead.priority = newPrio;
+          syncLeadToCloud(lead);
+        }
+      });
+
+      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      closeModal('bulk-priority-modal');
+      deselectAllOpps();
+      renderOpportunities();
+      showToast(selectedIds.length + ' leads updated to "' + newPrio + '" priority!', 'success');
+    }
+
+    // ==================== INTELLIGENT DATA SANITIZER & AUTO-REPAIR ====================
+    function sanitizeLeadRecord(lead) {
+      if (!lead) return false;
+      let changed = false;
+
+      // 1. Sanitize Phone
+      if (lead.phone && typeof lead.phone === 'string') {
+        const rawPhone = lead.phone.trim();
+        // Check if phone contains non-phone text like remarks, dates, or words
+        if (/[a-zA-Z]{3,}/.test(rawPhone) || rawPhone.includes('GMT') || rawPhone.includes('Universal') || rawPhone.includes('shopkeeper') || rawPhone.includes('TimeLine')) {
+          const commentText = rawPhone.replace(/\s+/g, ' ').trim();
+          if (!lead.notes || !lead.notes.includes(commentText)) {
+            lead.notes = lead.notes ? (lead.notes + ' | ' + commentText) : commentText;
+          }
+          
+          const phoneMatch = rawPhone.match(/(?:(?:\+?91[\-\s]?)?[6-9]\d{9})/);
+          if (phoneMatch) {
+            lead.phone = phoneMatch[0].replace(/[^0-9+]/g, '');
+          } else {
+            lead.phone = '';
+          }
+          changed = true;
+        }
+      }
+
+      // 2. Sanitize Name
+      if (lead.name && typeof lead.name === 'string') {
+        const rawName = lead.name.trim();
+        if (rawName.startsWith('Project TimeLine:') || rawName.includes('TimeLine:') || rawName.includes(',,') || rawName.includes('deal karte ha')) {
+          const parts = rawName.split(/[,;]+/);
+          const cleanParts = [];
+          const remarkParts = [];
+          
+          parts.forEach(p => {
+            const trimmed = p.trim();
+            if (!trimmed) return;
+            if (trimmed.toLowerCase().includes('deal karte') || trimmed.toLowerCase().includes('shopkeeper') || trimmed.toLowerCase().includes('plywood') || trimmed.toLowerCase().includes('timeline:')) {
+              remarkParts.push(trimmed);
+            } else {
+              cleanParts.push(trimmed);
+            }
+          });
+
+          if (remarkParts.length > 0) {
+            const extractedRemark = remarkParts.join(', ');
+            if (!lead.notes || !lead.notes.includes(extractedRemark)) {
+              lead.notes = lead.notes ? (lead.notes + ' | ' + extractedRemark) : extractedRemark;
+            }
+          }
+
+          if (cleanParts.length > 0 && cleanParts[0].length >= 2) {
+            lead.name = cleanParts[0];
+          } else if (lead.company && lead.company !== '—' && !lead.company.includes('TimeLine')) {
+            lead.name = lead.company;
+          } else if (lead.notes && lead.notes.toLowerCase().includes('shopkeeper')) {
+            lead.name = 'Shopkeeper / Dealer Inquiry';
+          } else {
+            lead.name = 'Plywood Client #' + (lead.id ? lead.id.replace('lead-', '').substring(0, 6) : 'Inquiry');
+          }
+          changed = true;
+        }
+      }
+
+      return changed;
+    }
+
+    function sanitizeAllLeads(saveToStorage = true) {
+      if (!Array.isArray(leads)) return false;
+      let anyChanged = false;
+      leads.forEach(l => {
+        if (sanitizeLeadRecord(l)) anyChanged = true;
+      });
+      if (anyChanged && saveToStorage) {
+        localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      }
+      return anyChanged;
+    }
+
+    function autoRepairCurrentLead() {
+      if (!currentSelectedLead) return;
+      const changed = sanitizeLeadRecord(currentSelectedLead);
+      if (changed) {
+        localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+        syncLeadToCloud(currentSelectedLead);
+        openLeadModal(currentSelectedLead.id);
+        renderOpportunities();
+        renderPhonebookTable();
+        showToast('Lead remarks moved to Notes and Name/Phone sanitized!', 'success');
+      } else {
+        showToast('Lead data is already clean.', 'info');
+      }
+    }
+
+    // Run auto-cleaner once on startup to repair any existing corrupted imports
+    sanitizeAllLeads(true);
+
+    // ==================== ADVANCED DATE & CRITERIA FILTER ENGINE ====================
+    let oppFilterState = {
+      dateType: 'created', // 'created' | 'close' | 'followup'
+      datePreset: 'all',   // 'all' | 'today' | 'yesterday' | '7d' | '30d' | 'this_month' | 'last_month' | 'custom'
+      dateFrom: '',
+      dateTo: '',
+      stageId: 'all',
+      assignee: 'all',
+      priority: 'all',
+      sourceText: ''
+    };
+
+    function toggleOppFilters(forceState) {
+      const panel = document.getElementById('opp-filters-panel');
+      if (!panel) return;
+
+      const willOpen = (typeof forceState === 'boolean') ? forceState : panel.classList.contains('hidden');
+
+      if (willOpen) {
+        // Populate pipeline stages
+        const pipeline = pipelines.find(p => p.id === activePipelineId) || pipelines[0];
+        const stageSelect = document.getElementById('filter-stage');
+        if (stageSelect) {
+          let opts = '<option value="all">All Stages</option>';
+          pipeline.stages.forEach(stg => {
+            const isSel = oppFilterState.stageId === stg.id;
+            opts += `<option value="${stg.id}" ${isSel ? 'selected' : ''}>${stg.name}</option>`;
+          });
+          stageSelect.innerHTML = opts;
+        }
+
+        // Populate sales staff
+        const staffSelect = document.getElementById('filter-assignee');
+        if (staffSelect) {
+          let opts = '<option value="all">All Team Members</option>';
+          users.filter(u => u.status === 'Active').forEach(u => {
+            const isSel = oppFilterState.assignee === u.name || oppFilterState.assignee === u.email;
+            opts += `<option value="${u.name}" ${isSel ? 'selected' : ''}>${u.name} (${u.role})</option>`;
+          });
+          staffSelect.innerHTML = opts;
+        }
+
+        // Sync inputs from state
+        const dtEl = document.getElementById('filter-date-type');
+        if (dtEl) dtEl.value = oppFilterState.dateType || 'created';
+
+        const dfEl = document.getElementById('filter-date-from');
+        if (dfEl) dfEl.value = oppFilterState.dateFrom || '';
+
+        const dtoEl = document.getElementById('filter-date-to');
+        if (dtoEl) dtoEl.value = oppFilterState.dateTo || '';
+
+        const priEl = document.getElementById('filter-priority');
+        if (priEl) priEl.value = oppFilterState.priority || 'all';
+
+        const srcEl = document.getElementById('filter-source');
+        if (srcEl) srcEl.value = oppFilterState.sourceText || '';
+
+        highlightDatePresetButton(oppFilterState.datePreset);
+        panel.classList.remove('hidden');
+      } else {
+        panel.classList.add('hidden');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function highlightDatePresetButton(preset) {
+      document.querySelectorAll('.filter-preset-btn').forEach(btn => {
+        btn.classList.remove('bg-gold', 'text-slate-950', 'font-extrabold', 'border-gold');
+        btn.classList.add('bg-card', 'text-main', 'border-main');
+      });
+      const targetBtn = document.getElementById('f-preset-' + (preset || 'all'));
+      if (targetBtn) {
+        targetBtn.classList.remove('bg-card', 'text-main', 'border-main');
+        targetBtn.classList.add('bg-gold', 'text-slate-950', 'font-extrabold', 'border-gold');
+      }
+    }
+
+    function formatDateToYMD(d) {
+      if (!d || isNaN(d.getTime())) return '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function setFilterDatePreset(preset) {
+      oppFilterState.datePreset = preset;
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+      const fromEl = document.getElementById('filter-date-from');
+      const toEl = document.getElementById('filter-date-to');
+
+      if (preset === 'all') {
+        oppFilterState.dateFrom = '';
+        oppFilterState.dateTo = '';
+        if (fromEl) fromEl.value = '';
+        if (toEl) toEl.value = '';
+      } else if (preset === 'today') {
+        oppFilterState.dateFrom = formatDateToYMD(todayStart);
+        oppFilterState.dateTo = formatDateToYMD(todayEnd);
+        if (fromEl) fromEl.value = oppFilterState.dateFrom;
+        if (toEl) toEl.value = oppFilterState.dateTo;
+      } else if (preset === 'yesterday') {
+        const yStart = new Date(todayStart.getTime() - 86400000);
+        oppFilterState.dateFrom = formatDateToYMD(yStart);
+        oppFilterState.dateTo = formatDateToYMD(yStart);
+        if (fromEl) fromEl.value = oppFilterState.dateFrom;
+        if (toEl) toEl.value = oppFilterState.dateTo;
+      } else if (preset === '7d') {
+        const d7 = new Date(todayStart.getTime() - 6 * 86400000);
+        oppFilterState.dateFrom = formatDateToYMD(d7);
+        oppFilterState.dateTo = formatDateToYMD(todayEnd);
+        if (fromEl) fromEl.value = oppFilterState.dateFrom;
+        if (toEl) toEl.value = oppFilterState.dateTo;
+      } else if (preset === '30d') {
+        const d30 = new Date(todayStart.getTime() - 29 * 86400000);
+        oppFilterState.dateFrom = formatDateToYMD(d30);
+        oppFilterState.dateTo = formatDateToYMD(todayEnd);
+        if (fromEl) fromEl.value = oppFilterState.dateFrom;
+        if (toEl) toEl.value = oppFilterState.dateTo;
+      } else if (preset === 'this_month') {
+        const mStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const mEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        oppFilterState.dateFrom = formatDateToYMD(mStart);
+        oppFilterState.dateTo = formatDateToYMD(mEnd);
+        if (fromEl) fromEl.value = oppFilterState.dateFrom;
+        if (toEl) toEl.value = oppFilterState.dateTo;
+      } else if (preset === 'last_month') {
+        const lmStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lmEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+        oppFilterState.dateFrom = formatDateToYMD(lmStart);
+        oppFilterState.dateTo = formatDateToYMD(lmEnd);
+        if (fromEl) fromEl.value = oppFilterState.dateFrom;
+        if (toEl) toEl.value = oppFilterState.dateTo;
+      } else if (preset === 'custom') {
+        // Keep inputs as is
+      }
+
+      highlightDatePresetButton(preset);
+      applyOppFilters();
+    }
+
+    function onCustomDateChanged() {
+      oppFilterState.datePreset = 'custom';
+      oppFilterState.dateFrom = document.getElementById('filter-date-from')?.value || '';
+      oppFilterState.dateTo = document.getElementById('filter-date-to')?.value || '';
+      highlightDatePresetButton('custom');
+      applyOppFilters();
+    }
+
+    function parseLeadDateObj(val) {
+      if (!val) return null;
+      if (val instanceof Date && !isNaN(val.getTime())) return val;
+      const s = String(val).trim();
+      if (!s) return null;
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) return d;
+      const parts = s.split(/[/\-\.\sT]/);
+      if (parts.length >= 3) {
+        if (parts[0].length === 4) {
+          const d2 = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+          if (!isNaN(d2.getTime())) return d2;
+        } else {
+          const d2 = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+          if (!isNaN(d2.getTime())) return d2;
+        }
+      }
+      return null;
+    }
+
+    function applyOppFilters() {
+      const dtEl = document.getElementById('filter-date-type');
+      if (dtEl) oppFilterState.dateType = dtEl.value;
+
+      oppFilterState.dateFrom = document.getElementById('filter-date-from')?.value || '';
+      oppFilterState.dateTo = document.getElementById('filter-date-to')?.value || '';
+      oppFilterState.stageId = document.getElementById('filter-stage')?.value || 'all';
+      oppFilterState.assignee = document.getElementById('filter-assignee')?.value || 'all';
+      oppFilterState.priority = document.getElementById('filter-priority')?.value || 'all';
+      oppFilterState.sourceText = document.getElementById('filter-source')?.value.trim() || '';
+
+      updateFilterUIIndicators();
+      renderOpportunities();
+    }
+
+    function clearOppFilters() {
+      oppFilterState = {
+        dateType: 'created',
+        datePreset: 'all',
+        dateFrom: '',
+        dateTo: '',
+        stageId: 'all',
+        assignee: 'all',
+        priority: 'all',
+        sourceText: ''
+      };
+
+      const dtEl = document.getElementById('filter-date-type');
+      if (dtEl) dtEl.value = 'created';
+      const dfEl = document.getElementById('filter-date-from');
+      if (dfEl) dfEl.value = '';
+      const dtoEl = document.getElementById('filter-date-to');
+      if (dtoEl) dtoEl.value = '';
+      const stEl = document.getElementById('filter-stage');
+      if (stEl) stEl.value = 'all';
+      const asEl = document.getElementById('filter-assignee');
+      if (asEl) asEl.value = 'all';
+      const prEl = document.getElementById('filter-priority');
+      if (prEl) prEl.value = 'all';
+      const srEl = document.getElementById('filter-source');
+      if (srEl) srEl.value = '';
+
+      highlightDatePresetButton('all');
+      updateFilterUIIndicators();
+      renderOpportunities();
+      showToast('Filters cleared. Showing all leads.', 'info');
+    }
+
+    function removeSingleFilter(filterKey) {
+      if (filterKey === 'date') {
+        oppFilterState.datePreset = 'all';
+        oppFilterState.dateFrom = '';
+        oppFilterState.dateTo = '';
+        const dfEl = document.getElementById('filter-date-from');
+        if (dfEl) dfEl.value = '';
+        const dtoEl = document.getElementById('filter-date-to');
+        if (dtoEl) dtoEl.value = '';
+        highlightDatePresetButton('all');
+      } else if (filterKey === 'stage') {
+        oppFilterState.stageId = 'all';
+        const stEl = document.getElementById('filter-stage');
+        if (stEl) stEl.value = 'all';
+      } else if (filterKey === 'assignee') {
+        oppFilterState.assignee = 'all';
+        const asEl = document.getElementById('filter-assignee');
+        if (asEl) asEl.value = 'all';
+      } else if (filterKey === 'priority') {
+        oppFilterState.priority = 'all';
+        const prEl = document.getElementById('filter-priority');
+        if (prEl) prEl.value = 'all';
+      } else if (filterKey === 'source') {
+        oppFilterState.sourceText = '';
+        const srEl = document.getElementById('filter-source');
+        if (srEl) srEl.value = '';
+      }
+      updateFilterUIIndicators();
+      renderOpportunities();
+    }
+
+    function updateFilterUIIndicators() {
+      let activeCount = 0;
+      const chips = [];
+
+      // Date chip
+      if (oppFilterState.dateFrom || oppFilterState.dateTo || oppFilterState.datePreset !== 'all') {
+        activeCount++;
+        let label = 'Date: ' + oppFilterState.datePreset.replace('_', ' ').toUpperCase();
+        if (oppFilterState.dateFrom && oppFilterState.dateTo) {
+          label = `📅 ${oppFilterState.dateFrom} to ${oppFilterState.dateTo}`;
+        } else if (oppFilterState.dateFrom) {
+          label = `📅 From ${oppFilterState.dateFrom}`;
+        } else if (oppFilterState.dateTo) {
+          label = `📅 Till ${oppFilterState.dateTo}`;
+        }
+        chips.push(`<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-gold border border-gold/30">${label} <button type="button" onclick="removeSingleFilter('date')" class="hover:text-rose-400 font-extrabold ml-1">✕</button></span>`);
+      }
+
+      // Stage chip
+      if (oppFilterState.stageId !== 'all') {
+        activeCount++;
+        const p = pipelines.find(x => x.id === activePipelineId);
+        const stg = p ? p.stages.find(s => s.id === oppFilterState.stageId) : null;
+        const stgName = stg ? stg.name : oppFilterState.stageId;
+        chips.push(`<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">🏷️ Stage: ${stgName} <button type="button" onclick="removeSingleFilter('stage')" class="hover:text-rose-400 font-extrabold ml-1">✕</button></span>`);
+      }
+
+      // Assignee chip
+      if (oppFilterState.assignee !== 'all') {
+        activeCount++;
+        chips.push(`<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/30">👤 Staff: ${oppFilterState.assignee} <button type="button" onclick="removeSingleFilter('assignee')" class="hover:text-rose-400 font-extrabold ml-1">✕</button></span>`);
+      }
+
+      // Priority chip
+      if (oppFilterState.priority !== 'all') {
+        activeCount++;
+        chips.push(`<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30">🔥 Priority: ${oppFilterState.priority} <button type="button" onclick="removeSingleFilter('priority')" class="hover:text-rose-400 font-extrabold ml-1">✕</button></span>`);
+      }
+
+      // Source chip
+      if (oppFilterState.sourceText) {
+        activeCount++;
+        chips.push(`<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">📣 Source: ${oppFilterState.sourceText} <button type="button" onclick="removeSingleFilter('source')" class="hover:text-rose-400 font-extrabold ml-1">✕</button></span>`);
+      }
+
+      // Badge on filter button
+      const badgeCountEl = document.getElementById('opp-filter-badge-count');
+      const filterBtn = document.getElementById('btn-opp-filters');
+      if (badgeCountEl) {
+        if (activeCount > 0) {
+          badgeCountEl.innerText = activeCount;
+          badgeCountEl.classList.remove('hidden');
+          if (filterBtn) filterBtn.classList.add('border-gold', 'bg-gold/10');
+        } else {
+          badgeCountEl.classList.add('hidden');
+          if (filterBtn) filterBtn.classList.remove('border-gold', 'bg-gold/10');
+        }
+      }
+
+      // Active chips strip
+      const chipsBar = document.getElementById('opp-active-filters-bar');
+      const chipsContainer = document.getElementById('opp-active-filter-chips');
+      if (chipsBar && chipsContainer) {
+        if (activeCount > 0) {
+          chipsContainer.innerHTML = chips.join('');
+          chipsBar.classList.remove('hidden');
+        } else {
+          chipsContainer.innerHTML = '';
+          chipsBar.classList.add('hidden');
+        }
+      }
+    }
+
+    function getFilteredPipelineLeads(pipLeads, pipeline) {
+      // 1. Search Query
+      const searchInput = document.getElementById('opp-search-input');
+      const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+      // 2. Date Bounds
+      let fromTime = null;
+      let toTime = null;
+      if (oppFilterState.dateFrom) {
+        const fDate = new Date(oppFilterState.dateFrom + 'T00:00:00');
+        if (!isNaN(fDate.getTime())) fromTime = fDate.getTime();
+      }
+      if (oppFilterState.dateTo) {
+        const tDate = new Date(oppFilterState.dateTo + 'T23:59:59.999');
+        if (!isNaN(tDate.getTime())) toTime = tDate.getTime();
+      }
+
+      const dateField = oppFilterState.dateType === 'close' ? 'closeDate' :
+                        (oppFilterState.dateType === 'followup' ? 'nextFollowUp' : 'createdAt');
+
+      return pipLeads.filter(l => {
+        // Search match
+        if (q) {
+          const matchSearch = (l.name && l.name.toLowerCase().includes(q)) ||
+                              (l.phone && l.phone.includes(q)) ||
+                              (l.email && l.email.toLowerCase().includes(q)) ||
+                              (l.company && l.company.toLowerCase().includes(q)) ||
+                              (l.campaignName && l.campaignName.toLowerCase().includes(q)) ||
+                              (l.adsetName && l.adsetName.toLowerCase().includes(q)) ||
+                              (l.address && l.address.toLowerCase().includes(q)) ||
+                              (l.city && l.city.toLowerCase().includes(q)) ||
+                              (l.materialType && l.materialType.toLowerCase().includes(q)) ||
+                              (l.clientType && l.clientType.toLowerCase().includes(q));
+          if (!matchSearch) return false;
+        }
+
+        // Stage match
+        if (oppFilterState.stageId && oppFilterState.stageId !== 'all') {
+          if (l.stageId !== oppFilterState.stageId) return false;
+        }
+
+        // Assignee match
+        if (oppFilterState.assignee && oppFilterState.assignee !== 'all') {
+          if (l.assignedToName !== oppFilterState.assignee && l.assignedToEmail !== oppFilterState.assignee) return false;
+        }
+
+        // Priority match
+        if (oppFilterState.priority && oppFilterState.priority !== 'all') {
+          if ((l.priority || 'Medium').toLowerCase() !== oppFilterState.priority.toLowerCase()) return false;
+        }
+
+        // Source / Campaign match
+        if (oppFilterState.sourceText) {
+          const st = oppFilterState.sourceText.toLowerCase();
+          const matchSrc = (l.source && l.source.toLowerCase().includes(st)) ||
+                           (l.campaignName && l.campaignName.toLowerCase().includes(st)) ||
+                           (l.adsetName && l.adsetName.toLowerCase().includes(st)) ||
+                           (l.adPlatform && l.adPlatform.toLowerCase().includes(st));
+          if (!matchSrc) return false;
+        }
+
+        // Date match
+        if (fromTime !== null || toTime !== null) {
+          const rawDateVal = l[dateField] || (dateField === 'closeDate' ? l.expectedCloseDate : (dateField === 'createdAt' ? l.lastActivityAt : null));
+          const parsedDate = parseLeadDateObj(rawDateVal);
+          if (!parsedDate) return false;
+          const leadTime = parsedDate.getTime();
+          if (fromTime !== null && leadTime < fromTime) return false;
+          if (toTime !== null && leadTime > toTime) return false;
+        }
+
+        return true;
+      });
     }
 
     function renderOpportunityKanbanBoard(pipLeads, pipeline) {
@@ -4995,12 +6503,39 @@
       const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
       document.getElementById('modal-lead-pipeline-name').innerText = p.name;
       document.getElementById('modal-lead-assigned-staff').innerText = lead.assignedToName || 'Sri Sri Admin';
-      document.getElementById('modal-lead-description').innerText = lead.budget || 'Plywood / Hardware requirement discussion';
 
+      // Ad Campaign & AdSet Attribution
+      const campEl = document.getElementById('modal-lead-campaign-name');
+      if (campEl) campEl.innerText = lead.campaignName || lead.campaign || '—';
+      const adsetEl = document.getElementById('modal-lead-adset-name');
+      if (adsetEl) adsetEl.innerText = lead.adsetName || '—';
+      const adEl = document.getElementById('modal-lead-ad-name');
+      if (adEl) adEl.innerText = lead.adName || '—';
+      const platEl = document.getElementById('modal-lead-ad-platform');
+      if (platEl) platEl.innerText = lead.adPlatform || lead.source || 'Direct Inquiry';
+
+      // Description & Notes highlight
+      const descText = (lead.notes && lead.notes.trim()) ? lead.notes.trim() : (lead.requirementTimeline ? ('Requirement: ' + lead.requirementTimeline) : 'No description notes recorded.');
+      const descEl = document.getElementById('modal-lead-description');
+      if (descEl) descEl.innerText = descText;
+
+      const createdBadge = document.getElementById('modal-lead-created-date-badge');
+      if (createdBadge) createdBadge.innerText = 'Created: ' + formatFollowupDate(lead.createdAt || new Date());
+
+      // Next due action & attempt history (matching Image 1)
+      const mainNextDate = document.getElementById('modal-main-next-date');
+      const mainAttemptHistory = document.getElementById('modal-main-attempt-history');
+      const currentStg = p.stages.find(s => s.id === lead.stageId) || p.stages[0];
       if (lead.nextFollowUp) {
+        if (mainNextDate) mainNextDate.innerText = formatFollowupDate(lead.nextFollowUp);
+        if (mainAttemptHistory) {
+          mainAttemptHistory.innerHTML = `<span><strong class="text-main">${currentStg.name}</strong> · attempt #1 · due <span class="text-gold font-bold">${formatFollowupDate(lead.nextFollowUp)}</span></span> <span class="text-[10px] text-muted-custom font-mono">(${formatFollowupDate(lead.createdAt || new Date())} · by ${lead.assignedToName || 'Sri Sri Admin'})</span>`;
+        }
         document.getElementById('modal-lead-next-update').innerHTML = '<i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i> <span class="text-amber-400 font-bold">' + formatFollowupDate(lead.nextFollowUp) + '</span>';
         document.getElementById('modal-lead-next-note').innerText = lead.nextFollowUpNote || 'Reattempt scheduled';
       } else {
+        if (mainNextDate) mainNextDate.innerText = 'No upcoming action scheduled';
+        if (mainAttemptHistory) mainAttemptHistory.innerText = `${currentStg.name} · Initial inquiry captured · Click Re-attempt to schedule`;
         document.getElementById('modal-lead-next-update').innerHTML = '<i data-lucide="calendar" class="w-3.5 h-3.5 text-gold"></i> <span>No follow-up set</span>';
         document.getElementById('modal-lead-next-note').innerText = 'Click button below to schedule';
       }
@@ -5054,7 +6589,7 @@
         btn.style.color = isActive ? '#020617' : 'inherit';
 
         btn.innerHTML = isActive ? '<span>✓</span> <span>' + stg.name + '</span>' : '<span>' + stg.name + '</span>';
-        btn.onclick = () => updateLeadStage(stg.id);
+        btn.onclick = () => requestLeadStageChange(stg.id);
         container.appendChild(btn);
       });
     }
@@ -5435,37 +6970,59 @@
 
     function renderLeadTimeline(lead) {
       const container = document.getElementById('modal-timeline-stream');
+      const badge = document.getElementById('modal-comments-count-badge');
       if (!container) return;
       container.innerHTML = '';
 
-      if (!lead.activities || lead.activities.length === 0) {
-        container.innerHTML = '<div class="p-6 text-center text-xs text-muted-custom bg-subtle/30 rounded-2xl border border-main">No activity logs recorded yet. Add a note or call update above.</div>';
+      let allActivities = lead.activities ? [...lead.activities] : [];
+
+      // If lead has notes but no activity yet, synthesize initial comment from notes so it appears under COMMENTS
+      if (lead.notes && lead.notes.trim() && !allActivities.some(a => (a.notes || a.text || '').trim() === lead.notes.trim())) {
+        allActivities.unshift({
+          id: 'act-init-' + lead.id,
+          userName: lead.assignedToName || 'Sri Sri Admin',
+          userEmail: lead.assignedToEmail || 'sales.ssply@gmail.com',
+          type: 'COMMENT',
+          notes: lead.notes,
+          text: lead.notes,
+          time: formatFollowupDate(lead.createdAt || new Date()),
+          timestamp: lead.createdAt || new Date().toISOString()
+        });
+      }
+
+      if (badge) badge.innerText = String(allActivities.length);
+
+      if (allActivities.length === 0) {
+        container.innerHTML = '<div class="p-6 text-center text-xs text-muted-custom bg-subtle/30 rounded-2xl border border-main">No remarks or comments recorded yet. Add a note above.</div>';
         return;
       }
 
-      const sorted = [...lead.activities].sort((a,b) => new Date(b.timestamp || b.time) - new Date(a.timestamp || a.time));
+      const sorted = allActivities.sort((a,b) => new Date(b.timestamp || b.time) - new Date(a.timestamp || a.time));
 
       sorted.forEach(act => {
         const item = document.createElement('div');
-        item.className = 'p-3.5 rounded-2xl bg-card border border-main space-y-2.5 shadow-xs';
+        item.className = 'p-3.5 rounded-2xl bg-card border border-main space-y-2 shadow-xs';
 
         const noteText = (act.notes || act.text || act.content || act.note || '').trim();
-        const typeBadge = act.type || 'NOTE';
         const displayTime = act.time || (act.timestamp ? formatFollowupDate(act.timestamp) : 'Recently');
-        const authorInitial = ((act.userName || 'AD')[0] || 'A').toUpperCase();
+        const authorIdentifier = act.userEmail || act.userName || 'sales.ssply@gmail.com';
 
         item.innerHTML = `
           <div class="flex items-center justify-between text-[11px]">
             <div class="flex items-center gap-2">
-              <span class="w-6 h-6 rounded-full bg-gold/20 text-gold font-bold flex items-center justify-center text-[10px] shrink-0">${authorInitial}</span>
-              <span class="font-bold text-main">${act.userName || 'Admin'}</span>
-              <span class="px-2 py-0.5 rounded-full font-bold bg-subtle border border-main/60 text-muted-custom text-[9px] uppercase">${typeBadge}</span>
+              <span class="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">
+                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+              </span>
+              <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
             </div>
-            <span class="text-muted-custom text-[10px] font-mono">${displayTime}</span>
+            <span class="text-muted-custom text-[10px] font-mono flex items-center gap-1">
+              <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
+              <span>${displayTime}</span>
+            </span>
           </div>
           
           ${noteText ? `
-            <div class="p-3 rounded-xl bg-subtle/50 border border-main text-xs text-main leading-relaxed break-words font-sans">
+            <div class="p-3 rounded-xl bg-subtle/60 border border-main text-xs text-main leading-relaxed break-words font-sans">
               ${noteText}
             </div>
           ` : ''}
@@ -5656,6 +7213,10 @@
       if (elCity) elCity.value = currentSelectedLead.city || currentSelectedLead.stateCity || '';
       const elClose = document.getElementById('edit-close-date');
       if (elClose) elClose.value = currentSelectedLead.closeDate || '';
+      const elCamp = document.getElementById('edit-campaign-name');
+      if (elCamp) elCamp.value = currentSelectedLead.campaignName || currentSelectedLead.campaign || '';
+      const elAdset = document.getElementById('edit-adset-name');
+      if (elAdset) elAdset.value = currentSelectedLead.adsetName || '';
       document.getElementById('edit-lead-modal').classList.remove('hidden');
     }
 
@@ -5677,6 +7238,10 @@
       if (elCity) currentSelectedLead.city = elCity.value.trim();
       const elClose = document.getElementById('edit-close-date');
       if (elClose) currentSelectedLead.closeDate = elClose.value;
+      const elCamp = document.getElementById('edit-campaign-name');
+      if (elCamp) currentSelectedLead.campaignName = elCamp.value.trim();
+      const elAdset = document.getElementById('edit-adset-name');
+      if (elAdset) currentSelectedLead.adsetName = elAdset.value.trim();
 
       const now = new Date();
       currentSelectedLead.lastActivityAt = now.toISOString();
@@ -5692,22 +7257,19 @@
       showToast('Lead details updated!', 'success');
     }
 
+    var pendingSingleDeleteLeadId = null;
+
     function deleteCurrentLeadSingle() {
       if (!isCurrentUserSuperAdmin() && !userHasPermission('leads_delete')) { showToast('Permission Denied: You do not have permission to delete leads.', 'error'); return; }
       if (!currentSelectedLead) return;
-      if (confirm('Are you sure you want to delete lead "' + currentSelectedLead.name + '"?')) {
-        deleteLeadFromCloud(currentSelectedLead.id);
-        leads = leads.filter(l => l.id !== currentSelectedLead.id);
-        tasks = tasks.filter(t => t.leadId !== currentSelectedLead.id);
-        localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
-        localStorage.setItem('sri_sri_tasks', JSON.stringify(tasks));
-        closeModal('lead-modal');
-        currentSelectedLead = null;
-        renderOpportunities();
-        renderPhonebookTable();
-        initDashboard();
-        showToast('Lead entry removed.', 'info');
-      }
+      pendingSingleDeleteLeadId = currentSelectedLead.id;
+      
+      const countText = document.getElementById('bulk-del-count-text');
+      if (countText) countText.innerText = '1';
+      const btnCount = document.getElementById('bulk-del-btn-count');
+      if (btnCount) btnCount.innerText = '1';
+
+      openModal('bulk-delete-confirm-modal');
     }
 
     function openNewLeadModal() {
@@ -5763,6 +7325,8 @@
       const materialType = document.getElementById('nl-material-type') ? document.getElementById('nl-material-type').value.trim() : '';
       const requirementTimeline = document.getElementById('nl-requirement-timeline') ? document.getElementById('nl-requirement-timeline').value.trim() : '';
       const city = document.getElementById('nl-city') ? document.getElementById('nl-city').value.trim() : '';
+      const campaignName = document.getElementById('nl-campaign-name') ? document.getElementById('nl-campaign-name').value.trim() : '';
+      const adsetName = document.getElementById('nl-adset-name') ? document.getElementById('nl-adset-name').value.trim() : '';
 
       const newLead = {
         id: 'lead-' + Date.now(),
@@ -5772,6 +7336,9 @@
         materialType,
         requirementTimeline,
         city,
+        campaignName: campaignName || (pip.name.includes('Facebook') ? 'Meta Inbound Campaign' : (pip.name.includes('Google') ? 'Google Ads Campaign' : '')),
+        adsetName: adsetName || '',
+        adPlatform: pip.name.includes('Facebook') ? 'Meta Ads' : (pip.name.includes('Google') ? 'Google Ads' : 'Direct Manual Entry'),
         clientType,
         pipelineId: pip.id,
         stageId: pip.stages[0].id,
@@ -7276,37 +8843,153 @@
     function renderAppsGrid() {
       const container = document.getElementById('apps-cards-container');
       if (!container) return;
+
       const apps = [
-        { id: 'app-tally', name: 'Tally Prime ERP', desc: 'Sync customer ledgers, invoices & pending outstanding balances automatically.', icon: 'calculator', status: 'Configured', isConnected: true },
-        { id: 'app-busy', name: 'Busy Accounting', desc: 'Real-time GST invoice push, stock item lookup & dispatch challans.', icon: 'file-spreadsheet', status: 'Available', isConnected: false },
-        { id: 'app-meta', name: 'Meta Cloud API', desc: 'Official WhatsApp Business Cloud API & direct webhook message routing.', icon: 'message-circle', status: 'Connected', isConnected: true },
-        { id: 'app-indiamart', name: 'IndiaMART B2B Leads', desc: 'Direct webhook integration to ingest plywood buyer inquiries into CRM.', icon: 'shopping-bag', status: 'Available', isConnected: false },
-        { id: 'app-tradeindia', name: 'TradeIndia Leads', desc: 'Automatic commercial contractor lead ingestion with instant SMS alert.', icon: 'globe', status: 'Available', isConnected: false },
-        { id: 'app-justdial', name: 'Justdial Directory', desc: 'Capture local interior and architect phone leads in real time.', icon: 'phone-forwarded', status: 'Available', isConnected: false },
-        { id: 'app-sheets', name: 'Google Sheets 2-Way Sync', desc: 'Export leads and sales transactions automatically to live spreadsheets.', icon: 'table', status: 'Connected', isConnected: true },
-        { id: 'app-razorpay', name: 'Razorpay Payment Gateway', desc: 'Generate instant payment links on WhatsApp and auto-mark deals won.', icon: 'credit-card', status: 'Available', isConnected: false }
+        {
+          id: 'meta_ads',
+          name: 'Meta Ads (Facebook & Instagram)',
+          desc: 'Auto-capture instant lead forms from Facebook & Instagram ad campaigns with Campaign & AdSet attribution.',
+          icon: 'megaphone',
+          category: 'Paid Ads',
+          handler: "openAdsIntegrationModal('meta_ads')",
+          isConn: !!(channelConfigs.meta_ads && channelConfigs.meta_ads.connected)
+        },
+        {
+          id: 'google_ads',
+          name: 'Google Ads (Search & PMax)',
+          desc: 'Direct ingestion of high-intent plywood buyer leads from Google Search Ads, Performance Max & YouTube.',
+          icon: 'search',
+          category: 'Paid Ads',
+          handler: "openAdsIntegrationModal('google_ads')",
+          isConn: !!(channelConfigs.google_ads && channelConfigs.google_ads.connected)
+        },
+        {
+          id: 'whatsapp',
+          name: 'Meta Cloud API (WhatsApp)',
+          desc: 'Official WhatsApp Business Cloud API for automated notifications, catalog broadcasts & lead follow-up.',
+          icon: 'message-circle',
+          category: 'Messaging',
+          handler: "openChannelConfigModal('whatsapp')",
+          isConn: !!(channelConfigs.whatsapp && channelConfigs.whatsapp.connected)
+        },
+        {
+          id: 'indiamart',
+          name: 'IndiaMART B2B Leads',
+          desc: 'Direct webhook integration to ingest wholesale plywood buyer inquiries into CRM in real time.',
+          icon: 'shopping-bag',
+          category: 'B2B Portal',
+          handler: "openAdsIntegrationModal('indiamart')",
+          isConn: !!(channelConfigs.indiamart && channelConfigs.indiamart.connected)
+        },
+        {
+          id: 'tradeindia',
+          name: 'TradeIndia Leads',
+          desc: 'Automatic commercial contractor & distributor inquiry ingestion with instant staff notification.',
+          icon: 'globe',
+          category: 'B2B Portal',
+          handler: "openAdsIntegrationModal('tradeindia')",
+          isConn: !!(channelConfigs.tradeindia && channelConfigs.tradeindia.connected)
+        },
+        {
+          id: 'justdial',
+          name: 'Justdial Directory Leads',
+          desc: 'Capture local interior designers, architects & homeowner phone inquiries in real time.',
+          icon: 'phone-forwarded',
+          category: 'Local Leads',
+          handler: "openAdsIntegrationModal('justdial')",
+          isConn: !!(channelConfigs.justdial && channelConfigs.justdial.connected)
+        },
+        {
+          id: 'sheets',
+          name: 'Google Sheets 2-Way Sync',
+          desc: 'Export leads and sales transactions automatically to live spreadsheets and vice versa.',
+          icon: 'table',
+          category: 'Sync & Export',
+          handler: "openAdsIntegrationModal('sheets')",
+          isConn: !!(channelConfigs.sheets && channelConfigs.sheets.connected)
+        },
+        {
+          id: 'tally',
+          name: 'Tally Prime ERP',
+          desc: 'Sync customer ledgers, GST sales vouchers & pending outstanding balances automatically.',
+          icon: 'calculator',
+          category: 'ERP & Accounts',
+          handler: "openAdsIntegrationModal('tally')",
+          isConn: !!(channelConfigs.tally && channelConfigs.tally.connected)
+        },
+        {
+          id: 'busy',
+          name: 'Busy Accounting Software',
+          desc: 'Real-time GST invoice push, stock item lookup & dispatch challans sync with CRM.',
+          icon: 'file-spreadsheet',
+          category: 'ERP & Accounts',
+          handler: "openAdsIntegrationModal('busy')",
+          isConn: !!(channelConfigs.busy && channelConfigs.busy.connected)
+        },
+        {
+          id: 'razorpay',
+          name: 'Razorpay Payment Gateway',
+          desc: 'Generate instant payment links on WhatsApp and auto-mark deals won on payment receipt.',
+          icon: 'credit-card',
+          category: 'Payments',
+          handler: "openChannelConfigModal('payments')",
+          isConn: !!(channelConfigs.payments && channelConfigs.payments.connected)
+        },
+        {
+          id: 'website_webhook',
+          name: 'Website Inbound Webhook',
+          desc: 'Capture quote requests & contact form leads directly from your official website.',
+          icon: 'globe',
+          category: 'Website',
+          handler: "openAdsIntegrationModal('website_webhook')",
+          isConn: !!(channelConfigs.website_webhook && channelConfigs.website_webhook.connected)
+        }
       ];
-      container.innerHTML = apps.map(app => `
-        <div class="p-5 rounded-3xl bg-card border border-main space-y-4 hover:border-gold/50 transition shadow-xs">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-gold border border-gold/20 flex items-center justify-center font-bold">
-                <i data-lucide="${app.icon}" class="w-5 h-5"></i>
+
+      container.innerHTML = apps.map(app => {
+        const isConn = app.isConn;
+        const statusText = isConn ? 'Connected & Active' : 'Available • Ready to Connect';
+        const statusColor = isConn ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-muted-custom bg-subtle border-main/50';
+
+        return `
+          <div class="p-5 rounded-3xl bg-card border border-main space-y-4 hover:border-gold/50 transition shadow-xs flex flex-col justify-between">
+            <div class="space-y-3">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl bg-amber-500/10 text-gold border border-gold/20 flex items-center justify-center font-bold shrink-0">
+                    <i data-lucide="${app.icon}" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <h4 class="font-bold text-sm text-main">${app.name}</h4>
+                      <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-subtle text-muted-custom border border-main/40">${app.category}</span>
+                    </div>
+                    <div class="mt-1 flex items-center gap-1.5">
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusColor}">
+                        <span class="w-1.5 h-1.5 rounded-full ${isConn ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}"></span>
+                        ${statusText}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h4 class="font-bold text-sm text-main">${app.name}</h4>
-                <span class="text-[10px] font-bold ${app.isConnected ? 'text-emerald-400' : 'text-muted-custom'}">● ${app.status}</span>
-              </div>
+              <p class="text-xs text-muted-custom leading-relaxed">${app.desc}</p>
+            </div>
+            <div class="pt-3 border-t border-main/50 flex items-center justify-between gap-2">
+              <button type="button" onclick="${app.handler}" class="text-xs font-bold text-gold hover:underline flex items-center gap-1">
+                <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                <span>Configuration</span>
+              </button>
+              <button type="button" onclick="${app.handler}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${isConn ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25' : 'bg-gold text-slate-950 shadow-xs hover:brightness-105'}">
+                <i data-lucide="${isConn ? 'sliders' : 'plug'}" class="w-3.5 h-3.5"></i>
+                <span>${isConn ? 'Manage Settings' : 'Connect'}</span>
+              </button>
             </div>
           </div>
-          <p class="text-xs text-muted-custom leading-relaxed">${app.desc}</p>
-          <div class="pt-3 border-t border-main/50 flex items-center justify-between">
-            <button onclick="showToast('${app.name} settings opened', 'info')" class="text-xs font-bold text-gold hover:underline">Configuration</button>
-            <button onclick="showToast('${app.name} status updated', 'success')" class="px-3 py-1.5 rounded-xl text-xs font-bold ${app.isConnected ? 'bg-subtle text-muted-custom' : 'bg-gold text-slate-950 shadow-xs'}">${app.isConnected ? 'Manage' : 'Connect'}</button>
-          </div>
-        </div>
-      `).join('');
-      lucide.createIcons();
+        `;
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
     }
 
     // ==================== SETTINGS INTEGRATIONS VIEW ====================
@@ -7329,7 +9012,12 @@
           city: 'Ludhiana',
           materialType: '19mm Calibrated Marine Ply & 1mm Mica',
           dealValue: 125000,
-          source: 'Facebook Ads'
+          source: 'Facebook Ads',
+          campaignName: 'Monsoon Kitchen Gurjan 2026',
+          adsetName: 'Mohali Architects & Builders 25-45',
+          adName: '19mm Club BWR Video Ad',
+          adPlatform: 'Meta Ads (Facebook/Instagram)',
+          formName: 'Instant Lead Form - Architectural Inquiry'
         },
         fields: [
           { id: 'meta-ad-account-id', label: 'Meta Ad Account ID *', placeholder: 'e.g. act_8829104812', type: 'text' },
@@ -7352,7 +9040,12 @@
           city: 'Jalandhar',
           materialType: 'Full Bungalow Flush Doors & Gurjan Core Ply',
           dealValue: 240000,
-          source: 'Google Ads'
+          source: 'Google Ads',
+          campaignName: 'Search - Wholesale Plywood Punjab',
+          adsetName: 'Contractors & Flush Doors Intent',
+          adName: 'Text Ad #2 - IS:710 Waterproof Certified',
+          adPlatform: 'Google Ads (Search & PMax)',
+          formName: 'Google Search Lead Form Extension'
         },
         fields: [
           { id: 'google-customer-id', label: 'Google Ads Customer ID (CID) *', placeholder: 'e.g. 456-789-0123', type: 'text' },
@@ -7445,6 +9138,75 @@
         fields: [
           { id: 'sheets-doc-url', label: 'Google Sheet URL or Spreadsheet ID *', placeholder: 'https://docs.google.com/spreadsheets/d/...', type: 'text' },
           { id: 'sheets-service-email', label: 'Service Account Email *', placeholder: 'crm-sync@srisriply-project.iam.gserviceaccount.com', type: 'text' }
+        ]
+      },
+      tradeindia: {
+        name: 'TradeIndia B2B Portal',
+        subtitle: 'Auto-ingest commercial timber & plywood inquiries from TradeIndia Inquiry API',
+        icon: 'globe',
+        defaultWebhook: 'https://crm.srisriplywoods.com/api/webhook/tradeindia',
+        defaultToken: 'sri_tradeindia_key_2026',
+        defaultPipeline: 'p-field',
+        sampleLead: {
+          name: 'Rajinder Gupta (Commercial Contractor)',
+          phone: '+91 98150 77665',
+          email: 'guptaplywood@rediffmail.com',
+          company: 'Gupta Builders & Woodcraft',
+          city: 'Patiala',
+          materialType: '100 Sheets Commercial 18mm & Shuttering Ply',
+          dealValue: 160000,
+          source: 'TradeIndia'
+        },
+        fields: [
+          { id: 'ti-user-id', label: 'TradeIndia User ID *', placeholder: 'e.g. 5839201', type: 'text' },
+          { id: 'ti-profile-id', label: 'TradeIndia Profile ID *', placeholder: 'e.g. 2948194', type: 'text' },
+          { id: 'ti-api-key', label: 'TradeIndia Inbound API Key *', placeholder: 'Enter API Key from TradeIndia My Account', type: 'text' }
+        ]
+      },
+      tally: {
+        name: 'Tally Prime ERP Connector',
+        subtitle: 'Bi-directional sync of Customer Ledgers, Sales Invoices & GST Outstandings',
+        icon: 'calculator',
+        defaultWebhook: 'http://localhost:9000',
+        defaultToken: 'sri_tally_odbc_sync_2026',
+        defaultPipeline: 'p-walkin',
+        sampleLead: {
+          name: 'Shree Balaji Timber Depot (Ledger Sync)',
+          phone: '+91 98765 43210',
+          email: 'balaji.timber@gmail.com',
+          company: 'Shree Balaji Timber Depot',
+          city: 'Ludhiana',
+          materialType: 'Gurjan Marine Ply 19mm - ₹2,45,000 Outstanding',
+          dealValue: 245000,
+          source: 'Tally Prime ERP'
+        },
+        fields: [
+          { id: 'tally-server-url', label: 'Tally Prime XML/ODBC Server URL *', placeholder: 'http://localhost:9000 or http://192.168.1.50:9000', type: 'text' },
+          { id: 'tally-company-name', label: 'Tally Company Name in ERP *', placeholder: 'Sri Sri Plywoods Pvt Ltd (2025-2026)', type: 'text' },
+          { id: 'tally-sync-interval', label: 'Auto Sync Interval (Minutes) *', placeholder: '15', type: 'text' }
+        ]
+      },
+      busy: {
+        name: 'Busy Accounting Software',
+        subtitle: 'Direct sync of GST Invoices, Dispatch Challans & Debtor Accounts',
+        icon: 'file-spreadsheet',
+        defaultWebhook: 'http://localhost:9005/api/busy-sync',
+        defaultToken: 'sri_busy_secret_token_2026',
+        defaultPipeline: 'p-walkin',
+        sampleLead: {
+          name: 'Oberoi Interiors (Busy Debtor Account)',
+          phone: '+91 98888 55443',
+          email: 'accounts@oberoi-interiors.com',
+          company: 'Oberoi Interiors Pvt Ltd',
+          city: 'Chandigarh',
+          materialType: 'Teak Veneer & Acrylic Sheets - Bill #BY-4412',
+          dealValue: 110000,
+          source: 'Busy Accounting'
+        },
+        fields: [
+          { id: 'busy-server-url', label: 'Busy API Server URL & Port *', placeholder: 'http://localhost:9005 or http://192.168.1.55:9005', type: 'text' },
+          { id: 'busy-company-code', label: 'Busy Company Code / DB Name *', placeholder: 'COMP0001 (Sri Sri Plywoods)', type: 'text' },
+          { id: 'busy-auth-token', label: 'Busy API Key / Auth Token *', placeholder: 'busy_auth_key_...', type: 'text' }
         ]
       }
     };
@@ -7694,6 +9456,7 @@
 
       localStorage.setItem('sri_sri_channel_configs', JSON.stringify(channelConfigs));
       renderIntegrationsGrid();
+      if (typeof renderAppsGrid === 'function') renderAppsGrid();
       closeModal('ads-integration-modal');
       showToast(`${pDef.name} integration credentials saved and live sync activated!`, 'success');
     }
@@ -7709,6 +9472,7 @@
         localStorage.setItem('sri_sri_channel_configs', JSON.stringify(channelConfigs));
       }
       renderIntegrationsGrid();
+      if (typeof renderAppsGrid === 'function') renderAppsGrid();
       showToast(`Integration disconnected successfully.`, 'info');
     }
 
@@ -7725,6 +9489,11 @@
       const now = new Date();
       const sample = pDef.sampleLead;
 
+      // Read custom simulation inputs if entered
+      const customCampaign = document.getElementById('ads-sim-campaign')?.value.trim() || sample.campaignName || 'Monsoon Kitchen Gurjan 2026';
+      const customAdSet = document.getElementById('ads-sim-adset')?.value.trim() || sample.adsetName || 'Mohali Architects & Builders 25-45';
+      const customAdName = document.getElementById('ads-sim-adname')?.value.trim() || sample.adName || '19mm Club BWR Video Ad';
+
       const newTestLead = {
         id: 'lead-ad-' + Date.now(),
         name: sample.name,
@@ -7739,6 +9508,11 @@
         requirementTimeline: 'Immediate (Within 48h)',
         closeDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
         source: sample.source || 'Ad Campaign',
+        campaignName: customCampaign,
+        adsetName: customAdSet,
+        adName: customAdName,
+        adPlatform: sample.adPlatform || sample.source || 'Meta Ads',
+        formName: sample.formName || 'Instant Lead Form - Plywood & Hardware Promo',
         clientType: 'Lead',
         priority: 'High',
         pipelineId: targetPipeline.id,
@@ -7747,26 +9521,16 @@
         assignedToEmail: assignedUser ? assignedUser.email : 'sriplywoodsgm@gmail.com',
         createdAt: now.toISOString(),
         lastActivityAt: now.toISOString(),
-        lastActivityText: `Incoming ad lead from ${sample.source} campaign`,
-        lastActivityUser: 'Ad Webhook',
-        notes: [
+        lastActivityText: `Incoming live lead from ${customCampaign} (${customAdSet})`,
+        lastActivityUser: 'Ad Inbound Webhook',
+        notes: `Automatic Ad Lead captured via ${customCampaign}. AdSet: ${customAdSet}. Creative: ${customAdName}.`,
+        history: [
           {
-            id: 'note-' + Date.now(),
-            text: `[Instant Ad Webhook Capture] Customer submitted instant inquiry form on ${sample.source}. Form responses automatically mapped.`,
-            userName: 'Ad Webhook Bot',
-            time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            id: 'hist-' + Date.now(),
+            stageName: targetPipeline.stages[0]?.name || 'New Lead',
             timestamp: now.toISOString(),
-            audioUrl: null
-          }
-        ],
-        activities: [
-          {
-            id: 'act-' + Date.now(),
-            userName: 'Ad Ingestion Engine',
-            type: 'WEBHOOK_CAPTURE',
-            notes: `New deal automatically generated from ${sample.source} campaign for "${targetPipeline.name}".`,
-            time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            timestamp: now.toISOString()
+            user: 'Ad Inbound Webhook',
+            text: `Lead ingested via ${customCampaign} (${customAdSet}) Webhook into ${targetPipeline.name}`
           }
         ]
       };
@@ -7790,12 +9554,18 @@
       const disBtn = document.getElementById('ads-btn-disconnect');
       if (disBtn) disBtn.style.display = '';
 
+      // Push to Firebase Realtime Sync
+      if (typeof syncLeadsToCloud === 'function') syncLeadsToCloud();
+
+      activePipelineId = targetPipeline.id;
       renderIntegrationsGrid();
       renderOpportunities();
       renderPhonebookTable();
       initDashboard();
 
-      showToast(`🎉 Test ${sample.source} lead generated! Pushed into "${targetPipeline.name}" assigned to ${assignedUser.name}.`, 'success');
+      closeModal('ads-integration-modal');
+      openLeadModal(newTestLead.id);
+      showToast('🚀 Live test lead injected with Campaign: "' + customCampaign + '" into ' + targetPipeline.name + '! Check attribution in details modal.', 'success');
     }
 
     // ==================== ACCOUNT VIEW ====================
@@ -8284,7 +10054,8 @@
             const workbook = XLSX.read(data, { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            // defval: '' is essential to ensure empty cells are never skipped or shifted
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
             if (!jsonRows || jsonRows.length < 2) {
               showToast('Uploaded spreadsheet is empty or has no header row.', 'error');
@@ -8292,7 +10063,7 @@
             }
 
             const headers = jsonRows[0].map(h => String(h || '').trim());
-            const rows = jsonRows.slice(1).filter(r => r.some(c => c !== null && c !== undefined && c !== ''));
+            const rows = jsonRows.slice(1).filter(r => r.some(c => c !== null && c !== undefined && String(c).trim() !== ''));
 
             processParsedImportData(headers, rows);
           } catch(err) {
@@ -8313,42 +10084,81 @@
     function handlePastedCSV() {
       const text = document.getElementById('import-csv-paste').value.trim();
       if (!text) {
-        showToast('Please paste CSV text first!', 'error');
+        showToast('Please paste Excel / CSV text first!', 'error');
         return;
       }
       parseCSVText(text);
     }
 
+    function parseCSVOrTSV(text) {
+      if (!text || !text.trim()) return { headers: [], rows: [] };
+
+      // Detect delimiter: Tab (\t) for copy-paste from Excel/Sheets vs comma (,) vs semicolon (;)
+      const firstLine = text.split(/\r?\n/)[0] || '';
+      let delimiter = ',';
+      if (firstLine.includes('\t') && (firstLine.split('\t').length >= firstLine.split(',').length)) {
+        delimiter = '\t';
+      } else if (firstLine.includes(';') && (firstLine.split(';').length > firstLine.split(',').length)) {
+        delimiter = ';';
+      }
+
+      const rows = [];
+      let currentRow = [];
+      let currentCell = '';
+      let insideQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (char === '"' || char === "'") {
+          if (insideQuotes && nextChar === char) {
+            currentCell += char;
+            i++; // skip escaped quote
+          } else {
+            insideQuotes = !insideQuotes;
+          }
+        } else if (char === delimiter && !insideQuotes) {
+          currentRow.push(currentCell.trim());
+          currentCell = '';
+        } else if ((char === '\r' || char === '\n') && !insideQuotes) {
+          if (char === '\r' && nextChar === '\n') i++;
+          currentRow.push(currentCell.trim());
+          if (currentRow.some(c => c !== '')) {
+            rows.push(currentRow);
+          }
+          currentRow = [];
+          currentCell = '';
+        } else {
+          currentCell += char;
+        }
+      }
+      if (currentCell || currentRow.length > 0) {
+        currentRow.push(currentCell.trim());
+        if (currentRow.some(c => c !== '')) {
+          rows.push(currentRow);
+        }
+      }
+
+      if (rows.length < 2) return { headers: [], rows: [] };
+
+      const headers = rows[0].map(h => String(h || '').trim());
+      const dataRows = rows.slice(1).map(r => {
+        const copy = [...r];
+        while (copy.length < headers.length) copy.push('');
+        return copy.slice(0, headers.length);
+      });
+
+      return { headers, rows: dataRows };
+    }
+
     function parseCSVText(csvText) {
-      const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-      if (lines.length < 2) {
+      const parsed = parseCSVOrTSV(csvText);
+      if (!parsed.rows || parsed.rows.length === 0) {
         showToast('CSV must contain at least a header row and 1 data row.', 'error');
         return;
       }
-
-      function splitCSVLine(line) {
-        const result = [];
-        let cur = '';
-        let inQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-          if (char === '"' || char === "'") {
-            inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
-            result.push(cur.trim());
-            cur = '';
-          } else {
-            cur += char;
-          }
-        }
-        result.push(cur.trim());
-        return result;
-      }
-
-      const headers = splitCSVLine(lines[0]);
-      const rows = lines.slice(1).map(splitCSVLine);
-
-      processParsedImportData(headers, rows);
+      processParsedImportData(parsed.headers, parsed.rows);
     }
 
     function processParsedImportData(headers, rows) {
@@ -8374,30 +10184,27 @@
     }
 
     const CRM_IMPORTABLE_FIELDS = [
-      { id: 'name', label: 'Name / Client Name *', match: ['name', 'opportunity', 'client', 'customer'] },
-      { id: 'phone', label: 'Phone Number', match: ['phone', 'mobile', 'contact', 'whatsapp', 'number', 'tel'] },
-      { id: 'email', label: 'Email Address', match: ['email', 'mail'] },
-      { id: 'company', label: 'Company / Firm Name', match: ['company', 'firm', 'business', 'org'] },
-      { id: 'dealValue', label: 'Value / Deal Amount', match: ['value', 'deal value', 'deal', 'budget', 'amount', 'price'] },
-      { id: 'sourceDetails', label: 'Source Details (Source De)', match: ['source de', 'source details', 'sub-source', 'adset', 'ad', 'campaign'] },
-      { id: 'source', label: 'Source', match: ['source', 'lead source', 'channel'] },
-      { id: 'priority', label: 'Priority (High/Med/Low)', match: ['priority'] },
-      { id: 'stage', label: 'Stage / Deal Status', match: ['stage', 'status'] },
-      { id: 'pipeline', label: 'Pipeline / Target Pipeline', match: ['pipeline', 'pipe', 'target pipeline', 'sheet'] },
-      { id: 'assignedTo', label: 'Assigned To / Executive', match: ['assigned to', 'assigned', 'executive', 'owner', 'agent', 'staff'] },
-      { id: 'tags', label: 'Tags / Labels', match: ['tags', 'tag', 'labels', 'label'] },
-      { id: 'notes', label: 'Notes / Description', match: ['notes', 'note', 'description', 'remarks', 'remark', 'comments'] },
-      { id: 'closeDate', label: 'Expected Close Date (Expected)', match: ['expected', 'expected close date', 'close date', 'target date', 'closing', 'due date'] },
-      { id: 'lossReason', label: 'Lost Reason (Lost Reasc)', match: ['lost reasc', 'lost reason', 'loss reason', 'reason'] },
-      { id: 'createdAt', label: 'Created At (Created A)', match: ['created a', 'created at', 'created', 'entry date', 'creation', 'date'] },
-      { id: 'wonAt', label: 'Won At (Won Date)', match: ['won at', 'won date', 'won time'] },
-      { id: 'lostAt', label: 'Lost At (Lost Date)', match: ['lost at', 'lost date', 'lost time'] },
-      { id: 'customerType', label: 'Customer Type', match: ['customer type', 'client type', 'type'] },
-      { id: 'materialType', label: 'Material Type', match: ['material', 'product', 'item', 'furniture'] },
-      { id: 'requirementDateTime', label: 'Requirement Timeline', match: ['requirement', 'timeline', 'time', 'duration'] },
-      { id: 'customerAddress', label: 'Customer Address', match: ['address', 'street', 'location', 'site'] },
-      { id: 'city', label: 'State / City', match: ['city', 'state', 'town'] },
-      { id: '_skip', label: '— Do Not Import / Skip Column —', match: [] }
+      { id: 'name', label: '👤 Client Name (ग्राहक का नाम) *', match: ['name', 'opportunity', 'client', 'customer'] },
+      { id: 'phone', label: '📞 Phone / WhatsApp (मोबाइल नंबर)', match: ['phone', 'mobile', 'contact', 'whatsapp', 'number', 'tel'] },
+      { id: 'email', label: '📧 Email Address (ईमेल)', match: ['email', 'mail'] },
+      { id: 'company', label: '🏢 Company / Firm (फ़र्म या दुकान का नाम)', match: ['company', 'firm', 'business', 'org'] },
+      { id: 'dealValue', label: '💰 Value / Deal Amount ₹ (डील का बजट)', match: ['value', 'deal value', 'deal', 'budget', 'amount', 'price'] },
+      { id: 'sourceDetails', label: '📢 Source Details (Source De / Ad campaign)', match: ['source de', 'source details', 'sub-source', 'adset', 'ad', 'campaign'] },
+      { id: 'source', label: '🏷️ Lead Source (Facebook, Walk-in, Google)', match: ['source', 'lead source', 'channel'] },
+      { id: 'priority', label: '🔥 Priority (High / Med / Low)', match: ['priority'] },
+      { id: 'stage', label: '📊 Stage / Status (डील का स्टेज)', match: ['stage', 'status'] },
+      { id: 'pipeline', label: '🔄 Target Pipeline (पाइपलाइन)', match: ['pipeline', 'pipe', 'target pipeline', 'sheet'] },
+      { id: 'assignedTo', label: '👨‍💼 Assigned Staff / Executive (कर्मचारी)', match: ['assigned to', 'assigned', 'executive', 'owner', 'agent', 'staff'] },
+      { id: 'tags', label: '🏷️ Tags / Labels (उदा. Contractor, VIP)', match: ['tags', 'tag', 'labels', 'label'] },
+      { id: 'notes', label: '💬 Notes / Comments / Remarks (टिप्पणी व रिमार्क्स)', match: ['notes', 'note', 'description', 'remarks', 'remark', 'comments', 'comment'] },
+      { id: 'closeDate', label: '📅 Expected Close Date (Expected)', match: ['expected', 'expected close date', 'close date', 'target date', 'closing', 'due date'] },
+      { id: 'lossReason', label: '❌ Lost Reason (Lost Reasc)', match: ['lost reasc', 'lost reason', 'loss reason', 'reason'] },
+      { id: 'createdAt', label: '🗓️ Created At (Created A)', match: ['created a', 'created at', 'created', 'entry date', 'creation', 'date'] },
+      { id: 'wonAt', label: '🏆 Won Date (Won At)', match: ['won at', 'won date', 'won time'] },
+      { id: 'lostAt', label: '🚫 Lost Date (Lost At)', match: ['lost at', 'lost date', 'lost time'] },
+      { id: 'customerAddress', label: '🏠 Customer Address (ग्राहक का पता)', match: ['address', 'street', 'location', 'site'] },
+      { id: 'city', label: '🏙️ State / City (राज्य या शहर)', match: ['city', 'state', 'town'] },
+      { id: '_skip', label: '⏭️ — Do Not Import / Skip Column (छोड़ दें) —', match: [] }
     ];
 
     function matchHeaderToField(header) {
@@ -8437,14 +10244,14 @@
         `).join('');
 
         tr.innerHTML = `
-          <td class="py-2 px-2 font-bold text-main font-mono text-xs">
-            <span class="px-2 py-0.5 rounded bg-subtle border border-main text-gold">${header}</span>
+          <td class="py-2.5 px-3 font-bold text-main font-mono text-xs">
+            <span class="px-2.5 py-1 rounded-lg bg-subtle border border-main text-gold shadow-2xs">${header}</span>
           </td>
-          <td class="py-2 px-2 text-muted-custom font-mono text-xs truncate max-w-[150px]" title="${sampleVal}">
-            ${sampleVal}
+          <td class="py-2.5 px-3 text-muted-custom font-sans text-xs truncate max-w-[180px]" title="${sampleVal}">
+            <span class="italic text-slate-300">${sampleVal}</span>
           </td>
-          <td class="py-2 px-2">
-            <select class="import-col-mapper w-full p-1.5 rounded-xl border border-main bg-card text-main font-bold text-xs focus:border-gold outline-none" data-col-index="${colIdx}">
+          <td class="py-2.5 px-3">
+            <select class="import-col-mapper w-full p-2 rounded-xl border border-main bg-card text-main font-bold text-xs focus:border-gold outline-none" data-col-index="${colIdx}">
               ${optionsHtml}
             </select>
           </td>
@@ -8567,14 +10374,16 @@
 
         const createdAtStr = leadObj.createdAt || now.toISOString();
 
-        // 5. Construct activities array
+        // 5. Construct activities & comments array
         const activities = [];
-        if (leadObj.notes) {
+        if (leadObj.notes && leadObj.notes.trim()) {
           activities.push({
             id: 'act-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
             userName: assigneeName,
-            type: 'NOTE',
-            notes: leadObj.notes,
+            userEmail: assigneeEmail,
+            type: 'COMMENT',
+            notes: leadObj.notes.trim(),
+            text: leadObj.notes.trim(),
             time: formatFollowupDate(createdAtStr),
             timestamp: createdAtStr,
             imageUrl: null
@@ -8584,8 +10393,10 @@
           activities.push({
             id: 'act-won-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
             userName: assigneeName,
+            userEmail: assigneeEmail,
             type: 'DEAL_WON',
             notes: 'Deal marked as Won at ' + leadObj.wonAt,
+            text: 'Deal marked as Won at ' + leadObj.wonAt,
             time: leadObj.wonAt,
             timestamp: leadObj.wonAt
           });
@@ -8594,17 +10405,25 @@
           activities.push({
             id: 'act-lost-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
             userName: assigneeName,
+            userEmail: assigneeEmail,
             type: 'DEAL_LOST',
             notes: 'Deal marked as Lost at ' + leadObj.lostAt + (leadObj.lossReason ? ' - Reason: ' + leadObj.lossReason : ''),
+            text: 'Deal marked as Lost at ' + leadObj.lostAt + (leadObj.lossReason ? ' - Reason: ' + leadObj.lossReason : ''),
             time: leadObj.lostAt,
             timestamp: leadObj.lostAt
           });
         }
 
-        // Format Deal Value
-        let formattedValue = leadObj.dealValue || '';
-        if (formattedValue && !formattedValue.startsWith('₹') && !isNaN(parseFloat(formattedValue.replace(/,/g, '')))) {
-          formattedValue = '₹ ' + formattedValue;
+        // Format Deal Value strictly as currency, never notes
+        let rawVal = (leadObj.dealValue || '').trim();
+        let formattedValue = 'Not set';
+        if (rawVal && rawVal !== 'Not set') {
+          const numOnly = rawVal.replace(/[^0-9.]/g, '');
+          if (numOnly && !isNaN(parseFloat(numOnly))) {
+            formattedValue = '₹ ' + parseFloat(numOnly).toLocaleString('en-IN');
+          } else {
+            formattedValue = rawVal.startsWith('₹') ? rawVal : ('₹ ' + rawVal);
+          }
         }
 
         const newLead = {
@@ -8613,8 +10432,8 @@
           phone: leadObj.phone || '',
           email: leadObj.email || '',
           company: leadObj.company || '',
-          dealValue: formattedValue || 'Not set',
-          budget: leadObj.notes || formattedValue || 'Imported via Excel',
+          dealValue: formattedValue,
+          budget: formattedValue,
           source: leadObj.source || 'Excel Import',
           sourceDetails: leadObj.sourceDetails || '',
           priority: leadObj.priority || 'Medium',
@@ -8634,15 +10453,20 @@
           customerType: leadObj.customerType || 'Existing Customer',
           materialType: leadObj.materialType || '',
           requirementTimeline: leadObj.requirementDateTime || '',
+          requirementDateTime: leadObj.requirementDateTime || '',
           address: leadObj.customerAddress || '',
           customerAddress: leadObj.customerAddress || '',
           city: leadObj.city || '',
+          stateCity: leadObj.city || '',
+          nextFollowUp: leadObj.closeDate || null,
+          nextFollowUpNote: leadObj.notes ? ('Follow up on: ' + leadObj.notes.substring(0, 40)) : 'Reattempt scheduled',
           lastActivityAt: now.toISOString(),
           lastActivityText: 'Imported into ' + rowPip.name,
-          lastActivityUser: loggedInUser ? loggedInUser.name : 'Admin',
+          lastActivityUser: assigneeName,
           activities: activities
         };
 
+        if (typeof sanitizeLeadRecord === 'function') sanitizeLeadRecord(newLead);
         leads.unshift(newLead);
         syncLeadToCloud(newLead);
         importedCount++;
