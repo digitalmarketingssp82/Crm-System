@@ -2066,7 +2066,7 @@
   <!-- ====================== MODAL 1: LEAD DETAILS ================ -->
   <!-- =================== (AJAY SHARMA STYLE REPLICA) ============== -->
   <!-- ============================================================= -->
-  <div id="lead-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4">
+  <div id="lead-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4" onclick="if(event.target === this) closeModal('lead-modal')">
     <div class="bg-card w-full max-w-5xl rounded-3xl shadow-2xl border border-main h-[94vh] flex flex-col overflow-hidden animate-in fade-in duration-200">
       
       <!-- TOP HEADER -->
@@ -2196,6 +2196,10 @@
               <div id="modal-lead-tags" class="flex flex-wrap gap-1 mt-0.5">—</div>
             </div>
             <div>
+              <p class="text-[10px] text-muted-custom font-semibold uppercase">REMARKS / NOTES</p>
+              <p class="font-bold text-amber-400 text-xs break-words" id="modal-lead-sidebar-notes">—</p>
+            </div>
+            <div>
               <p class="text-[10px] text-muted-custom font-semibold">CREATED AT</p>
               <p class="font-bold text-main font-mono text-[11px]" id="modal-lead-created-at">—</p>
             </div>
@@ -2317,12 +2321,24 @@
               </div>
             </div>
 
-            <!-- 4. ADD NOTE / CONVERSATION UPDATE -->
+            <!-- 4. COMMENTS / ACTIVITY STREAM & REMARKS HISTORY -->
+            <div class="space-y-3 pt-1">
+              <div class="flex items-center justify-between pb-1 border-b border-main/50">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-main flex items-center gap-2">
+                  <i data-lucide="message-square" class="w-4 h-4 text-purple-400"></i>
+                  <span>COMMENTS &amp; REMARKS HISTORY</span>
+                  <span id="modal-comments-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-subtle border border-main text-gold">0</span>
+                </h4>
+              </div>
+              <div class="space-y-3" id="modal-timeline-stream"></div>
+            </div>
+
+            <!-- 5. ADD NOTE / CONVERSATION UPDATE -->
             <div class="bg-card rounded-2xl border border-main p-4 shadow-sm space-y-3">
               <span class="text-xs font-bold uppercase tracking-wider text-main flex items-center gap-1.5">
-                <i data-lucide="message-square" class="w-3.5 h-3.5 text-gold"></i> ADD NOTE / UPDATE
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-gold"></i> ADD NEW NOTE / UPDATE
               </span>
-              <textarea id="modal-note-textarea" rows="3" placeholder="Write a note, update, or comment..." class="w-full p-3 rounded-xl border border-main bg-card text-main text-xs focus:border-gold focus:outline-none"></textarea>
+              <textarea id="modal-note-textarea" rows="2" placeholder="Write a new note, discussion update, or comment..." class="w-full p-3 rounded-xl border border-main bg-card text-main text-xs focus:border-gold focus:outline-none"></textarea>
 
               <!-- Scheduled follow-up selector with presets -->
               <div class="p-2.5 rounded-xl bg-subtle border border-main/60 space-y-1.5">
@@ -2405,18 +2421,6 @@
                   <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
               </div>
-            </div>
-
-            <!-- 5. COMMENTS / ACTIVITY STREAM (Matches Image 1) -->
-            <div class="space-y-3 pt-1">
-              <div class="flex items-center justify-between pb-1 border-b border-main/50">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-main flex items-center gap-2">
-                  <i data-lucide="message-square" class="w-4 h-4 text-purple-400"></i>
-                  <span>COMMENTS</span>
-                  <span id="modal-comments-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-subtle border border-main text-gold">0</span>
-                </h4>
-              </div>
-              <div class="space-y-3" id="modal-timeline-stream"></div>
             </div>
 
           </div>
@@ -4460,7 +4464,7 @@
       { id: 'p-complaint', name: 'new complaint', isDefault: false, stages: JSON.parse(JSON.stringify(defaultStagesTemplate)) }
     ]));
 
-    let activePipelineId = 'p-fb'; // Default to Facebook Leads as in user screenshot
+    let activePipelineId = localStorage.getItem('sri_sri_active_pipeline') || 'p-google';
     let opportunityViewMode = 'list';
 
     // ==================== COLUMNS CUSTOMIZATION SYSTEM ====================
@@ -5930,6 +5934,7 @@
 
     function changeActivePipeline(pipId) {
       activePipelineId = pipId;
+      try { localStorage.setItem('sri_sri_active_pipeline', pipId); } catch(e){}
       renderOpportunities();
     }
 
@@ -6169,7 +6174,9 @@
         const displayTags = lead.tags ? (typeof lead.tags === 'string' ? lead.tags.split(/[,;]+/).filter(Boolean).map(t => `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-gold border border-gold/30 mr-1">${t.trim()}</span>`).join('') : '—') : '—';
         
         let displayNotes = '—';
-        if (lead.lastContactAttempt) {
+        if (lead.notes && lead.notes.trim()) {
+          displayNotes = `<span class="truncate max-w-[200px] block font-sans text-amber-400 font-semibold text-xs" title="${escapeHtml(lead.notes)}">${escapeHtml(lead.notes)}</span>`;
+        } else if (lead.lastContactAttempt && (lead.lastContactAttempt.note || lead.lastContactAttempt.outcome)) {
           const lca = lead.lastContactAttempt;
           if (lca.type === 'CALL') {
             const isConnected = (lca.outcome || lead.lastCallOutcome || '').includes('Baat Hui');
@@ -6181,8 +6188,8 @@
                   <i data-lucide="${icon}" class="w-3 h-3"></i>
                   <span>${lca.outcome || lead.lastCallOutcome || 'Call Logged'}</span>
                 </span>
-                <span class="truncate block max-w-[150px] text-main font-medium" title="${lca.note || lead.notes || ''}">
-                  ${lca.note || lead.notes || 'Call completed'}
+                <span class="truncate block max-w-[180px] text-main font-medium" title="${escapeHtml(lca.note || '')}">
+                  ${escapeHtml(lca.note || 'Call completed')}
                 </span>
               </div>
             `;
@@ -6193,8 +6200,8 @@
                   <i data-lucide="message-circle" class="w-3 h-3"></i>
                   <span>WA Sent</span>
                 </span>
-                <span class="truncate block max-w-[150px] text-main font-medium" title="${lca.messageText || lca.note || lead.notes || ''}">
-                  ${lca.messageText || lca.note || lead.notes || 'WhatsApp delivered'}
+                <span class="truncate block max-w-[180px] text-main font-medium" title="${escapeHtml(lca.messageText || lca.note || '')}">
+                  ${escapeHtml(lca.messageText || lca.note || 'WhatsApp delivered')}
                 </span>
               </div>
             `;
@@ -6205,14 +6212,18 @@
                   <i data-lucide="check-circle" class="w-3 h-3"></i>
                   <span>${lca.outcome || 'Note'}</span>
                 </span>
-                <span class="truncate block max-w-[150px] text-main font-medium" title="${lca.note || lead.notes || ''}">
-                  ${lca.note || lead.notes || '—'}
+                <span class="truncate block max-w-[180px] text-main font-medium" title="${escapeHtml(lca.note || '')}">
+                  ${escapeHtml(lca.note || '—')}
                 </span>
               </div>
             `;
           }
-        } else if (lead.notes) {
-          displayNotes = `<span class="truncate max-w-[150px] block font-sans text-main" title="${lead.notes}">${lead.notes}</span>`;
+        } else if (lead.activities && lead.activities.length > 0) {
+          const actWithNote = lead.activities.find(a => (a.notes || a.text || '').trim());
+          if (actWithNote) {
+            const txt = (actWithNote.notes || actWithNote.text).trim();
+            displayNotes = `<span class="truncate max-w-[200px] block font-sans text-amber-400 font-semibold text-xs" title="${escapeHtml(txt)}">${escapeHtml(txt)}</span>`;
+          }
         }
 
         // Campaign & AdSet formatted badges
@@ -7153,130 +7164,169 @@
 
     // ==================== LEAD DETAILS MODAL ====================
     function openLeadModal(leadId) {
-      const lead = leads.find(l => l.id === leadId);
-      if (!lead) return;
-      currentSelectedLead = lead;
+      try {
+        const lead = leads.find(l => l.id === leadId);
+        if (!lead) return;
+        currentSelectedLead = lead;
 
-      const initials = lead.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-      document.getElementById('modal-lead-avatar').innerText = initials;
-      document.getElementById('modal-lead-name').innerText = lead.name;
-      document.getElementById('modal-lead-priority-pill').innerText = '• ' + (lead.priority || 'Medium');
-      document.getElementById('modal-lead-phone').innerText = lead.phone || 'No phone provided';
+        const leadName = lead.name || lead.company || lead.phone || 'Inquiry';
+        const initials = leadName.split(/\s+/).filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'LD';
+        
+        const avatarEl = document.getElementById('modal-lead-avatar');
+        if (avatarEl) avatarEl.innerText = initials;
+        const nameEl = document.getElementById('modal-lead-name');
+        if (nameEl) nameEl.innerText = leadName;
+        const prioPill = document.getElementById('modal-lead-priority-pill');
+        if (prioPill) prioPill.innerText = '• ' + (lead.priority || 'Medium');
+        const phoneEl = document.getElementById('modal-lead-phone');
+        if (phoneEl) phoneEl.innerText = lead.phone || 'No phone provided';
 
-      const btnCall = document.getElementById('modal-btn-call');
-      const btnWa = document.getElementById('modal-btn-whatsapp');
-      if (lead.phone) {
-        btnCall.href = 'tel:' + lead.phone;
-        btnCall.onclick = function(e) { if(e) e.preventDefault(); initiateCallWithLogging(lead.id); };
-        btnWa.href = 'https://wa.me/91' + lead.phone.replace(/[^0-9]/g, '');
-        btnWa.onclick = function(e) { if(e) e.preventDefault(); openWhatsAppComposerModal(lead.id); };
-      } else {
-        btnCall.href = '#';
-        btnCall.onclick = function() { return false; };
-        btnWa.href = '#';
-        btnWa.onclick = function() { return false; };
-      }
+        const btnCall = document.getElementById('modal-btn-call');
+        const btnWa = document.getElementById('modal-btn-whatsapp');
+        if (btnCall && btnWa) {
+          if (lead.phone) {
+            btnCall.href = 'tel:' + lead.phone;
+            btnCall.onclick = function(e) { if(e) e.preventDefault(); initiateCallWithLogging(lead.id); };
+            btnWa.href = 'https://wa.me/91' + lead.phone.replace(/[^0-9]/g, '');
+            btnWa.onclick = function(e) { if(e) e.preventDefault(); openWhatsAppComposerModal(lead.id); };
+          } else {
+            btnCall.href = '#';
+            btnCall.onclick = function() { return false; };
+            btnWa.href = '#';
+            btnWa.onclick = function() { return false; };
+          }
+        }
 
-      updateModalLastAttemptCard(lead);
+        updateModalLastAttemptCard(lead);
 
-      document.getElementById('modal-lead-deal-value').innerText = lead.dealValue || lead.budget || 'Not set';
-      document.getElementById('modal-lead-priority').innerText = '• ' + (lead.priority || 'Medium');
-      document.getElementById('modal-lead-type').innerText = lead.clientType || 'Existing Customer';
-      document.getElementById('modal-lead-address').innerText = lead.address || 'Not specified';
-      const mComp = document.getElementById('modal-lead-company');
-      if (mComp) mComp.innerText = lead.company || '—';
-      const mMat = document.getElementById('modal-lead-material-type');
-      if (mMat) mMat.innerText = lead.materialType || '—';
-      const mTime = document.getElementById('modal-lead-requirement-timeline');
-      if (mTime) mTime.innerText = lead.requirementTimeline || lead.requirementDateTime || '—';
-      const mCity = document.getElementById('modal-lead-city');
-      if (mCity) mCity.innerText = lead.city || lead.stateCity || '—';
-      const mClose = document.getElementById('modal-lead-close-date');
-      if (mClose) mClose.innerText = lead.closeDate || lead.expectedCloseDate || '—';
+        const dealValEl = document.getElementById('modal-lead-deal-value');
+        if (dealValEl) dealValEl.innerText = lead.dealValue || lead.budget || 'Not set';
+        const prioEl = document.getElementById('modal-lead-priority');
+        if (prioEl) prioEl.innerText = '• ' + (lead.priority || 'Medium');
+        const typeEl = document.getElementById('modal-lead-type');
+        if (typeEl) typeEl.innerText = lead.clientType || lead.customerType || 'Existing Customer';
+        const addrEl = document.getElementById('modal-lead-address');
+        if (addrEl) addrEl.innerText = lead.address || lead.customerAddress || 'Not specified';
+        
+        const mComp = document.getElementById('modal-lead-company');
+        if (mComp) mComp.innerText = lead.company || '—';
+        const mMat = document.getElementById('modal-lead-material-type');
+        if (mMat) mMat.innerText = lead.materialType || '—';
+        const mTime = document.getElementById('modal-lead-requirement-timeline');
+        if (mTime) mTime.innerText = lead.requirementTimeline || lead.requirementDateTime || '—';
+        const mCity = document.getElementById('modal-lead-city');
+        if (mCity) mCity.innerText = lead.city || lead.stateCity || '—';
+        const mClose = document.getElementById('modal-lead-close-date');
+        if (mClose) mClose.innerText = lead.closeDate || lead.expectedCloseDate || '—';
 
-      const mSrcDe = document.getElementById('modal-lead-source-details');
-      if (mSrcDe) {
-        mSrcDe.innerHTML = formatLeadSourceBadge(lead);
-      }
+        // Sidebar Notes / Remarks
+        const mSideNotes = document.getElementById('modal-lead-sidebar-notes');
+        if (mSideNotes) mSideNotes.innerText = (lead.notes && lead.notes.trim()) ? lead.notes.trim() : '—';
 
-      const mTags = document.getElementById('modal-lead-tags');
-      if (mTags) {
-        if (lead.tags) {
-          const tagsArr = typeof lead.tags === 'string' ? lead.tags.split(/[,;]+/).map(t => t.trim()).filter(Boolean) : (Array.isArray(lead.tags) ? lead.tags : []);
-          mTags.innerHTML = tagsArr.map(t => `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-gold border border-gold/30">${t}</span>`).join('') || '—';
+        const mSrcDe = document.getElementById('modal-lead-source-details');
+        if (mSrcDe) {
+          mSrcDe.innerHTML = formatLeadSourceBadge(lead);
+        }
+
+        const mTags = document.getElementById('modal-lead-tags');
+        if (mTags) {
+          if (lead.tags) {
+            const tagsArr = typeof lead.tags === 'string' ? lead.tags.split(/[,;]+/).map(t => t.trim()).filter(Boolean) : (Array.isArray(lead.tags) ? lead.tags : []);
+            mTags.innerHTML = tagsArr.map(t => `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-gold border border-gold/30">${t}</span>`).join('') || '—';
+          } else {
+            mTags.innerText = '—';
+          }
+        }
+
+        const mCreated = document.getElementById('modal-lead-created-at');
+        if (mCreated) mCreated.innerText = formatFollowupDate(lead.createdAt || lead.lastActivityAt);
+
+        const mOutcome = document.getElementById('modal-lead-outcome');
+        if (mOutcome) {
+          if (lead.wonAt) {
+            mOutcome.innerHTML = '<span class="text-emerald-400 font-bold flex items-center gap-1">🏆 Won: ' + formatFollowupDate(lead.wonAt) + '</span>';
+          } else if (lead.lostAt || lead.lossReason) {
+            mOutcome.innerHTML = '<span class="text-rose-400 font-bold">❌ Lost: ' + (lead.lostAt ? formatFollowupDate(lead.lostAt) : '') + (lead.lossReason ? ' (' + lead.lossReason + ')' : '') + '</span>';
+          } else {
+            mOutcome.innerHTML = '<span class="text-blue-400 font-bold">⏳ Active in Pipeline</span>';
+          }
+        }
+
+        const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0] || { name: 'Direct', stages: defaultStagesTemplate };
+        const pipNameEl = document.getElementById('modal-lead-pipeline-name');
+        if (pipNameEl) pipNameEl.innerText = p.name;
+        const staffEl = document.getElementById('modal-lead-assigned-staff');
+        if (staffEl) staffEl.innerText = lead.assignedToName || 'Sri Sri Admin';
+
+        // Ad Campaign & AdSet Attribution
+        const campEl = document.getElementById('modal-lead-campaign-name');
+        if (campEl) campEl.innerText = lead.campaignName || lead.campaign || '—';
+        const adsetEl = document.getElementById('modal-lead-adset-name');
+        if (adsetEl) adsetEl.innerText = lead.adsetName || '—';
+        const adEl = document.getElementById('modal-lead-ad-name');
+        if (adEl) adEl.innerText = lead.adName || '—';
+        const platEl = document.getElementById('modal-lead-ad-platform');
+        if (platEl) platEl.innerText = lead.adPlatform || lead.source || 'Direct Inquiry';
+
+        // Description & Notes highlight - Guaranteed display of remarks
+        let mainNoteText = (lead.notes && lead.notes.trim()) ? lead.notes.trim() : '';
+        if (!mainNoteText && lead.activities && lead.activities.length > 0) {
+          const foundActNote = lead.activities.find(a => (a.notes || a.text || '').trim());
+          if (foundActNote) mainNoteText = (foundActNote.notes || foundActNote.text).trim();
+        }
+        if (!mainNoteText && lead.requirementTimeline) {
+          mainNoteText = 'Requirement: ' + lead.requirementTimeline;
+        }
+        if (!mainNoteText) {
+          mainNoteText = 'No description notes recorded.';
+        }
+        const descEl = document.getElementById('modal-lead-description');
+        if (descEl) descEl.innerText = mainNoteText;
+
+        const createdBadge = document.getElementById('modal-lead-created-date-badge');
+        if (createdBadge) createdBadge.innerText = 'Created: ' + formatFollowupDate(lead.createdAt || new Date());
+
+        // Next due action & attempt history (matching Image 1)
+        const mainNextDate = document.getElementById('modal-main-next-date');
+        const mainAttemptHistory = document.getElementById('modal-main-attempt-history');
+        const currentStg = (p && p.stages && p.stages.length) ? (p.stages.find(s => s.id === lead.stageId) || p.stages[0]) : defaultStagesTemplate[0];
+        if (lead.nextFollowUp) {
+          if (mainNextDate) mainNextDate.innerText = formatFollowupDate(lead.nextFollowUp);
+          if (mainAttemptHistory) {
+            mainAttemptHistory.innerHTML = `<span><strong class="text-main">${currentStg.name}</strong> · attempt #1 · due <span class="text-gold font-bold">${formatFollowupDate(lead.nextFollowUp)}</span></span> <span class="text-[10px] text-muted-custom font-mono">(${formatFollowupDate(lead.createdAt || new Date())} · by ${lead.assignedToName || 'Sri Sri Admin'})</span>`;
+          }
+          const nextUpEl = document.getElementById('modal-lead-next-update');
+          if (nextUpEl) nextUpEl.innerHTML = '<i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i> <span class="text-amber-400 font-bold">' + formatFollowupDate(lead.nextFollowUp) + '</span>';
+          const nextNoteEl = document.getElementById('modal-lead-next-note');
+          if (nextNoteEl) nextNoteEl.innerText = lead.nextFollowUpNote || 'Reattempt scheduled';
         } else {
-          mTags.innerText = '—';
+          if (mainNextDate) mainNextDate.innerText = 'No upcoming action scheduled';
+          if (mainAttemptHistory) mainAttemptHistory.innerText = `${currentStg.name} · Initial inquiry captured · Click Re-attempt to schedule`;
+          const nextUpEl = document.getElementById('modal-lead-next-update');
+          if (nextUpEl) nextUpEl.innerHTML = '<i data-lucide="calendar" class="w-3.5 h-3.5 text-gold"></i> <span>No follow-up set</span>';
+          const nextNoteEl = document.getElementById('modal-lead-next-note');
+          if (nextNoteEl) nextNoteEl.innerText = 'Click button below to schedule';
         }
+
+        renderLeadStagesBar(lead, p);
+        renderLeadTimeline(lead);
+
+        // Enforce lead modal action button permissions
+        const isLeadModalOwner = isCurrentUserSuperAdmin();
+        const btnLmEdit = document.getElementById('btn-lead-modal-edit');
+        if (btnLmEdit) btnLmEdit.style.display = (isLeadModalOwner || userHasPermission('leads_edit')) ? '' : 'none';
+        const btnLmDel = document.getElementById('btn-lead-modal-delete');
+        if (btnLmDel) btnLmDel.style.display = (isLeadModalOwner || userHasPermission('leads_delete')) ? '' : 'none';
+        const btnLmTr = document.getElementById('btn-lead-modal-transfer');
+        if (btnLmTr) btnLmTr.style.display = (isLeadModalOwner || userHasPermission('leads_transfer')) ? '' : 'none';
+
+      } catch(err) {
+        console.warn('openLeadModal parsing note:', err);
       }
 
-      const mCreated = document.getElementById('modal-lead-created-at');
-      if (mCreated) mCreated.innerText = formatFollowupDate(lead.createdAt || lead.lastActivityAt);
-
-      const mOutcome = document.getElementById('modal-lead-outcome');
-      if (mOutcome) {
-        if (lead.wonAt) {
-          mOutcome.innerHTML = '<span class="text-emerald-400 font-bold flex items-center gap-1">🏆 Won: ' + lead.wonAt + '</span>';
-        } else if (lead.lostAt || lead.lossReason) {
-          mOutcome.innerHTML = '<span class="text-rose-400 font-bold">❌ Lost: ' + (lead.lostAt || '') + (lead.lossReason ? ' (' + lead.lossReason + ')' : '') + '</span>';
-        } else {
-          mOutcome.innerHTML = '<span class="text-blue-400 font-bold">⏳ Active in Pipeline</span>';
-        }
-      }
-
-      const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
-      document.getElementById('modal-lead-pipeline-name').innerText = p.name;
-      document.getElementById('modal-lead-assigned-staff').innerText = lead.assignedToName || 'Sri Sri Admin';
-
-      // Ad Campaign & AdSet Attribution
-      const campEl = document.getElementById('modal-lead-campaign-name');
-      if (campEl) campEl.innerText = lead.campaignName || lead.campaign || '—';
-      const adsetEl = document.getElementById('modal-lead-adset-name');
-      if (adsetEl) adsetEl.innerText = lead.adsetName || '—';
-      const adEl = document.getElementById('modal-lead-ad-name');
-      if (adEl) adEl.innerText = lead.adName || '—';
-      const platEl = document.getElementById('modal-lead-ad-platform');
-      if (platEl) platEl.innerText = lead.adPlatform || lead.source || 'Direct Inquiry';
-
-      // Description & Notes highlight
-      const descText = (lead.notes && lead.notes.trim()) ? lead.notes.trim() : (lead.requirementTimeline ? ('Requirement: ' + lead.requirementTimeline) : 'No description notes recorded.');
-      const descEl = document.getElementById('modal-lead-description');
-      if (descEl) descEl.innerText = descText;
-
-      const createdBadge = document.getElementById('modal-lead-created-date-badge');
-      if (createdBadge) createdBadge.innerText = 'Created: ' + formatFollowupDate(lead.createdAt || new Date());
-
-      // Next due action & attempt history (matching Image 1)
-      const mainNextDate = document.getElementById('modal-main-next-date');
-      const mainAttemptHistory = document.getElementById('modal-main-attempt-history');
-      const currentStg = p.stages.find(s => s.id === lead.stageId) || p.stages[0];
-      if (lead.nextFollowUp) {
-        if (mainNextDate) mainNextDate.innerText = formatFollowupDate(lead.nextFollowUp);
-        if (mainAttemptHistory) {
-          mainAttemptHistory.innerHTML = `<span><strong class="text-main">${currentStg.name}</strong> · attempt #1 · due <span class="text-gold font-bold">${formatFollowupDate(lead.nextFollowUp)}</span></span> <span class="text-[10px] text-muted-custom font-mono">(${formatFollowupDate(lead.createdAt || new Date())} · by ${lead.assignedToName || 'Sri Sri Admin'})</span>`;
-        }
-        document.getElementById('modal-lead-next-update').innerHTML = '<i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i> <span class="text-amber-400 font-bold">' + formatFollowupDate(lead.nextFollowUp) + '</span>';
-        document.getElementById('modal-lead-next-note').innerText = lead.nextFollowUpNote || 'Reattempt scheduled';
-      } else {
-        if (mainNextDate) mainNextDate.innerText = 'No upcoming action scheduled';
-        if (mainAttemptHistory) mainAttemptHistory.innerText = `${currentStg.name} · Initial inquiry captured · Click Re-attempt to schedule`;
-        document.getElementById('modal-lead-next-update').innerHTML = '<i data-lucide="calendar" class="w-3.5 h-3.5 text-gold"></i> <span>No follow-up set</span>';
-        document.getElementById('modal-lead-next-note').innerText = 'Click button below to schedule';
-      }
-
-      renderLeadStagesBar(lead, p);
-      renderLeadTimeline(lead);
-
-      // Enforce lead modal action button permissions
-      const isLeadModalOwner = isCurrentUserSuperAdmin();
-      const btnLmEdit = document.getElementById('btn-lead-modal-edit');
-      if (btnLmEdit) btnLmEdit.style.display = (isLeadModalOwner || userHasPermission('leads_edit')) ? '' : 'none';
-      const btnLmDel = document.getElementById('btn-lead-modal-delete');
-      if (btnLmDel) btnLmDel.style.display = (isLeadModalOwner || userHasPermission('leads_delete')) ? '' : 'none';
-      const btnLmTr = document.getElementById('btn-lead-modal-transfer');
-      if (btnLmTr) btnLmTr.style.display = (isLeadModalOwner || userHasPermission('leads_transfer')) ? '' : 'none';
-
-      document.getElementById('lead-modal').classList.remove('hidden');
-      lucide.createIcons();
+      // 100% Fail-safe: Always open modal immediately using openModal so inline style="display:none" is reset to "display:flex"
+      openModal('lead-modal');
+      if (window.lucide) lucide.createIcons();
     }
 
     function openLeadModalByPhone(phone) {
@@ -7385,7 +7435,7 @@
       if (!currentSelectedLead) return;
       document.getElementById('fu-modal-note').value = '';
       setModalFollowupPreset('tomorrow_10');
-      document.getElementById('followup-schedule-modal').classList.remove('hidden');
+      openModal('followup-schedule-modal');
     }
 
     function quickReattemptCall() {
@@ -7822,8 +7872,8 @@
         const item = document.createElement('div');
         item.className = 'p-3.5 rounded-2xl bg-card border border-main space-y-2 shadow-xs';
 
-        const displayTime = act.time || (act.timestamp ? formatFollowupDate(act.timestamp) : 'Recently');
-        const authorIdentifier = act.userEmail || act.userName || 'sales.ssply@gmail.com';
+        const displayTime = formatFollowupDate(act.time || act.timestamp || lead.createdAt);
+        const authorIdentifier = act.userName || act.userEmail || lead.assignedToName || 'Sri Sri Admin';
 
         // Check if Call Log
         if (act.type === 'CALL_LOG' || act.callOutcome) {
@@ -7850,7 +7900,7 @@
                 <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
                 ${outcomeBadge}
               </div>
-              <span class="text-muted-custom text-[10px] font-mono flex items-center gap-1 shrink-0">
+              <span class="text-gold text-[10px] font-mono flex items-center gap-1 shrink-0 font-bold">
                 <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
                 <span>${displayTime}</span>
               </span>
@@ -7879,7 +7929,7 @@
                   <i data-lucide="send" class="w-2.5 h-2.5"></i> WhatsApp Sent
                 </span>
               </div>
-              <span class="text-muted-custom text-[10px] font-mono flex items-center gap-1 shrink-0">
+              <span class="text-gold text-[10px] font-mono flex items-center gap-1 shrink-0 font-bold">
                 <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
                 <span>${displayTime}</span>
               </span>
@@ -7893,25 +7943,42 @@
             </div>
           `;
         } else {
-          // Standard comment or uploaded note
+          // Standard comment, remark or uploaded note
           const noteText = (act.notes || act.text || act.content || act.note || '').trim();
+          let typeBadge = '';
+          let bgClass = 'bg-subtle/70';
+          let borderClass = 'border-main';
+          if (act.type && act.type !== 'COMMENT') {
+            if (act.type === 'DEAL_LOST') {
+              typeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">❌ Deal Lost</span>';
+              bgClass = 'bg-rose-500/10';
+              borderClass = 'border-rose-500/30';
+            } else if (act.type === 'DEAL_WON') {
+              typeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">🏆 Deal Won</span>';
+              bgClass = 'bg-emerald-500/10';
+              borderClass = 'border-emerald-500/30';
+            } else {
+              typeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-gold border border-gold/30">' + act.type + '</span>';
+            }
+          }
+
           item.innerHTML = `
             <div class="flex items-center justify-between text-[11px]">
               <div class="flex items-center gap-2">
-                <span class="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold shrink-0">
-                  <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                <span class="w-6 h-6 rounded-lg bg-amber-500/10 text-gold flex items-center justify-center font-bold shrink-0">
+                  <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
                 </span>
                 <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
-                ${act.type && act.type !== 'COMMENT' ? '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-subtle text-gold">' + act.type + '</span>' : ''}
+                ${typeBadge}
               </div>
-              <span class="text-muted-custom text-[10px] font-mono flex items-center gap-1 shrink-0">
+              <span class="text-gold text-[10px] font-mono flex items-center gap-1 shrink-0 font-bold">
                 <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
                 <span>${displayTime}</span>
               </span>
             </div>
             
             ${noteText ? `
-              <div class="p-3 rounded-xl bg-subtle/60 border border-main text-xs text-main leading-relaxed break-words font-sans">
+              <div class="p-3 rounded-xl ${bgClass} border ${borderClass} text-xs text-main leading-relaxed break-words font-sans font-medium">
                 ${noteText}
               </div>
             ` : ''}
@@ -9083,7 +9150,7 @@
         staffSelect.appendChild(opt);
       });
 
-      document.getElementById('transfer-modal').classList.remove('hidden');
+      openModal('transfer-modal');
     }
 
     function executeLeadTransfer() {
@@ -9151,7 +9218,7 @@
       if (elCamp) elCamp.value = currentSelectedLead.campaignName || currentSelectedLead.campaign || '';
       const elAdset = document.getElementById('edit-adset-name');
       if (elAdset) elAdset.value = currentSelectedLead.adsetName || '';
-      document.getElementById('edit-lead-modal').classList.remove('hidden');
+      openModal('edit-lead-modal');
     }
 
     function saveEditedLeadDetails() {
@@ -9226,7 +9293,7 @@
       document.getElementById('nl-followup').value = '';
       document.getElementById('nl-address').value = '';
       document.getElementById('nl-budget').value = '';
-      document.getElementById('new-lead-modal').classList.remove('hidden');
+      openModal('new-lead-modal');
     }
 
     function saveNewLead() {
@@ -10389,7 +10456,7 @@
     }
 
     function openNewWaTemplateModal() {
-      document.getElementById('wa-template-modal').classList.remove('hidden');
+      openModal('wa-template-modal');
     }
 
     function saveNewWaTemplate() {
@@ -11653,7 +11720,7 @@
       document.getElementById('tf-name').value = '';
       document.getElementById('tf-phone').value = '';
       document.getElementById('tf-notes').value = '';
-      document.getElementById('test-form-modal').classList.remove('hidden');
+      openModal('test-form-modal');
     }
 
     function submitPublicFormLead() {
