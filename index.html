@@ -2144,6 +2144,31 @@
               <p id="modal-last-attempt-text" class="text-xs font-semibold text-main leading-snug">No contact attempt recorded yet</p>
               <p id="modal-last-attempt-time" class="text-[10px] text-muted-custom font-mono">Click Call or WhatsApp to connect</p>
             </div>
+
+            <!-- LAST ACTIVITY AUDIT (User, Role, Device & IP) -->
+            <div class="p-2.5 rounded-2xl bg-card border border-main/80 space-y-1.5 mt-2 shadow-xs" id="modal-last-audit-container">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] font-extrabold uppercase tracking-wider text-purple-400 flex items-center gap-1">
+                  <i data-lucide="shield-check" class="w-3 h-3"></i> LAST ACTION AUDIT
+                </span>
+                <span id="modal-last-audit-role" class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">Super Admin</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-md bg-subtle border border-main flex items-center justify-center text-[10px] text-gold font-bold">
+                  <i data-lucide="user" class="w-3 h-3"></i>
+                </span>
+                <span class="font-bold text-main text-xs" id="modal-last-audit-user-name">Sri Sri Admin</span>
+              </div>
+              <p id="modal-last-audit-action" class="text-[11px] font-medium text-main leading-snug line-clamp-2">Initial inquiry captured</p>
+              <div class="pt-1 border-t border-main/60 flex items-center justify-between text-[9px] text-muted-custom font-mono">
+                <span id="modal-last-audit-device">💻 Windows PC · Chrome</span>
+                <span id="modal-last-audit-ip" class="text-gold font-bold">🌐 IP: 223.178.xxx</span>
+              </div>
+              <p id="modal-last-audit-time" class="text-[9px] text-gold font-mono font-bold flex items-center gap-1">
+                <i data-lucide="clock" class="w-2.5 h-2.5"></i>
+                <span id="modal-last-audit-time-text">16 Oct 11:15 AM</span>
+              </p>
+            </div>
           </div>
 
           <!-- Deal & Budget Details -->
@@ -2432,56 +2457,66 @@
   <!-- ============================================================= -->
   <!-- ============ MODAL 2: REATTEMPT & FOLLOW-UP SCHEDULER ======= -->
   <!-- ============================================================= -->
-  <div id="followup-schedule-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-card w-full max-w-md rounded-3xl shadow-2xl p-6 border border-main space-y-4">
-      <div class="flex items-center justify-between pb-2 border-b border-main">
-        <h3 class="text-base font-bold text-main flex items-center gap-2">
-          <i data-lucide="calendar-plus" class="w-4 h-4 text-gold"></i>
-          <span>Schedule Reattempt & Follow-up</span>
-        </h3>
-        <button onclick="closeModal('followup-schedule-modal')" class="text-muted-custom hover:text-gold"><i data-lucide="x" class="w-4 h-4"></i></button>
+  <div id="followup-schedule-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[100005] hidden flex items-center justify-center p-3 sm:p-4" onclick="if(event.target === this) closeModal('followup-schedule-modal')">
+    <div class="bg-card w-full max-w-md rounded-3xl shadow-2xl p-6 border border-main space-y-4 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between pb-3 border-b border-main">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gold/15 text-gold flex items-center justify-center font-bold">
+            <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold text-main">Schedule Reattempt & Follow-up</h3>
+            <p class="text-[11px] text-muted-custom">Direct date & time selection with mandatory note</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('followup-schedule-modal')" class="p-1.5 rounded-xl bg-subtle hover:bg-rose-500/20 text-muted-custom hover:text-rose-400 border border-main transition cursor-pointer" title="Close">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
       </div>
       
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block text-muted-custom font-bold mb-1">Select Action / Reason</label>
-          <select id="fu-modal-action" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold">
-            <option value="Call Not Picked - Reattempt">🔄 Call Not Picked - Reattempt</option>
-            <option value="Customer Busy - Call Later">📞 Customer Busy - Call Later</option>
-            <option value="Quotation Follow-up">📑 Share Plywood Quotation & Follow-up</option>
-            <option value="Site Visit & Measurement">📐 Site Measurement Visit</option>
-            <option value="Sample Delivery">🪵 Plywood / Laminate Sample Delivery</option>
-            <option value="Payment Follow-up">💰 Payment Follow-up</option>
-          </select>
+      <div class="space-y-4 text-xs">
+        <!-- Direct Follow-up Date & Time Picker with Quick Presets -->
+        <div class="p-3 rounded-2xl bg-subtle/60 border border-main space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-main flex items-center gap-1.5 text-xs">
+              <i data-lucide="clock" class="w-3.5 h-3.5 text-gold"></i>
+              <span>Next Follow-up Date & Time *</span>
+            </label>
+            <span class="text-[10px] text-gold font-bold">1-Click Presets</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1.5">
+            <button type="button" onclick="setModalFollowupPreset('2h')" class="p-2 rounded-xl bg-card hover:border-gold hover:text-gold border border-main font-bold text-[11px] text-main transition flex items-center justify-center gap-1">⏱️ In 2 Hours</button>
+            <button type="button" onclick="setModalFollowupPreset('tomorrow_10')" class="p-2 rounded-xl bg-card hover:border-gold hover:text-gold border border-main font-bold text-[11px] text-main transition flex items-center justify-center gap-1">🌅 Tomorrow 10 AM</button>
+            <button type="button" onclick="setModalFollowupPreset('tomorrow_16')" class="p-2 rounded-xl bg-card hover:border-gold hover:text-gold border border-main font-bold text-[11px] text-main transition flex items-center justify-center gap-1">🌇 Tomorrow 4 PM</button>
+            <button type="button" onclick="setModalFollowupPreset('2d')" class="p-2 rounded-xl bg-card hover:border-gold hover:text-gold border border-main font-bold text-[11px] text-main transition flex items-center justify-center gap-1">📅 In 2 Days</button>
+          </div>
+
+          <input type="datetime-local" id="fu-modal-datetime" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold text-xs focus:ring-1 focus:ring-gold outline-hidden">
         </div>
 
+        <!-- Mandatory Conversation Details / Note Textarea -->
         <div>
-          <div class="flex items-center justify-between mb-1">
-            <label class="font-bold text-muted-custom">Next Follow-up Date & Time *</label>
-            <span class="text-[10px] text-gold font-bold">Quick Presets</span>
-          </div>
-          <div class="grid grid-cols-2 gap-1.5 mb-2">
-            <button type="button" onclick="setModalFollowupPreset('2h')" class="p-1.5 rounded-lg bg-subtle hover:bg-card border border-main font-bold text-[10px] text-main">⏱️ In 2 Hours</button>
-            <button type="button" onclick="setModalFollowupPreset('tomorrow_10')" class="p-1.5 rounded-lg bg-subtle hover:bg-card border border-main font-bold text-[10px] text-main">🌅 Tomorrow 10:00 AM</button>
-            <button type="button" onclick="setModalFollowupPreset('tomorrow_16')" class="p-1.5 rounded-lg bg-subtle hover:bg-card border border-main font-bold text-[10px] text-main">🌇 Tomorrow 04:00 PM</button>
-            <button type="button" onclick="setModalFollowupPreset('2d')" class="p-1.5 rounded-lg bg-subtle hover:bg-card border border-main font-bold text-[10px] text-main">📅 In 2 Days</button>
-          </div>
-          <input type="datetime-local" id="fu-modal-datetime" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold">
-        </div>
-
-        <div>
-          <label class="block font-bold text-main mb-1 flex items-center justify-between">
-            <span>Mandatory Note / Reason *</span>
-            <span class="text-rose-500 font-extrabold text-[10px] uppercase">Compulsory</span>
+          <label class="block font-bold text-main mb-1.5 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="message-square" class="w-3.5 h-3.5 text-purple-400"></i>
+              <span>Discussion Details / Activity Note *</span>
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500/15 text-rose-400 border border-rose-500/30 uppercase tracking-wide">Compulsory</span>
           </label>
-          <textarea id="fu-modal-note" rows="3" required placeholder="Enter conversation details, reattempt reason, or next discussion agenda (e.g., Client did not answer, callback requested at 4 PM)..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-semibold outline-none focus:border-gold"></textarea>
-          <p class="text-[10px] text-muted-custom mt-0.5">⚠️ Entering a note/reason is strictly mandatory to schedule next follow-up or reattempt.</p>
+          <textarea id="fu-modal-note" rows="3" required placeholder="Customer se kya baat hui, kya rate/requirement discuss hui, ya next call ka purpose kya hai likhein..." class="w-full p-3 rounded-2xl border border-main bg-card text-main text-xs font-semibold outline-hidden focus:border-gold focus:ring-1 focus:ring-gold"></textarea>
+          <p class="text-[10px] text-muted-custom mt-1 flex items-center gap-1">
+            <span class="text-rose-400 font-bold">⚠️ Note:</span> Reattempt ya follow-up set karne ke liye discussion details likhna compulsory hai.
+          </p>
         </div>
       </div>
 
-      <div class="flex justify-end gap-2 pt-2 border-t border-main">
-        <button onclick="closeModal('followup-schedule-modal')" class="px-4 py-2 border border-main rounded-xl text-xs text-muted-custom">Cancel</button>
-        <button onclick="saveFollowupSchedule()" class="px-5 py-2 bg-gold text-slate-950 font-bold text-xs rounded-xl shadow-md hover:brightness-105">Save Follow-up</button>
+      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-main">
+        <button type="button" onclick="closeModal('followup-schedule-modal')" class="px-4 py-2.5 border border-main rounded-xl text-xs font-bold text-muted-custom hover:text-main hover:bg-subtle transition">Cancel</button>
+        <button type="button" onclick="saveFollowupSchedule()" class="px-5 py-2.5 bg-gold hover:brightness-110 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Save Follow-up</span>
+        </button>
       </div>
     </div>
   </div>
@@ -2653,94 +2688,126 @@
   <!-- ============================================================= -->
   <!-- ====================== MODAL 5: EDIT LEAD =================== -->
   <!-- ============================================================= -->
-  <div id="edit-lead-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-card w-full max-w-md rounded-3xl shadow-2xl p-6 border border-main space-y-4">
-      <div class="flex items-center justify-between pb-2 border-b border-main">
-        <h3 class="text-base font-bold text-main">Edit Client Details</h3>
-        <button onclick="closeModal('edit-lead-modal')" class="text-muted-custom hover:text-gold"><i data-lucide="x" class="w-4 h-4"></i></button>
-      </div>
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block text-muted-custom font-bold mb-1">Client Name</label>
-          <input type="text" id="edit-name" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold">
-        </div>
-        <div>
-          <label class="block text-muted-custom font-bold mb-1">Client Type</label>
-          <select id="edit-client-type" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold">
-            <option value="Existing Customer">Existing Customer</option>
-            <option value="Carpenter / Thekedar">Carpenter / Thekedar</option>
-            <option value="Walk-in Visitor">Walk-in Visitor</option>
-            <option value="Architect / Interior">Architect / Designer</option>
-            <option value="New Lead">New Lead</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-muted-custom font-bold mb-1">Lead Source</label>
-          <select id="edit-source" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold outline-none focus:border-gold">
-            <option value="Manual Entry">✍️ Manual Entry</option>
-            <option value="Walk-in">🏬 Walk-in / Direct Visit</option>
-            <option value="Meta Ads">🎯 Meta Ads (Facebook & Instagram)</option>
-            <option value="Google Ads">🔍 Google Ads (Search & PMax)</option>
-            <option value="Phone Call">📞 Inbound Phone Call</option>
-            <option value="Excel Import">📊 Excel / CSV Import</option>
-            <option value="Website Webhook">🌐 Website / Online Form</option>
-            <option value="Reference">🤝 Reference / Referral</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-muted-custom font-bold mb-1">Mobile Number</label>
-          <input type="tel" id="edit-phone" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-mono">
-        </div>
-        <div>
-          <label class="block text-muted-custom font-bold mb-1">Deal Value / Budget</label>
-          <input type="text" id="edit-deal-value" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
-        </div>
-        <div>
-          <label class="block text-muted-custom font-bold mb-1">Company / Firm Name</label>
-          <input type="text" id="edit-company" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  <div id="edit-lead-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[100005] hidden flex items-center justify-center p-3 sm:p-6" onclick="if(event.target === this) closeModal('edit-lead-modal')">
+    <div class="bg-card w-full max-w-2xl max-h-[88vh] rounded-3xl shadow-2xl border border-main flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Sticky Header with Big Clear Close Button -->
+      <div class="flex items-center justify-between p-4 sm:p-5 border-b border-main shrink-0 bg-card">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gold/15 text-gold border border-gold/30 flex items-center justify-center font-bold">
+            <i data-lucide="edit-3" class="w-5 h-5"></i>
+          </div>
           <div>
-            <label class="block text-muted-custom font-bold mb-1">Material Type</label>
-            <input type="text" id="edit-material-type" placeholder="e.g. home_furniture" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+            <h3 class="text-base font-extrabold text-main">Edit Client Details</h3>
+            <p class="text-[11px] text-muted-custom">Update profile, contact, budget & campaign metadata</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('edit-lead-modal')" class="p-2 rounded-xl bg-subtle hover:bg-rose-500/20 text-muted-custom hover:text-rose-400 border border-main transition cursor-pointer" title="Close Modal">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Scrollable Form Body -->
+      <div class="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1 custom-scrollbar">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-muted-custom font-bold mb-1">Client Name *</label>
+            <input type="text" id="edit-name" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold focus:border-gold outline-hidden">
+          </div>
+          <div>
+            <label class="block text-muted-custom font-bold mb-1">Mobile Number *</label>
+            <input type="tel" id="edit-phone" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-mono font-bold focus:border-gold outline-hidden">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-muted-custom font-bold mb-1">Client Type</label>
+            <select id="edit-client-type" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold focus:border-gold outline-hidden">
+              <option value="Existing Customer">Existing Customer</option>
+              <option value="Carpenter / Thekedar">Carpenter / Thekedar</option>
+              <option value="Walk-in Visitor">Walk-in Visitor</option>
+              <option value="Architect / Interior">Architect / Designer</option>
+              <option value="New Lead">New Lead</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-muted-custom font-bold mb-1">Lead Source</label>
+            <select id="edit-source" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold outline-hidden focus:border-gold">
+              <option value="Manual Entry">✍️ Manual Entry</option>
+              <option value="Walk-in">🏬 Walk-in / Direct Visit</option>
+              <option value="Meta Ads">🎯 Meta Ads (Facebook & Instagram)</option>
+              <option value="Google Ads">🔍 Google Ads (Search & PMax)</option>
+              <option value="Phone Call">📞 Inbound Phone Call</option>
+              <option value="Excel Import">📊 Excel / CSV Import</option>
+              <option value="Website Webhook">🌐 Website / Online Form</option>
+              <option value="Reference">🤝 Reference / Referral</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-muted-custom font-bold mb-1">Deal Value / Budget (₹)</label>
+            <input type="text" id="edit-deal-value" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold focus:border-gold outline-hidden">
+          </div>
+          <div>
+            <label class="block text-muted-custom font-bold mb-1">Company / Firm Name</label>
+            <input type="text" id="edit-company" class="w-full p-2.5 rounded-xl border border-main bg-card text-main focus:border-gold outline-hidden">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-muted-custom font-bold mb-1">Material Type / Requirement</label>
+            <input type="text" id="edit-material-type" placeholder="e.g. 19mm Gurjan Ply, Acrylic Sheet" class="w-full p-2.5 rounded-xl border border-main bg-card text-main focus:border-gold outline-hidden">
           </div>
           <div>
             <label class="block text-muted-custom font-bold mb-1">Requirement Timeline</label>
-            <input type="text" id="edit-requirement-timeline" placeholder="e.g. within_7_days" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+            <input type="text" id="edit-requirement-timeline" placeholder="e.g. within_7_days, immediate" class="w-full p-2.5 rounded-xl border border-main bg-card text-main focus:border-gold outline-hidden">
           </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <div class="sm:col-span-2">
             <label class="block text-muted-custom font-bold mb-1">Customer / Site Address</label>
-            <input type="text" id="edit-address" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+            <input type="text" id="edit-address" class="w-full p-2.5 rounded-xl border border-main bg-card text-main focus:border-gold outline-hidden">
           </div>
           <div>
             <label class="block text-muted-custom font-bold mb-1">State / City</label>
-            <input type="text" id="edit-city" placeholder="e.g. Mohali" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+            <input type="text" id="edit-city" placeholder="e.g. Mohali / Chandigarh" class="w-full p-2.5 rounded-xl border border-main bg-card text-main focus:border-gold outline-hidden">
           </div>
         </div>
+
         <div>
           <label class="block text-muted-custom font-bold mb-1">Target Close Date</label>
-          <input type="date" id="edit-close-date" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+          <input type="date" id="edit-close-date" class="w-full p-2.5 rounded-xl border border-main bg-card text-main focus:border-gold outline-hidden">
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label class="block text-muted-custom font-bold mb-1">Ad Campaign Name</label>
-            <input type="text" id="edit-campaign-name" placeholder="e.g. Monsoon Kitchen Gurjan 2026" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+            <input type="text" id="edit-campaign-name" placeholder="e.g. Monsoon Kitchen Gurjan 2026" class="w-full p-2.5 rounded-xl border border-main bg-card text-main focus:border-gold outline-hidden">
           </div>
           <div>
             <label class="block text-muted-custom font-bold mb-1">AdSet / Ad Name</label>
-            <input type="text" id="edit-adset-name" placeholder="e.g. Mohali Architects & Builders" class="w-full p-2.5 rounded-xl border border-main bg-card text-main">
+            <input type="text" id="edit-adset-name" placeholder="e.g. Mohali Architects & Builders" class="w-full p-2.5 rounded-xl border border-main bg-card text-main focus:border-gold outline-hidden">
           </div>
         </div>
+
         <div>
-          <label class="block text-muted-custom font-bold mb-1">Requirement / Notes</label>
-          <textarea id="edit-budget" rows="2" class="w-full p-2.5 rounded-xl border border-main bg-card text-main"></textarea>
+          <label class="block text-muted-custom font-bold mb-1">Description & Remarks / Notes</label>
+          <textarea id="edit-budget" rows="3" placeholder="Enter additional customer requirements, notes, or remarks..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main focus:border-gold outline-hidden"></textarea>
         </div>
       </div>
-      <div class="flex justify-end gap-2 pt-2 border-t border-main">
-        <button onclick="closeModal('edit-lead-modal')" class="px-4 py-2 border border-main rounded-xl text-xs text-muted-custom">Cancel</button>
-        <button onclick="saveEditedLeadDetails()" class="px-5 py-2 bg-gold text-slate-950 font-bold text-xs rounded-xl shadow-md">Save Changes</button>
+
+      <!-- Sticky Footer with Cancel and Save Buttons -->
+      <div class="flex items-center justify-end gap-3 p-4 border-t border-main shrink-0 bg-card">
+        <button type="button" onclick="closeModal('edit-lead-modal')" class="px-5 py-2.5 border border-main rounded-xl text-xs font-bold text-muted-custom hover:text-main hover:bg-subtle transition">Cancel</button>
+        <button type="button" onclick="saveEditedLeadDetails()" class="px-6 py-2.5 bg-gold hover:brightness-110 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          <span>Save Changes</span>
+        </button>
       </div>
     </div>
   </div>
@@ -4425,7 +4492,7 @@
     </div>
   </div>
 
-  <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2.5 pointer-events-none max-w-md"></div>
+  <div id="toast-container" class="fixed bottom-6 right-6 z-[9999999] flex flex-col gap-2.5 pointer-events-none max-w-md"></div>
 
   <!-- ============================================================= -->
   <!-- ======================== JAVASCRIPT LOGIC =================== -->
@@ -4441,13 +4508,85 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
     }
+    // ==================== GLOBAL AUDIT & DEVICE/IP TRACKING ENGINE ====================
+    let currentClientIp = 'Local Client';
+    const currentClientDevice = (function() {
+      const ua = navigator.userAgent || '';
+      let dev = 'Desktop PC';
+      if (/mobile/i.test(ua)) dev = 'Mobile Device';
+      else if (/tablet|ipad/i.test(ua)) dev = 'Tablet';
+
+      let os = 'Windows';
+      if (ua.indexOf('Win') !== -1) os = 'Windows';
+      else if (ua.indexOf('Mac') !== -1) os = 'MacOS';
+      else if (ua.indexOf('Android') !== -1) os = 'Android';
+      else if (ua.indexOf('Linux') !== -1) os = 'Linux';
+      else if (/iphone|ipad|ipod/i.test(ua)) os = 'iOS';
+
+      let browser = 'Chrome';
+      if (ua.indexOf('Edg') !== -1) browser = 'Edge';
+      else if (ua.indexOf('Chrome') !== -1) browser = 'Chrome';
+      else if (ua.indexOf('Safari') !== -1 && ua.indexOf('Chrome') === -1) browser = 'Safari';
+      else if (ua.indexOf('Firefox') !== -1) browser = 'Firefox';
+
+      return `${dev} (${os} · ${browser})`;
+    })();
+
+    // Asynchronously fetch client real public IP
+    (function fetchPublicIp() {
+      if (typeof fetch !== 'function') return;
+      fetch('https://api.ipify.org?format=json')
+        .then(r => r.json())
+        .then(d => { if (d && d.ip) currentClientIp = d.ip; })
+        .catch(() => {
+          fetch('https://api64.ipify.org?format=json')
+            .then(r => r.json())
+            .then(d => { if (d && d.ip) currentClientIp = d.ip; })
+            .catch(() => {});
+        });
+    })();
+
+    function logLeadActivity(lead, type, notes, extra = {}) {
+      if (!lead) return;
+      if (!lead.activities) lead.activities = [];
+      const now = new Date();
+      const user = loggedInUser || { name: 'Sri Sri Admin', email: 'sales.ssply@gmail.com', role: 'Super Admin' };
+      const timeStr = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const act = {
+        id: 'act-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+        type: type || 'NOTE',
+        notes: notes || '',
+        text: notes || '',
+        userName: user.name || 'Admin',
+        userEmail: user.email || '',
+        userRole: user.role || 'Super Admin',
+        device: currentClientDevice,
+        ip: currentClientIp,
+        time: timeStr,
+        timestamp: now.toISOString(),
+        ...extra
+      };
+
+      lead.activities.unshift(act);
+
+      // Keep summary attributes updated on lead
+      lead.lastActivityAt = act.timestamp;
+      lead.lastActivityText = notes;
+      lead.lastActivityUser = act.userName;
+      lead.lastActivityRole = act.userRole;
+      lead.lastActivityDevice = act.device;
+      lead.lastActivityIp = act.ip;
+
+      return act;
+    }
+
     const defaultStagesTemplate = [
       { id: 'stg-1', name: 'New Lead', color: '#38BDF8', isWon: false, isLost: false },
       { id: 'stg-2', name: 'Call Not Pick/User Busy', color: '#60A5FA', isWon: false, isLost: false },
       { id: 'stg-3', name: 'Validated/Follow up', color: '#818CF8', isWon: false, isLost: false },
       { id: 'stg-4', name: 'Quotation shared(Follow-up)', color: '#F59E0B', isWon: false, isLost: false },
       { id: 'stg-5', name: 'Office Visit Scheduled', color: '#A78BFA', isWon: false, isLost: false },
-      { id: 'stg-6', name: 'Site Visit Schedule', color: '#38BDF8', isWon: false, isLost: false },
       { id: 'stg-7', name: 'Site Visit Done', color: '#D99B26', isWon: false, isLost: false },
       { id: 'stg-8', name: 'Purchased', color: '#10B981', isWon: true, isLost: false },
       { id: 'stg-9', name: 'Not Qualified', color: '#EF4444', isWon: false, isLost: true },
@@ -4463,6 +4602,16 @@
       { id: 'p-might', name: 'Might Buy More', isDefault: false, stages: JSON.parse(JSON.stringify(defaultStagesTemplate)) },
       { id: 'p-complaint', name: 'new complaint', isDefault: false, stages: JSON.parse(JSON.stringify(defaultStagesTemplate)) }
     ]));
+
+    // Sanitize pipelines: permanently eliminate 'Site Visit Schedule' (stg-6)
+    try {
+      pipelines.forEach(p => {
+        if (p && p.stages) {
+          p.stages = p.stages.filter(s => s.id !== 'stg-6' && !s.name.toLowerCase().includes('site visit schedule'));
+        }
+      });
+      localStorage.setItem('sri_sri_pipelines', JSON.stringify(pipelines));
+    } catch(e){}
 
     let activePipelineId = localStorage.getItem('sri_sri_active_pipeline') || 'p-google';
     let opportunityViewMode = 'list';
@@ -4789,6 +4938,16 @@
 
     // DATA STORES
     let leads = JSON.parse(localStorage.getItem('sri_sri_leads') || '[]');
+    try {
+      let leadsMigrated = false;
+      leads.forEach(l => {
+        if (l && l.stageId === 'stg-6') {
+          l.stageId = 'stg-7';
+          leadsMigrated = true;
+        }
+      });
+      if (leadsMigrated) localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+    } catch(e){}
     let tasks = JSON.parse(localStorage.getItem('sri_sri_tasks') || '[]');
     let waBroadcasts = JSON.parse(localStorage.getItem('sri_sri_broadcasts') || '[]');
     if (waBroadcasts.length === 0) {
@@ -4872,23 +5031,23 @@
       if (!container) return;
       const toast = document.createElement('div');
       
-      let bgStyle = 'background: #0f172a; color: #ffffff; border: 2px solid #d4af37; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);';
+      let bgStyle = 'background: #0f172a; color: #ffffff; border: 2px solid #d4af37; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85); z-index: 9999999 !important; position: relative;';
       let iconHtml = '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-400 shrink-0"></i>';
 
       if (type === 'error') {
-        bgStyle = 'background: #881337; color: #ffffff; border: 2px solid #f43f5e; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);';
+        bgStyle = 'background: #881337; color: #ffffff; border: 2px solid #f43f5e; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85); z-index: 9999999 !important; position: relative;';
         iconHtml = '<i data-lucide="alert-triangle" class="w-5 h-5 text-rose-300 shrink-0"></i>';
       } else if (type === 'info') {
-        bgStyle = 'background: #1e1b4b; color: #ffffff; border: 2px solid #6366f1; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);';
+        bgStyle = 'background: #1e1b4b; color: #ffffff; border: 2px solid #6366f1; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85); z-index: 9999999 !important; position: relative;';
         iconHtml = '<i data-lucide="info" class="w-5 h-5 text-indigo-300 shrink-0"></i>';
       } else if (type === 'warning') {
-        bgStyle = 'background: #78350f; color: #ffffff; border: 2px solid #f59e0b; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);';
+        bgStyle = 'background: #78350f; color: #ffffff; border: 2px solid #f59e0b; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85); z-index: 9999999 !important; position: relative;';
         iconHtml = '<i data-lucide="alert-circle" class="w-5 h-5 text-amber-300 shrink-0"></i>';
       }
 
       if (toast.style) toast.style.cssText = bgStyle;
       if (typeof toast.setAttribute === 'function') toast.setAttribute('style', bgStyle);
-      toast.className = 'px-4 py-3 rounded-2xl flex items-center gap-3 text-xs font-extrabold pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0 z-[9999] max-w-md';
+      toast.className = 'px-4 py-3 rounded-2xl flex items-center gap-3 text-xs font-extrabold pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0 z-[9999999] max-w-md shadow-2xl';
       toast.innerHTML = iconHtml + '<span style="color: #ffffff !important; font-size: 13px; font-weight: 700; line-height: 1.4;">' + escapeHtml(message) + '</span>';
       
       container.appendChild(toast);
@@ -6454,7 +6613,31 @@
       if (idsToDelete.length === 0) return;
       const count = idsToDelete.length;
 
+      const delUser = loggedInUser || { name: 'Sri Sri Admin', email: 'sales.ssply@gmail.com', role: 'Super Admin' };
+      const delTimeStr = new Date().toLocaleDateString('en-IN') + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
       idsToDelete.forEach(id => {
+        const leadToDelete = leads.find(l => l.id === id);
+        const delAudit = {
+          id: 'audit-del-' + Date.now() + '-' + Math.random().toString(36).substring(2,6),
+          type: 'LEAD_DELETED',
+          leadId: id,
+          leadName: leadToDelete ? leadToDelete.name : 'Unknown',
+          leadPhone: leadToDelete ? leadToDelete.phone : '',
+          userName: delUser.name,
+          userEmail: delUser.email,
+          userRole: delUser.role || 'Super Admin',
+          device: currentClientDevice,
+          ip: currentClientIp,
+          time: delTimeStr,
+          timestamp: new Date().toISOString()
+        };
+        try {
+          let systemAudits = JSON.parse(localStorage.getItem('sri_sri_system_audits') || '[]');
+          systemAudits.unshift(delAudit);
+          if (systemAudits.length > 500) systemAudits = systemAudits.slice(0, 500);
+          localStorage.setItem('sri_sri_system_audits', JSON.stringify(systemAudits));
+        } catch(e){}
         deleteLeadFromCloud(id);
       });
 
@@ -6509,17 +6692,7 @@
         const lead = leads.find(l => l.id === id);
         if (lead) {
           lead.stageId = targetStageId;
-          lead.lastActivityAt = now.toISOString();
-          lead.lastActivityText = 'Bulk moved to ' + targetStage.name;
-          if (!lead.activities) lead.activities = [];
-          lead.activities.push({
-            id: 'act-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
-            userName: loggedInUser ? loggedInUser.name : 'Admin',
-            type: 'STAGE_CHANGE',
-            notes: 'Bulk moved to stage: ' + targetStage.name,
-            time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            timestamp: now.toISOString()
-          });
+          logLeadActivity(lead, 'STAGE_CHANGE', 'Bulk moved to stage: ' + targetStage.name);
           syncLeadToCloud(lead);
         }
       });
@@ -7199,6 +7372,29 @@
 
         updateModalLastAttemptCard(lead);
 
+        // Populate LAST ACTION AUDIT card in Modal Sidebar
+        const auditUserEl = document.getElementById('modal-last-audit-user-name');
+        const auditRoleEl = document.getElementById('modal-last-audit-role');
+        const auditActionEl = document.getElementById('modal-last-audit-action');
+        const auditDevEl = document.getElementById('modal-last-audit-device');
+        const auditIpEl = document.getElementById('modal-last-audit-ip');
+        const auditTimeEl = document.getElementById('modal-last-audit-time-text');
+
+        const latestAct = (lead.activities && lead.activities.length > 0) ? lead.activities[0] : null;
+        const aUser = (latestAct && (latestAct.userName || latestAct.author)) || lead.lastActivityUser || lead.assignedToName || 'Sri Sri Admin';
+        const aRole = (latestAct && (latestAct.userRole || latestAct.role)) || lead.lastActivityRole || 'Staff';
+        const aAction = (latestAct && (latestAct.notes || latestAct.text || latestAct.type)) || lead.lastActivityText || (lead.notes ? lead.notes.substring(0, 50) : 'Lead recorded');
+        const aDev = (latestAct && latestAct.device) || lead.lastActivityDevice || currentClientDevice;
+        const aIp = (latestAct && latestAct.ip) || lead.lastActivityIp || currentClientIp;
+        const aTime = formatFollowupDate((latestAct && (latestAct.timestamp || latestAct.time)) || lead.lastActivityAt || lead.createdAt);
+
+        if (auditUserEl) auditUserEl.innerText = aUser;
+        if (auditRoleEl) auditRoleEl.innerText = aRole;
+        if (auditActionEl) auditActionEl.innerText = aAction;
+        if (auditDevEl) auditDevEl.innerText = '💻 ' + aDev;
+        if (auditIpEl) auditIpEl.innerText = '🌐 IP: ' + aIp;
+        if (auditTimeEl) auditTimeEl.innerText = aTime;
+
         const dealValEl = document.getElementById('modal-lead-deal-value');
         if (dealValEl) dealValEl.innerText = lead.dealValue || lead.budget || 'Not set';
         const prioEl = document.getElementById('modal-lead-priority');
@@ -7399,21 +7595,8 @@
       const targetStage = pipeline.stages.find(s => s.id === newStageId);
 
       currentSelectedLead.stageId = newStageId;
-      const now = new Date();
-      currentSelectedLead.lastActivityAt = now.toISOString();
-      currentSelectedLead.lastActivityText = 'Stage updated to ' + targetStage.name;
-      currentSelectedLead.lastActivityUser = loggedInUser ? loggedInUser.name : 'Admin';
-
-      if (!currentSelectedLead.activities) currentSelectedLead.activities = [];
-      currentSelectedLead.activities.push({
-        id: 'act-' + Date.now(),
-        userName: loggedInUser ? loggedInUser.name : 'Admin',
-        type: 'STAGE_CHANGE',
-        notes: 'Lead moved to stage: ' + targetStage.name + (targetStage.isLost ? ' (Reason: ' + currentSelectedLead.lossReason + ')' : ''),
-        time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        timestamp: now.toISOString(),
-        imageUrl: null
-      });
+      // Audit logging with user, role, device, and IP
+      logLeadActivity(currentSelectedLead, 'STAGE_CHANGE', 'Lead moved to stage: ' + targetStage.name + (targetStage.isLost ? ' (Reason: ' + currentSelectedLead.lossReason + ')' : ''));
 
       localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
       syncLeadToCloud(currentSelectedLead);
@@ -7433,7 +7616,11 @@
     // ==================== FOLLOW-UP & REATTEMPT SCHEDULING ====================
     function openFollowupScheduleModal() {
       if (!currentSelectedLead) return;
-      document.getElementById('fu-modal-note').value = '';
+      const noteInput = document.getElementById('fu-modal-note');
+      const leadNoteTextarea = document.getElementById('modal-note-textarea');
+      if (noteInput) {
+        noteInput.value = (leadNoteTextarea && leadNoteTextarea.value.trim()) ? leadNoteTextarea.value.trim() : '';
+      }
       setModalFollowupPreset('tomorrow_10');
       openModal('followup-schedule-modal');
     }
@@ -7450,12 +7637,12 @@
 
     function setModalFollowupPreset(type) {
       const input = document.getElementById('fu-modal-datetime');
-      input.value = calculateFollowupTime(type);
+      if (input) input.value = calculateFollowupTime(type);
     }
 
     function setFollowupPreset(type) {
       const input = document.getElementById('modal-note-followup');
-      input.value = calculateFollowupTime(type);
+      if (input) input.value = calculateFollowupTime(type);
     }
 
     function calculateFollowupTime(type) {
@@ -7472,24 +7659,29 @@
         d.setDate(d.getDate() + 2);
         d.setHours(11, 0, 0, 0);
       }
-      return d.toISOString().slice(0, 16);
+      // ISO format string YYYY-MM-DDTHH:mm for datetime-local input
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
     function saveFollowupSchedule() {
       if (!currentSelectedLead) return;
-      const action = document.getElementById('fu-modal-action').value;
       const dtVal = document.getElementById('fu-modal-datetime').value;
-      const note = document.getElementById('fu-modal-note').value.trim();
+      const noteEl = document.getElementById('fu-modal-note');
+      const note = noteEl ? noteEl.value.trim() : '';
 
       if (!dtVal) {
-        showToast('Please select a valid Follow-up Date & Time!', 'error');
+        showToast('⚠️ Please select a valid Follow-up Date & Time!', 'error');
         return;
       }
 
       // Mandatory Note Check
       if (!note) {
-        showToast('⚠️ A Note / Reason is strictly mandatory before scheduling a follow-up or reattempt!', 'error');
-        const noteEl = document.getElementById('fu-modal-note');
+        showToast('⚠️ Compulsory: Please enter discussion details / activity note before scheduling follow-up!', 'error');
         if (noteEl) {
           noteEl.focus();
           noteEl.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/50');
@@ -7498,26 +7690,16 @@
       }
 
       currentSelectedLead.nextFollowUp = dtVal;
-      currentSelectedLead.nextFollowUpNote = action + ': ' + note;
+      currentSelectedLead.nextFollowUpNote = note;
 
-      const now = new Date();
-      currentSelectedLead.lastActivityAt = now.toISOString();
-      currentSelectedLead.lastActivityText = 'Scheduled ' + action;
-      currentSelectedLead.lastActivityUser = loggedInUser ? loggedInUser.name : 'Admin';
-
-      if (!currentSelectedLead.activities) currentSelectedLead.activities = [];
-      currentSelectedLead.activities.push({
-        id: 'act-' + Date.now(),
-        userName: loggedInUser ? loggedInUser.name : 'Admin',
-        type: 'FOLLOWUP_SCHEDULED',
-        notes: 'Follow-up / Reattempt scheduled for ' + formatFollowupDate(dtVal) + ' (' + action + ') - Reason: ' + note,
-        time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        timestamp: now.toISOString(),
-        imageUrl: null
+      // Audit Logging with User, Role, Device & IP
+      logLeadActivity(currentSelectedLead, 'FOLLOWUP_SCHEDULED', 'Follow-up scheduled for ' + formatFollowupDate(dtVal) + ' - Details: ' + note, {
+        scheduledFor: dtVal,
+        action: 'Reattempt & Follow-up'
       });
 
-      // Append to lead overall notes
-      currentSelectedLead.notes = (currentSelectedLead.notes ? currentSelectedLead.notes + '\n\n' : '') + '[Reattempt Scheduled for ' + formatFollowupDate(dtVal) + ' (' + action + ')]: ' + note;
+      // Append to lead overall cumulative notes
+      currentSelectedLead.notes = (currentSelectedLead.notes ? currentSelectedLead.notes + '\n\n' : '') + `[Follow-up ${formatFollowupDate(dtVal)}]: ${note}`;
 
       // Automatically register task in tasks store
       tasks.unshift({
@@ -7525,7 +7707,7 @@
         leadId: currentSelectedLead.id,
         leadName: currentSelectedLead.name,
         phone: currentSelectedLead.phone || '',
-        action: action,
+        action: 'Follow-up Call',
         note: note,
         dueDate: dtVal,
         status: 'PENDING'
@@ -7541,7 +7723,7 @@
       renderTasksList('PENDING');
       initDashboard();
       updatePendingWorkDashboard();
-      showToast('✓ Follow-up / Reattempt successfully scheduled with note!', 'success');
+      showToast('✓ Follow-up scheduled for ' + formatFollowupDate(dtVal), 'success');
     }
 
     // ==================== IMAGES & NOTES ====================
@@ -7756,6 +7938,7 @@
 
     function submitLeadNote() {
       if (!currentSelectedLead) return;
+      const now = new Date();
       const text = document.getElementById('modal-note-textarea').value.trim();
       const callStatus = document.getElementById('modal-note-call-status').value;
       const followupDt = document.getElementById('modal-note-followup').value;
@@ -7775,23 +7958,18 @@
         return;
       }
 
-      const now = new Date();
-      if (!currentSelectedLead.activities) currentSelectedLead.activities = [];
-
-      currentSelectedLead.activities.push({
-        id: 'act-' + Date.now(),
-        userName: loggedInUser ? loggedInUser.name : 'Admin',
-        type: callStatus,
-        notes: text || (selectedAudioBase64 ? 'Call recording attached (' + callStatus + ')' : ('Uploaded ' + callStatus + ' update')),
-        time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        timestamp: now.toISOString(),
+      const noteSummary = text || (selectedAudioBase64 ? 'Call recording attached (' + callStatus + ')' : ('Uploaded ' + callStatus + ' update'));
+      
+      // Full audit logging with user, role, device, and IP
+      logLeadActivity(currentSelectedLead, callStatus, noteSummary, {
         imageUrl: selectedImageBase64,
         audioUrl: selectedAudioBase64
       });
 
-      currentSelectedLead.lastActivityAt = now.toISOString();
-      currentSelectedLead.lastActivityText = callStatus + ': ' + (text ? text.substring(0, 35) + '...' : 'Photo posted');
-      currentSelectedLead.lastActivityUser = loggedInUser ? loggedInUser.name : 'Admin';
+      // Preserve cumulative notes history
+      if (text) {
+        currentSelectedLead.notes = (currentSelectedLead.notes ? currentSelectedLead.notes + '\n\n' : '') + `[${callStatus}]: ${text}`;
+      }
 
       if (followupDt) {
         currentSelectedLead.nextFollowUp = followupDt;
@@ -7816,7 +7994,9 @@
         text: text,
         time: now.toISOString(),
         formattedTime: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        user: loggedInUser ? loggedInUser.name : 'Sri Sri Admin'
+        user: loggedInUser ? loggedInUser.name : 'Sri Sri Admin',
+        device: currentClientDevice,
+        ip: currentClientIp
       };
       currentSelectedLead.lastContactMethod = 'Note (' + callStatus + ')';
       currentSelectedLead.lastContactedAt = now.toISOString();
@@ -7845,17 +8025,51 @@
 
       let allActivities = lead.activities ? [...lead.activities] : [];
 
-      // If lead has notes but no activity yet, synthesize initial comment from notes so it appears under COMMENTS
+      // 1. Synthesize initial inquiry from lead.notes if not already in timeline
       if (lead.notes && lead.notes.trim() && !allActivities.some(a => (a.notes || a.text || '').trim() === lead.notes.trim())) {
         allActivities.unshift({
           id: 'act-init-' + lead.id,
           userName: lead.assignedToName || 'Sri Sri Admin',
-          userEmail: lead.assignedToEmail || 'sales.ssply@gmail.com',
-          type: 'COMMENT',
-          notes: lead.notes,
-          text: lead.notes,
+          userRole: 'Staff',
+          type: 'INQUIRY_NOTE',
+          notes: lead.notes.trim(),
+          text: lead.notes.trim(),
           time: formatFollowupDate(lead.createdAt || new Date()),
-          timestamp: lead.createdAt || new Date().toISOString()
+          timestamp: lead.createdAt || new Date().toISOString(),
+          device: lead.lastActivityDevice || 'Old CRM Import',
+          ip: lead.lastActivityIp || 'Direct System'
+        });
+      }
+
+      // 2. Synthesize customer objection/discussion from lead.lossReason if not already in timeline
+      if (lead.lossReason && lead.lossReason.trim() && !allActivities.some(a => (a.notes || a.text || '').includes(lead.lossReason.trim()))) {
+        allActivities.push({
+          id: 'act-lost-reason-' + lead.id,
+          userName: lead.assignedToName || 'Sri Sri Admin',
+          userRole: 'Staff',
+          type: 'DEAL_LOST',
+          notes: 'Customer Discussion & Reason: ' + lead.lossReason.trim(),
+          text: 'Customer Discussion & Reason: ' + lead.lossReason.trim(),
+          time: formatFollowupDate(lead.lostAt || lead.lastActivityAt || lead.createdAt),
+          timestamp: lead.lostAt || lead.lastActivityAt || lead.createdAt || new Date().toISOString(),
+          device: lead.lastActivityDevice || 'Old CRM History',
+          ip: lead.lastActivityIp || 'Direct System'
+        });
+      }
+
+      // 3. Synthesize next follow-up note if present and distinct
+      if (lead.nextFollowUpNote && lead.nextFollowUpNote.trim() && !allActivities.some(a => (a.notes || a.text || '').includes(lead.nextFollowUpNote.trim()))) {
+        allActivities.push({
+          id: 'act-fu-note-' + lead.id,
+          userName: lead.assignedToName || 'Sri Sri Admin',
+          userRole: 'Staff',
+          type: 'FOLLOWUP_SCHEDULED',
+          notes: 'Next Action: ' + lead.nextFollowUpNote.trim(),
+          text: 'Next Action: ' + lead.nextFollowUpNote.trim(),
+          time: formatFollowupDate(lead.nextFollowUp || lead.lastActivityAt),
+          timestamp: lead.nextFollowUp || lead.lastActivityAt || new Date().toISOString(),
+          device: lead.lastActivityDevice || 'Scheduled',
+          ip: lead.lastActivityIp || 'Direct'
         });
       }
 
@@ -7874,6 +8088,14 @@
 
         const displayTime = formatFollowupDate(act.time || act.timestamp || lead.createdAt);
         const authorIdentifier = act.userName || act.userEmail || lead.assignedToName || 'Sri Sri Admin';
+        const userRoleBadge = act.userRole ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/20">${act.userRole}</span>` : '';
+        const auditDeviceIp = (act.device || act.ip) ? `
+          <div class="flex items-center gap-2 text-[10px] text-muted-custom font-mono mt-0.5">
+            <span>💻 ${act.device || 'Web Browser'}</span>
+            <span>•</span>
+            <span class="text-gold font-bold">🌐 IP: ${act.ip || 'Local/Network'}</span>
+          </div>
+        ` : '';
 
         // Check if Call Log
         if (act.type === 'CALL_LOG' || act.callOutcome) {
@@ -7893,12 +8115,16 @@
 
           item.innerHTML = `
             <div class="flex items-center justify-between text-[11px]">
-              <div class="flex items-center gap-2">
-                <span class="w-6 h-6 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center font-bold shrink-0">
-                  <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
-                </span>
-                <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
-                ${outcomeBadge}
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center font-bold shrink-0">
+                    <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+                  </span>
+                  <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
+                  ${userRoleBadge}
+                  ${outcomeBadge}
+                </div>
+                ${auditDeviceIp}
               </div>
               <span class="text-gold text-[10px] font-mono flex items-center gap-1 shrink-0 font-bold">
                 <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
@@ -7920,14 +8146,18 @@
           const waMessage = act.messageText || act.notes || act.text || '';
           item.innerHTML = `
             <div class="flex items-center justify-between text-[11px]">
-              <div class="flex items-center gap-2">
-                <span class="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold shrink-0">
-                  <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
-                </span>
-                <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shrink-0">
-                  <i data-lucide="send" class="w-2.5 h-2.5"></i> WhatsApp Sent
-                </span>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold shrink-0">
+                    <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                  </span>
+                  <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
+                  ${userRoleBadge}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shrink-0">
+                    <i data-lucide="send" class="w-2.5 h-2.5"></i> WhatsApp Sent
+                  </span>
+                </div>
+                ${auditDeviceIp}
               </div>
               <span class="text-gold text-[10px] font-mono flex items-center gap-1 shrink-0 font-bold">
                 <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
@@ -7950,13 +8180,17 @@
           let borderClass = 'border-main';
           if (act.type && act.type !== 'COMMENT') {
             if (act.type === 'DEAL_LOST') {
-              typeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">❌ Deal Lost</span>';
+              typeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">❌ Deal Lost / Objection</span>';
               bgClass = 'bg-rose-500/10';
               borderClass = 'border-rose-500/30';
             } else if (act.type === 'DEAL_WON') {
               typeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">🏆 Deal Won</span>';
               bgClass = 'bg-emerald-500/10';
               borderClass = 'border-emerald-500/30';
+            } else if (act.type === 'INQUIRY_NOTE') {
+              typeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">📝 Inquiry Requirement</span>';
+            } else if (act.type === 'FOLLOWUP_SCHEDULED') {
+              typeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-gold border border-gold/30">📅 Follow-up Set</span>';
             } else {
               typeBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-gold border border-gold/30">' + act.type + '</span>';
             }
@@ -7964,12 +8198,16 @@
 
           item.innerHTML = `
             <div class="flex items-center justify-between text-[11px]">
-              <div class="flex items-center gap-2">
-                <span class="w-6 h-6 rounded-lg bg-amber-500/10 text-gold flex items-center justify-center font-bold shrink-0">
-                  <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
-                </span>
-                <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
-                ${typeBadge}
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-lg bg-amber-500/10 text-gold flex items-center justify-center font-bold shrink-0">
+                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                  </span>
+                  <span class="font-bold text-main font-mono text-xs">${authorIdentifier}</span>
+                  ${userRoleBadge}
+                  ${typeBadge}
+                </div>
+                ${auditDeviceIp}
               </div>
               <span class="text-gold text-[10px] font-mono flex items-center gap-1 shrink-0 font-bold">
                 <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
@@ -9167,21 +9405,8 @@
       currentSelectedLead.assignedToName = newStaff.name;
       currentSelectedLead.assignedToEmail = newStaff.email;
 
-      const now = new Date();
-      currentSelectedLead.lastActivityAt = now.toISOString();
-      currentSelectedLead.lastActivityText = 'Transferred to ' + newPip.name + ' (' + newStaff.name + ')';
-      currentSelectedLead.lastActivityUser = loggedInUser ? loggedInUser.name : 'Admin';
-
-      if (!currentSelectedLead.activities) currentSelectedLead.activities = [];
-      currentSelectedLead.activities.push({
-        id: 'act-' + Date.now(),
-        userName: loggedInUser ? loggedInUser.name : 'Admin',
-        type: 'TRANSFER',
-        notes: 'Lead transferred to pipeline "' + newPip.name + '" and reassigned to ' + newStaff.name + (note ? '. Note: ' + note : ''),
-        time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        timestamp: now.toISOString(),
-        imageUrl: null
-      });
+      // Audit logging with user, role, device, and IP
+      logLeadActivity(currentSelectedLead, 'TRANSFER', 'Lead transferred to pipeline "' + newPip.name + '" and reassigned to ' + newStaff.name + (note ? '. Note: ' + note : ''));
 
       localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
       syncLeadToCloud(currentSelectedLead);
@@ -9246,18 +9471,17 @@
       const elAdset = document.getElementById('edit-adset-name');
       if (elAdset) currentSelectedLead.adsetName = elAdset.value.trim();
 
-      const now = new Date();
-      currentSelectedLead.lastActivityAt = now.toISOString();
-      currentSelectedLead.lastActivityText = 'Client details edited';
-      currentSelectedLead.lastActivityUser = loggedInUser ? loggedInUser.name : 'Admin';
+      // Audit Logging with User, Role, Device & IP
+      logLeadActivity(currentSelectedLead, 'LEAD_EDITED', 'Client profile & contact details edited');
 
       localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      syncLeadToCloud(currentSelectedLead);
       closeModal('edit-lead-modal');
       openLeadModal(currentSelectedLead.id);
       renderOpportunities();
       renderPhonebookTable();
       initDashboard();
-      showToast('Lead details updated!', 'success');
+      showToast('Lead details updated & synchronized!', 'success');
     }
 
     var pendingSingleDeleteLeadId = null;
@@ -9358,20 +9582,14 @@
         assignedToEmail: assigneeEmail,
         createdAt: now.toISOString(),
         lastActivityAt: now.toISOString(),
-        lastActivityText: 'Lead created in ' + pip.name,
-        lastActivityUser: loggedInUser ? loggedInUser.name : 'Admin',
-        activities: [
-          {
-            id: 'act-' + Date.now(),
-            userName: loggedInUser ? loggedInUser.name : 'Admin',
-            type: 'ENTRY',
-            notes: 'Client registered into ' + pip.name + '. Type: ' + clientType + (budget ? ' • Req: ' + budget : ''),
-            time: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            timestamp: now.toISOString(),
-            imageUrl: null
-          }
-        ]
+        lastActivityUser: loggedInUser ? loggedInUser.name : 'Sri Sri Admin',
+        lastActivityRole: loggedInUser ? (loggedInUser.role || 'Staff') : 'Super Admin',
+        lastActivityDevice: currentClientDevice,
+        lastActivityIp: currentClientIp,
+        activities: []
       };
+
+      logLeadActivity(newLead, 'ENTRY', 'Client registered into ' + pip.name + '. Type: ' + clientType + (budget ? ' • Req: ' + budget : ''));
 
       if (followup) {
         tasks.unshift({
@@ -12505,8 +12723,27 @@
           const cloudLeads = [];
           snapshot.forEach(doc => {
             const data = doc.data();
-            if (data && data.id) cloudLeads.push(data);
+            if (data) {
+              if (!data.id) data.id = doc.id;
+              if (!data.createdAt) data.createdAt = new Date().toISOString();
+              if (!data.lastActivityAt) data.lastActivityAt = data.createdAt;
+              if (!data.pipelineId) data.pipelineId = 'p-fb';
+              if (!data.stage) data.stage = 'New Lead';
+              cloudLeads.push(data);
+            }
           });
+
+          // Play audio and toast when new lead arrives in real-time
+          if (isInitialLeadsSyncDone) {
+            snapshot.docChanges().forEach(change => {
+              if (change.type === 'added') {
+                const newLeadData = change.doc.data() || {};
+                const leadName = newLeadData.name || 'New Ad Lead';
+                if (typeof playReminderSound === 'function') playReminderSound();
+                if (typeof showToast === 'function') showToast(`🚀 Real-time Lead Received: ${leadName} (${newLeadData.phone || ''})`, 'success');
+              }
+            });
+          }
 
           // Sort leads by activity or creation
           cloudLeads.sort((a,b) => new Date(b.lastActivityAt || b.createdAt || 0) - new Date(a.lastActivityAt || a.createdAt || 0));
