@@ -2466,7 +2466,7 @@
           </div>
           <div>
             <h3 class="text-sm font-extrabold text-main">Schedule Reattempt & Follow-up</h3>
-            <p class="text-[11px] text-muted-custom">Direct date & time selection with mandatory note</p>
+            <p class="text-[11px] text-muted-custom">Direct date & time selection for next client contact</p>
           </div>
         </div>
         <button type="button" onclick="closeModal('followup-schedule-modal')" class="p-1.5 rounded-xl bg-subtle hover:bg-rose-500/20 text-muted-custom hover:text-rose-400 border border-main transition cursor-pointer" title="Close">
@@ -2476,11 +2476,11 @@
       
       <div class="space-y-4 text-xs">
         <!-- Direct Follow-up Date & Time Picker with Quick Presets -->
-        <div class="p-3 rounded-2xl bg-subtle/60 border border-main space-y-2">
+        <div class="p-3.5 rounded-2xl bg-subtle/60 border border-main space-y-3">
           <div class="flex items-center justify-between">
             <label class="font-bold text-main flex items-center gap-1.5 text-xs">
               <i data-lucide="clock" class="w-3.5 h-3.5 text-gold"></i>
-              <span>Next Follow-up Date & Time *</span>
+              <span>Select Next Follow-up Date & Time *</span>
             </label>
             <span class="text-[10px] text-gold font-bold">1-Click Presets</span>
           </div>
@@ -2493,21 +2493,6 @@
           </div>
 
           <input type="datetime-local" id="fu-modal-datetime" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold text-xs focus:ring-1 focus:ring-gold outline-hidden">
-        </div>
-
-        <!-- Mandatory Conversation Details / Note Textarea -->
-        <div>
-          <label class="block font-bold text-main mb-1.5 flex items-center justify-between">
-            <span class="flex items-center gap-1.5">
-              <i data-lucide="message-square" class="w-3.5 h-3.5 text-purple-400"></i>
-              <span>Discussion Details / Activity Note *</span>
-            </span>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500/15 text-rose-400 border border-rose-500/30 uppercase tracking-wide">Compulsory</span>
-          </label>
-          <textarea id="fu-modal-note" rows="3" required placeholder="Customer se kya baat hui, kya rate/requirement discuss hui, ya next call ka purpose kya hai likhein..." class="w-full p-3 rounded-2xl border border-main bg-card text-main text-xs font-semibold outline-hidden focus:border-gold focus:ring-1 focus:ring-gold"></textarea>
-          <p class="text-[10px] text-muted-custom mt-1 flex items-center gap-1">
-            <span class="text-rose-400 font-bold">⚠️ Note:</span> Reattempt ya follow-up set karne ke liye discussion details likhna compulsory hai.
-          </p>
         </div>
       </div>
 
@@ -4233,15 +4218,33 @@
         </button>
       </div>
 
-      <!-- Client Info Banner -->
-      <div class="p-3 rounded-2xl bg-subtle/50 border border-main flex items-center justify-between">
-        <div>
-          <span class="text-[10px] uppercase font-bold text-muted-custom block">Client</span>
-          <span id="call-log-client-name" class="font-extrabold text-sm text-main">Client Name</span>
+      <!-- Client Info Banner & Direct Dial Options -->
+      <div class="p-3.5 rounded-2xl bg-subtle/50 border border-main space-y-2.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-muted-custom block">Client</span>
+            <span id="call-log-client-name" class="font-extrabold text-sm text-main">Client Name</span>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] uppercase font-bold text-muted-custom block">Mobile Number</span>
+            <span id="call-log-client-phone" class="font-mono text-xs text-gold font-bold">+91 98765 43210</span>
+          </div>
         </div>
-        <div class="text-right">
-          <span class="text-[10px] uppercase font-bold text-muted-custom block">Dialed Number</span>
-          <span id="call-log-client-phone" class="font-mono text-xs text-gold font-bold">+91 98765 43210</span>
+
+        <!-- 3 Instant Dial / Connect Shortcuts -->
+        <div class="grid grid-cols-3 gap-1.5 pt-2 border-t border-main/50 text-[11px] font-bold">
+          <a id="call-log-btn-phonelink" href="#" class="p-2 rounded-xl bg-blue-500/15 hover:bg-blue-500 text-blue-400 hover:text-white border border-blue-500/30 flex items-center justify-center gap-1.5 transition" title="Dial via Windows Phone Link / Default Dialer">
+            <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+            <span>Phone Link</span>
+          </a>
+          <a id="call-log-btn-wa" href="#" target="_blank" class="p-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-400 hover:text-white border border-emerald-500/30 flex items-center justify-center gap-1.5 transition" title="Voice Call / Message on WhatsApp">
+            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+            <span>WhatsApp</span>
+          </a>
+          <button type="button" onclick="copyCallLogNumber()" class="p-2 rounded-xl bg-card hover:bg-subtle text-main hover:text-gold border border-main flex items-center justify-center gap-1.5 transition" title="Copy Number to Clipboard">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>Copy Number</span>
+          </button>
         </div>
       </div>
 
@@ -4278,10 +4281,29 @@
           <input type="hidden" id="call-log-selected-outcome" value="Baat Hui (Connected)">
         </div>
 
-        <!-- Call Notes / Conversation Details -->
+        <!-- Call Notes & Smart Auto-Summary -->
         <div>
-          <label class="block font-bold text-main mb-1">Call Notes / Discussion Summary *</label>
-          <textarea id="call-log-notes" rows="3" placeholder="e.g. Discussed 19mm Marine Ply pricing, customer requested site visit tomorrow..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main text-xs focus:ring-1 focus:ring-gold outline-hidden"></textarea>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="font-bold text-main flex items-center gap-1.5">
+              <i data-lucide="file-text" class="w-3.5 h-3.5 text-gold"></i>
+              <span>Call Discussion Summary & Main Points *</span>
+            </label>
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="toggleCallLogVoiceMic()" id="btn-call-voice-mic" class="px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-300 hover:bg-purple-500 hover:text-white border border-purple-500/30 font-bold text-[10px] flex items-center gap-1 transition cursor-pointer" title="Dictate Discussion via Microphone">
+                <i data-lucide="mic" class="w-3 h-3"></i>
+                <span id="call-voice-mic-label">🎙️ Mic</span>
+              </button>
+              <button type="button" onclick="generateSmartCallSummary()" class="px-2.5 py-1 rounded-lg bg-gold/15 text-gold hover:bg-gold hover:text-slate-950 border border-gold/30 font-bold text-[10px] flex items-center gap-1 transition cursor-pointer" title="Auto-generate main discussion points based on outcome and customer profile">
+                <i data-lucide="sparkles" class="w-3 h-3"></i>
+                <span>✨ Auto-Points</span>
+              </button>
+            </div>
+          </div>
+          <textarea id="call-log-notes" rows="4" placeholder="Main discussion points, rates quoted, customer requirements..." class="w-full p-3 rounded-2xl border border-main bg-card text-main text-xs font-medium focus:ring-1 focus:ring-gold outline-hidden leading-relaxed custom-scrollbar"></textarea>
+          <div class="flex items-center justify-between mt-1 text-[10px] text-muted-custom">
+            <span>💡 Click Call Status above to auto-generate main points, or use 🎙️ Mic.</span>
+            <button type="button" onclick="formatCallLogKeyPoints()" class="text-gold font-bold hover:underline cursor-pointer">Format As Bullet Points</button>
+          </div>
         </div>
 
         <!-- Optional Follow-up & Stage Selection -->
@@ -7284,6 +7306,136 @@
       });
     }
 
+    // ==================== KANBAN BOARD DRAG & DROP ENGINE ====================
+    let kanbanDragType = null; // 'stage' or 'lead'
+    let draggedStageId = null;
+    let draggedLeadId = null;
+    let draggedFromStageId = null;
+
+    function handleStageDragStart(e, stageId) {
+      kanbanDragType = 'stage';
+      draggedStageId = stageId;
+      draggedLeadId = null;
+      if (e.dataTransfer) {
+        e.dataTransfer.setData('text/stage-id', stageId);
+        e.dataTransfer.effectAllowed = 'move';
+      }
+      const colEl = document.getElementById('kanban-col-' + stageId);
+      if (colEl) colEl.classList.add('opacity-50', 'ring-2', 'ring-gold/60');
+    }
+
+    function handleStageDragEnd(e) {
+      const allCols = document.querySelectorAll('.kanban-stage-col');
+      allCols.forEach(c => c.classList.remove('opacity-50', 'ring-2', 'ring-gold/60', 'border-gold', 'bg-gold/10'));
+      kanbanDragType = null;
+      draggedStageId = null;
+    }
+
+    function handleLeadCardDragStart(e, leadId, stageId) {
+      kanbanDragType = 'lead';
+      draggedLeadId = leadId;
+      draggedFromStageId = stageId;
+      draggedStageId = null;
+      if (e.dataTransfer) {
+        e.dataTransfer.setData('text/lead-id', leadId);
+        e.dataTransfer.setData('text/stage-id', stageId);
+        e.dataTransfer.effectAllowed = 'move';
+      }
+      const cardEl = e.currentTarget;
+      if (cardEl) {
+        cardEl.classList.add('opacity-40', 'scale-95');
+      }
+    }
+
+    function handleLeadCardDragEnd(e) {
+      const allCards = document.querySelectorAll('.kanban-lead-card');
+      allCards.forEach(c => c.classList.remove('opacity-40', 'scale-95'));
+      const allDropzones = document.querySelectorAll('.kanban-dropzone');
+      allDropzones.forEach(dz => dz.classList.remove('ring-2', 'ring-gold', 'border-gold', 'bg-gold/10', 'border-dashed'));
+      kanbanDragType = null;
+      draggedLeadId = null;
+    }
+
+    function handleKanbanColDragOver(e, targetStageId) {
+      e.preventDefault();
+      if (kanbanDragType === 'stage') {
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        const colEl = document.getElementById('kanban-col-' + targetStageId);
+        if (colEl && draggedStageId !== targetStageId) {
+          colEl.classList.add('border-gold', 'ring-2', 'ring-gold/40');
+        }
+      } else if (kanbanDragType === 'lead') {
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        const dropzone = document.getElementById('kanban-stage-' + targetStageId);
+        if (dropzone) {
+          dropzone.classList.add('ring-2', 'ring-gold', 'bg-gold/10', 'border-dashed');
+        }
+      }
+    }
+
+    function handleKanbanColDragLeave(e, targetStageId) {
+      const colEl = document.getElementById('kanban-col-' + targetStageId);
+      if (colEl) colEl.classList.remove('border-gold', 'ring-2', 'ring-gold/40');
+      const dropzone = document.getElementById('kanban-stage-' + targetStageId);
+      if (dropzone) dropzone.classList.remove('ring-2', 'ring-gold', 'bg-gold/10', 'border-dashed');
+    }
+
+    function handleKanbanColDrop(e, targetStageId) {
+      e.preventDefault();
+      const colEl = document.getElementById('kanban-col-' + targetStageId);
+      if (colEl) colEl.classList.remove('border-gold', 'ring-2', 'ring-gold/40');
+      const dropzone = document.getElementById('kanban-stage-' + targetStageId);
+      if (dropzone) dropzone.classList.remove('ring-2', 'ring-gold', 'bg-gold/10', 'border-dashed');
+
+      // 1. Stage Reordering Drop
+      if (kanbanDragType === 'stage' && draggedStageId) {
+        if (draggedStageId !== targetStageId) {
+          const pipeline = pipelines.find(p => p.id === activePipelineId) || pipelines[0];
+          const fromIdx = pipeline.stages.findIndex(s => s.id === draggedStageId);
+          const toIdx = pipeline.stages.findIndex(s => s.id === targetStageId);
+          if (fromIdx !== -1 && toIdx !== -1) {
+            const [movedStage] = pipeline.stages.splice(fromIdx, 1);
+            pipeline.stages.splice(toIdx, 0, movedStage);
+            localStorage.setItem('sri_sri_pipelines', JSON.stringify(pipelines));
+            renderOpportunities();
+            showToast('Stage position updated: ' + movedStage.name, 'success');
+          }
+        }
+        handleStageDragEnd(e);
+        return;
+      }
+
+      // 2. Lead Card Movement Drop
+      if (kanbanDragType === 'lead' || (e.dataTransfer && e.dataTransfer.getData('text/lead-id'))) {
+        const leadId = draggedLeadId || (e.dataTransfer ? e.dataTransfer.getData('text/lead-id') : null);
+        const lead = leads.find(l => l.id === leadId);
+        if (lead) {
+          const pipeline = pipelines.find(p => p.id === lead.pipelineId) || pipelines[0];
+          const targetStage = pipeline.stages.find(s => s.id === targetStageId) || pipeline.stages[0];
+
+          if (lead.stageId === targetStageId) {
+            showToast('Lead already in ' + targetStage.name, 'info');
+          } else {
+            if (targetStage.isLost) {
+              currentSelectedLead = lead;
+              pendingLostStageId = targetStage.id;
+              openModal('lead-loss-reason-modal');
+            } else {
+              lead.stageId = targetStage.id;
+              logLeadActivity(lead, 'STAGE_CHANGE', 'Lead moved to stage: ' + targetStage.name + ' via Drag & Drop');
+              localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+              syncLeadToCloud(lead);
+              renderOpportunities();
+              renderPhonebookTable();
+              initDashboard();
+              showToast('Lead "' + lead.name + '" moved to ' + targetStage.name + '!', 'success');
+            }
+          }
+        }
+        handleLeadCardDragEnd(e);
+      }
+    }
+
     function renderOpportunityKanbanBoard(pipLeads, pipeline) {
       const container = document.getElementById('opp-kanban-view-container');
       if (!container) return;
@@ -7292,24 +7444,40 @@
       pipeline.stages.forEach(stg => {
         const colLeads = pipLeads.filter(l => l.stageId === stg.id);
         const col = document.createElement('div');
-        col.className = 'w-72 shrink-0 bg-subtle/40 rounded-3xl border border-main flex flex-col max-h-[75vh] overflow-hidden';
+        col.id = 'kanban-col-' + stg.id;
+        col.className = 'kanban-stage-col w-72 shrink-0 bg-subtle/40 rounded-3xl border border-main flex flex-col max-h-[75vh] overflow-hidden transition-all duration-200';
+        
+        // Drag and drop listeners on column
+        col.ondragover = (e) => handleKanbanColDragOver(e, stg.id);
+        col.ondragleave = (e) => handleKanbanColDragLeave(e, stg.id);
+        col.ondrop = (e) => handleKanbanColDrop(e, stg.id);
 
         col.innerHTML = `
-          <div class="p-3.5 border-b border-main flex items-center justify-between bg-card/60">
+          <div class="p-3.5 border-b border-main flex items-center justify-between bg-card/60 cursor-grab active:cursor-grabbing select-none"
+               draggable="true"
+               ondragstart="handleStageDragStart(event, '${stg.id}')"
+               ondragend="handleStageDragEnd(event)"
+               title="Drag column header to reorder stages forward or backward">
             <div class="flex items-center gap-2">
+              <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-muted-custom opacity-50"></i>
               <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${stg.color}"></span>
               <h4 class="font-bold text-xs text-main truncate">${stg.name}</h4>
             </div>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-card border border-main text-muted-custom">${colLeads.length}</span>
           </div>
-          <div class="flex-1 p-3 overflow-y-auto custom-scrollbar space-y-2.5" id="kanban-stage-${stg.id}"></div>
+          <div class="kanban-dropzone flex-1 p-3 overflow-y-auto custom-scrollbar space-y-2.5 min-h-[140px] transition-colors duration-150" id="kanban-stage-${stg.id}"></div>
         `;
         container.appendChild(col);
 
         const cardContainer = col.querySelector('#kanban-stage-' + stg.id);
         colLeads.forEach(lead => {
           const card = document.createElement('div');
-          card.className = 'p-3.5 rounded-2xl bg-card border border-main shadow-xs hover:border-gold cursor-pointer transition space-y-2';
+          card.id = 'kanban-card-' + lead.id;
+          card.className = 'kanban-lead-card p-3.5 rounded-2xl bg-card border border-main shadow-xs hover:border-gold cursor-grab active:cursor-grabbing transition space-y-2';
+          card.setAttribute('draggable', 'true');
+          
+          card.ondragstart = (e) => handleLeadCardDragStart(e, lead.id, stg.id);
+          card.ondragend = (e) => handleLeadCardDragEnd(e);
           card.onclick = () => openLeadModal(lead.id);
 
           card.innerHTML = `
@@ -7606,21 +7774,29 @@
       renderPhonebookTable();
       initDashboard();
 
-      if (!targetStage.isLost && !targetStage.isWon) {
-        setTimeout(() => {
-          openFollowupScheduleModal();
-        }, 300);
-      }
+      showToast('Lead moved to stage: ' + targetStage.name, 'success');
     }
 
     // ==================== FOLLOW-UP & REATTEMPT SCHEDULING ====================
     function openFollowupScheduleModal() {
       if (!currentSelectedLead) return;
-      const noteInput = document.getElementById('fu-modal-note');
-      const leadNoteTextarea = document.getElementById('modal-note-textarea');
-      if (noteInput) {
-        noteInput.value = (leadNoteTextarea && leadNoteTextarea.value.trim()) ? leadNoteTextarea.value.trim() : '';
+
+      // Ensure notes/comments have been updated before allowing reattempt scheduling
+      const hasNotes = (currentSelectedLead.notes && currentSelectedLead.notes.trim()) ||
+                       (currentSelectedLead.activities && currentSelectedLead.activities.some(a => (a.notes && a.notes.trim()) || (a.text && a.text.trim())));
+      
+      if (!hasNotes) {
+        showToast('⚠️ Pehle discussion / comment note update karein! Uske baad hi reattempt schedule hoga.', 'warning');
+        const txtEl = document.getElementById('modal-note-textarea');
+        if (txtEl) {
+          txtEl.focus();
+          txtEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          txtEl.classList.add('border-gold', 'ring-2', 'ring-gold/50');
+          setTimeout(() => txtEl.classList.remove('border-gold', 'ring-2', 'ring-gold/50'), 3000);
+        }
+        return;
       }
+
       setModalFollowupPreset('tomorrow_10');
       openModal('followup-schedule-modal');
     }
@@ -7671,35 +7847,22 @@
     function saveFollowupSchedule() {
       if (!currentSelectedLead) return;
       const dtVal = document.getElementById('fu-modal-datetime').value;
-      const noteEl = document.getElementById('fu-modal-note');
-      const note = noteEl ? noteEl.value.trim() : '';
 
       if (!dtVal) {
         showToast('⚠️ Please select a valid Follow-up Date & Time!', 'error');
         return;
       }
 
-      // Mandatory Note Check
-      if (!note) {
-        showToast('⚠️ Compulsory: Please enter discussion details / activity note before scheduling follow-up!', 'error');
-        if (noteEl) {
-          noteEl.focus();
-          noteEl.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/50');
-        }
-        return;
-      }
+      const note = (currentSelectedLead.activities && currentSelectedLead.activities[0] && (currentSelectedLead.activities[0].notes || currentSelectedLead.activities[0].text)) || currentSelectedLead.notes || 'Follow-up Call';
 
       currentSelectedLead.nextFollowUp = dtVal;
       currentSelectedLead.nextFollowUpNote = note;
 
       // Audit Logging with User, Role, Device & IP
-      logLeadActivity(currentSelectedLead, 'FOLLOWUP_SCHEDULED', 'Follow-up scheduled for ' + formatFollowupDate(dtVal) + ' - Details: ' + note, {
+      logLeadActivity(currentSelectedLead, 'FOLLOWUP_SCHEDULED', 'Follow-up scheduled for ' + formatFollowupDate(dtVal), {
         scheduledFor: dtVal,
         action: 'Reattempt & Follow-up'
       });
-
-      // Append to lead overall cumulative notes
-      currentSelectedLead.notes = (currentSelectedLead.notes ? currentSelectedLead.notes + '\n\n' : '') + `[Follow-up ${formatFollowupDate(dtVal)}]: ${note}`;
 
       // Automatically register task in tasks store
       tasks.unshift({
@@ -7717,13 +7880,15 @@
       syncLeadToCloud(currentSelectedLead);
 
       closeModal('followup-schedule-modal');
-      openLeadModal(currentSelectedLead.id);
-      renderPhonebookTable();
+      if (currentSelectedLead) {
+        openLeadModal(currentSelectedLead.id);
+      }
       renderOpportunities();
+      renderPhonebookTable();
       renderTasksList('PENDING');
       initDashboard();
       updatePendingWorkDashboard();
-      showToast('✓ Follow-up scheduled for ' + formatFollowupDate(dtVal), 'success');
+      showToast('Follow-up scheduled for ' + formatFollowupDate(dtVal), 'success');
     }
 
     // ==================== IMAGES & NOTES ====================
@@ -8302,6 +8467,138 @@
       }
     }
 
+    function copyCallLogNumber() {
+      const phoneEl = document.getElementById('call-log-client-phone');
+      if (!phoneEl) return;
+      const rawText = phoneEl.innerText.replace(/[^0-9]/g, '');
+      if (rawText) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(rawText);
+        }
+        showToast('✓ Mobile number copied: +91 ' + rawText, 'info');
+      }
+    }
+
+    function generateSmartCallSummary(customOutcome) {
+      const outcome = customOutcome || (document.getElementById('call-log-selected-outcome') ? document.getElementById('call-log-selected-outcome').value : 'Baat Hui (Connected)');
+      const notesEl = document.getElementById('call-log-notes');
+      if (!notesEl) return;
+
+      const leadId = currentActiveLogLeadId || (currentSelectedLead ? currentSelectedLead.id : null);
+      const lead = leads.find(l => l.id === leadId) || currentSelectedLead || {};
+
+      const leadName = lead.name || 'Client';
+      const material = lead.materialType || lead.budget || 'Commercial / Marine Plywood';
+      const city = lead.city || lead.address || 'Local Site';
+      const dealVal = lead.dealValue || 'Rate quotation';
+
+      let summary = '';
+      if (outcome.includes('Baat Hui')) {
+        summary = `• Outcome: Connected (Customer se detailed discussion hui)\n• Client: ${leadName} (${city})\n• Requirement: ${material}\n• Deal / Rates: Pricing & specifications shared (${dealVal})\n• Next Action: Follow-up & site measurement / sample dispatch scheduled`;
+      } else if (outcome.includes('Call Nahi Lag Rahi')) {
+        summary = `• Outcome: Call Not Connecting (Number busy / network issue)\n• Client: ${leadName}\n• Action Taken: Direct dial attempt made; auto-queued for WhatsApp message & callback attempt`;
+      } else if (outcome.includes('Call Not Picked')) {
+        summary = `• Outcome: Call Not Picked (Phone ringing, unanswered)\n• Client: ${leadName}\n• Action Taken: Ringing attempt logged; scheduled follow-up reattempt in 2 hours`;
+      } else if (outcome.includes('User Busy')) {
+        summary = `• Outcome: User Busy / Call Cut (Customer disconnected / busy)\n• Client: ${leadName}\n• Action Taken: Reattempt scheduled for later today`;
+      } else if (outcome.includes('Switched Off')) {
+        summary = `• Outcome: Phone Switched Off\n• Client: ${leadName}\n• Action Taken: Marked network unreachable; queued for WhatsApp greeting & callback`;
+      } else if (outcome.includes('Call Back Later')) {
+        summary = `• Outcome: Call Back Later (Customer requested callback at convenient timing)\n• Client: ${leadName}\n• Requirement: ${material}\n• Action Taken: Reattempt scheduled as per customer request`;
+      } else {
+        summary = `• Call Status: ${outcome}\n• Client: ${leadName} | Req: ${material}\n• Notes: Discussion recorded`;
+      }
+
+      notesEl.value = summary;
+    }
+
+    function formatCallLogKeyPoints() {
+      const notesEl = document.getElementById('call-log-notes');
+      if (!notesEl) return;
+      let text = notesEl.value.trim();
+      if (!text) {
+        showToast('Please type or dictate some notes first.', 'info');
+        return;
+      }
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      const formatted = lines.map(line => {
+        if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) return line;
+        return '• ' + line;
+      }).join('\n');
+      notesEl.value = formatted;
+      showToast('✓ Formatted as key bullet points!', 'success');
+    }
+
+    let callLogVoiceRecognition = null;
+    let isCallLogMicActive = false;
+
+    function toggleCallLogVoiceMic() {
+      const notesEl = document.getElementById('call-log-notes');
+      const micLabel = document.getElementById('call-voice-mic-label');
+      const micBtn = document.getElementById('btn-call-voice-mic');
+      if (!notesEl) return;
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showToast('Voice recognition not supported in this browser. Please type or use Chrome.', 'warning');
+        return;
+      }
+
+      if (isCallLogMicActive && callLogVoiceRecognition) {
+        callLogVoiceRecognition.stop();
+        isCallLogMicActive = false;
+        if (micLabel) micLabel.innerText = '🎙️ Mic';
+        if (micBtn) micBtn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse');
+        showToast('Microphone stopped', 'info');
+        return;
+      }
+
+      try {
+        callLogVoiceRecognition = new SpeechRecognition();
+        callLogVoiceRecognition.continuous = true;
+        callLogVoiceRecognition.interimResults = false;
+        callLogVoiceRecognition.lang = 'hi-IN';
+
+        callLogVoiceRecognition.onstart = function() {
+          isCallLogMicActive = true;
+          if (micLabel) micLabel.innerText = '🔴 Listening...';
+          if (micBtn) micBtn.classList.add('bg-rose-500', 'text-white', 'animate-pulse');
+          showToast('🎙️ Bolna shuru karein (Listening for discussion notes)...', 'info');
+        };
+
+        callLogVoiceRecognition.onresult = function(event) {
+          const results = event.results;
+          for (let i = event.resultIndex; i < results.length; ++i) {
+            if (results[i].isFinal) {
+              const transcript = results[i][0].transcript.trim();
+              if (transcript) {
+                const currentVal = notesEl.value.trim();
+                notesEl.value = currentVal ? (currentVal + '\n• ' + transcript) : ('• ' + transcript);
+              }
+            }
+          }
+        };
+
+        callLogVoiceRecognition.onerror = function(event) {
+          console.error('Speech recognition error:', event.error);
+          isCallLogMicActive = false;
+          if (micLabel) micLabel.innerText = '🎙️ Mic';
+          if (micBtn) micBtn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse');
+        };
+
+        callLogVoiceRecognition.onend = function() {
+          isCallLogMicActive = false;
+          if (micLabel) micLabel.innerText = '🎙️ Mic';
+          if (micBtn) micBtn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse');
+        };
+
+        callLogVoiceRecognition.start();
+      } catch(e) {
+        console.error('Error starting speech recognition:', e);
+        showToast('Could not start microphone: ' + e.message, 'error');
+      }
+    }
+
     function initiateCallWithLogging(leadId) {
       let lead = leads.find(l => l.id === leadId);
       if (!lead && currentSelectedLead && (!leadId || currentSelectedLead.id === leadId)) {
@@ -8313,8 +8610,17 @@
       }
       currentActiveLogLeadId = lead.id;
 
-      // 1. Dial phone number if present
+      // 1. Dial phone number if present & configure direct dial buttons
       const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
+      const btnPhoneLink = document.getElementById('call-log-btn-phonelink');
+      if (btnPhoneLink) {
+        btnPhoneLink.href = cleanPhone ? ('tel:' + cleanPhone) : '#';
+      }
+      const btnWa = document.getElementById('call-log-btn-wa');
+      if (btnWa) {
+        btnWa.href = cleanPhone ? ('https://wa.me/91' + cleanPhone + '?text=' + encodeURIComponent('Namaste ' + lead.name + ', Sri Sri Plywoods se call kiya tha regarding your requirement.')) : '#';
+      }
+
       if (cleanPhone) {
         try {
           window.location.href = 'tel:' + cleanPhone;
@@ -8332,16 +8638,14 @@
       // 3. Reset outcome to default "Baat Hui (Connected)"
       selectCallOutcome('Baat Hui (Connected)');
 
-      // 4. Reset notes & follow-up
-      const notesEl = document.getElementById('call-log-notes');
-      if (notesEl) {
-        notesEl.value = '';
-        notesEl.placeholder = 'e.g. 19mm Gurjan BWR Ply ka rate discuss hua, kal site measurement par aane ko bola...';
-      }
+      // 4. Auto-generate smart summary key points
+      generateSmartCallSummary('Baat Hui (Connected)');
+
+      // 5. Reset follow-up
       const fuEl = document.getElementById('call-log-next-followup');
       if (fuEl) fuEl.value = '';
 
-      // 5. Populate stages in select
+      // 6. Populate stages in select
       const stgSelect = document.getElementById('call-log-update-stage');
       if (stgSelect) {
         const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
@@ -8355,7 +8659,7 @@
         });
       }
 
-      // 6. Open Modal
+      // 7. Open Modal
       openModal('call-log-modal');
       if (window.lucide) lucide.createIcons();
     }
@@ -8393,6 +8697,9 @@
           }
         }
       }
+
+      // Auto-populate structured key points based on selected outcome
+      generateSmartCallSummary(outcome);
     }
 
     function saveCallLogEntry() {
