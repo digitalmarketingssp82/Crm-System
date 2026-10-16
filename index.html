@@ -3887,6 +3887,13 @@
             <i data-lucide="send" class="w-4 h-4"></i>
             <span id="btn-send-test-ad-text">🚀 Send Test Meta Ad Lead into Pipeline</span>
           </button>
+          
+          <div class="pt-1">
+            <button type="button" onclick="closeModal('ads-integration-modal'); openModal('import-modal');" class="w-full py-2.5 rounded-xl bg-subtle border border-main text-main font-bold text-xs hover:border-gold transition flex items-center justify-center gap-2">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
+              <span>📥 Import Leads from Meta CSV / Excel (Instant 1-Click Upload)</span>
+            </button>
+          </div>
         </div>
 
       </div>
@@ -4768,7 +4775,6 @@
       website_webhook: { connected: false, secretKey: 'sri_web_inbound_key_99', webhookUrl: 'https://crm.srisriplywoods.com/api/webhook/website-inbound', verifyToken: 'sri_web_inbound_key_99', targetPipeline: 'p-walkin', defaultAssignee: '' },
       facebook: { connected: false, pageName: '', pageId: '', token: '' },
       google: { connected: false, clientId: '', clientSecret: '' },
-      payments: { connected: false, gateway: 'Razorpay', keyId: '', keySecret: '' },
       webchat: { connected: false, widgetId: '' },
       sheets: { connected: false, sheetUrl: '', serviceEmail: '', webhookUrl: 'https://crm.srisriplywoods.com/api/webhook/sheets-sync', verifyToken: 'sri_sheets_sync_key_99', targetPipeline: 'p-walkin' },
       email: { connected: false, host: '', port: '587', email: '', password: '' }
@@ -4843,6 +4849,7 @@
     let walletBalance = parseFloat(localStorage.getItem('sri_sri_wallet_bal') || '500.00');
 
     let loggedInUser = JSON.parse(sessionStorage.getItem('sri_sri_active_session') || 'null');
+    let currentActiveTab = 'dashboard';
     let currentSelectedLead = null;
     let currentActiveLogLeadId = null;
     let selectedImageBase64 = null;
@@ -4933,7 +4940,7 @@
       }
 
       // 2. Settings Badges
-      const chList = ['whatsapp', 'instagram', 'facebook', 'google', 'payments', 'email'];
+      const chList = ['whatsapp', 'instagram', 'facebook', 'google', 'email'];
       chList.forEach(c => {
         const isConn = channelConfigs[c] && channelConfigs[c].connected;
         const pill = document.getElementById('channel-status-pill-' + c);
@@ -4967,13 +4974,13 @@
 
     function openChannelConfigModal(channelName) {
       if (channelName === 'whatsapp') {
-        populateWhatsAppModal();
         openModal('channel-config-modal-whatsapp');
+        try { populateWhatsAppModal(); } catch (err) { console.warn(err); }
       } else {
-        populateGeneralChannelModal(channelName);
         openModal('channel-config-modal-general');
+        try { populateGeneralChannelModal(channelName); } catch (err) { console.warn(err); }
       }
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     function populateWhatsAppModal() {
@@ -5101,27 +5108,6 @@
             <input type="password" id="gen-f2" placeholder="••••••••••••" value="${cfg.clientSecret || ''}" class="w-full p-2.5 rounded-xl border border-main bg-subtle text-main font-mono">
           </div>
         `;
-      } else if (channelName === 'payments') {
-        titleEl.innerText = 'Payment Gateway (Razorpay / Cashfree)';
-        subEl.innerText = 'Generate payment links and collect plywood invoice deposits';
-        fieldsContainer.innerHTML = `
-          <div>
-            <label class="block font-bold text-main mb-1">Gateway Provider</label>
-            <select id="gen-f1" class="w-full p-2.5 rounded-xl border border-main bg-subtle text-main font-bold">
-              <option value="Razorpay">Razorpay Payment Gateway</option>
-              <option value="Cashfree">Cashfree Payments</option>
-              <option value="Stripe">Stripe India</option>
-            </select>
-          </div>
-          <div>
-            <label class="block font-bold text-main mb-1">API Key ID / App ID *</label>
-            <input type="text" id="gen-f2" placeholder="rzp_live_xxxxxxxx" value="${cfg.keyId || ''}" class="w-full p-2.5 rounded-xl border border-main bg-subtle text-main font-mono">
-          </div>
-          <div>
-            <label class="block font-bold text-main mb-1">Key Secret *</label>
-            <input type="password" id="gen-f3" placeholder="••••••••••••" value="${cfg.keySecret || ''}" class="w-full p-2.5 rounded-xl border border-main bg-subtle text-main font-mono">
-          </div>
-        `;
       } else if (channelName === 'email') {
         titleEl.innerText = 'SMTP Email Server';
         subEl.innerText = 'Send automated plywood quotations and formal invoices';
@@ -5166,8 +5152,6 @@
         channelConfigs.facebook = { connected: true, pageName: f1, pageId: f2, token: f3 };
       } else if (c === 'google') {
         channelConfigs.google = { connected: true, clientId: f1, clientSecret: f2 };
-      } else if (c === 'payments') {
-        channelConfigs.payments = { connected: true, gateway: f1, keyId: f2, keySecret: f3 };
       } else if (c === 'email') {
         channelConfigs.email = { connected: true, host: f1, port: f2, email: f3, password: f4 };
       }
@@ -5629,6 +5613,7 @@
       });
       const targetSec = document.getElementById('tab-content-' + tabId);
       if (targetSec) targetSec.classList.remove('hidden');
+      currentActiveTab = tabId;
 
       // 5. Initialize tab views
       if (tabId === 'dashboard') initDashboard();
@@ -10792,6 +10777,15 @@
 
       const apps = [
         {
+          id: 'firebase_sync',
+          name: 'Google Firebase Cloud Sync',
+          desc: 'Live real-time cloud database syncing across all employee phones and laptops with zero data loss.',
+          icon: 'database',
+          category: 'Cloud Database',
+          handler: "openFirebaseConfigModal()",
+          isConn: true
+        },
+        {
           id: 'meta_ads',
           name: 'Meta Ads (Facebook & Instagram)',
           desc: 'Auto-capture instant lead forms from Facebook & Instagram ad campaigns with Campaign & AdSet attribution.',
@@ -10811,30 +10805,30 @@
         },
         {
           id: 'whatsapp',
-          name: 'Meta Cloud API (WhatsApp)',
-          desc: 'Official WhatsApp Business Cloud API for automated notifications, catalog broadcasts & lead follow-up.',
+          name: 'WhatsApp Cloud API',
+          desc: 'Official Meta WhatsApp Business Cloud API for automated notifications, catalog broadcasts & lead follow-up.',
           icon: 'message-circle',
           category: 'Messaging',
           handler: "openChannelConfigModal('whatsapp')",
           isConn: !!(channelConfigs.whatsapp && channelConfigs.whatsapp.connected)
         },
         {
+          id: 'instagram',
+          name: 'Instagram Direct API',
+          desc: 'Direct message automation and DM chatbot for interior designers, architects and home owners.',
+          icon: 'instagram',
+          category: 'Social Channel',
+          handler: "openChannelConfigModal('instagram')",
+          isConn: !!(channelConfigs.instagram && channelConfigs.instagram.connected)
+        },
+        {
           id: 'sheets',
-          name: 'Google Sheets 2-Way Sync',
+          name: 'Google Sheets Live 2-Way Sync',
           desc: 'Export leads and sales transactions automatically to live spreadsheets and vice versa.',
           icon: 'table',
           category: 'Sync & Export',
           handler: "openAdsIntegrationModal('sheets')",
           isConn: !!(channelConfigs.sheets && channelConfigs.sheets.connected)
-        },
-        {
-          id: 'razorpay',
-          name: 'Razorpay Payment Gateway',
-          desc: 'Generate instant payment links on WhatsApp and auto-mark deals won on payment receipt.',
-          icon: 'credit-card',
-          category: 'Payments',
-          handler: "openChannelConfigModal('payments')",
-          isConn: !!(channelConfigs.payments && channelConfigs.payments.connected)
         },
         {
           id: 'website_webhook',
@@ -10921,9 +10915,9 @@
           formName: 'Instant Lead Form - Architectural Inquiry'
         },
         fields: [
-          { id: 'meta-ad-account-id', label: 'Meta Ad Account ID *', placeholder: 'e.g. act_8829104812', type: 'text' },
-          { id: 'meta-page-id', label: 'Facebook Page ID *', placeholder: 'e.g. 102938475610293', type: 'text' },
-          { id: 'meta-access-token', label: 'Page / System User Access Token *', placeholder: 'EAAB...', type: 'textarea', rows: 2 }
+          { id: 'meta-ad-account-id', label: 'Meta Ad Account ID (Optional)', placeholder: 'e.g. act_8829104812', type: 'text' },
+          { id: 'meta-page-id', label: 'Facebook Page ID (Optional)', placeholder: 'e.g. 102938475610293', type: 'text' },
+          { id: 'meta-access-token', label: 'Page Access Token (Optional - Leave blank if connecting via Webhook or Zapier/Pabbly)', placeholder: 'EAAB... (Optional)', type: 'textarea', rows: 2 }
         ]
       },
       google_ads: {
@@ -11116,84 +11110,91 @@
 
     function openAdsIntegrationModal(platform) {
       currentActiveAdsPlatform = platform;
-      const pDef = ADS_PLATFORMS_CONFIG[platform] || ADS_PLATFORMS_CONFIG['meta_ads'];
-      const cfg = channelConfigs[platform] || { connected: false };
+      openModal('ads-integration-modal');
+      try {
+        const pDef = ADS_PLATFORMS_CONFIG[platform] || ADS_PLATFORMS_CONFIG['meta_ads'];
+        const cfg = (channelConfigs && channelConfigs[platform]) || { connected: false };
 
-      document.getElementById('ads-modal-title').innerText = pDef.name;
-      document.getElementById('ads-modal-subtitle').innerText = pDef.subtitle;
+        const titleEl = document.getElementById('ads-modal-title');
+        if (titleEl) titleEl.innerText = pDef.name;
+        const subEl = document.getElementById('ads-modal-subtitle');
+        if (subEl) subEl.innerText = pDef.subtitle;
 
-      const iconBox = document.getElementById('ads-modal-icon-box');
-      if (iconBox) iconBox.innerHTML = `<i data-lucide="${pDef.icon}" class="w-6 h-6"></i>`;
+        const iconBox = document.getElementById('ads-modal-icon-box');
+        if (iconBox) iconBox.innerHTML = `<i data-lucide="${pDef.icon}" class="w-6 h-6"></i>`;
 
-      const badge = document.getElementById('ads-modal-badge');
-      if (badge) {
-        if (cfg.connected) {
-          badge.innerText = '• Connected & Active';
-          badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-        } else {
-          badge.innerText = '• Not Connected';
-          badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
+        const badge = document.getElementById('ads-modal-badge');
+        if (badge) {
+          if (cfg.connected) {
+            badge.innerText = '• Connected & Active';
+            badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+          } else {
+            badge.innerText = '• Not Connected';
+            badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
+          }
         }
-      }
 
-      document.getElementById('ads-webhook-url').value = cfg.webhookUrl || pDef.defaultWebhook;
-      document.getElementById('ads-verify-token').value = cfg.verifyToken || pDef.defaultToken;
+        const urlEl = document.getElementById('ads-webhook-url');
+        if (urlEl) urlEl.value = cfg.webhookUrl || pDef.defaultWebhook;
+        const tokEl = document.getElementById('ads-verify-token');
+        if (tokEl) tokEl.value = cfg.verifyToken || pDef.defaultToken;
 
-      // Render dynamic credentials fields
-      const dynamicContainer = document.getElementById('ads-dynamic-fields');
-      if (dynamicContainer) {
-        dynamicContainer.innerHTML = pDef.fields.map(f => {
-          const val = cfg[f.id] || '';
-          if (f.type === 'textarea') {
+        // Render dynamic credentials fields
+        const dynamicContainer = document.getElementById('ads-dynamic-fields');
+        if (dynamicContainer && pDef.fields) {
+          dynamicContainer.innerHTML = pDef.fields.map(f => {
+            const val = cfg[f.id] || '';
+            if (f.type === 'textarea') {
+              return `
+                <div>
+                  <label class="block font-bold text-main mb-1">${f.label}</label>
+                  <textarea id="${f.id}" rows="${f.rows || 2}" placeholder="${f.placeholder}" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-mono text-[11px] focus:ring-1 focus:ring-gold focus:outline-hidden">${val}</textarea>
+                </div>
+              `;
+            }
             return `
               <div>
                 <label class="block font-bold text-main mb-1">${f.label}</label>
-                <textarea id="${f.id}" rows="${f.rows || 2}" placeholder="${f.placeholder}" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-mono text-[11px] focus:ring-1 focus:ring-gold focus:outline-hidden">${val}</textarea>
+                <input type="${f.type}" id="${f.id}" placeholder="${f.placeholder}" value="${val}" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold text-xs focus:ring-1 focus:ring-gold focus:outline-hidden">
               </div>
             `;
-          }
-          return `
-            <div>
-              <label class="block font-bold text-main mb-1">${f.label}</label>
-              <input type="${f.type}" id="${f.id}" placeholder="${f.placeholder}" value="${val}" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold text-xs focus:ring-1 focus:ring-gold focus:outline-hidden">
-            </div>
-          `;
-        }).join('');
-      }
+          }).join('');
+        }
 
-      // Populate target pipeline select
-      const pipSelect = document.getElementById('ads-cfg-pipeline');
-      if (pipSelect) {
-        pipSelect.innerHTML = pipelines.map(p => {
-          const isSel = (cfg.targetPipeline === p.id) || (!cfg.targetPipeline && p.id === pDef.defaultPipeline);
-          return `<option value="${p.id}" ${isSel ? 'selected' : ''}>${p.name}</option>`;
-        }).join('');
-      }
+        // Populate target pipeline select
+        const pipSelect = document.getElementById('ads-cfg-pipeline');
+        if (pipSelect && Array.isArray(pipelines)) {
+          pipSelect.innerHTML = pipelines.map(p => {
+            const isSel = (cfg.targetPipeline === p.id) || (!cfg.targetPipeline && p.id === pDef.defaultPipeline);
+            return `<option value="${p.id}" ${isSel ? 'selected' : ''}>${p.name}</option>`;
+          }).join('');
+        }
 
-      // Populate default assignee select
-      const assSelect = document.getElementById('ads-cfg-assignee');
-      if (assSelect) {
-        let opts = `<option value="">Auto Round-Robin (All Active Staff)</option>`;
-        users.filter(u => u.status === 'Active').forEach(u => {
-          const isSel = cfg.defaultAssignee === u.email;
-          opts += `<option value="${u.email}" ${isSel ? 'selected' : ''}>${u.name} (${u.role})</option>`;
-        });
-        assSelect.innerHTML = opts;
-      }
+        // Populate default assignee select
+        const assSelect = document.getElementById('ads-cfg-assignee');
+        if (assSelect && Array.isArray(users)) {
+          let opts = `<option value="">Auto Round-Robin (All Active Staff)</option>`;
+          users.filter(u => u && u.status === 'Active').forEach(u => {
+            const isSel = cfg.defaultAssignee === u.email;
+            opts += `<option value="${u.email}" ${isSel ? 'selected' : ''}>${u.name} (${u.role})</option>`;
+          });
+          assSelect.innerHTML = opts;
+        }
 
-      // Update simulator button text
-      const btnSimText = document.getElementById('btn-send-test-ad-text');
-      if (btnSimText) {
-        btnSimText.innerText = `🚀 Send Test ${pDef.name.split(' ')[0]} Ad Lead into Pipeline`;
-      }
+        // Update simulator button text
+        const btnSimText = document.getElementById('btn-send-test-ad-text');
+        if (btnSimText) {
+          btnSimText.innerText = `🚀 Send Test ${pDef.name.split(' ')[0]} Ad Lead into Pipeline`;
+        }
 
-      // Disconnect button visibility
-      const disBtn = document.getElementById('ads-btn-disconnect');
-      if (disBtn) {
-        disBtn.style.display = cfg.connected ? '' : 'none';
+        // Disconnect button visibility
+        const disBtn = document.getElementById('ads-btn-disconnect');
+        if (disBtn) {
+          disBtn.style.display = cfg.connected ? '' : 'none';
+        }
+      } catch (err) {
+        console.warn('Notice in openAdsIntegrationModal:', err);
       }
-
-      openModal('ads-integration-modal');
       if (window.lucide) lucide.createIcons();
     }
 
@@ -12312,12 +12313,18 @@
     // ==================== GLOBAL HELPERS ====================
     function openModal(modalId) {
       const m = document.getElementById(modalId);
-      if (m) m.classList.remove('hidden');
+      if (m) {
+        m.classList.remove('hidden');
+        m.style.display = 'flex';
+      }
     }
 
     function closeModal(modalId) {
       const m = document.getElementById(modalId);
-      if (m) m.classList.add('hidden');
+      if (m) {
+        m.classList.add('hidden');
+        m.style.display = 'none';
+      }
     }
 
     function toggleMobileMenu() {
@@ -12552,6 +12559,16 @@
         showToast('All CRM data synchronized with Google Cloud Firestore (crm-f4bf7)!', 'success');
       }, 800);
     }
+
+    // Explicit Global Window Bindings for HTML onclick handlers
+    window.openAdsIntegrationModal = openAdsIntegrationModal;
+    window.openChannelConfigModal = openChannelConfigModal;
+    window.openFirebaseConfigModal = openFirebaseConfigModal;
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.renderAppsGrid = renderAppsGrid;
+    window.renderIntegrationsGrid = renderIntegrationsGrid;
+    window.switchTab = switchTab;
 
     window.addEventListener('DOMContentLoaded', () => {
       initFirebaseCloudSync();
