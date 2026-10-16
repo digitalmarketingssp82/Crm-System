@@ -519,7 +519,7 @@
                 <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0"></span>
                 <h3 class="text-sm font-extrabold text-main flex items-center gap-2">
                   <i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>
-                  <span>Pending Work & Overdue Follow-up Center (काम का स्टेटस व अलर्ट)</span>
+                  <span>Pending Work & Overdue Follow-up Center</span>
                 </h3>
               </div>
               <p class="text-xs text-muted-custom mt-0.5">Overdue follow-ups, 30-min urgent alerts, missed leads aur WhatsApp notifications</p>
@@ -538,11 +538,11 @@
 
           <!-- 2-Tier Work Status Cards: Today's Live Work vs Yesterday & Older Backlog -->
           
-          <!-- TIER 1: ☀️ TODAY'S LIVE OPERATIONS (आज का काम - Present Day) -->
+          <!-- TIER 1: TODAY'S LIVE OPERATIONS (Present Day Work) -->
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-extrabold uppercase tracking-wider text-gold flex items-center gap-1.5">
-                <span>☀️ आज का लाइव वर्क (Today's Present Day Work)</span>
+                <span>☀️ Today's Live Operations (Present Day Work)</span>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-gold border border-gold/30">Live Today</span>
               </span>
               <span class="text-[11px] text-muted-custom font-medium">Daily Target & Urgent Follow-ups</span>
@@ -599,11 +599,11 @@
             </div>
           </div>
 
-          <!-- TIER 2: ⏳ YESTERDAY & OLDER BACKLOG (कल व पिछले दिनों का पेंडिंग काम - कॉलिंग लिस्ट) -->
+          <!-- TIER 2: YESTERDAY & PAST DAYS BACKLOG (Calling Queue) -->
           <div class="space-y-2 pt-2 border-t border-main/50">
             <div class="flex items-center justify-between">
               <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
-                <span>⏳ कल व पुराने दिनों का बैकलाग (Yesterday & Older Backlog - Calling Queue)</span>
+                <span>⏳ Past Days Backlog (Calling Queue)</span>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">Backlog Queue</span>
               </span>
               <button type="button" onclick="sendBacklogCallingWhatsAppAlerts()" id="btn-admin-wa-backlog" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1">
@@ -667,7 +667,7 @@
                 <span class="w-2.5 h-2.5 rounded-full bg-gold animate-ping"></span>
                 <span class="text-xs font-extrabold uppercase tracking-wider text-gold flex items-center gap-1.5">
                   <i data-lucide="clock" class="w-4 h-4 text-gold"></i>
-                  <span>URGENT: 30-MINUTE FOLLOW-UP REMINDER (फॉलो-अप का समय आ गया है)</span>
+                  <span>URGENT: 30-MINUTE FOLLOW-UP REMINDER</span>
                 </span>
               </div>
               <span id="dash-30m-timer-pill" class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-gold text-slate-950 font-mono">Due in 15 mins</span>
@@ -723,7 +723,7 @@
             <div class="flex items-center justify-between">
               <h4 class="text-xs font-bold text-main flex items-center gap-1.5">
                 <i data-lucide="users" class="w-3.5 h-3.5 text-purple-400"></i>
-                <span>Team Pending Work Breakdown (किस कर्मचारी का कितना काम पेंडिंग है)</span>
+                <span>Team Pending Work Breakdown (Staff Work Allocation)</span>
               </h4>
               <span class="text-[11px] text-muted-custom font-bold">Admin Oversight</span>
             </div>
@@ -1846,13 +1846,6 @@
                 </div>
                 <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold" id="badge-sub-ig">Not Connected</span>
               </button>
-              <button onclick="switchSettingsSubTab('telegram-channel')" id="set-sub-telegram-channel" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-muted-custom hover:bg-subtle transition">
-                <div class="flex items-center gap-2.5">
-                  <i data-lucide="send" class="w-4 h-4 text-blue-400"></i>
-                  <span>Telegram</span>
-                </div>
-                <span class="text-[9px] text-muted-custom" id="badge-sub-tg">Not connected</span>
-              </button>
               <button onclick="switchSettingsSubTab('webchat-channel')" id="set-sub-webchat-channel" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-muted-custom hover:bg-subtle transition">
                 <div class="flex items-center gap-2.5">
                   <i data-lucide="globe" class="w-4 h-4 text-cyan-400"></i>
@@ -2038,12 +2031,6 @@
             </div>
 
             <!-- OTHER CHANNELS -->
-            <div id="set-view-telegram-channel" class="hidden p-8 text-center space-y-3 bg-card border border-main rounded-3xl">
-              <h3 class="text-base font-bold text-main">Telegram Channel Integration</h3>
-              <p class="text-xs text-muted-custom" id="tg-status-text">Status: <span class="text-amber-500 font-bold">Not connected</span></p>
-              <button onclick="openChannelConfigModal('telegram')" class="px-4 py-2 bg-gold text-slate-950 font-bold text-xs rounded-xl">Configure Telegram Bot</button>
-            </div>
-
             <div id="set-view-webchat-channel" class="hidden p-8 text-center space-y-3 bg-card border border-main rounded-3xl">
               <h3 class="text-base font-bold text-main">Website Live Chat Widget</h3>
               <p class="text-xs text-muted-custom" id="wc-status-text">Status: <span class="text-amber-500 font-bold">Not connected</span></p>
@@ -2479,11 +2466,11 @@
 
         <div>
           <label class="block font-bold text-main mb-1 flex items-center justify-between">
-            <span>Mandatory Note / Reason (कारण / नोट) *</span>
+            <span>Mandatory Note / Reason *</span>
             <span class="text-rose-500 font-extrabold text-[10px] uppercase">Compulsory</span>
           </label>
-          <textarea id="fu-modal-note" rows="3" required placeholder="कस्टमर से क्या बात हुई / रीअटेम्प्ट या फॉलो-अप का कारण यहाँ लिखें (जैसे: फ़ोन नहीं उठाया, 4 बजे दोबारा बात होगी)..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-semibold outline-none focus:border-gold"></textarea>
-          <p class="text-[10px] text-muted-custom mt-0.5">⚠️ बिना नोट लिखे रीअटेम्प्ट या अगला फॉलो-अप शेड्यूल नहीं होगा।</p>
+          <textarea id="fu-modal-note" rows="3" required placeholder="Enter conversation details, reattempt reason, or next discussion agenda (e.g., Client did not answer, callback requested at 4 PM)..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-semibold outline-none focus:border-gold"></textarea>
+          <p class="text-[10px] text-muted-custom mt-0.5">⚠️ Entering a note/reason is strictly mandatory to schedule next follow-up or reattempt.</p>
         </div>
       </div>
 
@@ -2529,19 +2516,16 @@
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block font-bold text-main mb-1">Lead Source (लीड कहाँ से आई) *</label>
+              <label class="block font-bold text-main mb-1">Lead Source *</label>
               <select id="nl-source" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold outline-none focus:border-gold">
-                <option value="Manual Entry">✍️ Manual Entry (सीधा जोड़ा गया)</option>
-                <option value="Walk-in">🏬 Walk-in / Direct Visit (दुकान पर आए)</option>
-                <option value="Meta Ads">🎯 Meta Ads (Facebook / Instagram)</option>
-                <option value="Google Ads">🔍 Google Ads (सर्च / यूट्यूब एड्स)</option>
-                <option value="Phone Call">📞 Inbound Phone Call (कॉल आई)</option>
+                <option value="Manual Entry">✍️ Manual Entry</option>
+                <option value="Walk-in">🏬 Walk-in / Direct Visit</option>
+                <option value="Meta Ads">🎯 Meta Ads (Facebook & Instagram)</option>
+                <option value="Google Ads">🔍 Google Ads (Search & PMax)</option>
+                <option value="Phone Call">📞 Inbound Phone Call</option>
                 <option value="Excel Import">📊 Excel / CSV Import</option>
                 <option value="Website Webhook">🌐 Website / Online Form</option>
-                <option value="Reference">🤝 Reference / Referral (सिफारिश)</option>
-                <option value="IndiaMART">🛍️ IndiaMART Inbound</option>
-                <option value="Justdial">☎️ Justdial Inquiry</option>
-                <option value="TradeIndia">💼 TradeIndia Inquiry</option>
+                <option value="Reference">🤝 Reference / Referral</option>
               </select>
             </div>
             <div>
@@ -2685,19 +2669,16 @@
           </select>
         </div>
         <div>
-          <label class="block text-muted-custom font-bold mb-1">Lead Source (लीड का सोर्स)</label>
+          <label class="block text-muted-custom font-bold mb-1">Lead Source</label>
           <select id="edit-source" class="w-full p-2.5 rounded-xl border border-main bg-card text-main font-bold outline-none focus:border-gold">
-            <option value="Manual Entry">✍️ Manual Entry (सीधा जोड़ा गया)</option>
-            <option value="Walk-in">🏬 Walk-in / Direct Visit (दुकान पर आए)</option>
-            <option value="Meta Ads">🎯 Meta Ads (Facebook / Instagram)</option>
-            <option value="Google Ads">🔍 Google Ads (सर्च / यूट्यूब एड्स)</option>
-            <option value="Phone Call">📞 Inbound Phone Call (कॉल आई)</option>
+            <option value="Manual Entry">✍️ Manual Entry</option>
+            <option value="Walk-in">🏬 Walk-in / Direct Visit</option>
+            <option value="Meta Ads">🎯 Meta Ads (Facebook & Instagram)</option>
+            <option value="Google Ads">🔍 Google Ads (Search & PMax)</option>
+            <option value="Phone Call">📞 Inbound Phone Call</option>
             <option value="Excel Import">📊 Excel / CSV Import</option>
             <option value="Website Webhook">🌐 Website / Online Form</option>
-            <option value="Reference">🤝 Reference / Referral (सिफारिश)</option>
-            <option value="IndiaMART">🛍️ IndiaMART Inbound</option>
-            <option value="Justdial">☎️ Justdial Inquiry</option>
-            <option value="TradeIndia">💼 TradeIndia Inquiry</option>
+            <option value="Reference">🤝 Reference / Referral</option>
           </select>
         </div>
         <div>
@@ -3798,22 +3779,22 @@
               </span>
               <div>
                 <h4 class="font-bold text-main text-xs sm:text-sm">Multi-CRM Coexistence Mode (Add-On Integration)</h4>
-                <p class="text-[11px] text-muted-custom">Existing CRM disconnect karne ki koi zaroorat nahi hai!</p>
+                <p class="text-[11px] text-muted-custom">No need to disconnect or alter your existing CRM!</p>
               </div>
             </div>
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              ⚡ Add-On Supported
+              ⚡ Multi-CRM Supported
             </span>
           </div>
 
           <div class="p-3 rounded-xl bg-card border border-main text-[11px] text-muted-custom space-y-2">
             <p class="font-semibold text-main">
-              💡 Agar aapka Meta Ads, Google Ads ya Website already kisi doosre CRM/software se connected hai:
+              💡 Connecting Meta Ads or Google Ads alongside an existing CRM:
             </p>
             <ul class="list-disc list-inside space-y-1.5 pl-1 leading-relaxed">
-              <li><strong class="text-main">Meta / Facebook Ads:</strong> Meta Business Suite mein <span class="font-mono text-gold">Integrations → Leads Access</span> mein aap <em>Multiple CRMs</em> ko simultaneous lead delivery allow kar sakte hain. Purana CRM disconnect nahi hoga!</li>
-              <li><strong class="text-main">Zapier / Make.com / Pabbly (Sabse Aasan):</strong> Apne existing Zap / Scenario mein bas ek aur <em>Webhook POST Action</em> add karein jo niche diye gaye Callback URL par lead bheje. Dono CRMs ko parallel lead deliver hogi!</li>
-              <li><strong class="text-main">Website Lead Form:</strong> Website ke form submission code mein parallel asynchronous <code>fetch()</code> add karein. Existing form submission waise ka waisa rahega.</li>
+              <li><strong class="text-main">Meta Business Suite (Direct Access):</strong> In Meta Business Suite → <span class="font-mono text-gold">Integrations → Leads Access</span>, Meta allows multiple CRMs to be subscribed to the same Lead Forms simultaneously. Your existing CRM will continue working uninterrupted.</li>
+              <li><strong class="text-main">Zapier / Make / Pabbly (Recommended):</strong> In your existing Zap or automation workflow, add an additional <em>Webhook POST Action</em> pointing to our Callback URL below. Both CRMs will receive incoming leads in parallel in real time.</li>
+              <li><strong class="text-main">Website Lead Forms:</strong> Add a secondary asynchronous <code>fetch()</code> POST in your website form submit handler. Your existing database flow remains untouched.</li>
             </ul>
           </div>
         </div>
@@ -3825,7 +3806,7 @@
             <span>Real-time Lead Ingestion Webhook (Sri Sri Plywoods CRM)</span>
           </div>
           <p class="text-[11px] text-muted-custom leading-relaxed">
-            Meta Ads Manager aur Google Ads mein Leads capture karne ke liye niche diya gaya Webhook URL aur Token use karein. Jab bhi customer ad form fill karega, lead automatic Sri Sri Plywoods CRM mein store ho jayegi.
+            Use the Webhook URL and Secret Key below to connect your Meta Ads Lead Forms, Google Ads, or custom web forms. Every time a customer submits your ad form, the lead is instantly captured into Sri Sri Plywoods CRM with full campaign attribution.
           </p>
           <div class="grid grid-cols-1 gap-2 pt-1">
             <div>
@@ -3851,7 +3832,7 @@
 
         <!-- Dynamic Credentials Inputs -->
         <div id="ads-dynamic-fields" class="space-y-3.5">
-          <!-- Injected dynamically per platform: Meta Page ID, Access Token, Google Ads CID, IndiaMART GLUSR Key, etc. -->
+          <!-- Injected dynamically per platform: Meta Page ID, Access Token, Google Ads CID, Webhook secret, etc. -->
         </div>
 
         <!-- Pipeline Routing & Default Assignee -->
@@ -3942,7 +3923,7 @@
           </div>
           <div>
             <h3 class="text-sm font-bold text-main">Confirm Stage Change</h3>
-            <p class="text-[11px] text-muted-custom">स्टेज बदलने की पुष्टि करें</p>
+            <p class="text-[11px] text-muted-custom">Please confirm moving this lead to the new stage</p>
           </div>
         </div>
         <button type="button" onclick="cancelStageChange()" class="text-muted-custom hover:text-gold transition">
@@ -3971,17 +3952,17 @@
         </div>
 
         <p id="stage-confirm-msg" class="text-xs text-main leading-relaxed text-center font-medium">
-          Kya aap confirm is lead ki stage change karna chahte hain?
+          Are you sure you want to move this deal to the selected stage?
         </p>
       </div>
 
       <div class="flex items-center justify-end gap-2.5 pt-2">
         <button type="button" onclick="cancelStageChange()" class="px-4 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main transition">
-          Cancel (रद्द करें)
+          Cancel
         </button>
         <button type="button" onclick="confirmStageChangeProceed()" class="px-5 py-2 rounded-xl bg-gold text-slate-950 text-xs font-bold shadow-md hover:brightness-105 transition flex items-center gap-1.5">
           <i data-lucide="check" class="w-3.5 h-3.5"></i>
-          <span>Yes, Confirm (हाँ, बदलें)</span>
+          <span>Confirm Stage Change</span>
         </button>
       </div>
     </div>
@@ -4004,16 +3985,16 @@
 
       <div class="p-3.5 rounded-2xl bg-rose-500/5 border border-rose-500/20 text-xs text-muted-custom leading-relaxed space-y-2">
         <p class="font-bold text-main">
-          Kya aap <span id="bulk-del-count-text" class="text-rose-400 font-extrabold text-sm">0</span> selected client entries ko CRM se permanently delete karna chahte hain?
+          Are you sure you want to permanently delete <span id="bulk-del-count-text" class="text-rose-400 font-extrabold text-sm">0</span> selected client records?
         </p>
         <p class="text-[11px]">
-          In leads se related sabhi tasks aur follow-up reminders bhi delete ho jayenge.
+          All associated tasks, logs, and follow-up reminders will be permanently removed.
         </p>
       </div>
 
       <div class="flex items-center justify-end gap-2.5 pt-2">
         <button type="button" onclick="closeModal('bulk-delete-confirm-modal')" class="px-4 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main transition">
-          Cancel (वापस जाएं)
+          Cancel
         </button>
         <button type="button" onclick="confirmBulkDeleteProceed()" class="px-5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold shadow-md transition flex items-center gap-1.5">
           <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -4164,7 +4145,7 @@
           </div>
           <div>
             <h3 class="text-sm font-bold text-main" id="call-log-title">Log Call Activity</h3>
-            <p class="text-[11px] text-muted-custom">कॉल का नतीजा व बातचीत का विवरण दर्ज करें</p>
+            <p class="text-[11px] text-muted-custom">Record call outcome and discussion notes</p>
           </div>
         </div>
         <button type="button" onclick="closeModal('call-log-modal')" class="text-muted-custom hover:text-gold transition">
@@ -4187,7 +4168,7 @@
       <div class="space-y-3.5 text-xs">
         <!-- 1-Tap Call Outcome Selector -->
         <div>
-          <label class="block font-bold text-main mb-2">Call Status / Outcome (चुनें क्या हुआ) *</label>
+          <label class="block font-bold text-main mb-2">Call Status / Outcome *</label>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="call-log-outcome-buttons">
             <button type="button" onclick="selectCallOutcome('Baat Hui (Connected)', this)" class="call-outcome-btn p-2.5 rounded-xl border border-emerald-500/50 bg-emerald-500/10 text-left font-bold text-[11px] text-emerald-400 transition flex items-center gap-1.5 shadow-xs">
               <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
@@ -4219,8 +4200,8 @@
 
         <!-- Call Notes / Conversation Details -->
         <div>
-          <label class="block font-bold text-main mb-1">Call Notes / Discussion (क्या बात हुई या क्या हुआ) *</label>
-          <textarea id="call-log-notes" rows="3" placeholder="e.g. 19mm Gurjan BWR Ply ka rate discuss hua, kal site measurement par aane ko bola..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main text-xs focus:ring-1 focus:ring-gold outline-hidden"></textarea>
+          <label class="block font-bold text-main mb-1">Call Notes / Discussion Summary *</label>
+          <textarea id="call-log-notes" rows="3" placeholder="e.g. Discussed 19mm Marine Ply pricing, customer requested site visit tomorrow..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main text-xs focus:ring-1 focus:ring-gold outline-hidden"></textarea>
         </div>
 
         <!-- Optional Follow-up & Stage Selection -->
@@ -4244,7 +4225,7 @@
         </button>
         <button type="button" onclick="saveCallLogEntry()" class="px-5 py-2 rounded-xl bg-gold text-slate-950 font-bold text-xs shadow-md hover:brightness-105 transition flex items-center gap-1.5">
           <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
-          <span>Save Call Record (कॉल सेव करें)</span>
+          <span>Save Call Record</span>
         </button>
       </div>
     </div>
@@ -4262,7 +4243,7 @@
           </div>
           <div>
             <h3 class="text-sm font-bold text-main" id="wa-composer-title">Send WhatsApp & Log Message</h3>
-            <p class="text-[11px] text-muted-custom">WhatsApp पर मैसेज भेजें और उसकी हिस्ट्री टाइमलाइन में सेव रखें</p>
+            <p class="text-[11px] text-muted-custom">Send message via WhatsApp and record in client timeline</p>
           </div>
         </div>
         <button type="button" onclick="closeModal('whatsapp-composer-modal')" class="text-muted-custom hover:text-gold transition">
@@ -4285,7 +4266,7 @@
       <div class="space-y-3 text-xs">
         <!-- Quick Template Selector -->
         <div>
-          <label class="block font-bold text-main mb-1.5">Quick Message Templates (सुझाए गए मैसेज):</label>
+          <label class="block font-bold text-main mb-1.5">Quick Message Templates:</label>
           <div class="flex flex-wrap gap-1.5">
             <button type="button" onclick="applyWhatsAppTemplatePreset('catalog')" class="px-2.5 py-1 rounded-lg border border-main bg-subtle hover:border-gold text-[10px] font-bold text-main transition">
               📋 Catalog & Rates
@@ -4304,10 +4285,10 @@
 
         <!-- Editable Message Content -->
         <div>
-          <label class="block font-bold text-main mb-1">Message Content (यह मैसेज क्लाइंट को भेजा जाएगा) *</label>
+          <label class="block font-bold text-main mb-1">Message Content (Will be sent to client) *</label>
           <textarea id="wa-composer-text" rows="5" class="w-full p-3 rounded-2xl border border-main bg-card text-main text-xs font-sans leading-relaxed focus:ring-1 focus:ring-emerald-500 outline-hidden"></textarea>
           <p class="text-[10px] text-muted-custom mt-1">
-            💡 Yeh exact message WhatsApp par open hoga aur lead ke timeline & notes mein permanently record ho jayega.
+            💡 This message will open in WhatsApp and automatically save to lead timeline and notes.
           </p>
         </div>
       </div>
@@ -4318,7 +4299,7 @@
         </button>
         <button type="button" onclick="sendAndLogWhatsAppMessage()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
           <i data-lucide="send" class="w-3.5 h-3.5"></i>
-          <span>Send on WhatsApp & Save (मैसेज भेजें व सेव करें)</span>
+          <span>Send on WhatsApp & Save</span>
         </button>
       </div>
     </div>
@@ -4360,6 +4341,74 @@
         <i data-lucide="send" class="w-3.5 h-3.5"></i>
         <span>Alert Staff</span>
       </button>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- ========== MODAL: FIREBASE CLOUD SYNC CONFIGURATION ========= -->
+  <!-- ============================================================= -->
+  <div id="firebase-cloud-sync-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-card w-full max-w-lg rounded-3xl shadow-2xl p-6 border border-main space-y-4 animate-in fade-in duration-200">
+      <div class="flex items-center justify-between pb-3 border-b border-main">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/15 text-gold border border-gold/30 flex items-center justify-center font-bold">
+            <i data-lucide="database" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-main">Google Firebase Cloud Database</h3>
+            <p class="text-[11px] text-muted-custom">Realtime bi-directional synchronization with Google Cloud Firestore</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('firebase-cloud-sync-modal')" class="text-muted-custom hover:text-gold transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div>
+            <span class="font-bold text-xs text-emerald-400 block">Cloud Sync Active</span>
+            <span class="text-[10px] text-muted-custom font-mono">Project ID: crm-f4bf7</span>
+          </div>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+          Connected
+        </span>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-3 rounded-xl bg-subtle border border-main">
+            <span class="text-[10px] font-bold text-muted-custom uppercase block">Database Engine</span>
+            <span class="text-xs font-bold text-main">Google Cloud Firestore</span>
+          </div>
+          <div class="p-3 rounded-xl bg-subtle border border-main">
+            <span class="text-[10px] font-bold text-muted-custom uppercase block">Synced Devices</span>
+            <span class="text-xs font-bold text-main">All Staff Phones & PCs</span>
+          </div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-subtle border border-main space-y-1.5">
+          <span class="text-[10px] font-bold text-muted-custom uppercase block">Synchronized Collections</span>
+          <p class="text-[11px] text-main font-mono">crm_leads • crm_users • crm_pipelines • crm_activities • crm_channel_configs</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-main">
+        <button type="button" onclick="exportDataBackup()" class="px-3.5 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main flex items-center gap-1.5">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>Backup JSON</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeModal('firebase-cloud-sync-modal')" class="px-4 py-2 border border-main rounded-xl text-xs font-bold text-muted-custom hover:text-main">
+            Close
+          </button>
+          <button type="button" onclick="if(typeof syncLeadsToCloud==='function') syncLeadsToCloud(); closeModal('firebase-cloud-sync-modal'); showToast('Cloud database synchronized successfully!', 'success');" class="px-5 py-2 rounded-xl bg-gold text-slate-950 font-bold text-xs shadow-md hover:brightness-105 flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Sync Now</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4565,7 +4614,7 @@
         category: 'WhatsApp & Social Messaging',
         icon: 'message-square',
         permissions: [
-          { id: 'conv_view_all', name: 'View Team Conversations', desc: 'Can view all incoming WhatsApp, Instagram and Telegram messages' },
+          { id: 'conv_view_all', name: 'View Team Conversations', desc: 'Can view all incoming WhatsApp and Instagram messages' },
           { id: 'conv_reply', name: 'Reply & Chat Live', desc: 'Send direct WhatsApp messages and take over customer chats' },
           { id: 'conv_attach_files', name: 'Send Catalogs & Media', desc: 'Attach photos, finish catalogs, PDF quotes and vouchers in chat' }
         ]
@@ -4607,7 +4656,7 @@
           { id: 'settings_team', name: 'Manage Team Members', desc: 'Add new staff members, set passwords, and assign role access' },
           { id: 'settings_roles', name: 'Manage Roles & Permissions', desc: 'Create custom roles and customize granular permission sets' },
           { id: 'settings_wallet', name: 'Manage Messaging Wallet', desc: 'View balance and recharge Meta conversation wallet' },
-          { id: 'settings_apps', name: 'Manage ERP Integrations', desc: 'Configure Tally Prime, Busy Accounting, and Google Sheets sync' }
+          { id: 'settings_apps', name: 'Manage Integrations & Ads', desc: 'Configure Meta Ads, Google Ads, Google Sheets, and Firebase Cloud sync' }
         ]
       }
     ];
@@ -4716,15 +4765,11 @@
       instagram: { connected: false, handle: '', pageId: '', token: '' },
       meta_ads: { connected: false, adAccountId: '', pageId: '', pageAccessToken: '', webhookUrl: 'https://crm.srisriplywoods.com/api/webhook/meta-leads', verifyToken: 'sri_sri_ply_meta_verify_2026', targetPipeline: 'p-fb', defaultAssignee: '' },
       google_ads: { connected: false, customerId: '', webhookKey: 'sri_google_lead_secret_789', webhookUrl: 'https://crm.srisriplywoods.com/api/webhook/google-ads', targetPipeline: 'p-google', defaultAssignee: '' },
-      indiamart: { connected: false, glusrKey: '', mobile: '', webhookUrl: 'https://crm.srisriplywoods.com/api/webhook/indiamart', verifyToken: 'sri_indiamart_push_2026', targetPipeline: 'p-field', defaultAssignee: '' },
-      justdial: { connected: false, apiKey: '', webhookUrl: 'https://crm.srisriplywoods.com/api/webhook/justdial', verifyToken: 'sri_justdial_key_2026', targetPipeline: 'p-walkin', defaultAssignee: '' },
       website_webhook: { connected: false, secretKey: 'sri_web_inbound_key_99', webhookUrl: 'https://crm.srisriplywoods.com/api/webhook/website-inbound', verifyToken: 'sri_web_inbound_key_99', targetPipeline: 'p-walkin', defaultAssignee: '' },
       facebook: { connected: false, pageName: '', pageId: '', token: '' },
       google: { connected: false, clientId: '', clientSecret: '' },
       payments: { connected: false, gateway: 'Razorpay', keyId: '', keySecret: '' },
-      telegram: { connected: false, botUsername: '', botToken: '' },
       webchat: { connected: false, widgetId: '' },
-      tally: { connected: false, serverUrl: '', port: '9000', company: 'Sri Sri Plywoods' },
       sheets: { connected: false, sheetUrl: '', serviceEmail: '', webhookUrl: 'https://crm.srisriplywoods.com/api/webhook/sheets-sync', verifyToken: 'sri_sheets_sync_key_99', targetPipeline: 'p-walkin' },
       email: { connected: false, host: '', port: '587', email: '', password: '' }
     }));
@@ -4888,7 +4933,7 @@
       }
 
       // 2. Settings Badges
-      const chList = ['whatsapp', 'instagram', 'facebook', 'google', 'payments', 'telegram', 'email'];
+      const chList = ['whatsapp', 'instagram', 'facebook', 'google', 'payments', 'email'];
       chList.forEach(c => {
         const isConn = channelConfigs[c] && channelConfigs[c].connected;
         const pill = document.getElementById('channel-status-pill-' + c);
@@ -4974,6 +5019,8 @@
 
       localStorage.setItem('sri_sri_channel_configs', JSON.stringify(channelConfigs));
       updateAllChannelStatusBadges();
+      renderIntegrationsGrid();
+      if (typeof renderAppsGrid === 'function') renderAppsGrid();
       closeModal('channel-config-modal-whatsapp');
       showToast('WhatsApp Cloud API Connected Successfully! Phone: ' + channelConfigs.whatsapp.phone, 'success');
     }
@@ -4983,6 +5030,8 @@
         channelConfigs[channelName].connected = false;
         localStorage.setItem('sri_sri_channel_configs', JSON.stringify(channelConfigs));
         updateAllChannelStatusBadges();
+        renderIntegrationsGrid();
+        if (typeof renderAppsGrid === 'function') renderAppsGrid();
         closeModal('channel-config-modal-whatsapp');
         closeModal('channel-config-modal-general');
         showToast(channelName.toUpperCase() + ' channel disconnected and reset to Not Connected.', 'info');
@@ -5073,19 +5122,6 @@
             <input type="password" id="gen-f3" placeholder="••••••••••••" value="${cfg.keySecret || ''}" class="w-full p-2.5 rounded-xl border border-main bg-subtle text-main font-mono">
           </div>
         `;
-      } else if (channelName === 'telegram') {
-        titleEl.innerText = 'Telegram Bot API';
-        subEl.innerText = 'Connect customer support bot for inquiries and alerts';
-        fieldsContainer.innerHTML = `
-          <div>
-            <label class="block font-bold text-main mb-1">Telegram Bot Username *</label>
-            <input type="text" id="gen-f1" placeholder="@SriSriPlywoodBot" value="${cfg.botUsername || ''}" class="w-full p-2.5 rounded-xl border border-main bg-subtle text-main font-bold">
-          </div>
-          <div>
-            <label class="block font-bold text-main mb-1">Bot HTTP Token *</label>
-            <input type="text" id="gen-f2" placeholder="bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" value="${cfg.botToken || ''}" class="w-full p-2.5 rounded-xl border border-main bg-subtle text-main font-mono">
-          </div>
-        `;
       } else if (channelName === 'email') {
         titleEl.innerText = 'SMTP Email Server';
         subEl.innerText = 'Send automated plywood quotations and formal invoices';
@@ -5132,14 +5168,14 @@
         channelConfigs.google = { connected: true, clientId: f1, clientSecret: f2 };
       } else if (c === 'payments') {
         channelConfigs.payments = { connected: true, gateway: f1, keyId: f2, keySecret: f3 };
-      } else if (c === 'telegram') {
-        channelConfigs.telegram = { connected: true, botUsername: f1, botToken: f2 };
       } else if (c === 'email') {
         channelConfigs.email = { connected: true, host: f1, port: f2, email: f3, password: f4 };
       }
 
       localStorage.setItem('sri_sri_channel_configs', JSON.stringify(channelConfigs));
       updateAllChannelStatusBadges();
+      renderIntegrationsGrid();
+      if (typeof renderAppsGrid === 'function') renderAppsGrid();
       closeModal('channel-config-modal-general');
       showToast(c.toUpperCase() + ' channel connected successfully!', 'success');
     }
@@ -5343,7 +5379,7 @@
       const canRoles = isOwner || userHasPermission('settings_roles');
       const canIntegrations = isOwner || userHasPermission('settings_apps');
 
-      ['set-sub-whatsapp-channel', 'set-sub-instagram-channel', 'set-sub-telegram-channel', 'set-sub-webchat-channel', 'set-sub-email-channel'].forEach(id => {
+      ['set-sub-whatsapp-channel', 'set-sub-instagram-channel', 'set-sub-webchat-channel', 'set-sub-email-channel'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = canChannels ? '' : 'none';
       });
@@ -5642,7 +5678,6 @@
       const setPermMap = {
         'whatsapp-channel': ['settings_channels'],
         'instagram-channel': ['settings_channels'],
-        'telegram-channel': ['settings_channels'],
         'webchat-channel': ['settings_channels'],
         'email-channel': ['settings_channels'],
         'team': ['settings_team'],
@@ -7405,13 +7440,13 @@
       const note = document.getElementById('fu-modal-note').value.trim();
 
       if (!dtVal) {
-        showToast('Follow-up Date & Time सेलेक्ट करना अनिवार्य है!', 'error');
+        showToast('Please select a valid Follow-up Date & Time!', 'error');
         return;
       }
 
       // Mandatory Note Check
       if (!note) {
-        showToast('⚠️ Reattempt / Follow-up शेड्यूल करने के लिए Note / Reason लिखना compulsory है!', 'error');
+        showToast('⚠️ A Note / Reason is strictly mandatory before scheduling a follow-up or reattempt!', 'error');
         const noteEl = document.getElementById('fu-modal-note');
         if (noteEl) {
           noteEl.focus();
@@ -7544,7 +7579,7 @@
       const micLabel = document.getElementById('lbl-voice-dictation');
 
       if (!SpeechRecognition) {
-        showToast('Voice dictation Google Chrome या Microsoft Edge ब्राउज़र में चलती है।', 'warning');
+        showToast('Voice dictation is supported in Google Chrome and Microsoft Edge browsers.', 'warning');
         return;
       }
 
@@ -7570,7 +7605,7 @@
         voiceRecognitionInstance.continuous = true;
         voiceRecognitionInstance.interimResults = true;
         voiceRecognitionInstance.maxAlternatives = 1;
-        voiceRecognitionInstance.lang = 'hi-IN'; // Works for Hindi & Indian English
+        voiceRecognitionInstance.lang = 'hi-IN'; // Recognizes both English and Hindi speech
 
         const initialText = textarea ? textarea.value : '';
         let finalizedSoFar = '';
@@ -7585,9 +7620,9 @@
             micIcon.setAttribute('data-lucide', 'mic-off');
             micIcon.className = 'w-4 h-4 text-white';
           }
-          if (micLabel) micLabel.innerText = 'Listening... (बोलिए / Tap to stop)';
+          if (micLabel) micLabel.innerText = 'Listening... (Speak now / Tap to stop)';
           if (window.lucide) lucide.createIcons();
-          showToast('🎙️ Mic चालू है: बोलिए (Speak in Hindi / English)...', 'info');
+          showToast('🎙️ Microphone active: Listening... Speak your note clearly.', 'info');
         };
 
         voiceRecognitionInstance.onresult = function(event) {
@@ -8555,37 +8590,37 @@
       if (currentPendingFilter === 'TODAY_OVERDUE' || currentPendingFilter === 'OVERDUE') {
         displayLeads = todayOverdueLeads;
         if (filterBadge) filterBadge.innerText = 'Showing ' + todayOverdueLeads.length + ' Today Overdue';
-        if (listTitle) listTitle.innerText = 'Today Overdue Work (आज का छूटा हुआ काम)';
+        if (listTitle) listTitle.innerText = 'Today Overdue Work';
       } else if (currentPendingFilter === 'UPCOMING_30M') {
         displayLeads = upcoming30mLeads;
         if (filterBadge) filterBadge.innerText = 'Showing ' + upcoming30mLeads.length + ' Due in 30 Mins';
-        if (listTitle) listTitle.innerText = 'Urgent Due in 30 Mins (अगले 30 मिनट में आने वाले फॉलो-अप)';
+        if (listTitle) listTitle.innerText = 'Urgent Due in 30 Mins';
       } else if (currentPendingFilter === 'DUE_TODAY') {
         displayLeads = dueTodayRemainingLeads;
         if (filterBadge) filterBadge.innerText = 'Showing ' + dueTodayRemainingLeads.length + ' Due Today';
-        if (listTitle) listTitle.innerText = 'Due Today Schedule (आज का बाकी काम)';
+        if (listTitle) listTitle.innerText = 'Due Today Schedule';
       } else if (currentPendingFilter === 'MISSED_TODAY' || currentPendingFilter === 'UNCONTACTED') {
         displayLeads = todayMissedLeads;
         if (filterBadge) filterBadge.innerText = 'Showing ' + todayMissedLeads.length + ' Missed Today';
-        if (listTitle) listTitle.innerText = 'Today Missed / Fresh Untouched Leads (आज आई नई अनटच्ड लीड्स)';
+        if (listTitle) listTitle.innerText = 'Today Missed / Fresh Untouched Leads';
       } else if (currentPendingFilter === 'BACKLOG_OVERDUE') {
         displayLeads = backlogOverdueLeads;
         if (filterBadge) filterBadge.innerText = 'Showing ' + backlogOverdueLeads.length + ' Past Backlog Overdue';
-        if (listTitle) listTitle.innerText = 'Yesterday & Older Backlog Overdue (कल व पुराने दिनों के छूटे फॉलो-अप)';
+        if (listTitle) listTitle.innerText = 'Yesterday & Past Days Overdue Backlog';
       } else if (currentPendingFilter === 'BACKLOG_MISSED') {
         displayLeads = backlogMissedLeads;
         if (filterBadge) filterBadge.innerText = 'Showing ' + backlogMissedLeads.length + ' Old Untouched';
-        if (listTitle) listTitle.innerText = 'Older Neglected Backlog (पुराने दिनों की अनटच्ड लीड्स)';
+        if (listTitle) listTitle.innerText = 'Older Backlog Untouched Leads';
       } else if (currentPendingFilter === 'CALLING_QUEUE') {
         displayLeads = uniqueCallingQueueLeads;
         if (filterBadge) filterBadge.innerText = 'Calling Queue (' + uniqueCallingQueueLeads.length + ')';
-        if (listTitle) listTitle.innerText = 'Calling Person Action Queue (कॉलिंग टीम की कुल वर्क लिस्ट)';
+        if (listTitle) listTitle.innerText = 'Calling Team Action Queue';
       } else if (currentPendingFilter === 'TODAY_ALL') {
         displayLeads = [...todayOverdueLeads, ...upcoming30mLeads, ...dueTodayRemainingLeads, ...todayMissedLeads];
         const s = new Set();
         displayLeads = displayLeads.filter(l => { if (s.has(l.id)) return false; s.add(l.id); return true; });
         if (filterBadge) filterBadge.innerText = 'Today Live Work (' + displayLeads.length + ')';
-        if (listTitle) listTitle.innerText = 'All Present Day Live Work (आज का कुल काम)';
+        if (listTitle) listTitle.innerText = 'All Present Day Live Work';
       } else {
         // Combined All Active prioritized: Backlog Overdue -> Today Overdue -> 30m -> Today Due -> Today Missed -> Backlog Missed
         displayLeads = [
@@ -10784,33 +10819,6 @@
           isConn: !!(channelConfigs.whatsapp && channelConfigs.whatsapp.connected)
         },
         {
-          id: 'indiamart',
-          name: 'IndiaMART B2B Leads',
-          desc: 'Direct webhook integration to ingest wholesale plywood buyer inquiries into CRM in real time.',
-          icon: 'shopping-bag',
-          category: 'B2B Portal',
-          handler: "openAdsIntegrationModal('indiamart')",
-          isConn: !!(channelConfigs.indiamart && channelConfigs.indiamart.connected)
-        },
-        {
-          id: 'tradeindia',
-          name: 'TradeIndia Leads',
-          desc: 'Automatic commercial contractor & distributor inquiry ingestion with instant staff notification.',
-          icon: 'globe',
-          category: 'B2B Portal',
-          handler: "openAdsIntegrationModal('tradeindia')",
-          isConn: !!(channelConfigs.tradeindia && channelConfigs.tradeindia.connected)
-        },
-        {
-          id: 'justdial',
-          name: 'Justdial Directory Leads',
-          desc: 'Capture local interior designers, architects & homeowner phone inquiries in real time.',
-          icon: 'phone-forwarded',
-          category: 'Local Leads',
-          handler: "openAdsIntegrationModal('justdial')",
-          isConn: !!(channelConfigs.justdial && channelConfigs.justdial.connected)
-        },
-        {
           id: 'sheets',
           name: 'Google Sheets 2-Way Sync',
           desc: 'Export leads and sales transactions automatically to live spreadsheets and vice versa.',
@@ -10818,24 +10826,6 @@
           category: 'Sync & Export',
           handler: "openAdsIntegrationModal('sheets')",
           isConn: !!(channelConfigs.sheets && channelConfigs.sheets.connected)
-        },
-        {
-          id: 'tally',
-          name: 'Tally Prime ERP',
-          desc: 'Sync customer ledgers, GST sales vouchers & pending outstanding balances automatically.',
-          icon: 'calculator',
-          category: 'ERP & Accounts',
-          handler: "openAdsIntegrationModal('tally')",
-          isConn: !!(channelConfigs.tally && channelConfigs.tally.connected)
-        },
-        {
-          id: 'busy',
-          name: 'Busy Accounting Software',
-          desc: 'Real-time GST invoice push, stock item lookup & dispatch challans sync with CRM.',
-          icon: 'file-spreadsheet',
-          category: 'ERP & Accounts',
-          handler: "openAdsIntegrationModal('busy')",
-          isConn: !!(channelConfigs.busy && channelConfigs.busy.connected)
         },
         {
           id: 'razorpay',
@@ -10963,50 +10953,6 @@
           { id: 'google-lead-key', label: 'Google Lead Form Key *', placeholder: 'Enter Key from Google Ads Webhook Setup', type: 'text' }
         ]
       },
-      indiamart: {
-        name: 'IndiaMART B2B Lead Manager',
-        subtitle: 'Direct sync of wholesale buyer inquiries & contractor requests via Push API',
-        icon: 'building',
-        defaultWebhook: 'https://crm.srisriplywoods.com/api/webhook/indiamart',
-        defaultToken: 'sri_indiamart_push_2026',
-        defaultPipeline: 'p-field',
-        sampleLead: {
-          name: 'Gurpreet Singh (Wholesale Dealer)',
-          phone: '+91 98141 99882',
-          email: 'gurpreet.ply@gmail.com',
-          company: 'Singh Timber & Plywood Store',
-          city: 'Amritsar',
-          materialType: '50 Sheets 12mm Commercial MR Grade Ply',
-          dealValue: 85000,
-          source: 'IndiaMART'
-        },
-        fields: [
-          { id: 'im-registered-mobile', label: 'IndiaMART Registered Mobile *', placeholder: '+91 98772 42645', type: 'text' },
-          { id: 'im-glusr-key', label: 'IndiaMART CRM GLUSR Key *', placeholder: 'e.g. glus_9823145...', type: 'text' }
-        ]
-      },
-      justdial: {
-        name: 'Justdial & Local Inquiries',
-        subtitle: 'Capture verified local customer inquiries and caller requirements automatically',
-        icon: 'phone-call',
-        defaultWebhook: 'https://crm.srisriplywoods.com/api/webhook/justdial',
-        defaultToken: 'sri_justdial_key_2026',
-        defaultPipeline: 'p-walkin',
-        sampleLead: {
-          name: 'Ramesh Kumar (Home Owner)',
-          phone: '+91 98765 43210',
-          email: 'ramesh.ludhiana@gmail.com',
-          company: 'Residential Construction',
-          city: 'Ludhiana',
-          materialType: 'Kitchen Modular Laminates & 19mm Block Board',
-          dealValue: 65000,
-          source: 'Justdial'
-        },
-        fields: [
-          { id: 'jd-vendor-id', label: 'Vendor / Account ID *', placeholder: 'e.g. JD-PL-9921', type: 'text' },
-          { id: 'jd-api-key', label: 'Lead Ingestion API Key *', placeholder: 'Enter API Key', type: 'text' }
-        ]
-      },
       website_webhook: {
         name: 'Website Quote Form & Inbound Webhook',
         subtitle: 'Capture inquiries from your official website quote calculator or inquiry form',
@@ -11022,7 +10968,11 @@
           city: 'Chandigarh',
           materialType: 'Charcoal Louvers, Acrylic Sheets & HDHMR Boards',
           dealValue: 180000,
-          source: 'Website Webhook'
+          source: 'Website Webhook',
+          campaignName: 'Website SEO & Organic Quote Form',
+          adsetName: 'Modular Kitchen Inquiries',
+          adName: 'Website Instant Quote Calculator',
+          formName: 'Online Plywood Estimate Form'
         },
         fields: [
           { id: 'web-domain', label: 'Website Domain URL *', placeholder: 'https://srisriplywoods.com', type: 'text' },
@@ -11044,83 +10994,23 @@
           city: 'Ludhiana',
           materialType: 'Calibrated Plywood 16mm',
           dealValue: 75000,
-          source: 'Google Sheets'
+          source: 'Google Sheets',
+          campaignName: 'Daily Calling Master Sheet 2026',
+          adsetName: 'Local Timber Merchants & Carpenters',
+          adName: 'Spreadsheet Row Sync Entry',
+          formName: 'Google Sheets Live 2-Way Sync'
         },
         fields: [
           { id: 'sheets-doc-url', label: 'Google Sheet URL or Spreadsheet ID *', placeholder: 'https://docs.google.com/spreadsheets/d/...', type: 'text' },
           { id: 'sheets-service-email', label: 'Service Account Email *', placeholder: 'crm-sync@srisriply-project.iam.gserviceaccount.com', type: 'text' }
         ]
-      },
-      tradeindia: {
-        name: 'TradeIndia B2B Portal',
-        subtitle: 'Auto-ingest commercial timber & plywood inquiries from TradeIndia Inquiry API',
-        icon: 'globe',
-        defaultWebhook: 'https://crm.srisriplywoods.com/api/webhook/tradeindia',
-        defaultToken: 'sri_tradeindia_key_2026',
-        defaultPipeline: 'p-field',
-        sampleLead: {
-          name: 'Rajinder Gupta (Commercial Contractor)',
-          phone: '+91 98150 77665',
-          email: 'guptaplywood@rediffmail.com',
-          company: 'Gupta Builders & Woodcraft',
-          city: 'Patiala',
-          materialType: '100 Sheets Commercial 18mm & Shuttering Ply',
-          dealValue: 160000,
-          source: 'TradeIndia'
-        },
-        fields: [
-          { id: 'ti-user-id', label: 'TradeIndia User ID *', placeholder: 'e.g. 5839201', type: 'text' },
-          { id: 'ti-profile-id', label: 'TradeIndia Profile ID *', placeholder: 'e.g. 2948194', type: 'text' },
-          { id: 'ti-api-key', label: 'TradeIndia Inbound API Key *', placeholder: 'Enter API Key from TradeIndia My Account', type: 'text' }
-        ]
-      },
-      tally: {
-        name: 'Tally Prime ERP Connector',
-        subtitle: 'Bi-directional sync of Customer Ledgers, Sales Invoices & GST Outstandings',
-        icon: 'calculator',
-        defaultWebhook: 'http://localhost:9000',
-        defaultToken: 'sri_tally_odbc_sync_2026',
-        defaultPipeline: 'p-walkin',
-        sampleLead: {
-          name: 'Shree Balaji Timber Depot (Ledger Sync)',
-          phone: '+91 98765 43210',
-          email: 'balaji.timber@gmail.com',
-          company: 'Shree Balaji Timber Depot',
-          city: 'Ludhiana',
-          materialType: 'Gurjan Marine Ply 19mm - ₹2,45,000 Outstanding',
-          dealValue: 245000,
-          source: 'Tally Prime ERP'
-        },
-        fields: [
-          { id: 'tally-server-url', label: 'Tally Prime XML/ODBC Server URL *', placeholder: 'http://localhost:9000 or http://192.168.1.50:9000', type: 'text' },
-          { id: 'tally-company-name', label: 'Tally Company Name in ERP *', placeholder: 'Sri Sri Plywoods Pvt Ltd (2025-2026)', type: 'text' },
-          { id: 'tally-sync-interval', label: 'Auto Sync Interval (Minutes) *', placeholder: '15', type: 'text' }
-        ]
-      },
-      busy: {
-        name: 'Busy Accounting Software',
-        subtitle: 'Direct sync of GST Invoices, Dispatch Challans & Debtor Accounts',
-        icon: 'file-spreadsheet',
-        defaultWebhook: 'http://localhost:9005/api/busy-sync',
-        defaultToken: 'sri_busy_secret_token_2026',
-        defaultPipeline: 'p-walkin',
-        sampleLead: {
-          name: 'Oberoi Interiors (Busy Debtor Account)',
-          phone: '+91 98888 55443',
-          email: 'accounts@oberoi-interiors.com',
-          company: 'Oberoi Interiors Pvt Ltd',
-          city: 'Chandigarh',
-          materialType: 'Teak Veneer & Acrylic Sheets - Bill #BY-4412',
-          dealValue: 110000,
-          source: 'Busy Accounting'
-        },
-        fields: [
-          { id: 'busy-server-url', label: 'Busy API Server URL & Port *', placeholder: 'http://localhost:9005 or http://192.168.1.55:9005', type: 'text' },
-          { id: 'busy-company-code', label: 'Busy Company Code / DB Name *', placeholder: 'COMP0001 (Sri Sri Plywoods)', type: 'text' },
-          { id: 'busy-auth-token', label: 'Busy API Key / Auth Token *', placeholder: 'busy_auth_key_...', type: 'text' }
-        ]
       }
     };
+
+    function openFirebaseConfigModal() {
+      openModal('firebase-cloud-sync-modal');
+      if (window.lucide) lucide.createIcons();
+    }
 
     function renderIntegrationsGrid() {
       const container = document.getElementById('integrations-cards-grid');
@@ -11138,9 +11028,9 @@
         {
           id: 'meta_ads',
           name: 'Meta Ads (Facebook & Instagram)',
-          desc: 'Capture instant lead forms from Facebook & Instagram ad campaigns directly into your pipeline.',
+          desc: 'Capture instant lead forms from Facebook & Instagram ad campaigns directly into your pipeline with Campaign & AdSet attribution.',
           icon: 'megaphone',
-          category: 'Paid Ads',
+          category: 'Paid Advertising',
           isConn: !!(channelConfigs.meta_ads && channelConfigs.meta_ads.connected),
           type: 'ads'
         },
@@ -11149,81 +11039,45 @@
           name: 'Google Ads (Lead Form Extensions)',
           desc: 'Ingest contractor & architect leads from Google Search Ads, Performance Max & YouTube lead forms.',
           icon: 'search',
-          category: 'Paid Ads',
+          category: 'Paid Advertising',
           isConn: !!(channelConfigs.google_ads && channelConfigs.google_ads.connected),
-          type: 'ads'
-        },
-        {
-          id: 'indiamart',
-          name: 'IndiaMART B2B Lead Manager',
-          desc: 'Automatic real-time sync of wholesale buyer inquiries & contractor requests via IndiaMART Push API.',
-          icon: 'building',
-          category: 'B2B Portal',
-          isConn: !!(channelConfigs.indiamart && channelConfigs.indiamart.connected),
           type: 'ads'
         },
         {
           id: 'whatsapp',
           name: 'WhatsApp Cloud API',
-          desc: 'Official Meta Cloud API for customer messaging, notifications & catalog broadcasts.',
+          desc: 'Official Meta WhatsApp Business Cloud API for automated notifications, catalog broadcasts & lead follow-up.',
           icon: 'message-circle',
-          category: 'Social Channel',
+          category: 'Messaging Channel',
           isConn: !!(channelConfigs.whatsapp && channelConfigs.whatsapp.connected),
           type: 'channel'
         },
         {
           id: 'instagram',
           name: 'Instagram Direct API',
-          desc: 'Direct message automation and DM chatbot for interior designers and architects.',
+          desc: 'Direct message automation and DM chatbot for interior designers, architects and home owners.',
           icon: 'instagram',
           category: 'Social Channel',
           isConn: !!(channelConfigs.instagram && channelConfigs.instagram.connected),
           type: 'channel'
         },
         {
-          id: 'justdial',
-          name: 'Justdial / Sulekha Local Leads',
-          desc: 'Capture verified local customer inquiries and caller requirements automatically.',
-          icon: 'phone-call',
-          category: 'Local Leads',
-          isConn: !!(channelConfigs.justdial && channelConfigs.justdial.connected),
-          type: 'ads'
-        },
-        {
           id: 'website_webhook',
           name: 'Website Inbound Lead Webhook',
-          desc: 'Connect your website quote calculator or contact form to automatically ingest inquiries.',
+          desc: 'Connect your website quote calculator or contact form to automatically ingest inquiries into CRM.',
           icon: 'globe',
-          category: 'Website',
+          category: 'Website Inbound',
           isConn: !!(channelConfigs.website_webhook && channelConfigs.website_webhook.connected),
           type: 'ads'
         },
         {
           id: 'sheets',
           name: 'Google Sheets Live 2-Way Sync',
-          desc: 'Live spreadsheet integration to automatically sync leads between Google Sheets and CRM.',
+          desc: 'Live spreadsheet integration to automatically sync leads between Google Sheets and CRM in real time.',
           icon: 'table',
-          category: 'Productivity',
+          category: 'Productivity & Sync',
           isConn: !!(channelConfigs.sheets && channelConfigs.sheets.connected),
           type: 'ads'
-        },
-        {
-          id: 'tally',
-          name: 'Tally Prime ERP & Busy',
-          desc: 'Two-way sync for sales invoices, customer ledger balances & GST voucher records.',
-          icon: 'calculator',
-          category: 'ERP & Accounts',
-          isConn: !!(channelConfigs.tally && channelConfigs.tally.connected),
-          type: 'channel'
-        },
-        {
-          id: 'telegram',
-          name: 'Telegram Deals & Alert Bot',
-          desc: 'Real-time pipeline notifications and deals broadcast alerts for staff telegram groups.',
-          icon: 'send',
-          category: 'Alerts',
-          isConn: !!(channelConfigs.telegram && channelConfigs.telegram.connected),
-          type: 'channel'
         }
       ];
 
@@ -11249,11 +11103,11 @@
             <p class="text-xs text-muted-custom leading-relaxed">${item.desc}</p>
           </div>
           <div class="pt-3 border-t border-main/40 flex items-center justify-between">
-            <button onclick="${item.type === 'ads' ? `openAdsIntegrationModal('${item.id}')` : `openChannelConfigModal('${item.id}')`}" class="px-3.5 py-1.5 rounded-xl bg-gold text-slate-950 font-bold text-xs shadow-xs hover:brightness-105 transition flex items-center gap-1">
+            <button onclick="${item.id === 'firebase_sync' ? 'openFirebaseConfigModal()' : (item.type === 'ads' ? `openAdsIntegrationModal('${item.id}')` : `openChannelConfigModal('${item.id}')`)}" class="px-3.5 py-1.5 rounded-xl bg-gold text-slate-950 font-bold text-xs shadow-xs hover:brightness-105 transition flex items-center gap-1">
               <i data-lucide="settings" class="w-3.5 h-3.5"></i>
               <span>${item.isConn ? 'Configure' : 'Connect'}</span>
             </button>
-            ${item.isConn ? `<button onclick="${item.type === 'ads' ? `disconnectAdsPlatformDirect('${item.id}')` : `disconnectChannel('${item.id}')`}" class="text-xs font-bold text-rose-500 hover:text-rose-400 transition">Disconnect</button>` : ''}
+            ${item.isConn ? `<button onclick="${item.id === 'firebase_sync' ? 'openFirebaseConfigModal()' : (item.type === 'ads' ? `disconnectAdsPlatformDirect('${item.id}')` : `disconnectChannel('${item.id}')`)}" class="text-xs font-bold ${item.id === 'firebase_sync' ? 'text-emerald-400 hover:text-emerald-300' : 'text-rose-500 hover:text-rose-400'} transition">${item.id === 'firebase_sync' ? 'Live Cloud' : 'Disconnect'}</button>` : ''}
           </div>
         </div>
       `).join('');
@@ -12095,27 +11949,27 @@
     }
 
     const CRM_IMPORTABLE_FIELDS = [
-      { id: 'name', label: '👤 Client Name (ग्राहक का नाम) *', match: ['name', 'opportunity', 'client', 'customer'] },
-      { id: 'phone', label: '📞 Phone / WhatsApp (मोबाइल नंबर)', match: ['phone', 'mobile', 'contact', 'whatsapp', 'number', 'tel'] },
-      { id: 'email', label: '📧 Email Address (ईमेल)', match: ['email', 'mail'] },
-      { id: 'company', label: '🏢 Company / Firm (फ़र्म या दुकान का नाम)', match: ['company', 'firm', 'business', 'org'] },
-      { id: 'dealValue', label: '💰 Value / Deal Amount ₹ (डील का बजट)', match: ['value', 'deal value', 'deal', 'budget', 'amount', 'price'] },
-      { id: 'sourceDetails', label: '📢 Source Details (Source De / Ad campaign)', match: ['source de', 'source details', 'sub-source', 'adset', 'ad', 'campaign'] },
-      { id: 'source', label: '🏷️ Lead Source (Facebook, Walk-in, Google)', match: ['source', 'lead source', 'channel'] },
+      { id: 'name', label: '👤 Client Name *', match: ['name', 'opportunity', 'client', 'customer'] },
+      { id: 'phone', label: '📞 Phone / WhatsApp', match: ['phone', 'mobile', 'contact', 'whatsapp', 'number', 'tel'] },
+      { id: 'email', label: '📧 Email Address', match: ['email', 'mail'] },
+      { id: 'company', label: '🏢 Company / Firm Name', match: ['company', 'firm', 'business', 'org'] },
+      { id: 'dealValue', label: '💰 Value / Deal Amount (₹)', match: ['value', 'deal value', 'deal', 'budget', 'amount', 'price'] },
+      { id: 'sourceDetails', label: '📢 Campaign / AdSet / Creative Details', match: ['source de', 'source details', 'sub-source', 'adset', 'ad', 'campaign'] },
+      { id: 'source', label: '🏷️ Lead Source (Meta Ads, Google, Walk-in)', match: ['source', 'lead source', 'channel'] },
       { id: 'priority', label: '🔥 Priority (High / Med / Low)', match: ['priority'] },
-      { id: 'stage', label: '📊 Stage / Status (डील का स्टेज)', match: ['stage', 'status'] },
-      { id: 'pipeline', label: '🔄 Target Pipeline (पाइपलाइन)', match: ['pipeline', 'pipe', 'target pipeline', 'sheet'] },
-      { id: 'assignedTo', label: '👨‍💼 Assigned Staff / Executive (कर्मचारी)', match: ['assigned to', 'assigned', 'executive', 'owner', 'agent', 'staff'] },
-      { id: 'tags', label: '🏷️ Tags / Labels (उदा. Contractor, VIP)', match: ['tags', 'tag', 'labels', 'label'] },
-      { id: 'notes', label: '💬 Notes / Comments / Remarks (टिप्पणी व रिमार्क्स)', match: ['notes', 'note', 'description', 'remarks', 'remark', 'comments', 'comment'] },
-      { id: 'closeDate', label: '📅 Expected Close Date (Expected)', match: ['expected', 'expected close date', 'close date', 'target date', 'closing', 'due date'] },
-      { id: 'lossReason', label: '❌ Lost Reason (Lost Reasc)', match: ['lost reasc', 'lost reason', 'loss reason', 'reason'] },
-      { id: 'createdAt', label: '🗓️ Created At (Created A)', match: ['created a', 'created at', 'created', 'entry date', 'creation', 'date'] },
-      { id: 'wonAt', label: '🏆 Won Date (Won At)', match: ['won at', 'won date', 'won time'] },
-      { id: 'lostAt', label: '🚫 Lost Date (Lost At)', match: ['lost at', 'lost date', 'lost time'] },
-      { id: 'customerAddress', label: '🏠 Customer Address (ग्राहक का पता)', match: ['address', 'street', 'location', 'site'] },
-      { id: 'city', label: '🏙️ State / City (राज्य या शहर)', match: ['city', 'state', 'town'] },
-      { id: '_skip', label: '⏭️ — Do Not Import / Skip Column (छोड़ दें) —', match: [] }
+      { id: 'stage', label: '📊 Deal Stage / Status', match: ['stage', 'status'] },
+      { id: 'pipeline', label: '🔄 Target Pipeline', match: ['pipeline', 'pipe', 'target pipeline', 'sheet'] },
+      { id: 'assignedTo', label: '👨‍💼 Assigned Staff / Executive', match: ['assigned to', 'assigned', 'executive', 'owner', 'agent', 'staff'] },
+      { id: 'tags', label: '🏷️ Tags / Labels (e.g. Contractor, Architect)', match: ['tags', 'tag', 'labels', 'label'] },
+      { id: 'notes', label: '💬 Notes / Remarks / Comments', match: ['notes', 'note', 'description', 'remarks', 'remark', 'comments', 'comment'] },
+      { id: 'closeDate', label: '📅 Expected Close Date', match: ['expected', 'expected close date', 'close date', 'target date', 'closing', 'due date'] },
+      { id: 'lossReason', label: '❌ Lost Reason', match: ['lost reasc', 'lost reason', 'loss reason', 'reason'] },
+      { id: 'createdAt', label: '🗓️ Created At Date', match: ['created a', 'created at', 'created', 'entry date', 'creation', 'date'] },
+      { id: 'wonAt', label: '🏆 Won Date', match: ['won at', 'won date', 'won time'] },
+      { id: 'lostAt', label: '🚫 Lost Date', match: ['lost at', 'lost date', 'lost time'] },
+      { id: 'customerAddress', label: '🏠 Customer Address', match: ['address', 'street', 'location', 'site'] },
+      { id: 'city', label: '🏙️ State / City', match: ['city', 'state', 'town'] },
+      { id: '_skip', label: '⏭️ — Do Not Import / Skip Column —', match: [] }
     ];
 
     function matchHeaderToField(header) {
