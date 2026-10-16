@@ -12093,15 +12093,28 @@
         const leadName = leadObj.name || leadObj.company || ('Client ' + (leadObj.phone || (importedCount + 1)));
         if (!leadName && !leadObj.phone) return;
 
-        // 1. Resolve Target Pipeline (row level takes priority if present, otherwise default dropdown pipeline)
+        // 1. Resolve Target Pipeline (row level takes priority, auto-creates pipeline if new)
         let rowPip = defaultPip;
-        if (leadObj.pipeline) {
-          const matchedPip = pipelines.find(p => 
-            p.name.toLowerCase() === leadObj.pipeline.toLowerCase() || 
-            p.id.toLowerCase() === leadObj.pipeline.toLowerCase() ||
-            leadObj.pipeline.toLowerCase().includes(p.name.toLowerCase())
+        if (leadObj.pipeline && leadObj.pipeline.trim()) {
+          const rawPipName = leadObj.pipeline.trim();
+          let matchedPip = pipelines.find(p => 
+            p.name.toLowerCase() === rawPipName.toLowerCase() || 
+            p.id.toLowerCase() === rawPipName.toLowerCase() ||
+            rawPipName.toLowerCase().includes(p.name.toLowerCase())
           );
-          if (matchedPip) rowPip = matchedPip;
+          if (!matchedPip) {
+            // Auto-create new pipeline dynamically so no leads are lost or misrouted
+            const newPipId = 'p-' + rawPipName.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 15) + '-' + Date.now();
+            matchedPip = {
+              id: newPipId,
+              name: rawPipName,
+              isDefault: false,
+              stages: JSON.parse(JSON.stringify(defaultStagesTemplate))
+            };
+            pipelines.push(matchedPip);
+            localStorage.setItem('sri_sri_pipelines', JSON.stringify(pipelines));
+          }
+          rowPip = matchedPip;
         }
 
         // 2. Resolve Stage in that pipeline
@@ -12237,8 +12250,8 @@
           stateCity: leadObj.city || '',
           nextFollowUp: leadObj.closeDate || null,
           nextFollowUpNote: leadObj.notes ? ('Follow up on: ' + leadObj.notes.substring(0, 40)) : 'Reattempt scheduled',
-          lastActivityAt: now.toISOString(),
-          lastActivityText: 'Imported into ' + rowPip.name,
+          lastActivityAt: (leadObj.createdAt && !isNaN(new Date(leadObj.createdAt).getTime())) ? new Date(leadObj.createdAt).toISOString() : now.toISOString(),
+          lastActivityText: leadObj.notes ? ('Remarks: ' + leadObj.notes.substring(0, 40)) : ('Imported into ' + rowPip.name),
           lastActivityUser: assigneeName,
           activities: activities
         };
