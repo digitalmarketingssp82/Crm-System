@@ -2682,9 +2682,9 @@
                       <input type="file" id="modal-note-audio-input" accept="audio/*,application/pdf" class="hidden" onchange="handleAudioSelection(this)">
                     </label>
                     <!-- 1-Tap Voice Dictation -->
-                    <button type="button" id="btn-voice-dictation" onclick="toggleVoiceDictation()" class="p-2 rounded-xl border border-main bg-subtle hover:bg-card text-gold hover:brightness-110 transition cursor-pointer" title="Speak to voice type">
+                    <button type="button" id="btn-voice-dictation" onclick="toggleVoiceDictation()" class="px-2.5 py-1.5 rounded-xl border border-main bg-subtle hover:bg-card text-gold hover:brightness-110 transition cursor-pointer flex items-center gap-1.5" title="Speak to voice type (Hindi / English)">
                       <i data-lucide="mic" class="w-4 h-4" id="icon-voice-mic"></i>
-                      <span id="lbl-voice-dictation" class="sr-only">Voice Typing</span>
+                      <span id="lbl-voice-dictation" class="text-xs font-bold">🎙️ Voice Type</span>
                     </button>
                     <span class="text-[10px] text-muted-custom hidden md:inline">Max 50 MB per file · stored in your media library</span>
                   </div>
@@ -10241,9 +10241,119 @@
       showToast('✓ Formatted as key bullet points!', 'success');
     }
 
+    // ==================== UNIVERSAL VOICE TYPING & SPEECH RECOGNITION ====================
+    let voiceDictationRecognition = null;
+    let isVoiceDictationActive = false;
     let callLogVoiceRecognition = null;
     let isCallLogMicActive = false;
 
+    // 1. Lead Detail Note Voice Dictation
+    function toggleVoiceDictation(targetFieldId) {
+      const targetId = targetFieldId || 'modal-note-textarea';
+      const targetEl = document.getElementById(targetId) || document.activeElement;
+      const btn = document.getElementById('btn-voice-dictation');
+      const lbl = document.getElementById('lbl-voice-dictation');
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showToast('⚠️ Voice typing is not supported in this browser. Please use Google Chrome or Microsoft Edge.', 'warning');
+        return;
+      }
+
+      if (location.protocol === 'file:') {
+        showToast('ℹ️ Notice: Voice typing requires HTTPS or local server. Please use your Vercel URL (https://crm-system-chi-amber.vercel.app).', 'warning');
+      }
+
+      // If active, stop listening
+      if (isVoiceDictationActive && voiceDictationRecognition) {
+        try { voiceDictationRecognition.stop(); } catch(e){}
+        isVoiceDictationActive = false;
+        if (btn) {
+          btn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse', 'border-rose-500', 'ring-2', 'ring-rose-400');
+          btn.classList.add('text-gold', 'bg-subtle');
+        }
+        if (lbl) lbl.innerText = '🎙️ Voice Type';
+        showToast('✓ Voice dictation stopped.', 'info');
+        return;
+      }
+
+      try {
+        voiceDictationRecognition = new SpeechRecognition();
+        voiceDictationRecognition.continuous = true;
+        voiceDictationRecognition.interimResults = false;
+        voiceDictationRecognition.lang = 'hi-IN'; // Recognizes Hindi, English & Hinglish
+
+        voiceDictationRecognition.onstart = function() {
+          isVoiceDictationActive = true;
+          if (btn) {
+            btn.classList.remove('text-gold', 'bg-subtle');
+            btn.classList.add('bg-rose-500', 'text-white', 'animate-pulse', 'border-rose-500', 'ring-2', 'ring-rose-400');
+          }
+          if (lbl) lbl.innerText = '🔴 Listening...';
+          showToast('🎙️ Bolna shuru karein (Listening: Hindi / Hinglish / English)...', 'info');
+        };
+
+        voiceDictationRecognition.onresult = function(event) {
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              const text = event.results[i][0].transcript.trim();
+              if (text && targetEl) {
+                const cur = targetEl.value || '';
+                const sep = (cur && !cur.endsWith(' ') && !cur.endsWith('\n')) ? ' ' : '';
+                targetEl.value = cur + sep + text;
+                targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            }
+          }
+        };
+
+        voiceDictationRecognition.onerror = function(event) {
+          console.warn('Voice Dictation error:', event.error);
+          isVoiceDictationActive = false;
+          if (btn) {
+            btn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse', 'border-rose-500', 'ring-2', 'ring-rose-400');
+            btn.classList.add('text-gold', 'bg-subtle');
+          }
+          if (lbl) lbl.innerText = '🎙️ Voice Type';
+
+          if (event.error === 'not-allowed') {
+            showToast('⚠️ Microphone permission blocked. Browser address bar me Lock 🔒 icon par click karke Mic Allow karein.', 'error');
+          } else if (event.error === 'network') {
+            showToast('⚠️ Network / Speech service error. Agar aap file:// se khol rahe hain toh Vercel link use karein.', 'warning');
+          } else if (event.error !== 'no-speech') {
+            showToast('Mic note: ' + event.error, 'info');
+          }
+        };
+
+        voiceDictationRecognition.onend = function() {
+          isVoiceDictationActive = false;
+          if (btn) {
+            btn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse', 'border-rose-500', 'ring-2', 'ring-rose-400');
+            btn.classList.add('text-gold', 'bg-subtle');
+          }
+          if (lbl) lbl.innerText = '🎙️ Voice Type';
+        };
+
+        // Proactively ensure mic permission
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ audio: true }).then(() => {
+            voiceDictationRecognition.start();
+          }).catch(err => {
+            console.warn('Mic permission error:', err);
+            // Attempt standard start in case browser handles it
+            try { voiceDictationRecognition.start(); } catch(e){}
+          });
+        } else {
+          voiceDictationRecognition.start();
+        }
+      } catch(e) {
+        console.error('Error starting voice dictation:', e);
+        showToast('Could not start microphone: ' + e.message, 'error');
+      }
+    }
+    window.toggleVoiceDictation = toggleVoiceDictation;
+
+    // 2. Call Hub Discussion Voice Mic
     function toggleCallLogVoiceMic() {
       const notesEl = document.getElementById('call-log-notes');
       const micLabel = document.getElementById('call-voice-mic-label');
@@ -10252,12 +10362,12 @@
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        showToast('Voice recognition not supported in this browser. Please type or use Chrome.', 'warning');
+        showToast('Voice recognition not supported in this browser. Please use Google Chrome or Edge.', 'warning');
         return;
       }
 
       if (isCallLogMicActive && callLogVoiceRecognition) {
-        callLogVoiceRecognition.stop();
+        try { callLogVoiceRecognition.stop(); } catch(e){}
         isCallLogMicActive = false;
         if (micLabel) micLabel.innerText = '🎙️ Mic';
         if (micBtn) micBtn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse');
@@ -10286,6 +10396,7 @@
               if (transcript) {
                 const currentVal = notesEl.value.trim();
                 notesEl.value = currentVal ? (currentVal + '\n• ' + transcript) : ('• ' + transcript);
+                notesEl.dispatchEvent(new Event('input', { bubbles: true }));
               }
             }
           }
@@ -10296,6 +10407,9 @@
           isCallLogMicActive = false;
           if (micLabel) micLabel.innerText = '🎙️ Mic';
           if (micBtn) micBtn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse');
+          if (event.error === 'not-allowed') {
+            showToast('⚠️ Microphone permission blocked. Browser address bar me Lock 🔒 icon par click karke Mic Allow karein.', 'error');
+          }
         };
 
         callLogVoiceRecognition.onend = function() {
@@ -10304,12 +10418,21 @@
           if (micBtn) micBtn.classList.remove('bg-rose-500', 'text-white', 'animate-pulse');
         };
 
-        callLogVoiceRecognition.start();
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ audio: true }).then(() => {
+            callLogVoiceRecognition.start();
+          }).catch(() => {
+            try { callLogVoiceRecognition.start(); } catch(e){}
+          });
+        } else {
+          callLogVoiceRecognition.start();
+        }
       } catch(e) {
         console.error('Error starting speech recognition:', e);
         showToast('Could not start microphone: ' + e.message, 'error');
       }
     }
+    window.toggleCallLogVoiceMic = toggleCallLogVoiceMic;
 
 
     function clearCallOutcomeSelection() {
