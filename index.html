@@ -1039,7 +1039,7 @@
           <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left border-collapse text-xs">
               <thead>
-                <tr class="border-b border-main bg-subtle/50 text-muted-custom uppercase tracking-wider text-[10px] font-bold">
+                <tr class="border-b border-main bg-subtle/50 text-muted-custom uppercase tracking-wider text-[10px] font-semibold">
                   <th class="p-3.5 w-10 text-center"><input type="checkbox" class="rounded"></th>
                   <th class="p-3.5">Client Name & Type</th>
                   <th class="p-3.5">Contact / Actions</th>
@@ -1360,7 +1360,7 @@
           <div id="opp-table-scroll-body" class="overflow-x-auto overflow-y-auto max-h-[68vh] custom-scrollbar relative" onscroll="syncOppScroll(this, 'top')">
             <table class="w-full min-w-[2100px] text-left border-collapse text-xs whitespace-nowrap" id="opp-full-table">
               <thead>
-                <tr class="border-b border-main bg-card text-muted-custom uppercase tracking-wider text-[10px] font-bold">
+                <tr class="border-b border-main bg-card text-muted-custom uppercase tracking-wider text-[10px] font-semibold">
                   <th class="p-3 w-10 text-center opp-sticky-col-cb">
                     <input type="checkbox" id="opp-select-all" onchange="toggleSelectAllOpps(this.checked)" class="rounded border-main text-gold">
                   </th>
@@ -7247,11 +7247,11 @@
               ${initials}
             </div>
             <div>
-              <p class="font-extrabold text-xs text-main">${lead.name}</p>
-              <p class="text-[10px] text-muted-custom">${lead.lastActivityText || 'Lead registered'} • <span class="text-gold font-bold">${formatRelativeTime(lead.lastActivityAt)}</span></p>
+              <p class="font-medium text-xs text-main">${lead.name}</p>
+              <p class="text-[10px] text-muted-custom">${lead.lastActivityText || 'Lead registered'} • <span class="text-gold font-medium">${formatRelativeTime(lead.lastActivityAt)}</span></p>
             </div>
           </div>
-          <span class="text-xs font-bold text-muted-custom hover:text-gold">View →</span>
+          <span class="text-xs font-medium text-muted-custom hover:text-gold">View →</span>
         `;
         container.appendChild(item);
       });
@@ -7299,7 +7299,7 @@
         tr.className = 'hover:bg-subtle/50 transition cursor-pointer border-b border-main/50';
 
         tr.innerHTML = `
-          <td class="p-3.5 font-bold text-main" onclick="handleTableCellClick(event, '${lead.id}')">
+          <td class="p-3.5 font-medium text-main text-xs" onclick="handleTableCellClick(event, '${lead.id}')">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${stg.color}"></span>
               <span class="hover:text-gold">${lead.name}</span>
@@ -7315,17 +7315,17 @@
             </div>
           </td>
           <td class="p-3.5" onclick="handleTableCellClick(event, '${lead.id}')">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-subtle text-gold border border-gold/20">${lead.clientType || 'Existing Customer'}</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-subtle text-gold border border-gold/20">${lead.clientType || 'Existing Customer'}</span>
           </td>
           <td class="p-3.5 text-xs text-muted-custom" onclick="handleTableCellClick(event, '${lead.id}')">${p.name}</td>
           <td class="p-3.5" onclick="handleTableCellClick(event, '${lead.id}')">
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold" style="background-color: ${stg.color}20; color: ${stg.color}">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium" style="background-color: ${stg.color}20; color: ${stg.color}">
               ${stg.name}
             </span>
           </td>
-          <td class="p-3.5 text-xs font-bold text-gold" onclick="handleTableCellClick(event, '${lead.id}')">${lead.dealValue || lead.budget || '—'}</td>
+          <td class="p-3.5 text-xs font-medium text-gold" onclick="handleTableCellClick(event, '${lead.id}')">${lead.dealValue || lead.budget || '—'}</td>
           <td class="p-3.5 text-[11px]" onclick="handleTableCellClick(event, '${lead.id}')">
-            ${lead.nextFollowUp ? '<span class="text-amber-400 font-bold flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>' + formatFollowupDate(lead.nextFollowUp) + '</span>' : '<span class="text-muted-custom">No Follow-up</span>'}
+            ${lead.nextFollowUp ? '<span class="text-amber-400 font-medium flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>' + formatFollowupDate(lead.nextFollowUp) + '</span>' : '<span class="text-muted-custom">No Follow-up</span>'}
           </td>
           <td class="p-3.5 text-right text-xs" onclick="event.stopPropagation()">
             <div class="flex items-center justify-end gap-1.5">
@@ -7665,18 +7665,18 @@
           <td class="p-3 text-center opp-sticky-col-cb" onclick="event.stopPropagation()">
             <input type="checkbox" class="opp-row-cb rounded border-main text-gold" data-lead-id="${lead.id}" onchange="updateBulkActionsState()">
           </td>
-          <td class="p-3 font-bold text-main col-opportunity opp-sticky-col-name" onclick="handleTableCellClick(event, '${lead.id}')">
+          <td class="p-3 text-main font-medium text-xs col-opportunity opp-sticky-col-name" onclick="handleTableCellClick(event, '${lead.id}')">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${stg.color}"></span>
-              <span class="font-extrabold hover:text-gold truncate max-w-[170px] block">${lead.name}</span>
+              <span class="font-medium text-main hover:text-gold truncate max-w-[170px] block">${lead.name}</span>
               <button type="button" onclick="event.stopPropagation(); copyTextToClipboard('${escapeJs(lead.name)}', 'Client Name');" class="text-muted-custom hover:text-gold p-0.5 rounded transition shrink-0" title="Copy Client Name">
                 <i data-lucide="copy" class="w-3 h-3"></i>
               </button>
             </div>
           </td>
-          <td class="p-3 font-mono text-xs text-main col-phone opp-sticky-col-phone" onclick="handleTableCellClick(event, '${lead.id}')">
+          <td class="p-3 font-mono text-xs text-muted-custom font-normal col-phone opp-sticky-col-phone" onclick="handleTableCellClick(event, '${lead.id}')">
             <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-              <a href="javascript:void(0)" onclick="initiateCallWithLogging('${lead.id}'); return false;" class="text-main hover:underline font-mono" title="Click to Call & Log Outcome">${lead.phone || '—'}</a>
+              <a href="javascript:void(0)" onclick="initiateCallWithLogging('${lead.id}'); return false;" class="text-main hover:underline font-mono font-normal" title="Click to Call & Log Outcome">${lead.phone || '—'}</a>
               ${cleanPhone ? '<button type="button" onclick="copyTextToClipboard(\'' + lead.phone + '\', \'Phone Number\')" class="p-0.5 rounded text-muted-custom hover:text-gold transition" title="Copy Phone Number"><i data-lucide="copy" class="w-3 h-3"></i></button>' : ''}
               ${cleanPhone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Send WhatsApp Message & Log Text"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i></button>' : ''}
             </div>
@@ -7686,22 +7686,22 @@
               ${cleanPhone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Direct Phone Call & Log Outcome"><i data-lucide="phone" class="w-3.5 h-3.5"></i></button>' : ''}
               ${cleanPhone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="Send WhatsApp Message & Log Text"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i></button>' : ''}
               <button type="button" onclick="scheduleReattemptForLead(\'' + lead.id + '\')" class="p-1.5 rounded-lg bg-amber-500/15 text-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer" title="⏱️ Schedule Next Call / Reattempt"><i data-lucide="clock" class="w-3.5 h-3.5"></i></button>
-              <button type="button" onclick="openLeadModal('${lead.id}')" class="px-2.5 py-1 bg-gold/15 hover:bg-gold hover:text-slate-950 border border-gold/40 rounded-lg text-xs font-bold text-gold transition shadow-xs">Open</button>
+              <button type="button" onclick="openLeadModal('${lead.id}')" class="px-2.5 py-1 bg-gold/15 hover:bg-gold hover:text-slate-950 border border-gold/40 rounded-lg text-xs font-medium text-gold transition shadow-xs">Open</button>
             </div>
           </td>
           <td class="p-3 text-muted-custom font-medium col-company" onclick="handleTableCellClick(event, '${lead.id}')">${lead.company || '—'}</td>
           <td class="p-3 col-campaign" onclick="handleTableCellClick(event, '${lead.id}')">${displayCampaign}</td>
           <td class="p-3 text-[11px] col-adset" onclick="handleTableCellClick(event, '${lead.id}')">${displayAdset}</td>
           <td class="p-3 col-stage" onclick="handleTableCellClick(event, '${lead.id}')">
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border" style="background-color: ${stg.color}15; color: ${stg.color}; border-color: ${stg.color}40">${stg.name}</span>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-medium border" style="background-color: ${stg.color}15; color: ${stg.color}; border-color: ${stg.color}40">${stg.name}</span>
           </td>
-          <td class="p-3 font-bold text-main font-mono col-dealValue" onclick="handleTableCellClick(event, '${lead.id}')">${displayDealVal}</td>
+          <td class="p-3 font-medium text-gold font-mono col-dealValue" onclick="handleTableCellClick(event, '${lead.id}')">${displayDealVal}</td>
           <td class="p-3 font-mono text-[11px] text-muted-custom col-closeDate" onclick="handleTableCellClick(event, '${lead.id}')">${lead.closeDate || '—'}</td>
           <td class="p-3 text-[11px] col-source" onclick="handleTableCellClick(event, '${lead.id}')">
             ${formatLeadSourceBadge(lead)}
           </td>
           <td class="p-3 col-priority" onclick="handleTableCellClick(event, '${lead.id}')">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${priorityColor}">${(lead.priority || 'Medium').toLowerCase()}</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium ${priorityColor}">${(lead.priority || 'Medium').toLowerCase()}</span>
           </td>
           <td class="p-3 text-xs text-main font-medium col-assignedTo" onclick="handleTableCellClick(event, '${lead.id}')">${lead.assignedToName || '—'}</td>
           <td class="p-3 col-tags" onclick="handleTableCellClick(event, '${lead.id}')">${displayTags}</td>
@@ -7709,7 +7709,7 @@
           <td class="p-3 font-mono text-[11px] text-muted-custom col-created" onclick="handleTableCellClick(event, '${lead.id}')">${formatCreatedDate(lead.createdAt)}</td>
           <td class="p-3 font-mono text-[11px] text-muted-custom col-email" onclick="handleTableCellClick(event, '${lead.id}')">${lead.email || '—'}</td>
           <td class="p-3 col-customerType" onclick="handleTableCellClick(event, '${lead.id}')">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-subtle text-gold">${lead.clientType || lead.customerType || '—'}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-subtle text-gold">${lead.clientType || lead.customerType || '—'}</span>
           </td>
           <td class="p-3 text-[11px] text-muted-custom col-materialType" onclick="handleTableCellClick(event, '${lead.id}')">${lead.materialType || '—'}</td>
           <td class="p-3 text-[11px] text-muted-custom col-requirementDateTime" onclick="handleTableCellClick(event, '${lead.id}')">${lead.requirementTimeline || lead.requirementDateTime || '—'}</td>
@@ -8740,13 +8740,13 @@
 
           card.innerHTML = `
             <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1 font-extrabold text-xs text-main">
+              <div class="flex items-center gap-1 font-medium text-xs text-main">
                 <span class="truncate max-w-[130px]">${lead.name}</span>
                 <button type="button" onclick="event.stopPropagation(); copyTextToClipboard('${escapeJs(lead.name)}', 'Client Name');" class="text-muted-custom hover:text-gold p-0.5 rounded transition shrink-0" title="Copy Client Name">
                   <i data-lucide="copy" class="w-2.5 h-2.5"></i>
                 </button>
               </div>
-              <span class="text-[10px] font-bold text-gold shrink-0">${lead.dealValue || lead.budget || ''}</span>
+              <span class="text-[10px] font-medium text-gold shrink-0">${lead.dealValue || lead.budget || ''}</span>
             </div>
             <div class="flex items-center justify-between text-[11px] font-mono text-muted-custom mt-1">
               <div class="flex items-center gap-1">
@@ -11086,15 +11086,15 @@
             item.innerHTML = `
               <div class="space-y-1">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-extrabold text-xs text-main cursor-pointer hover:text-gold" onclick="openLeadModal('${lead.id}')">${escapeHtml(lead.name)}</span>
+                  <span class="font-medium text-xs text-main cursor-pointer hover:text-gold" onclick="openLeadModal('${lead.id}')">${escapeHtml(lead.name)}</span>
                   ${tagHtml}
                   ${formatLeadSourceBadge(lead)}
-                  <span class="text-[11px] font-bold text-gold">${escapeHtml(lead.dealValue || lead.budget || '')}</span>
+                  <span class="text-[11px] font-medium text-gold">${escapeHtml(lead.dealValue || lead.budget || '')}</span>
                 </div>
                 <p class="text-[11px] text-muted-custom flex items-center gap-2 flex-wrap">
-                  <span class="font-mono text-main font-semibold">${lead.phone || 'No phone'}</span>
+                  <span class="font-mono text-main font-normal">${lead.phone || 'No phone'}</span>
                   <span>•</span>
-                  <span>Assigned: <strong class="text-main">${escapeHtml(lead.assignedToName || 'Sri Sri Admin')}</strong></span>
+                  <span>Assigned: <span class="text-main font-medium">${escapeHtml(lead.assignedToName || 'Sri Sri Admin')}</span></span>
                   <span>•</span>
                   <span class="italic truncate max-w-[200px]" title="${escapeHtml(lead.nextFollowUpNote || lead.notes || '')}">${escapeHtml(lead.nextFollowUpNote || lead.notes || 'No notes')}</span>
                 </p>
