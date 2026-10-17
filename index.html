@@ -3476,7 +3476,7 @@
           <i data-lucide="x-circle" class="w-4 h-4"></i>
           <span>Record Deal Loss Reason</span>
         </h3>
-        <button onclick="closeModal('lead-loss-reason-modal')" class="text-muted-custom hover:text-gold"><i data-lucide="x" class="w-4 h-4"></i></button>
+        <button type="button" onclick="cancelLeadLoss()" class="text-muted-custom hover:text-gold"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
       <p class="text-xs text-muted-custom">
         Marking this lead as <strong class="text-main">Not Qualified / Lost</strong>. Please select the primary reason why this deal was lost:
@@ -3499,7 +3499,7 @@
         </div>
       </div>
       <div class="flex justify-end gap-2 pt-2 border-t border-main">
-        <button onclick="closeModal('lead-loss-reason-modal')" class="px-4 py-2 border border-main rounded-xl text-xs text-muted-custom">Cancel</button>
+        <button type="button" onclick="cancelLeadLoss()" class="px-4 py-2 border border-main rounded-xl text-xs text-muted-custom">Cancel</button>
         <button onclick="confirmLeadLoss()" class="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md">Confirm Lost Deal</button>
       </div>
     </div>
@@ -4334,6 +4334,18 @@
             <i data-lucide="send" class="w-4 h-4"></i>
             <span id="btn-send-test-ad-text">🚀 Send Test Meta Ad Lead into Pipeline</span>
           </button>
+          
+          <!-- Xilot Dual Test Buttons for Walk-in & Ads -->
+          <div id="xilot-extra-test-buttons" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <button type="button" onclick="injectLiveXilotLead('walkin')" class="w-full py-2.5 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold flex items-center justify-center gap-1.5 text-xs hover:bg-emerald-500/20 transition">
+              <i data-lucide="user-check" class="w-4 h-4"></i>
+              <span>🚀 Test Live Walk-in (Walkin-Sheet)</span>
+            </button>
+            <button type="button" onclick="injectLiveXilotLead('meta_ads')" class="w-full py-2.5 px-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold flex items-center justify-center gap-1.5 text-xs hover:bg-blue-500/20 transition">
+              <i data-lucide="megaphone" class="w-4 h-4"></i>
+              <span>🚀 Test Live Meta Ads (Facebook Leads)</span>
+            </button>
+          </div>
           
           <div class="pt-1">
             <button type="button" onclick="closeModal('ads-integration-modal'); openModal('import-modal');" class="w-full py-2.5 rounded-xl bg-subtle border border-main text-main font-bold text-xs hover:border-gold transition flex items-center justify-center gap-2">
@@ -6064,6 +6076,29 @@
         }
       });
       if (leadsMigrated) localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+
+    // Auto-clean any pre-existing duplicate activities in localStorage
+    try {
+      let cleanedAny = false;
+      leads.forEach(l => {
+        if (l && Array.isArray(l.activities) && l.activities.length > 1) {
+          const s = new Set();
+          const origLen = l.activities.length;
+          l.activities = l.activities.filter(act => {
+            const raw = (act.notes || act.text || '').trim();
+            if (!raw) return false;
+            const norm = raw.replace(/^\[[^\]]+\]:\s*/, '').trim().toLowerCase();
+            const key = (act.type === 'STAGE_CHANGE' || act.type === 'CALL_LOG') ? (act.type + '|||' + norm) : norm;
+            if (s.has(key) || (act.type !== 'STAGE_CHANGE' && act.type !== 'CALL_LOG' && s.has(norm))) return false;
+            s.add(key);
+            if (act.type !== 'STAGE_CHANGE' && act.type !== 'CALL_LOG') s.add(norm);
+            return true;
+          });
+          if (l.activities.length !== origLen) cleanedAny = true;
+        }
+      });
+      if (cleanedAny) localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+    } catch(e){}
     } catch(e){}
     let tasks = JSON.parse(localStorage.getItem('sri_sri_tasks') || '[]');
     let waBroadcasts = JSON.parse(localStorage.getItem('sri_sri_broadcasts') || '[]');
@@ -7667,8 +7702,7 @@
       closeModal('stage-change-confirm-modal');
 
       if (isLost) {
-        pendingLostStageId = newStageId;
-        openModal('lead-loss-reason-modal');
+        openLeadLossReasonModal(newStageId);
         return;
       }
 
@@ -8528,8 +8562,7 @@
           } else {
             if (targetStage.isLost) {
               currentSelectedLead = lead;
-              pendingLostStageId = targetStage.id;
-              openModal('lead-loss-reason-modal');
+              openLeadLossReasonModal(targetStage.id);
             } else {
               lead.stageId = targetStage.id;
               logLeadActivity(lead, 'STAGE_CHANGE', 'Lead moved to stage: ' + targetStage.name + ' via Drag & Drop');
@@ -9221,6 +9254,18 @@
           if (nextNoteEl) nextNoteEl.innerText = 'Click button below to schedule';
         }
 
+        
+        // Clean out comment text area & follow up input so previous lead's notes never bleed in!
+        const noteTextarea = document.getElementById('modal-note-textarea');
+        if (noteTextarea) noteTextarea.value = '';
+        const noteFollowup = document.getElementById('modal-note-followup');
+        if (noteFollowup) noteFollowup.value = '';
+        const lrNotes = document.getElementById('loss-reason-notes');
+        if (lrNotes) lrNotes.value = '';
+        const lrSelect = document.getElementById('loss-reason-select');
+        if (lrSelect) lrSelect.selectedIndex = 0;
+        clearSelectedImage();
+        clearSelectedAudio();
         renderLeadStagesBar(lead, p);
         renderLeadTimeline(lead);
         updateLeadModalActivityBadge(lead);
@@ -9282,6 +9327,25 @@
       });
     }
 
+    function openLeadLossReasonModal(newStageId) {
+      pendingLostStageId = newStageId;
+      const selectEl = document.getElementById('loss-reason-select');
+      const notesEl = document.getElementById('loss-reason-notes');
+      if (selectEl) selectEl.selectedIndex = 0;
+      if (notesEl) notesEl.value = ''; // Always clean & fresh for each lead
+      openModal('lead-loss-reason-modal');
+      if (notesEl) setTimeout(() => notesEl.focus(), 50);
+    }
+
+    function cancelLeadLoss() {
+      pendingLostStageId = null;
+      const notesEl = document.getElementById('loss-reason-notes');
+      const selectEl = document.getElementById('loss-reason-select');
+      if (notesEl) notesEl.value = '';
+      if (selectEl) selectEl.selectedIndex = 0;
+      closeModal('lead-loss-reason-modal');
+    }
+
     function updateLeadStage(newStageId) {
       if (!isCurrentUserSuperAdmin() && !userHasPermission('opp_move_stage')) { showToast('Permission Denied: You cannot move deal stages.', 'error'); return; }
       if (!currentSelectedLead) return;
@@ -9289,8 +9353,7 @@
       const targetStage = pipeline.stages.find(s => s.id === newStageId);
 
       if (targetStage.isLost) {
-        pendingLostStageId = newStageId;
-        openModal('lead-loss-reason-modal');
+        openLeadLossReasonModal(newStageId);
         return;
       }
 
@@ -9305,6 +9368,14 @@
 
       const stageId = pendingLostStageId || 'stg-9';
       executeStageUpdate(stageId);
+
+      // Clear inputs immediately
+      const notesEl = document.getElementById('loss-reason-notes');
+      const selectEl = document.getElementById('loss-reason-select');
+      if (notesEl) notesEl.value = '';
+      if (selectEl) selectEl.selectedIndex = 0;
+      pendingLostStageId = null;
+
       closeModal('lead-loss-reason-modal');
       showToast('Deal marked as Lost with reason: ' + currentSelectedLead.lossReason, 'info');
     }
@@ -9314,6 +9385,13 @@
       const targetStage = pipeline.stages.find(s => s.id === newStageId);
 
       currentSelectedLead.stageId = newStageId;
+
+      // If moving to an active or won stage, clear previous lost reason so old lost reason never persists!
+      if (!targetStage.isLost) {
+        currentSelectedLead.lossReason = '';
+        currentSelectedLead.lostAt = '';
+      }
+
       // Audit logging with user, role, device, and IP
       logLeadActivity(currentSelectedLead, 'STAGE_CHANGE', 'Lead moved to stage: ' + targetStage.name + (targetStage.isLost ? ' (Reason: ' + currentSelectedLead.lossReason + ')' : ''));
 
@@ -9341,7 +9419,13 @@
         }
       }
       if (stageRespReason) {
-        stageRespReason.innerText = currentSelectedLead.lossReason || currentSelectedLead.stageRemark || currentSelectedLead.nextFollowUpNote || ('Stage changed to ' + targetStage.name);
+        if (targetStage.isLost) {
+          stageRespReason.innerText = currentSelectedLead.lossReason || 'Lost without specific reason';
+        } else if (targetStage.isWon) {
+          stageRespReason.innerText = currentSelectedLead.wonAt ? ('Purchased / Won on ' + formatFollowupDate(currentSelectedLead.wonAt)) : 'Deal Purchased & Closed Won';
+        } else {
+          stageRespReason.innerText = currentSelectedLead.nextFollowUpNote || ('Stage moved to ' + targetStage.name);
+        }
       }
       renderOpportunities();
       renderPhonebookTable();
@@ -9704,10 +9788,7 @@
         audioUrl: selectedAudioBase64
       });
 
-      // Preserve cumulative notes history
-      if (text) {
-        currentSelectedLead.notes = (currentSelectedLead.notes ? currentSelectedLead.notes + '\n\n' : '') + `[${callStatus}]: ${text}`;
-      }
+      // Keep initial customer requirements in lead.notes intact without duplicate remark appending
 
       if (followupDt) {
         currentSelectedLead.nextFollowUp = followupDt;
@@ -9765,11 +9846,11 @@
       if (!container) return;
       container.innerHTML = '';
 
-      let allActivities = lead.activities ? [...lead.activities] : [];
+      let allActivities = (lead.activities && Array.isArray(lead.activities)) ? [...lead.activities] : [];
 
-      // 1. Synthesize initial inquiry from lead.notes if not already in timeline
-      if (lead.notes && lead.notes.trim() && !allActivities.some(a => (a.notes || a.text || '').trim() === lead.notes.trim())) {
-        allActivities.unshift({
+      // Only if allActivities is completely empty, show initial notes from lead creation
+      if (allActivities.length === 0 && lead.notes && lead.notes.trim()) {
+        allActivities.push({
           id: 'act-init-' + lead.id,
           userName: lead.assignedToName || 'Sri Sri Admin',
           userRole: 'Staff',
@@ -9783,46 +9864,33 @@
         });
       }
 
-      // 2. Synthesize customer objection/discussion from lead.lossReason if not already in timeline
-      if (lead.lossReason && lead.lossReason.trim() && !allActivities.some(a => (a.notes || a.text || '').includes(lead.lossReason.trim()))) {
-        allActivities.push({
-          id: 'act-lost-reason-' + lead.id,
-          userName: lead.assignedToName || 'Sri Sri Admin',
-          userRole: 'Staff',
-          type: 'DEAL_LOST',
-          notes: 'Customer Discussion & Reason: ' + lead.lossReason.trim(),
-          text: 'Customer Discussion & Reason: ' + lead.lossReason.trim(),
-          time: formatFollowupDate(lead.lostAt || lead.lastActivityAt || lead.createdAt),
-          timestamp: lead.lostAt || lead.lastActivityAt || lead.createdAt || new Date().toISOString(),
-          device: lead.lastActivityDevice || 'Old CRM History',
-          ip: lead.lastActivityIp || 'Direct System'
-        });
-      }
+      // Deduplicate activities so no remarks appear double or triple
+      const seen = new Set();
+      const dedupedActivities = [];
 
-      // 3. Synthesize next follow-up note if present and distinct
-      if (lead.nextFollowUpNote && lead.nextFollowUpNote.trim() && !allActivities.some(a => (a.notes || a.text || '').includes(lead.nextFollowUpNote.trim()))) {
-        allActivities.push({
-          id: 'act-fu-note-' + lead.id,
-          userName: lead.assignedToName || 'Sri Sri Admin',
-          userRole: 'Staff',
-          type: 'FOLLOWUP_SCHEDULED',
-          notes: 'Next Action: ' + lead.nextFollowUpNote.trim(),
-          text: 'Next Action: ' + lead.nextFollowUpNote.trim(),
-          time: formatFollowupDate(lead.nextFollowUp || lead.lastActivityAt),
-          timestamp: lead.nextFollowUp || lead.lastActivityAt || new Date().toISOString(),
-          device: lead.lastActivityDevice || 'Scheduled',
-          ip: lead.lastActivityIp || 'Direct'
-        });
-      }
+      allActivities.forEach(act => {
+        const raw = (act.notes || act.text || '').trim();
+        if (!raw) return;
+        const norm = raw.replace(/^\[[^\]]+\]:\s*/, '').trim().toLowerCase();
+        const key = (act.type === 'STAGE_CHANGE' || act.type === 'CALL_LOG') ? (act.type + '|||' + norm) : norm;
+        if (seen.has(key) || (act.type !== 'STAGE_CHANGE' && act.type !== 'CALL_LOG' && seen.has(norm))) {
+          return; // Skip duplicate!
+        }
+        seen.add(key);
+        if (act.type !== 'STAGE_CHANGE' && act.type !== 'CALL_LOG') {
+          seen.add(norm);
+        }
+        dedupedActivities.push(act);
+      });
 
-      if (badge) badge.innerText = String(allActivities.length);
+      if (badge) badge.innerText = String(dedupedActivities.length);
 
-      if (allActivities.length === 0) {
+      if (dedupedActivities.length === 0) {
         container.innerHTML = '<div class="p-6 text-center text-xs text-muted-custom bg-subtle/30 rounded-2xl border border-main">No remarks or comments recorded yet. Add a note above.</div>';
         return;
       }
 
-      const sorted = allActivities.sort((a,b) => new Date(b.timestamp || b.time) - new Date(a.timestamp || a.time));
+      const sorted = dedupedActivities.sort((a,b) => new Date(b.timestamp || b.time) - new Date(a.timestamp || a.time));
 
       sorted.forEach(act => {
         const item = document.createElement('div');
@@ -13182,6 +13250,37 @@
     let currentActiveAdsPlatform = 'meta_ads';
 
     const ADS_PLATFORMS_CONFIG = {
+      xilot: {
+        name: 'Xilot (Apto Xilot / AptoAI CRM)',
+        subtitle: 'Live automatic ingestion for Walk-in Counter entries & Meta Ads leads from your Xilot account',
+        icon: 'cpu',
+        defaultWebhook: 'https://crm.srisriplywoods.com/api/webhook/xilot',
+        defaultToken: 'sri_xilot_live_sync_2026',
+        defaultPipeline: 'p-walkin',
+        sampleLead: {
+          name: 'Rajinder Kumar (Walk-in Counter Client)',
+          phone: '+91 98141 55678',
+          email: 'rajinder.woodwork@gmail.com',
+          company: 'Kumar Furniture Works',
+          city: 'Mohali',
+          customerAddress: 'Phase 7, Industrial Area, Mohali',
+          materialType: '18mm Gurjan Plywood & 1mm Teak Mica',
+          customerType: 'Contractor',
+          dealValue: 85000,
+          source: 'Walk-in',
+          campaignName: 'Showroom Walkin / In-Store Inquiry',
+          adsetName: 'Counter Visit',
+          adName: 'Desk Walkin Registration',
+          adPlatform: 'Xilot (AptoAI) Auto-Sync',
+          formName: 'Walk-in Sheet Entry',
+          notes: 'Customer visited showroom counter for 50 sheets 18mm Gurjan plywood quotation.'
+        },
+        fields: [
+          { id: 'xilot-api-key', label: 'Xilot API Key / Bearer Token *', placeholder: 'Enter your API Key from Xilot Settings -> API / Webhooks', type: 'text' },
+          { id: 'xilot-workspace-id', label: 'Xilot Workspace / Account ID (Optional)', placeholder: 'e.g. srisriply_xilot_01', type: 'text' },
+          { id: 'xilot-lead-type', label: 'Channels to Auto-Sync from Xilot', placeholder: 'Walk-in Sheet + Meta Ads (Facebook & Instagram)', type: 'text' }
+        ]
+      },
       meta_ads: {
         name: 'Meta Ads (Facebook & Instagram Lead Generation)',
         subtitle: 'Auto-capture instant lead forms from Facebook & Instagram ad campaigns',
@@ -13300,6 +13399,15 @@
       const container = document.getElementById('integrations-cards-grid');
       if (!container) return;
       const integrations = [
+        {
+          id: 'xilot',
+          name: 'Xilot / Apto Xilot (Walk-in & Ads Live Sync)',
+          desc: 'Direct real-time webhook & API bridge to automatically ingest Walk-in Sheet entries and Meta Ads leads directly from your Xilot account.',
+          icon: 'cpu',
+          category: 'Live Auto-Sync',
+          isConn: !!(channelConfigs.xilot && channelConfigs.xilot.connected),
+          type: 'ads'
+        },
         {
           id: 'firebase_sync',
           name: 'Google Firebase Cloud Sync',
@@ -13471,6 +13579,18 @@
           assSelect.innerHTML = opts;
         }
 
+                // Handle Xilot specific buttons
+        const xilotBtns = document.getElementById('xilot-extra-test-buttons');
+        const defaultTestBtn = document.getElementById('btn-send-test-ad-lead');
+        if (xilotBtns && defaultTestBtn) {
+          if (platform === 'xilot') {
+            xilotBtns.classList.remove('hidden');
+            defaultTestBtn.classList.add('hidden');
+          } else {
+            xilotBtns.classList.add('hidden');
+            defaultTestBtn.classList.remove('hidden');
+          }
+        }
         // Update simulator button text
         const btnSimText = document.getElementById('btn-send-test-ad-text');
         if (btnSimText) {
@@ -13486,6 +13606,116 @@
         console.warn('Notice in openAdsIntegrationModal:', err);
       }
       if (window.lucide) lucide.createIcons();
+    }
+
+    
+    function injectLiveXilotLead(type) {
+      const now = new Date();
+      let newLead;
+      if (type === 'walkin') {
+        const walkinPip = pipelines.find(p => p.id === 'p-walkin') || pipelines[0];
+        newLead = {
+          id: 'lead-xilot-walkin-' + Date.now(),
+          name: 'Rajinder Kumar (Walk-in Counter Client)',
+          phone: '+91 98141 55678',
+          email: 'rajinder.woodwork@gmail.com',
+          company: 'Kumar Furniture Works',
+          city: 'Mohali',
+          customerAddress: 'Phase 7, Industrial Area, Mohali',
+          materialType: '18mm Gurjan Plywood & 1mm Teak Mica',
+          customerType: 'Contractor',
+          clientType: 'Walk-in Visitor',
+          dealValue: '₹ 85,000',
+          budget: '₹ 85,000',
+          source: 'Walk-in',
+          sourceDetails: 'Showroom Counter Walk-in Registration',
+          priority: 'high',
+          pipelineId: walkinPip.id,
+          stageId: walkinPip.stages[0]?.id || 'stg-1',
+          assignedToName: loggedInUser ? loggedInUser.name : 'Sri Sri Admin',
+          assignedToEmail: loggedInUser ? loggedInUser.email : 'sales.ssply@gmail.com',
+          tags: 'walk-in, showroom',
+          notes: 'Customer visited showroom counter for 50 sheets 18mm Gurjan plywood quotation.',
+          postedNotes: '',
+          createdAt: now.toISOString(),
+          lastActivityAt: now.toISOString(),
+          lastActivityText: 'Walk-in client registered at counter',
+          lastActivityUser: 'Xilot Walk-in Bridge',
+          activities: [
+            {
+              id: 'act-' + Date.now(),
+              userName: 'Xilot Walk-in Bridge',
+              userEmail: 'counter@srisriplywoods.com',
+              type: 'COMMENT',
+              notes: 'Customer visited showroom counter for 50 sheets 18mm Gurjan plywood quotation.',
+              text: 'Customer visited showroom counter for 50 sheets 18mm Gurjan plywood quotation.',
+              time: now.toISOString().slice(0, 10),
+              timestamp: now.toISOString()
+            }
+          ]
+        };
+      } else {
+        const fbPip = pipelines.find(p => p.id === 'p-fb') || pipelines[0];
+        newLead = {
+          id: 'lead-xilot-ads-' + Date.now(),
+          name: 'Pooja Verma (Facebook Lead Form)',
+          phone: '+91 94163 99881',
+          email: 'pooja.verma@example.com',
+          company: 'Aura Modular Designs',
+          city: 'Mohali',
+          customerAddress: 'House 412, Sector 70, Mohali',
+          materialType: 'modular_kitchen',
+          requirementTimeline: 'within_7_days',
+          customerType: 'home_owner_/_family_member',
+          clientType: 'new',
+          dealValue: '₹ 1,45,000',
+          budget: '₹ 1,45,000',
+          source: 'Facebook Ads',
+          sourceDetails: 'Facebook Lead Ad — Hardware',
+          fbCampaign: '29 Sep 2026 Leads campaign',
+          fbCampaignId: '120248293774170340',
+          fbFormId: '877045891498963',
+          fbAd: 'Hardware',
+          fbPlatform: 'fb',
+          fbLeadId: '1132985482' + Math.floor(Math.random() * 1000000),
+          priority: 'medium',
+          pipelineId: fbPip.id,
+          stageId: fbPip.stages[0]?.id || 'stg-1',
+          assignedToName: loggedInUser ? loggedInUser.name : 'Sri Sri Admin',
+          assignedToEmail: loggedInUser ? loggedInUser.email : 'sales.ssply@gmail.com',
+          tags: 'facebook-lead, xilot-sync',
+          notes: '📋 Facebook Lead Form: modular_kitchen, within_7_days\nCustomer Address: House 412, Sector 70, Mohali',
+          postedNotes: '',
+          createdAt: now.toISOString(),
+          lastActivityAt: now.toISOString(),
+          lastActivityText: 'Meta Ad Form submitted by Pooja Verma',
+          lastActivityUser: 'Xilot Meta Ads Webhook',
+          activities: [
+            {
+              id: 'act-' + Date.now(),
+              userName: 'Meta Ads Lead Form',
+              userEmail: 'ads@facebook.com',
+              type: 'COMMENT',
+              notes: '📋 Facebook Lead Form: modular_kitchen, within_7_days\nCustomer Address: House 412, Sector 70, Mohali',
+              text: '📋 Facebook Lead Form: modular_kitchen, within_7_days\nCustomer Address: House 412, Sector 70, Mohali',
+              time: now.toISOString().slice(0, 10),
+              timestamp: now.toISOString()
+            }
+          ]
+        };
+      }
+
+      if (typeof sanitizeLeadRecord === 'function') sanitizeLeadRecord(newLead);
+      leads.unshift(newLead);
+      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      syncLeadToCloud(newLead);
+
+      renderOpportunities();
+      renderPhonebookTable();
+      initDashboard();
+
+      if (typeof playReminderSound === 'function') playReminderSound();
+      showToast('🚀 Live ' + (type === 'walkin' ? 'Walk-in' : 'Meta Ads') + ' Lead Ingested from Xilot: ' + newLead.name + ' (' + newLead.phone + ')', 'success');
     }
 
     function saveCurrentAdsConfig() {
