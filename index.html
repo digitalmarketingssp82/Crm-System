@@ -1083,7 +1083,7 @@
             <!-- Search Opportunities Input -->
             <div class="relative">
               <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom"></i>
-              <input type="text" id="opp-search-input" oninput="renderOpportunities()" placeholder="Search opportunities..." class="pl-8 pr-3 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-48 sm:w-56">
+              <input type="text" id="opp-search-input" oninput="renderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="pl-8 pr-3 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-52 sm:w-72">
             </div>
 
             <!-- Filters Button & Interactive Filter Dropdown Panel -->
@@ -5790,7 +5790,7 @@
       }
     } catch(e){}
 
-    let activePipelineId = localStorage.getItem('sri_sri_active_pipeline') || 'p-google';
+    let activePipelineId = localStorage.getItem('sri_sri_active_pipeline') || 'all';
     let opportunityViewMode = 'list';
 
     // ==================== COLUMNS CUSTOMIZATION SYSTEM ====================
@@ -7360,29 +7360,62 @@
     }
 
     function renderOpportunities() {
-      const pipeline = pipelines.find(p => p.id === activePipelineId) || pipelines[0];
+      const isAllPipelines = activePipelineId === 'all';
+      const pipeline = isAllPipelines
+        ? { id: 'all', name: 'All Pipeline Data', stages: defaultStagesTemplate }
+        : (pipelines.find(p => p.id === activePipelineId) || pipelines[0]);
+
+      const userLeads = getAccessibleLeads();
+
       const pipSelect = document.getElementById('opp-pipeline-select');
       if (pipSelect) {
         pipSelect.innerHTML = '';
+
+        // 1. All Pipeline Data Option
+        const allOpt = document.createElement('option');
+        allOpt.value = 'all';
+        allOpt.innerText = `🌐 All Pipeline Data (${userLeads.length} Leads)`;
+        allOpt.selected = activePipelineId === 'all';
+        pipSelect.appendChild(allOpt);
+
+        // 2. Individual Pipelines
         pipelines.forEach(p => {
+          const count = userLeads.filter(l => l.pipelineId === p.id).length;
           const opt = document.createElement('option');
           opt.value = p.id;
-          opt.innerText = p.name;
+          opt.innerText = `${p.name} (${count} Leads)`;
           opt.selected = p.id === activePipelineId;
           pipSelect.appendChild(opt);
         });
       }
 
-      const userLeads = getAccessibleLeads();
-      const pipLeads = userLeads.filter(l => l.pipelineId === pipeline.id);
-      const filteredLeads = getFilteredPipelineLeads(pipLeads, pipeline);
+      const searchInput = document.getElementById('opp-search-input');
+      const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+      // SMART SEARCH:
+      // If user typed a search query (name, phone number, etc.), search across ALL pipelines!
+      // If no search query:
+      //   - If 'all' is selected: show all accessible leads
+      //   - If specific pipeline is selected: show only that pipeline's leads
+      let baseLeads;
+      if (isAllPipelines || q.length > 0) {
+        baseLeads = userLeads;
+      } else {
+        baseLeads = userLeads.filter(l => l.pipelineId === pipeline.id);
+      }
+
+      const filteredLeads = getFilteredPipelineLeads(baseLeads, pipeline);
 
       const countBadge = document.getElementById('opp-count-badge');
       if (countBadge) {
-        if (filteredLeads.length === pipLeads.length) {
-          countBadge.innerText = pipLeads.length + ' Leads';
+        if (q.length > 0) {
+          countBadge.innerText = `🔍 Found ${filteredLeads.length} across all pipelines`;
+        } else if (isAllPipelines) {
+          countBadge.innerText = `${filteredLeads.length} Total Leads (All Pipelines)`;
+        } else if (filteredLeads.length === baseLeads.length) {
+          countBadge.innerText = `${baseLeads.length} Leads`;
         } else {
-          countBadge.innerText = `Showing ${filteredLeads.length} of ${pipLeads.length} Leads`;
+          countBadge.innerText = `Showing ${filteredLeads.length} of ${baseLeads.length} Leads`;
         }
       }
 
@@ -7392,7 +7425,7 @@
       if (opportunityViewMode === 'list') {
         if (listContainer) listContainer.classList.remove('hidden');
         if (kanbanContainer) kanbanContainer.classList.add('hidden');
-        renderOpportunityListTable(filteredLeads, pipeline, pipLeads.length);
+        renderOpportunityListTable(filteredLeads, pipeline, baseLeads.length);
       } else {
         if (listContainer) listContainer.classList.add('hidden');
         if (kanbanContainer) kanbanContainer.classList.remove('hidden');
@@ -7578,7 +7611,11 @@
       }
 
       filteredLeads.forEach(lead => {
-        const stg = pipeline.stages.find(s => s.id === lead.stageId) || pipeline.stages[0];
+        const leadPipeline = (Array.isArray(pipelines) && pipelines.find(p => p.id === lead.pipelineId)) || pipeline;
+        const stg = (leadPipeline.stages && leadPipeline.stages.find(s => s.id === lead.stageId)) || 
+                    (pipeline.stages && pipeline.stages.find(s => s.id === lead.stageId)) || 
+                    defaultStagesTemplate.find(s => s.id === lead.stageId) || 
+                    { name: 'Lead Registered', color: '#3B82F6' };
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-subtle/50 transition cursor-pointer border-b border-main/40 text-xs';
 
@@ -7668,7 +7705,10 @@
           <td class="p-3 text-main font-medium text-xs col-opportunity opp-sticky-col-name" onclick="handleTableCellClick(event, '${lead.id}')">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${stg.color}"></span>
-              <span class="font-medium text-main hover:text-gold truncate max-w-[170px] block">${lead.name}</span>
+              <div class="truncate max-w-[170px]">
+                <span class="font-medium text-main hover:text-gold truncate block">${lead.name}</span>
+                <span class="text-[9px] text-muted-custom font-normal block truncate">📂 ${leadPipeline.name || 'Direct Lead'}</span>
+              </div>
               <button type="button" onclick="event.stopPropagation(); copyTextToClipboard('${escapeJs(lead.name)}', 'Client Name');" class="text-muted-custom hover:text-gold p-0.5 rounded transition shrink-0" title="Copy Client Name">
                 <i data-lucide="copy" class="w-3 h-3"></i>
               </button>
@@ -8495,7 +8535,12 @@
       return pipLeads.filter(l => {
         // Search match
         if (q) {
-          const matchSearch = (l.name && l.name.toLowerCase().includes(q)) ||
+          const cleanQ = q.replace(/[^0-9]/g, '');
+          const cleanLeadPhone = (l.phone || '').replace(/[^0-9]/g, '');
+          const phoneMatch = cleanQ.length >= 3 && cleanLeadPhone.includes(cleanQ);
+
+          const matchSearch = phoneMatch ||
+                              (l.name && l.name.toLowerCase().includes(q)) ||
                               (l.phone && l.phone.includes(q)) ||
                               (l.email && l.email.toLowerCase().includes(q)) ||
                               (l.company && l.company.toLowerCase().includes(q)) ||
@@ -8504,7 +8549,10 @@
                               (l.address && l.address.toLowerCase().includes(q)) ||
                               (l.city && l.city.toLowerCase().includes(q)) ||
                               (l.materialType && l.materialType.toLowerCase().includes(q)) ||
-                              (l.clientType && l.clientType.toLowerCase().includes(q));
+                              (l.clientType && l.clientType.toLowerCase().includes(q)) ||
+                              (l.notes && l.notes.toLowerCase().includes(q)) ||
+                              (l.postedNotes && l.postedNotes.toLowerCase().includes(q)) ||
+                              (l.lastActivityText && l.lastActivityText.toLowerCase().includes(q));
           if (!matchSearch) return false;
         }
 
@@ -13926,30 +13974,38 @@
       const syncText = document.getElementById('xilot-sync-status-text');
       if (syncText) syncText.innerText = 'Syncing...';
       
-      let fetchedCount = 0;
       try {
-        const res = await fetch('http://localhost:3000/api/leads/pending', { method: 'GET' });
-        if (res.ok) {
-          const json = await res.json();
-          if (json && json.success && Array.isArray(json.leads) && json.leads.length > 0) {
-            json.leads.forEach(item => {
-              if (item && item.payload) {
-                ingestXilotLead(item.payload);
-                fetchedCount++;
+        if (db) {
+          const snapshot = await db.collection('crm_leads').get();
+          if (!snapshot.empty) {
+            const cloudLeads = [];
+            snapshot.forEach(doc => {
+              const d = doc.data();
+              if (d) {
+                d.id = d.id || doc.id;
+                cloudLeads.push(d);
               }
             });
-            await fetch('http://localhost:3000/api/leads/ack', { method: 'POST' }).catch(() => {});
-            showToast(`✅ Synced ${fetchedCount} live lead(s) from Xilot Server into CRM pipelines!`, 'success');
+            leads = cloudLeads;
+            localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+            renderOpportunities();
+            renderPhonebookTable();
+            if (typeof initDashboard === 'function') initDashboard();
+            if (typeof playChimeSound === 'function') playChimeSound('success');
+            showToast(`✅ Live Sync Successful: ${leads.length} leads up-to-date across all pipelines!`, 'success');
           } else {
-            showToast('ℹ️ Xilot Server is active on port 3000. No pending inbound leads in queue.', 'info');
+            showToast('ℹ️ Live Cloud Database connected. No pending leads.', 'info');
           }
         } else {
-          showToast('ℹ️ Xilot Cloud Sync active (Listening to Firebase collection crm_leads).', 'info');
+          renderOpportunities();
+          renderPhonebookTable();
+          showToast(`ℹ️ Live Sync Active: ${leads.length} leads loaded across all pipelines.`, 'info');
         }
       } catch (err) {
-        showToast('ℹ️ Xilot Cloud Sync active (Listening to Firebase collection crm_leads).', 'info');
+        console.warn('Sync error:', err);
+        showToast('ℹ️ Realtime database listener is active (listening for new Xilot & Ads leads).', 'info');
       } finally {
-        if (syncText) syncText.innerText = 'Xilot Sync Live';
+        if (syncText) syncText.innerText = 'Live Sync Active';
       }
     }
     window.syncXilotLiveNow = syncXilotLiveNow;
