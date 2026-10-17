@@ -266,7 +266,7 @@
         <div class="flex items-center gap-2 text-xs md:text-sm font-bold text-muted-custom">
           <span id="breadcrumb-category">Workspace</span>
           <span class="text-muted-custom opacity-50">/</span>
-          <span id="breadcrumb-current" class="text-main font-bold">Dashboard</span>
+          <span id="breadcrumb-current" class="text-main font-bold">Opportunities &amp; Sales Pipeline</span>
           <span class="ml-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-gold border border-gold/40 inline-flex items-center gap-1.5 shadow-xs"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> v2.4 (Live Ads & Import Active)</span>
         </div>
       </div>
@@ -327,7 +327,7 @@
 
         <!-- User Profile Dropdown -->
         <div class="relative flex items-center gap-2 pl-2 border-l border-main">
-          <div class="w-8 h-8 rounded-full bg-amber-500/20 text-gold flex items-center justify-center font-bold text-xs border border-gold/40" id="header-user-avatar">
+          <div onclick="switchTab('account')" class="w-8 h-8 rounded-full bg-amber-500/20 text-gold flex items-center justify-center font-bold text-xs border border-gold/40 cursor-pointer hover:scale-105 transition hover:border-gold" id="header-user-avatar" title="View / Edit Profile & WhatsApp Number">
             SA
           </div>
           <button onclick="handleLogout()" class="p-1.5 rounded-xl text-muted-custom hover:text-rose-500 hover:bg-subtle transition" title="Logout">
@@ -365,7 +365,7 @@
           <div class="p-3 space-y-1">
             
             <!-- MAIN SECTION -->
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition bg-gold text-slate-950 shadow-md">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
               <span>Dashboard</span>
             </button>
@@ -391,7 +391,7 @@
               <span class="text-[10px] font-bold uppercase tracking-widest text-muted-custom opacity-70">Sales</span>
             </div>
 
-            <button onclick="switchTab('opportunities')" id="nav-opportunities" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('opportunities')" id="nav-opportunities" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition bg-gold text-slate-950 shadow-md">
               <div class="flex items-center gap-3">
                 <i data-lucide="git-branch" class="w-4 h-4"></i>
                 <span>Opportunities</span>
@@ -501,7 +501,7 @@
         <!-- SIDEBAR FOOTER -->
         <div class="p-3 border-t border-main bg-subtle space-y-2">
           <div class="flex items-center justify-between px-1">
-            <div class="flex items-center gap-2 truncate">
+            <div onclick="switchTab('account')" class="flex items-center gap-2 truncate cursor-pointer hover:opacity-80 transition" title="My Profile & WhatsApp Number">
               <div class="w-7 h-7 rounded-full bg-amber-500/20 text-gold flex items-center justify-center font-bold text-xs shrink-0" id="user-avatar-badge">
                 SA
               </div>
@@ -526,7 +526,7 @@
       <!-- ============================================================= -->
       <!-- ======================== TAB 1: DASHBOARD =================== -->
       <!-- ============================================================= -->
-      <section id="tab-content-dashboard" class="space-y-6">
+      <section id="tab-content-dashboard" class="hidden space-y-6">
         <!-- Top Banner -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30">
           <div>
@@ -569,7 +569,7 @@
                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-gold"></i>
                 <span>Scan Now</span>
               </button>
-              <button type="button" onclick="sendPendingWorkWhatsAppSummaryToAll()" id="btn-admin-wa-all-summary" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5" title="Send WhatsApp Summary to Staff">
+              <button type="button" onclick="openCallingTeamWaModal()" id="btn-admin-wa-all-summary" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5" title="Send WhatsApp Summary to Staff">
                 <i data-lucide="send" class="w-3.5 h-3.5"></i>
                 <span>Send WhatsApp Alerts</span>
               </button>
@@ -684,7 +684,7 @@
               </div>
 
               <!-- 4. Quick Action: Alert Calling Team -->
-              <div onclick="sendBacklogCallingWhatsAppAlerts()" class="p-3.5 rounded-2xl bg-gold/10 border border-gold/30 hover:bg-gold/20 cursor-pointer transition flex flex-col justify-between shadow-xs">
+              <div id="dash-card-calling-team-alert" onclick="openCallingTeamWaModal()" class="p-3.5 rounded-2xl bg-gold/10 border border-gold/30 hover:bg-gold/20 cursor-pointer transition flex flex-col justify-between shadow-xs">
                 <div>
                   <div class="flex items-center justify-between">
                     <span class="text-[11px] font-extrabold uppercase tracking-wider text-gold">Calling Team Alert</span>
@@ -1074,7 +1074,7 @@
       <!-- ============================================================= -->
       <!-- ==================== TAB 4: OPPORTUNITIES =================== -->
       <!-- ============================================================= -->
-      <section id="tab-content-opportunities" class="hidden space-y-4">
+      <section id="tab-content-opportunities" class="space-y-4">
         
         <!-- Pipeline Header & Search & Columns Switcher (Exact Match to Screenshot) -->
         <div class="p-3.5 md:p-4 rounded-3xl bg-card border border-main shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -1221,10 +1221,10 @@
             
             <!-- View Mode Switcher -->
             <div class="flex items-center bg-subtle p-1 rounded-xl border border-main">
-              <button onclick="setOpportunityViewMode('list')" id="btn-opp-view-list" class="p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-card text-gold shadow-xs" title="Table View">
+              <button onclick="setOpportunityViewMode('list')" id="btn-opp-view-list" class="p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 text-muted-custom hover:text-main" title="Table View">
                 <i data-lucide="table" class="w-4 h-4"></i>
               </button>
-              <button onclick="setOpportunityViewMode('kanban')" id="btn-opp-view-kanban" class="p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 text-muted-custom hover:text-main" title="Kanban Board">
+              <button onclick="setOpportunityViewMode('kanban')" id="btn-opp-view-kanban" class="p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-card text-gold shadow-xs" title="Kanban Board">
                 <i data-lucide="trello" class="w-4 h-4"></i>
               </button>
             </div>
@@ -1298,7 +1298,7 @@
         </div>
 
         <!-- 1. Table View Container (Enhanced with Sticky Left Pinned Columns & Dual Scrollbars) -->
-        <div id="opp-table-view-container" class="bg-card border border-main rounded-3xl overflow-hidden shadow-sm flex flex-col">
+        <div id="opp-table-view-container" class="hidden bg-card border border-main rounded-3xl overflow-hidden shadow-sm flex flex-col">
           
           <!-- BULK SELECTION ACTIONS TOOLBAR (Appears when 1 or more leads are ticked) -->
           <div id="opp-bulk-actions-bar" class="hidden px-4 py-2.5 bg-gradient-to-r from-amber-500/20 via-card to-amber-500/10 border-b-2 border-gold flex flex-wrap items-center justify-between gap-3 text-xs animate-in slide-in-from-top duration-200">
@@ -1410,7 +1410,7 @@
         </div>
 
         <!-- 2. Kanban Board View Container -->
-        <div id="opp-kanban-view-container" class="hidden flex gap-4 overflow-x-auto pb-6 custom-scrollbar touch-scroll min-h-[500px]">
+        <div id="opp-kanban-view-container" class="flex gap-4 overflow-x-auto pb-6 custom-scrollbar touch-scroll min-h-[500px]">
           <!-- Dynamically populated Kanban columns -->
         </div>
 
@@ -2939,6 +2939,128 @@
           <i data-lucide="check" class="w-3.5 h-3.5"></i>
           <span>Save Follow-up</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- ===== MODAL: SEND CALLING TEAM WORK SUMMARY ON WHATSAPP ===== -->
+  <!-- ============================================================= -->
+  <div id="calling-team-wa-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[100005] hidden flex items-center justify-center p-3 sm:p-4" onclick="if(event.target === this) closeModal('calling-team-wa-modal')">
+    <div class="bg-card w-full max-w-xl rounded-3xl shadow-2xl p-5 sm:p-6 border border-main space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-main shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold border border-emerald-500/30">
+            <i data-lucide="message-circle" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-main flex items-center gap-2">
+              <span>Send Calling Work Summary on WhatsApp</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-gold border border-gold/30">Calling Team</span>
+            </h3>
+            <p class="text-[11px] text-muted-custom">Calling executive ko unke calling dashboard ka summary points WhatsApp alert bhejein</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('calling-team-wa-modal')" class="p-1.5 rounded-xl bg-subtle hover:bg-rose-500/20 text-muted-custom hover:text-rose-400 border border-main transition cursor-pointer" title="Close">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1 text-xs">
+        <!-- 1. Select Calling Person -->
+        <div class="space-y-1.5">
+          <label class="block font-bold text-main flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="user-check" class="w-3.5 h-3.5 text-gold"></i>
+              <span>Select Calling Person / Staff Member:</span>
+            </span>
+            <span id="cwa-staff-role-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-subtle text-muted-custom border border-main">Staff</span>
+          </label>
+          <div class="relative">
+            <select id="cwa-staff-select" onchange="onCallingStaffSelectChange(this.value)" class="w-full px-3 py-2.5 rounded-xl bg-subtle border border-main font-bold text-xs text-main focus:border-gold outline-none cursor-pointer appearance-none">
+              <!-- Dynamically populated with active staff -->
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-custom">
+              <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. WhatsApp Number & Profile Sync Card -->
+        <div class="p-3.5 rounded-2xl bg-subtle/50 border border-main space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-main flex items-center gap-1.5 text-[11px]">
+              <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Calling Person WhatsApp Number:</span>
+            </span>
+            <span class="text-[10px] text-muted-custom font-mono" id="cwa-account-info">Account: Sri Sri Team</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-2 bg-card border border-main rounded-xl font-bold font-mono text-xs text-muted-custom select-none">+91</span>
+            <input type="text" id="cwa-whatsapp-number" oninput="onCallingStaffNumberInput()" placeholder="10-digit WhatsApp number (e.g. 9812345678)" class="flex-1 px-3 py-2 bg-card border border-main rounded-xl font-mono text-xs text-main font-bold focus:border-gold outline-none">
+            <button type="button" onclick="saveStaffWhatsAppNumberFromModal()" class="px-3 py-2 rounded-xl bg-gold/15 text-gold hover:bg-gold hover:text-slate-950 font-bold text-xs transition border border-gold/40 flex items-center gap-1 shrink-0" title="Save this number to staff member's profile">
+              <i data-lucide="save" class="w-3.5 h-3.5"></i>
+              <span>Save to Profile</span>
+            </button>
+          </div>
+          <p class="text-[10px] text-muted-custom" id="cwa-number-helper">
+            💡 Calling person apna number apni profile se bhi save kar sakti hai, ya Admin yahan se direct save kar sakta hai.
+          </p>
+        </div>
+
+        <!-- 3. Work Breakdown KPI Pills -->
+        <div class="grid grid-cols-4 gap-2 text-center">
+          <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30">
+            <p class="text-[10px] font-bold text-rose-400">Overdue</p>
+            <p class="text-sm font-extrabold text-rose-400" id="cwa-stat-overdue">0</p>
+          </div>
+          <div class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <p class="text-[10px] font-bold text-gold">Due in 30m</p>
+            <p class="text-sm font-extrabold text-gold" id="cwa-stat-30m">0</p>
+          </div>
+          <div class="p-2 rounded-xl bg-blue-500/10 border border-blue-500/30">
+            <p class="text-[10px] font-bold text-blue-400">Due Today</p>
+            <p class="text-sm font-extrabold text-blue-400" id="cwa-stat-today">0</p>
+          </div>
+          <div class="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30">
+            <p class="text-[10px] font-bold text-purple-400">Backlog</p>
+            <p class="text-sm font-extrabold text-purple-400" id="cwa-stat-backlog">0</p>
+          </div>
+        </div>
+
+        <!-- 4. Generated WhatsApp Message Preview (Summary Points) -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-main flex items-center gap-1.5">
+              <i data-lucide="file-text" class="w-3.5 h-3.5 text-gold"></i>
+              <span>WhatsApp Message (Summary Point Format):</span>
+            </label>
+            <button type="button" onclick="regenerateCallingWaMessage()" class="text-[10px] font-bold text-gold hover:underline flex items-center gap-1">
+              <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+              <span>Refresh Summary</span>
+            </button>
+          </div>
+          <textarea id="cwa-message-text" rows="8" class="w-full p-3 rounded-2xl bg-card border border-main font-mono text-[11px] leading-relaxed text-main focus:border-gold outline-none custom-scrollbar resize-none" placeholder="Message will be generated automatically..."></textarea>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-3 border-t border-main flex items-center justify-between gap-2 shrink-0">
+        <button type="button" onclick="copyCallingWaMessage()" class="px-3.5 py-2 rounded-xl bg-subtle hover:bg-card border border-main text-xs font-bold text-main transition flex items-center gap-1.5" title="Copy text to clipboard">
+          <i data-lucide="copy" class="w-3.5 h-3.5 text-gold"></i>
+          <span>Copy Text</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeModal('calling-team-wa-modal')" class="px-4 py-2 rounded-xl border border-main bg-card hover:bg-subtle text-xs font-bold text-muted-custom hover:text-main transition">
+            Cancel
+          </button>
+          <button type="button" onclick="sendCallingWaMessageNow()" id="btn-cwa-send" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>Send on WhatsApp</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -5811,8 +5933,8 @@
       }
     } catch(e){}
 
-    let activePipelineId = localStorage.getItem('sri_sri_active_pipeline') || 'all';
-    let opportunityViewMode = 'list';
+    let activePipelineId = localStorage.getItem('sri_sri_active_pipeline') || 'p-walkin';
+    let opportunityViewMode = localStorage.getItem('sri_sri_opp_view_mode') || 'kanban';
 
     // ==================== COLUMNS CUSTOMIZATION SYSTEM ====================
     const DEFAULT_COLUMN_PREFS = {
@@ -6053,13 +6175,16 @@
           role.permissions = ['leads_view', 'leads_export', 'leads_import', 'broadcast_view', 'broadcast_launch', 'templates_manage', 'flows_manage', 'workflow_automate', 'reports_view', 'reports_export', 'conv_view_all', 'conv_reply', 'tasks_view', 'tasks_create', 'opp_view', 'settings_channels', 'settings_wallet', 'settings_apps'];
         } else if (role.id === 'r-field' || role.name === 'Field Salesman') {
           role.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'conv_reply', 'tasks_view', 'tasks_create', 'tasks_complete'];
-        } else if (role.id === 'r-coordinator' || role.name === 'Sales cordinator') {
-          role.permissions = ['leads_view', 'leads_create', 'leads_edit', 'leads_transfer', 'opp_view', 'opp_move_stage', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete', 'broadcast_view', 'reports_view'];
+        } else if (role.id === 'r-coordinator' || role.name === 'Sales cordinator' || role.name.toLowerCase().includes('coordinator')) {
+          role.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete'];
         } else if (role.id === 'r-walkin' || role.name === 'Store Walk-in Manager') {
           role.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete', 'templates_manage'];
         } else {
           role.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'conv_reply', 'tasks_view', 'tasks_create'];
         }
+      }
+      if (role.id === 'r-coordinator' || (role.name && role.name.toLowerCase().includes('coordinator')) || (role.name && role.name.toLowerCase().includes('cordinator'))) {
+        role.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete'];
       }
       role.permsCount = role.permissions.length;
     });
@@ -6075,6 +6200,17 @@
       status: 'Active',
       password: 'admin',
       permissions: CRM_PERMISSIONS_SCHEMA.flatMap(c => c.permissions.map(p => p.id))
+    };
+
+    const defaultSalesCoordinator = {
+      id: 'u-coordinator',
+      name: 'Sales Coordinator',
+      email: 'coordinator@srisriply.com',
+      mobile: '9813840800',
+      role: 'Sales cordinator',
+      status: 'Active',
+      password: '123',
+      permissions: ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete']
     };
 
     let users = [];
@@ -6095,10 +6231,19 @@
     if (!superAdminExists) {
       users.unshift(defaultSuperAdmin);
     }
-    // Update super admin permissions to 100% master access
+
+    // Ensure Sales Coordinator is present
+    const coordinatorExists = users.some(u => u.email && (u.email.toLowerCase() === 'coordinator@srisriply.com' || (u.role && u.role.toLowerCase().includes('coordinator')) || (u.role && u.role.toLowerCase().includes('cordinator'))));
+    if (!coordinatorExists) {
+      users.push(defaultSalesCoordinator);
+    }
+
+    // Update super admin permissions to 100% master access & sanitize coordinator permissions
     users.forEach(u => {
-      if (u.role === 'Organization Admin' || u.email.toLowerCase() === 'sriplywoodsgm@gmail.com') {
+      if (u.role === 'Organization Admin' || (u.email && u.email.toLowerCase() === 'sriplywoodsgm@gmail.com')) {
         u.permissions = CRM_PERMISSIONS_SCHEMA.flatMap(c => c.permissions.map(p => p.id));
+      } else if (u.role && (u.role.toLowerCase().includes('coordinator') || u.role.toLowerCase().includes('cordinator'))) {
+        u.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete'];
       }
     });
     localStorage.setItem('sri_sri_users', JSON.stringify(users));
@@ -6291,7 +6436,7 @@
       } catch(e){}
       return defaultSuperAdmin;
     })();
-    let currentActiveTab = localStorage.getItem('sri_sri_last_tab') || 'dashboard';
+    let currentActiveTab = localStorage.getItem('sri_sri_last_tab') || 'opportunities';
     let currentSelectedLead = null;
     let currentActiveLogLeadId = null;
     let selectedImageBase64 = null;
@@ -6714,24 +6859,16 @@
       checkSession();
       applyUserPermissions(user);
       updateAllChannelStatusBadges();
-      initDashboard();
-      renderPhonebookTable();
-      renderOpportunities();
-      renderWaTemplates();
-      renderRolesGrid();
       populateRoleSelect();
-      renderStaffManager();
-      renderTeamPerformanceScorecards();
       populateLeadAssigneeSelect();
-      renderFormsList();
-      renderReports();
-      renderTasksList('PENDING');
 
-      // Restore last active tab on login
+      // Restore last active tab on login (default: opportunities)
       try {
-        const lastTab = localStorage.getItem('sri_sri_last_tab');
-        if (lastTab && lastTab !== 'dashboard') switchTab(lastTab);
-      } catch(e){}
+        const lastTab = localStorage.getItem('sri_sri_last_tab') || 'opportunities';
+        switchTab(lastTab);
+      } catch(e){
+        switchTab('opportunities');
+      }
 
       showToast('Welcome back, ' + user.name + '!', 'success');
     }
@@ -6780,6 +6917,9 @@
     function applyUserPermissions(user) {
       if (!user) return;
       const isOwner = isCurrentUserSuperAdmin();
+      const roleLower = (user.role || '').toLowerCase();
+      const isCoordinator = roleLower.includes('cordinator') || roleLower.includes('coordinator') || roleLower.includes('calling');
+      const isManager = user.role === 'Manager' || roleLower.includes('manager');
 
       // 1. Navigation Visibility
       const navMap = [
@@ -6788,17 +6928,18 @@
         { id: 'nav-phonebook', allowed: isOwner || userHasPermission('leads_view') },
         { id: 'nav-opportunities', allowed: isOwner || userHasPermission('opp_view') },
         { id: 'nav-tasks', allowed: isOwner || userHasPermission('tasks_view') },
-        { id: 'nav-broadcast-group', allowed: isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage') },
-        { id: 'nav-wa-templates', allowed: isOwner || userHasPermission('templates_manage') },
-        { id: 'nav-wa-flow', allowed: isOwner || userHasPermission('flows_manage') },
-        { id: 'nav-wa-broadcast', allowed: isOwner || userHasPermission('broadcast_launch') },
-        { id: 'nav-automation', allowed: isOwner || userHasPermission('workflow_automate') },
-        { id: 'nav-forms', allowed: isOwner || userHasPermission('leads_create') || userHasPermission('leads_import') },
-        { id: 'nav-media', allowed: isOwner || userHasPermission('conv_attach_files') },
-        { id: 'nav-reports', allowed: isOwner || userHasPermission('reports_view') || userHasPermission('reports_staff_kpi') },
-        { id: 'nav-apps', allowed: isOwner || userHasPermission('settings_apps') },
+        { id: 'nav-call-logs', allowed: isOwner || userHasPermission('tasks_view') || isCoordinator },
+        { id: 'nav-broadcast-group', allowed: !isCoordinator && (isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage')) },
+        { id: 'nav-wa-templates', allowed: !isCoordinator && (isOwner || userHasPermission('templates_manage')) },
+        { id: 'nav-wa-flow', allowed: !isCoordinator && (isOwner || userHasPermission('flows_manage')) },
+        { id: 'nav-wa-broadcast', allowed: !isCoordinator && (isOwner || userHasPermission('broadcast_launch')) },
+        { id: 'nav-automation', allowed: !isCoordinator && (isOwner || userHasPermission('workflow_automate')) },
+        { id: 'nav-forms', allowed: !isCoordinator && (isOwner || userHasPermission('leads_create') || userHasPermission('leads_import')) },
+        { id: 'nav-media', allowed: !isCoordinator && (isOwner || userHasPermission('conv_attach_files')) },
+        { id: 'nav-reports', allowed: !isCoordinator && (isOwner || userHasPermission('reports_view') || userHasPermission('reports_staff_kpi')) },
+        { id: 'nav-apps', allowed: !isCoordinator && (isOwner || userHasPermission('settings_apps')) },
         { id: 'nav-account', allowed: true },
-        { id: 'nav-settings', allowed: isOwner || userHasPermission('settings_channels') || userHasPermission('settings_team') || userHasPermission('settings_roles') || userHasPermission('settings_wallet') || userHasPermission('settings_apps') }
+        { id: 'nav-settings', allowed: !isCoordinator && (isOwner || userHasPermission('settings_channels') || userHasPermission('settings_team') || userHasPermission('settings_roles') || userHasPermission('settings_wallet') || userHasPermission('settings_apps')) }
       ];
 
       navMap.forEach(item => {
@@ -6808,9 +6949,9 @@
 
       // 2. Sidebar Section Headers
       const canSales = isOwner || userHasPermission('opp_view') || userHasPermission('tasks_view');
-      const canMarketing = isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage') || userHasPermission('workflow_automate') || userHasPermission('leads_create') || userHasPermission('conv_attach_files');
-      const canInsights = isOwner || userHasPermission('reports_view') || userHasPermission('reports_staff_kpi');
-      const canSystem = isOwner || userHasPermission('settings_apps') || userHasPermission('settings_channels') || userHasPermission('settings_team') || userHasPermission('settings_roles') || userHasPermission('settings_wallet');
+      const canMarketing = !isCoordinator && (isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage') || userHasPermission('workflow_automate') || userHasPermission('leads_create') || userHasPermission('conv_attach_files'));
+      const canInsights = !isCoordinator && (isOwner || userHasPermission('reports_view') || userHasPermission('reports_staff_kpi'));
+      const canSystem = !isCoordinator && (isOwner || userHasPermission('settings_apps') || userHasPermission('settings_channels') || userHasPermission('settings_team') || userHasPermission('settings_roles') || userHasPermission('settings_wallet'));
 
       const secSales = document.getElementById('sec-header-sales');
       if (secSales) secSales.style.display = canSales ? '' : 'none';
@@ -6886,16 +7027,28 @@
       const btnTrModal = document.getElementById('btn-lead-modal-transfer');
       if (btnTrModal) btnTrModal.style.display = canTransferLead ? '' : 'none';
 
-      // 5. Dashboard Header Personalization
+      // 5. Dashboard Header Personalization & Admin Controls Isolation
       const dashTitle = document.getElementById('dash-banner-title');
       const dashSub = document.getElementById('dash-banner-subtitle');
       const memberBadge = document.getElementById('dash-member-badge');
 
       if (dashTitle) {
-        dashTitle.innerText = isOwner ? 'Sri Sri Plywoods Control Center' : 'Welcome, ' + user.name;
+        if (isOwner) {
+          dashTitle.innerText = 'Sri Sri Plywoods Control Center';
+        } else if (isCoordinator) {
+          dashTitle.innerText = 'Sales Coordinator Calling Desk';
+        } else {
+          dashTitle.innerText = 'Welcome, ' + user.name;
+        }
       }
       if (dashSub) {
-        dashSub.innerText = isOwner ? 'Enterprise CRM • Plywood, Laminates & Hardware Master Suite' : 'My Workspace • ' + user.role + ' Portal';
+        if (isOwner) {
+          dashSub.innerText = 'Enterprise CRM • Plywood, Laminates & Hardware Master Suite';
+        } else if (isCoordinator) {
+          dashSub.innerText = 'Daily Operations • Pending Follow-ups, Client Calls & Stage Conversions';
+        } else {
+          dashSub.innerText = 'My Workspace • ' + user.role + ' Portal';
+        }
       }
       if (memberBadge) {
         if (!isOwner) {
@@ -6906,6 +7059,20 @@
           memberBadge.classList.add('hidden');
         }
       }
+
+      // Hide Admin alert controls for Sales Coordinator / Regular Staff
+      const btnAdminWaAll = document.getElementById('btn-admin-wa-all-summary');
+      if (btnAdminWaAll) btnAdminWaAll.style.display = (!isCoordinator && (isOwner || isManager)) ? '' : 'none';
+
+      const btnAdminWaBacklog = document.getElementById('btn-admin-wa-backlog');
+      if (btnAdminWaBacklog) btnAdminWaBacklog.style.display = (!isCoordinator && (isOwner || isManager)) ? '' : 'none';
+
+      const cardCallingAlert = document.getElementById('dash-card-calling-team-alert');
+      if (cardCallingAlert) cardCallingAlert.style.display = (!isCoordinator && (isOwner || isManager)) ? '' : 'none';
+
+      const staffBreakdown = document.getElementById('dash-admin-staff-breakdown-container');
+      if (staffBreakdown) staffBreakdown.style.display = (!isCoordinator && (isOwner || isManager)) ? '' : 'none';
+
       if (window.lucide) lucide.createIcons();
     }
 
@@ -6913,14 +7080,32 @@
       if (!loggedInUser) return [];
       if (isCurrentUserSuperAdmin()) return leads;
 
-      // Super Admin, Manager, Sales Coordinator / Calling Person, or user with 'leads_view_all' / 'leads_distribute'
       const roleLower = (loggedInUser.role || '').toLowerCase();
       const isCoordinator = roleLower.includes('cordinator') || roleLower.includes('coordinator') || roleLower.includes('calling');
       const isManager = loggedInUser.role === 'Manager' || roleLower.includes('manager');
       const hasFullLeadAccess = userHasPermission('leads_view_all') || userHasPermission('leads_distribute');
 
-      if (isCoordinator || isManager || hasFullLeadAccess) {
+      // Manager or user with explicit full leads permissions
+      if (isManager || hasFullLeadAccess) {
         return leads;
+      }
+
+      // Sales Coordinator: sees ONLY leads she works on:
+      // 1. Leads assigned to her
+      // 2. Unassigned / fresh incoming leads needing qualification & calling
+      // 3. Leads assigned to "Sales Coordinator" / "Calling Team"
+      // (Does NOT see leads assigned to other specific sales representatives)
+      if (isCoordinator) {
+        const myEmail = (loggedInUser.email || '').toLowerCase().trim();
+        const myName = (loggedInUser.name || '').toLowerCase().trim();
+        return leads.filter(l => {
+          const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
+          const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
+          const isAssignedToMe = (lEmail && lEmail === myEmail) || (lName && (lName === myName || lName.includes(myName)));
+          const isUnassigned = !l.assignedTo || l.assignedTo === 'Unassigned' || l.assignedTo === '' || l.assignedTo === 'None';
+          const isRoleAssigned = lName.includes('coordinator') || lName.includes('cordinator') || lName.includes('calling');
+          return isAssignedToMe || isUnassigned || isRoleAssigned;
+        });
       }
 
       // If user lacks both leads_view and opp_view, zero access
@@ -6928,7 +7113,7 @@
         return [];
       }
 
-      // Regular member (e.g. the 4 sales persons): isolate strictly to their assigned leads
+      // Regular member (e.g. sales reps): isolate strictly to their assigned leads
       const myEmail = (loggedInUser.email || '').toLowerCase().trim();
       const myName = (loggedInUser.name || '').toLowerCase().trim();
 
@@ -7391,10 +7576,7 @@
     // ==================== OPPORTUNITIES & PIPELINES ====================
     function setOpportunityViewMode(mode) {
       opportunityViewMode = mode;
-      const bList = document.getElementById('btn-opp-view-list');
-      const bKanban = document.getElementById('btn-opp-view-kanban');
-      if (bList) bList.className = mode === 'list' ? 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-card text-gold shadow-xs' : 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-muted-custom hover:text-main';
-      if (bKanban) bKanban.className = mode === 'kanban' ? 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-card text-gold shadow-xs' : 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-muted-custom hover:text-main';
+      try { localStorage.setItem('sri_sri_opp_view_mode', mode); } catch(e){}
       renderOpportunities();
     }
 
@@ -7468,6 +7650,11 @@
       const listContainer = document.getElementById('opp-table-view-container');
       const kanbanContainer = document.getElementById('opp-kanban-view-container');
 
+      const bList = document.getElementById('btn-opp-view-list');
+      const bKanban = document.getElementById('btn-opp-view-kanban');
+      if (bList) bList.className = opportunityViewMode === 'list' ? 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-card text-gold shadow-xs' : 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-muted-custom hover:text-main';
+      if (bKanban) bKanban.className = opportunityViewMode === 'kanban' ? 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-card text-gold shadow-xs' : 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-muted-custom hover:text-main';
+
       if (opportunityViewMode === 'list') {
         if (listContainer) listContainer.classList.remove('hidden');
         if (kanbanContainer) kanbanContainer.classList.add('hidden');
@@ -7477,7 +7664,6 @@
         if (kanbanContainer) kanbanContainer.classList.remove('hidden');
         renderOpportunityKanbanBoard(filteredLeads, pipeline);
       }
-      lucide.createIcons();
     }
 
     let currentOppSortField = 'createdAt';
@@ -7656,6 +7842,7 @@
         return;
       }
 
+      const tbodyFrag = document.createDocumentFragment();
       filteredLeads.forEach(lead => {
         const leadPipeline = (Array.isArray(pipelines) && pipelines.find(p => p.id === lead.pipelineId)) || pipeline;
         const stg = (leadPipeline.stages && leadPipeline.stages.find(s => s.id === lead.stageId)) || 
@@ -7803,8 +7990,9 @@
           <td class="p-3 text-[11px] text-muted-custom col-city" onclick="handleTableCellClick(event, '${lead.id}')">${lead.city || lead.stateCity || '—'}</td>
 
         `;
-        tbody.appendChild(tr);
+        tbodyFrag.appendChild(tr);
       });
+      tbody.appendChild(tbodyFrag);
 
       // Synchronize top scrollbar track width with the table scrollWidth
       const topDummy = document.getElementById('opp-top-scroll-dummy');
@@ -7815,7 +8003,7 @@
 
       applyColumnPreferences();
       if (typeof updateBulkActionsState === 'function') updateBulkActionsState();
-      if (window.lucide) lucide.createIcons();
+      if (window.lucide) lucide.createIcons({ root: tbody });
     }
 
     function formatCreatedDate(isoString) {
@@ -8778,6 +8966,7 @@
       if (!container) return;
       container.innerHTML = '';
 
+      const boardFrag = document.createDocumentFragment();
       pipeline.stages.forEach(stg => {
         const colLeads = pipLeads.filter(l => l.stageId === stg.id);
         const col = document.createElement('div');
@@ -8804,9 +8993,10 @@
           </div>
           <div class="kanban-dropzone flex-1 p-3 overflow-y-auto custom-scrollbar space-y-2.5 min-h-[140px] transition-colors duration-150" id="kanban-stage-${stg.id}"></div>
         `;
-        container.appendChild(col);
+        boardFrag.appendChild(col);
 
         const cardContainer = col.querySelector('#kanban-stage-' + stg.id);
+        const colCardFrag = document.createDocumentFragment();
         colLeads.forEach(lead => {
           const card = document.createElement('div');
           card.id = 'kanban-card-' + lead.id;
@@ -8861,10 +9051,12 @@
               ${lead.nextFollowUp ? '<button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead(\'' + lead.id + '\')" class="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"><i data-lucide="clock" class="w-2.5 h-2.5 text-gold"></i> ' + formatFollowupDate(lead.nextFollowUp) + '</button>' : '<button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead(\'' + lead.id + '\')" class="px-2 py-0.5 rounded bg-amber-500/10 text-gold hover:bg-gold hover:text-slate-950 font-bold transition flex items-center gap-1 cursor-pointer"><i data-lucide="clock" class="w-2.5 h-2.5"></i> ⏱️ Reattempt</button>'}
             </div>
           `;
-          cardContainer.appendChild(card);
+          colCardFrag.appendChild(card);
         });
+        cardContainer.appendChild(colCardFrag);
       });
-      if (window.lucide) lucide.createIcons();
+      container.appendChild(boardFrag);
+      if (window.lucide) lucide.createIcons({ root: container });
     }
 
     // ==================== TABBED NAVIGATION FOR LEAD MODAL ====================
@@ -10944,8 +11136,17 @@
           if (btnCall) btnCall.onclick = () => initiateCallWithLogging(urgentLead.id);
           const btnWaClient = document.getElementById('dash-30m-btn-wa-client');
           if (btnWaClient) btnWaClient.onclick = () => openWhatsAppComposerModal(urgentLead.id);
+          const isOwner = isCurrentUserSuperAdmin();
+          const roleLower = (loggedInUser && loggedInUser.role || '').toLowerCase();
+          const isCoordinator = roleLower.includes('cordinator') || roleLower.includes('coordinator') || roleLower.includes('calling');
+          const isManager = loggedInUser && (loggedInUser.role === 'Manager' || roleLower.includes('manager'));
+          const canAlertStaff = (isOwner || isManager) && !isCoordinator;
+
           const btnWaStaff = document.getElementById('dash-30m-btn-wa-staff');
-          if (btnWaStaff) btnWaStaff.onclick = () => sendStaffFollowupAlertWhatsApp(urgentLead.id, '30M');
+          if (btnWaStaff) {
+            btnWaStaff.style.display = canAlertStaff ? '' : 'none';
+            btnWaStaff.onclick = () => openCallingTeamWaModal(null, urgentLead.id);
+          }
         }
 
         // 2. Update Global Floating Banner
@@ -10963,7 +11164,10 @@
           const gWa = document.getElementById('global-30m-btn-wa');
           if (gWa) gWa.onclick = () => { dismissGlobal30mBanner(); openWhatsAppComposerModal(urgentLead.id); };
           const gStaff = document.getElementById('global-30m-btn-wa-staff');
-          if (gStaff) gStaff.onclick = () => { dismissGlobal30mBanner(); sendStaffFollowupAlertWhatsApp(urgentLead.id, '30M'); };
+          if (gStaff) {
+            gStaff.style.display = canAlertStaff ? '' : 'none';
+            gStaff.onclick = () => { dismissGlobal30mBanner(); openCallingTeamWaModal(null, urgentLead.id); };
+          }
         }
 
         // Audio chime and notification if new
@@ -11213,6 +11417,14 @@
             const item = document.createElement('div');
             item.className = 'p-3.5 rounded-2xl border ' + borderClass + ' flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs transition hover:border-gold';
 
+            const isOwner = isCurrentUserSuperAdmin();
+            const roleLower = (loggedInUser && loggedInUser.role || '').toLowerCase();
+            const isCoordinator = roleLower.includes('cordinator') || roleLower.includes('coordinator') || roleLower.includes('calling');
+            const isManager = loggedInUser && (loggedInUser.role === 'Manager' || roleLower.includes('manager'));
+            const canAlertStaff = (isOwner || isManager) && !isCoordinator;
+
+            const alertStaffBtnHtml = canAlertStaff ? ('<button type="button" onclick="openCallingTeamWaModal(null, \'' + lead.id + '\')" class="px-2.5 py-1.5 rounded-xl border border-gold/40 text-gold hover:bg-gold hover:text-slate-950 text-xs font-bold transition flex items-center gap-1" title="Send WhatsApp Alert to Staff"><i data-lucide="send" class="w-3.5 h-3.5"></i><span>Alert Staff</span></button>') : '';
+
             item.innerHTML = `
               <div class="space-y-1">
                 <div class="flex items-center gap-2 flex-wrap">
@@ -11233,265 +11445,451 @@
               <div class="flex items-center gap-1.5 self-end md:self-auto shrink-0" onclick="event.stopPropagation()">
                 ${cleanPhone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="px-2.5 py-1.5 rounded-xl bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white text-xs font-bold transition flex items-center gap-1" title="Call & Log Outcome"><i data-lucide="phone" class="w-3.5 h-3.5"></i><span>Call</span></button>' : ''}
                 ${cleanPhone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500 hover:text-white text-xs font-bold transition flex items-center gap-1" title="Send WhatsApp Message & Log"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i><span>WhatsApp</span></button>' : ''}
-                <button type="button" onclick="sendStaffFollowupAlertWhatsApp(\'' + lead.id + '\')" class="px-2.5 py-1.5 rounded-xl border border-gold/40 text-gold hover:bg-gold hover:text-slate-950 text-xs font-bold transition flex items-center gap-1" title="Send WhatsApp Alert to Staff">
-                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                  <span>Alert Staff</span>
-                </button>
+                ${alertStaffBtnHtml}
                 <button type="button" onclick="openLeadModal(\'' + lead.id + '\')" class="px-2.5 py-1.5 rounded-xl border border-main bg-subtle text-xs font-bold text-main hover:border-gold transition">Open</button>
               </div>
             `;
             stream.appendChild(item);
-          });
-        }
-      }
-
-      // Admin & Manager View: Staff-Wise Pending Work Breakdown
-      const adminContainer = document.getElementById('dash-admin-staff-breakdown-container');
-      const adminBtnAll = document.getElementById('btn-admin-wa-all-summary');
-      const isOwnerOrManager = isCurrentUserSuperAdmin() || (loggedInUser && loggedInUser.role === 'Manager');
-
-      if (adminContainer) {
-        if (isOwnerOrManager) {
-          adminContainer.classList.remove('hidden');
-          if (adminBtnAll) adminBtnAll.classList.remove('hidden');
-
-          const tbody = document.getElementById('dash-staff-breakdown-tbody');
-          if (tbody) {
-            tbody.innerHTML = '';
-            const activeStaff = users.filter(u => u.status === 'Active');
-
-            activeStaff.forEach(u => {
-              const uEmail = (u.email || '').toLowerCase().trim();
-              const uName = (u.name || '').toLowerCase().trim();
-
-              const myLeads = leads.filter(l => {
-                const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
-                const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
-                return (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
-              });
-
-              let uTodayOverdue = 0, uBacklogOverdue = 0, uDueToday = 0, uCallingQueue = 0;
-              myLeads.forEach(l => {
-                const p = pipelines.find(x => x.id === l.pipelineId);
-                const stg = p ? p.stages.find(s => s.id === l.stageId) : null;
-                if (stg && (stg.isWon || stg.isLost)) return;
-
-                const hasContact = l.lastContactAttempt || (l.activities && l.activities.length > 0);
-                if (l.nextFollowUp) {
-                  const due = new Date(l.nextFollowUp);
-                  if (!isNaN(due.getTime())) {
-                    uCallingQueue++;
-                    if (due < startOfToday) {
-                      uBacklogOverdue++;
-                    } else if (due <= endOfToday) {
-                      if (due - now < -60000) uTodayOverdue++;
-                      else uDueToday++;
-                    }
-                  }
-                } else if (!hasContact) {
-                  uCallingQueue++;
-                }
-              });
-
-              const tr = document.createElement('tr');
-              tr.className = 'hover:bg-subtle/50 transition border-b border-main/30 text-xs';
-
-              const todayOverdueBadge = uTodayOverdue > 0 ?
-                '<span class="px-2 py-0.5 rounded-full font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">' + uTodayOverdue + ' Today</span>' :
-                '<span class="text-muted-custom">0</span>';
-
-              const backlogBadge = uBacklogOverdue > 0 ?
-                '<span class="px-2 py-0.5 rounded-full font-bold bg-orange-500/15 text-orange-400 border border-orange-500/30">' + uBacklogOverdue + ' Backlog</span>' :
-                '<span class="text-muted-custom">0</span>';
-
-              const todayBadge = uDueToday > 0 ?
-                '<span class="px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">' + uDueToday + ' Today</span>' :
-                '<span class="text-muted-custom">0</span>';
-
-              const queueBadge = uCallingQueue > 0 ?
-                '<span class="font-bold text-main font-mono px-2 py-0.5 rounded bg-amber-500/10 text-gold border border-gold/30">' + uCallingQueue + ' calls</span>' :
-                '<span class="text-emerald-400 font-bold">✓ Clear</span>';
-
-              tr.innerHTML = `
-                <td class="p-3">
-                  <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full ${(uTodayOverdue > 0 || uBacklogOverdue > 0) ? 'bg-rose-500 animate-pulse' : 'bg-emerald-400'}"></span>
-                    <div>
-                      <p class="font-extrabold text-main">${escapeHtml(u.name)}</p>
-                      <p class="text-[10px] text-muted-custom">${escapeHtml(u.role || 'Staff')}</p>
-                    </div>
-                  </div>
-                </td>
-                <td class="p-3 font-mono text-muted-custom">${u.mobile || u.phone || '—'}</td>
-                <td class="p-3 text-center">${todayOverdueBadge}</td>
-                <td class="p-3 text-center">${backlogBadge}</td>
-                <td class="p-3 text-center">${todayBadge}</td>
-                <td class="p-3 text-center">${queueBadge}</td>
-                <td class="p-3 text-right">
-                  <div class="flex items-center justify-end gap-1.5">
-                    ${uCallingQueue > 0 ? '<button type="button" onclick="sendStaffPendingWorkWhatsApp(\'' + u.id + '\')" class="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500 hover:text-white font-bold text-xs transition flex items-center gap-1" title="Send WhatsApp Work Summary to Staff"><i data-lucide="send" class="w-3 h-3"></i><span>WhatsApp</span></button>' : ''}
-                  </div>
-                </td>
-              `;
-              tbody.appendChild(tr);
             });
           }
-        } else {
-          adminContainer.classList.add('hidden');
-          if (adminBtnAll) adminBtnAll.classList.add('hidden');
         }
+
+        // Admin & Manager View: Staff-Wise Pending Work Breakdown (Hidden for Sales Coordinator)
+        const adminContainer = document.getElementById('dash-admin-staff-breakdown-container');
+        const adminBtnAll = document.getElementById('btn-admin-wa-all-summary');
+        const roleLower = (loggedInUser && loggedInUser.role || '').toLowerCase();
+        const isCoordinator = roleLower.includes('cordinator') || roleLower.includes('coordinator') || roleLower.includes('calling');
+        const isOwnerOrManager = !isCoordinator && (isCurrentUserSuperAdmin() || (loggedInUser && (loggedInUser.role === 'Manager' || roleLower.includes('manager'))));
+
+        if (adminContainer) {
+          if (isOwnerOrManager) {
+            adminContainer.classList.remove('hidden');
+            if (adminBtnAll) adminBtnAll.classList.remove('hidden');
+
+            const tbody = document.getElementById('dash-staff-breakdown-tbody');
+            if (tbody) {
+              tbody.innerHTML = '';
+              const activeStaff = users.filter(u => u.status === 'Active');
+
+              activeStaff.forEach(u => {
+                const uEmail = (u.email || '').toLowerCase().trim();
+                const uName = (u.name || '').toLowerCase().trim();
+
+                const myLeads = leads.filter(l => {
+                  const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
+                  const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
+                  return (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
+                });
+
+                let uTodayOverdue = 0, uBacklogOverdue = 0, uDueToday = 0, uCallingQueue = 0;
+                myLeads.forEach(l => {
+                  const p = pipelines.find(x => x.id === l.pipelineId);
+                  const stg = p ? p.stages.find(s => s.id === l.stageId) : null;
+                  if (stg && (stg.isWon || stg.isLost)) return;
+
+                  const hasContact = l.lastContactAttempt || (l.activities && l.activities.length > 0);
+                  if (l.nextFollowUp) {
+                    const due = new Date(l.nextFollowUp);
+                    if (!isNaN(due.getTime())) {
+                      uCallingQueue++;
+                      if (due < startOfToday) {
+                        uBacklogOverdue++;
+                      } else if (due <= endOfToday) {
+                        if (due - now < -60000) uTodayOverdue++;
+                        else uDueToday++;
+                      }
+                    }
+                  } else if (!hasContact) {
+                    uCallingQueue++;
+                  }
+                });
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-subtle/50 transition border-b border-main/30 text-xs';
+
+                const todayOverdueBadge = uTodayOverdue > 0 ?
+                  '<span class="px-2 py-0.5 rounded-full font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">' + uTodayOverdue + ' Today</span>' :
+                  '<span class="text-muted-custom">0</span>';
+
+                const backlogBadge = uBacklogOverdue > 0 ?
+                  '<span class="px-2 py-0.5 rounded-full font-bold bg-orange-500/15 text-orange-400 border border-orange-500/30">' + uBacklogOverdue + ' Backlog</span>' :
+                  '<span class="text-muted-custom">0</span>';
+
+                const todayBadge = uDueToday > 0 ?
+                  '<span class="px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">' + uDueToday + ' Today</span>' :
+                  '<span class="text-muted-custom">0</span>';
+
+                const queueBadge = uCallingQueue > 0 ?
+                  '<span class="font-bold text-main font-mono px-2 py-0.5 rounded bg-amber-500/10 text-gold border border-gold/30">' + uCallingQueue + ' calls</span>' :
+                  '<span class="text-emerald-400 font-bold">✓ Clear</span>';
+
+                tr.innerHTML = `
+                  <td class="p-3">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full ${(uTodayOverdue > 0 || uBacklogOverdue > 0) ? 'bg-rose-500 animate-pulse' : 'bg-emerald-400'}"></span>
+                      <div>
+                        <p class="font-extrabold text-main">${escapeHtml(u.name)}</p>
+                        <p class="text-[10px] text-muted-custom">${escapeHtml(u.role || 'Staff')}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="p-3 font-mono text-muted-custom">${u.mobile || u.phone || '—'}</td>
+                  <td class="p-3 text-center">${todayOverdueBadge}</td>
+                  <td class="p-3 text-center">${backlogBadge}</td>
+                  <td class="p-3 text-center">${todayBadge}</td>
+                  <td class="p-3 text-center">${queueBadge}</td>
+                  <td class="p-3 text-right">
+                    <div class="flex items-center justify-end gap-1.5">
+                      ${uCallingQueue > 0 ? '<button type="button" onclick="openCallingTeamWaModal(\'' + u.id + '\')" class="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500 hover:text-white font-bold text-xs transition flex items-center gap-1" title="Send WhatsApp Work Summary to Staff"><i data-lucide="send" class="w-3 h-3"></i><span>WhatsApp</span></button>' : ''}
+                    </div>
+                  </td>
+                `;
+                tbody.appendChild(tr);
+              });
+            }
+          } else {
+            adminContainer.classList.add('hidden');
+            if (adminBtnAll) adminBtnAll.classList.add('hidden');
+          }
+        }
+
+        if (window.lucide) lucide.createIcons();
       }
 
-      if (window.lucide) lucide.createIcons();
-    }
+      // =============================================================
+      // ====== CALLING PERSON WHATSAPP ALERT MODAL & LOGIC ==========
+      // =============================================================
 
-    function sendBacklogCallingWhatsAppAlerts() {
-      const now = new Date();
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      let currentCallingWaStaffId = null;
+      let currentCallingWaSpecificLeadId = null;
 
-      const backlogLeads = leads.filter(lead => {
-        const p = pipelines.find(x => x.id === lead.pipelineId);
-        const stg = p ? p.stages.find(s => s.id === lead.stageId) : null;
-        if (stg && (stg.isWon || stg.isLost)) return false;
+      function getStaffPendingCallingLeads(staffUser) {
+        if (!staffUser) return { overdue: [], upcoming30m: [], dueToday: [], backlog: [], allPending: [] };
 
-        const hasContact = lead.lastContactAttempt || (lead.activities && lead.activities.length > 0);
-        if (lead.nextFollowUp) {
-          const due = new Date(lead.nextFollowUp);
-          return due < startOfToday;
-        }
-        return !hasContact;
-      });
+        const uEmail = (staffUser.email || '').toLowerCase().trim();
+        const uName = (staffUser.name || '').toLowerCase().trim();
+        const uRole = (staffUser.role || '').toLowerCase().trim();
+        const isStaffCoordinator = uRole.includes('coordinator') || uRole.includes('cordinator') || uRole.includes('calling');
 
-      if (backlogLeads.length === 0) {
-        showToast('🎉 Shabaash! Koi bhi backlog pending nahi hai! All work is up-to-date.', 'success');
-        return;
-      }
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
-      const activeStaff = users.filter(u => u.status === 'Active');
-      let msg = '📢 *SRI SRI PLYWOODS - CALLING TEAM BACKLOG ALERT*\n';
-      msg += '⏰ Date: ' + now.toLocaleDateString('en-IN') + '\n';
-      msg += '📊 Kul Backlog Calling Leads: ' + backlogLeads.length + '\n\n';
-      msg += 'Kripya sabhi calling executive niche diye gaye puraane follow-ups aur uncontacted leads ko turant clear karein:\n';
+        const overdue = [];
+        const upcoming30m = [];
+        const dueToday = [];
+        const backlog = [];
+        const allPending = [];
 
-      activeStaff.forEach(u => {
-        const uEmail = (u.email || '').toLowerCase().trim();
-        const uName = (u.name || '').toLowerCase().trim();
-        const staffBacklog = backlogLeads.filter(l => {
-          const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
-          const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
-          return (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
+        leads.forEach(lead => {
+          const lEmail = (lead.assignedToEmail || '').toLowerCase().trim();
+          const lName = (lead.assignedToName || lead.assignedTo || '').toLowerCase().trim();
+          const matchesStaff = (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
+          const isUnassigned = !lead.assignedTo || lead.assignedTo === 'Unassigned' || lead.assignedTo === '' || lead.assignedTo === 'None';
+          const isRoleAssigned = lName.includes('coordinator') || lName.includes('cordinator') || lName.includes('calling');
+
+          // If staff is coordinator, include unassigned and role-assigned leads
+          const belongsToStaff = matchesStaff || (isStaffCoordinator && (isUnassigned || isRoleAssigned));
+          if (!belongsToStaff) return;
+
+          const p = pipelines.find(x => x.id === lead.pipelineId);
+          const stg = p ? p.stages.find(s => s.id === lead.stageId) : null;
+          if (stg && (stg.isWon || stg.isLost)) return;
+
+          allPending.push(lead);
+
+          const hasContact = lead.lastContactAttempt || (lead.activities && lead.activities.length > 0);
+          if (lead.nextFollowUp) {
+            const due = new Date(lead.nextFollowUp);
+            if (!isNaN(due.getTime())) {
+              if (due < startOfToday) {
+                backlog.push(lead);
+              } else if (due <= endOfToday) {
+                const diffMins = Math.round((due - now) / 60000);
+                if (diffMins < -1) {
+                  overdue.push(lead);
+                } else if (diffMins >= 0 && diffMins <= 30) {
+                  upcoming30m.push(lead);
+                } else {
+                  dueToday.push(lead);
+                }
+              }
+            }
+          } else if (!hasContact) {
+            const created = lead.createdAt ? new Date(lead.createdAt) : null;
+            if (created && created < startOfToday) {
+              backlog.push(lead);
+            } else {
+              overdue.push(lead);
+            }
+          }
         });
-        if (staffBacklog.length > 0) {
-          msg += '👤 ' + u.name + ': ' + staffBacklog.length + ' backlog leads pending\n';
+
+        return { overdue, upcoming30m, dueToday, backlog, allPending };
+      }
+
+      function buildCallingStaffSummaryBullets(staffUser, specificLead = null) {
+        if (!staffUser) return '';
+        const work = getStaffPendingCallingLeads(staffUser);
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        let text = `🚨 *SRI SRI PLYWOODS - CALLING WORK ALERT*\n`;
+        text += `👤 *Executive:* ${staffUser.name} (${staffUser.role || 'Calling Person'})\n`;
+        text += `📅 *Date:* ${dateStr} • ${timeStr}\n\n`;
+
+        text += `📊 *CALLING DASHBOARD SUMMARY:*\n`;
+        text += `• 🔴 Overdue Calls: *${work.overdue.length}*\n`;
+        text += `• 🟡 Due in 30 Mins: *${work.upcoming30m.length}*\n`;
+        text += `• 🔵 Due Today: *${work.dueToday.length}*\n`;
+        text += `• 🟣 Older Backlog / Fresh: *${work.backlog.length}*\n`;
+        text += `• 📋 Total Work Pending: *${work.allPending.length} Leads*\n\n`;
+
+        if (specificLead) {
+          const pipeName = pipelines.find(x => x.id === specificLead.pipelineId)?.name || 'General Inquiry';
+          const dueTime = specificLead.nextFollowUp ? formatFollowupDate(specificLead.nextFollowUp) : 'Immediate action';
+          const clientNote = stripHtmlTags(specificLead.nextFollowUpNote || specificLead.notes || specificLead.materialType || 'Plywood & Hardware Inquiry');
+          text += `⭐ *TARGET URGENT LEAD:*\n`;
+          text += `• *Client:* ${specificLead.name} (${specificLead.phone || 'No phone'})\n`;
+          text += `  - Pipeline: ${pipeName}\n`;
+          text += `  - Due Time: ${dueTime}\n`;
+          text += `  - Note: ${clientNote}\n`;
+          if (specificLead.dealValue || specificLead.budget) text += `  - Deal Value: ${specificLead.dealValue || specificLead.budget}\n`;
+          text += `\n`;
         }
-      });
 
-      msg += '\nKripya CRM open karke Calling Queue se 1-by-1 call karein aur outcome save karein.';
+        text += `📝 *PRIORITY CALL LIST (TOP PENDING WORK):*\n`;
+        const priorityQueue = [...work.upcoming30m, ...work.overdue, ...work.dueToday, ...work.backlog];
+        const queueFiltered = specificLead ? priorityQueue.filter(l => l.id !== specificLead.id) : priorityQueue;
+        const topBatch = queueFiltered.slice(0, 8);
 
-      const adminPhone = (defaultSuperAdmin && (defaultSuperAdmin.mobile || defaultSuperAdmin.phone)) ? (defaultSuperAdmin.mobile || defaultSuperAdmin.phone).replace(/[^0-9]/g, '') : '9813840800';
-      const waUrl = 'https://wa.me/91' + adminPhone + '?text=' + encodeURIComponent(msg);
-      window.open(waUrl, '_blank');
-      showToast('Calling Team Backlog alert prepared for WhatsApp!', 'success');
-    }
-
-    function sendStaffFollowupAlertWhatsApp(leadId, type = 'OVERDUE') {
-      const lead = leads.find(l => l.id === leadId);
-      if (!lead) {
-        showToast('Lead record not found.', 'error');
-        return;
-      }
-
-      // Find assigned staff user
-      const uEmail = (lead.assignedToEmail || '').toLowerCase().trim();
-      const uName = (lead.assignedToName || lead.assignedTo || '').toLowerCase().trim();
-      const staffUser = users.find(u => {
-        const email = (u.email || '').toLowerCase().trim();
-        const name = (u.name || '').toLowerCase().trim();
-        return (email && email === uEmail) || (name && name === uName);
-      }) || defaultSuperAdmin;
-
-      const staffPhone = (staffUser.mobile || staffUser.phone || defaultSuperAdmin.mobile || '7901856153').replace(/[^0-9]/g, '');
-      const staffName = staffUser.name || 'Team Member';
-      const scheduledTime = formatFollowupDate(lead.nextFollowUp);
-      const requirement = lead.nextFollowUpNote || lead.notes || lead.materialType || 'Plywood Inquiry';
-
-      let msg = '';
-      if (type === '30M') {
-        msg = '⏰ Sri Sri Ply Reminder: *' + staffName + '*, lead *' + lead.name + '* (' + (lead.phone || 'No phone') + ') ka follow-up agle 30 MINUTE mein scheduled hai! Due Time: *' + scheduledTime + '*. Notes: ' + requirement + '. Kripya ready rahein aur client se baat karein.';
-      } else {
-        msg = '🚨 Sri Sri Ply Alert: *' + staffName + '*, lead *' + lead.name + '* (' + (lead.phone || 'No phone') + ') ka follow-up OVERDUE ho chuka hai! Due Time tha: *' + scheduledTime + '*. Requirement: ' + requirement + '. Kripya turant is lead par call/action lein!';
-      }
-
-      const waUrl = 'https://wa.me/91' + staffPhone + '?text=' + encodeURIComponent(msg);
-      window.open(waUrl, '_blank');
-      showToast('WhatsApp alert opened for ' + staffName + ' (' + staffPhone + ')', 'success');
-    }
-
-    function sendStaffPendingWorkWhatsApp(userId) {
-      const staff = users.find(u => u.id === userId);
-      if (!staff) {
-        showToast('Staff profile not found.', 'error');
-        return;
-      }
-
-      const uEmail = (staff.email || '').toLowerCase().trim();
-      const uName = (staff.name || '').toLowerCase().trim();
-      const now = new Date();
-
-      const myPending = leads.filter(l => {
-        const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
-        const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
-        const matchesStaff = (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
-        if (!matchesStaff) return false;
-
-        const p = pipelines.find(x => x.id === l.pipelineId);
-        const stg = p ? p.stages.find(s => s.id === l.stageId) : null;
-        if (stg && (stg.isWon || stg.isLost)) return false;
-
-        if (l.nextFollowUp) return true;
-        if (!l.lastContactAttempt && (!l.activities || l.activities.length === 0)) return true;
-        return false;
-      });
-
-      if (myPending.length === 0) {
-        showToast(staff.name + ' has no pending or overdue work!', 'info');
-        return;
-      }
-
-      let summaryList = '';
-      myPending.slice(0, 8).forEach((l, idx) => {
-        const due = l.nextFollowUp ? formatFollowupDate(l.nextFollowUp) : 'Immediate action required';
-        summaryList += '\n' + (idx + 1) + '. *' + l.name + '* (' + (l.phone || 'No phone') + ') - ' + due + ' [' + (l.nextFollowUpNote || l.notes || 'Inquiry') + ']';
-      });
-
-      const staffPhone = (staff.mobile || staff.phone || defaultSuperAdmin.mobile || '7901856153').replace(/[^0-9]/g, '');
-      const msg = '📋 Sri Sri Ply CRM - Pending Work Summary for *' + staff.name + '*:\nAapke kul *' + myPending.length + ' leads* par work pending/overdue hai:' + summaryList + '\n\nKripya aaj inpar call karke status update karein. - Sri Sri Admin';
-
-      const waUrl = 'https://wa.me/91' + staffPhone + '?text=' + encodeURIComponent(msg);
-      window.open(waUrl, '_blank');
-      showToast('WhatsApp summary opened for ' + staff.name, 'success');
-    }
-
-    function sendPendingWorkWhatsAppSummaryToAll() {
-      const activeStaff = users.filter(u => u.status === 'Active');
-      let foundAny = false;
-      activeStaff.forEach(u => {
-        const uEmail = (u.email || '').toLowerCase().trim();
-        const uName = (u.name || '').toLowerCase().trim();
-        const count = leads.filter(l => {
-          const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
-          const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
-          return (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
-        }).length;
-        if (count > 0 && !foundAny) {
-          sendStaffPendingWorkWhatsApp(u.id);
-          foundAny = true;
+        if (topBatch.length === 0 && !specificLead) {
+          text += `• Shabaash! Filhal koi pending calls nahi hain. Calling queue clean hai.\n\n`;
+        } else {
+          topBatch.forEach((l, idx) => {
+            const pipe = pipelines.find(x => x.id === l.pipelineId)?.name || 'Direct';
+            const due = l.nextFollowUp ? formatFollowupDate(l.nextFollowUp) : 'Action pending';
+            const note = stripHtmlTags(l.nextFollowUpNote || l.notes || 'Inquiry');
+            text += `• *${idx + 1}. ${l.name}* (${l.phone || 'No phone'})\n`;
+            text += `  - Follow-up: ${due}\n`;
+            text += `  - Pipeline: ${pipe} | Note: ${note.substring(0, 45)}\n`;
+          });
+          if (queueFiltered.length > 8) {
+            text += `\n...aur ${queueFiltered.length - 8} leads Calling Queue mein pending hain.\n`;
+          }
+          text += `\n`;
         }
-      });
-      if (!foundAny) {
-        showToast('No active staff member has pending leads right now.', 'info');
+
+        text += `📌 *Calling Instructions:*\n`;
+        text += `1. Kripya CRM Calling Queue open karein.\n`;
+        text += `2. Har client ko call karke outcome aur next follow-up date note karein.\n`;
+        text += `3. Overdue aur 30m alerts ko sabse pehle clear karein.\n\n`;
+        text += `- *Sri Sri Plywoods Control Center*`;
+
+        return text;
       }
-    }
+
+      function openCallingTeamWaModal(preselectedUserId = null, preselectedLeadId = null) {
+        currentCallingWaSpecificLeadId = preselectedLeadId || null;
+
+        const selectEl = document.getElementById('cwa-staff-select');
+        if (!selectEl) return;
+        selectEl.innerHTML = '';
+
+        const activeUsers = users.filter(u => u.status === 'Active' || !u.status);
+
+        let targetUser = null;
+
+        if (preselectedUserId) {
+          targetUser = activeUsers.find(u => u.id === preselectedUserId);
+        } else if (preselectedLeadId) {
+          const lead = leads.find(l => l.id === preselectedLeadId);
+          if (lead) {
+            const lEmail = (lead.assignedToEmail || '').toLowerCase().trim();
+            const lName = (lead.assignedToName || lead.assignedTo || '').toLowerCase().trim();
+            targetUser = activeUsers.find(u => {
+              const uEmail = (u.email || '').toLowerCase().trim();
+              const uName = (u.name || '').toLowerCase().trim();
+              return (uEmail && uEmail === lEmail) || (uName && (uName === lName || uName.includes(lName)));
+            });
+          }
+        }
+
+        if (!targetUser) {
+          targetUser = activeUsers.find(u => {
+            const r = (u.role || '').toLowerCase();
+            return r.includes('coordinator') || r.includes('cordinator') || r.includes('calling');
+          }) || activeUsers.find(u => u.role !== 'Organization Admin') || activeUsers[0] || defaultSuperAdmin;
+        }
+
+        activeUsers.forEach(u => {
+          const work = getStaffPendingCallingLeads(u);
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          const phoneLabel = u.mobile || u.phone ? ` • 📞 +91 ${u.mobile || u.phone}` : ' • ⚠️ No WhatsApp Set';
+          opt.innerText = `${u.name} (${u.role || 'Staff'}) — ${work.allPending.length} Pending Leads${phoneLabel}`;
+          if (targetUser && u.id === targetUser.id) opt.selected = true;
+          selectEl.appendChild(opt);
+        });
+
+        currentCallingWaStaffId = targetUser ? targetUser.id : (activeUsers[0] ? activeUsers[0].id : null);
+        renderCallingWaStaffCard(targetUser);
+
+        openModal('calling-team-wa-modal');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function renderCallingWaStaffCard(staffUser) {
+        if (!staffUser) return;
+        currentCallingWaStaffId = staffUser.id;
+
+        const roleBadge = document.getElementById('cwa-staff-role-badge');
+        if (roleBadge) roleBadge.innerText = staffUser.role || 'Calling Person';
+
+        const accInfo = document.getElementById('cwa-account-info');
+        if (accInfo) accInfo.innerText = 'Account: ' + (staffUser.email || staffUser.name || 'Sri Sri Team');
+
+        const phoneInput = document.getElementById('cwa-whatsapp-number');
+        const cleanMobile = (staffUser.mobile || staffUser.phone || '').replace(/[^0-9]/g, '').slice(-10);
+        if (phoneInput) phoneInput.value = cleanMobile;
+
+        const work = getStaffPendingCallingLeads(staffUser);
+        const elOverdue = document.getElementById('cwa-stat-overdue');
+        if (elOverdue) elOverdue.innerText = work.overdue.length;
+        const el30m = document.getElementById('cwa-stat-30m');
+        if (el30m) el30m.innerText = work.upcoming30m.length;
+        const elToday = document.getElementById('cwa-stat-today');
+        if (elToday) elToday.innerText = work.dueToday.length;
+        const elBacklog = document.getElementById('cwa-stat-backlog');
+        if (elBacklog) elBacklog.innerText = work.backlog.length;
+
+        const specificLead = currentCallingWaSpecificLeadId ? leads.find(l => l.id === currentCallingWaSpecificLeadId) : null;
+        const msgArea = document.getElementById('cwa-message-text');
+        if (msgArea) {
+          msgArea.value = buildCallingStaffSummaryBullets(staffUser, specificLead);
+        }
+      }
+
+      function onCallingStaffSelectChange(userId) {
+        const staffUser = users.find(u => u.id === userId) || (defaultSuperAdmin.id === userId ? defaultSuperAdmin : null);
+        if (staffUser) {
+          renderCallingWaStaffCard(staffUser);
+        }
+      }
+
+      function onCallingStaffNumberInput() {
+        const phoneInput = document.getElementById('cwa-whatsapp-number');
+        if (!phoneInput) return;
+        phoneInput.value = phoneInput.value.replace(/[^0-9]/g, '').slice(0, 10);
+      }
+
+      function saveStaffWhatsAppNumberFromModal() {
+        if (!currentCallingWaStaffId) {
+          showToast('Please select a staff member first.', 'warning');
+          return;
+        }
+        const phoneInput = document.getElementById('cwa-whatsapp-number');
+        const newPhone = phoneInput ? phoneInput.value.replace(/[^0-9]/g, '').slice(-10) : '';
+
+        if (!newPhone || newPhone.length < 10) {
+          showToast('Please enter a valid 10-digit WhatsApp mobile number.', 'error');
+          return;
+        }
+
+        const staffIdx = users.findIndex(u => u.id === currentCallingWaStaffId);
+        if (staffIdx !== -1) {
+          users[staffIdx].mobile = newPhone;
+          users[staffIdx].phone = newPhone;
+          localStorage.setItem('sri_sri_users', JSON.stringify(users));
+
+          if (loggedInUser && loggedInUser.id === currentCallingWaStaffId) {
+            loggedInUser.mobile = newPhone;
+            loggedInUser.phone = newPhone;
+            sessionStorage.setItem('sri_sri_active_session', JSON.stringify(loggedInUser));
+            const profileMobile = document.getElementById('profile-edit-mobile');
+            if (profileMobile) profileMobile.value = newPhone;
+          }
+
+          const selectEl = document.getElementById('cwa-staff-select');
+          if (selectEl) {
+            const opt = selectEl.querySelector(`option[value="${currentCallingWaStaffId}"]`);
+            if (opt) {
+              const work = getStaffPendingCallingLeads(users[staffIdx]);
+              opt.innerText = `${users[staffIdx].name} (${users[staffIdx].role || 'Staff'}) — ${work.allPending.length} Pending Leads • 📞 +91 ${newPhone}`;
+            }
+          }
+
+          showToast(`✓ WhatsApp number (+91 ${newPhone}) saved to ${users[staffIdx].name}'s profile!`, 'success');
+        } else {
+          showToast('Staff user profile not found.', 'error');
+        }
+      }
+
+      function regenerateCallingWaMessage() {
+        const staffUser = users.find(u => u.id === currentCallingWaStaffId) || defaultSuperAdmin;
+        const specificLead = currentCallingWaSpecificLeadId ? leads.find(l => l.id === currentCallingWaSpecificLeadId) : null;
+        const msgArea = document.getElementById('cwa-message-text');
+        if (msgArea) {
+          msgArea.value = buildCallingStaffSummaryBullets(staffUser, specificLead);
+          showToast('WhatsApp summary refreshed with current work items.', 'info');
+        }
+      }
+
+      function copyCallingWaMessage() {
+        const msgArea = document.getElementById('cwa-message-text');
+        if (!msgArea || !msgArea.value) {
+          showToast('No message text to copy.', 'warning');
+          return;
+        }
+        navigator.clipboard.writeText(msgArea.value).then(() => {
+          showToast('✓ WhatsApp message copied to clipboard!', 'success');
+        }).catch(() => {
+          msgArea.select();
+          document.execCommand('copy');
+          showToast('✓ WhatsApp message copied to clipboard!', 'success');
+        });
+      }
+
+      function sendCallingWaMessageNow() {
+        const phoneInput = document.getElementById('cwa-whatsapp-number');
+        let phone = phoneInput ? phoneInput.value.replace(/[^0-9]/g, '').slice(-10) : '';
+
+        if (!phone || phone.length < 10) {
+          showToast('Kripya calling person ka 10-digit WhatsApp number dalein.', 'error');
+          if (phoneInput) phoneInput.focus();
+          return;
+        }
+
+        const msgArea = document.getElementById('cwa-message-text');
+        const msg = msgArea ? msgArea.value : '';
+        if (!msg) {
+          showToast('Message cannot be empty.', 'error');
+          return;
+        }
+
+        const waUrl = 'https://wa.me/91' + phone + '?text=' + encodeURIComponent(msg);
+        window.open(waUrl, '_blank');
+        showToast('Opening WhatsApp with calling summary for +91 ' + phone + '...', 'success');
+        closeModal('calling-team-wa-modal');
+      }
+
+      // Legacy compatibility wrappers
+      function sendBacklogCallingWhatsAppAlerts() {
+        openCallingTeamWaModal();
+      }
+
+      function sendStaffFollowupAlertWhatsApp(leadId, type = 'OVERDUE') {
+        openCallingTeamWaModal(null, leadId);
+      }
+
+      function sendStaffPendingWorkWhatsApp(userId) {
+        openCallingTeamWaModal(userId);
+      }
+
+      function sendPendingWorkWhatsAppSummaryToAll() {
+        openCallingTeamWaModal();
+      }
 
     function startFollowupReminderWatcher() {
       if (reminderWatcherInterval) clearInterval(reminderWatcherInterval);
@@ -16723,25 +17121,13 @@
       updateAllChannelStatusBadges();
       if (loggedInUser) {
         applyUserPermissions(loggedInUser);
-        initDashboard();
-        renderPhonebookTable();
-        renderOpportunities();
-        renderWaTemplates();
-        renderRolesGrid();
-        renderStaffManager();
-        renderTeamPerformanceScorecards();
         populateLeadAssigneeSelect();
-        renderFormsList();
-        renderReports();
-        renderTasksList('PENDING');
         startFollowupReminderWatcher();
 
-        // State Restoration: Restore exact tab and reopen lead modal if user was on a lead
+        // Instant Startup: Lazy load only the active tab (default: opportunities)
         try {
-          const lastTab = localStorage.getItem('sri_sri_last_tab');
-          if (lastTab && lastTab !== 'dashboard') {
-            switchTab(lastTab);
-          }
+          const targetTab = localStorage.getItem('sri_sri_last_tab') || 'opportunities';
+          switchTab(targetTab);
 
           let targetLeadId = null;
           if (window.location.hash && window.location.hash.includes('lead=')) {
@@ -16779,21 +17165,34 @@
       });
 
       // Background poller for local Xilot / Meta webhook server (port 3000)
-      setInterval(() => {
-        fetch('http://localhost:3000/api/leads/pending', { method: 'GET' })
-          .then(r => r.json())
-          .then(json => {
-            if (json && json.success && Array.isArray(json.leads) && json.leads.length > 0) {
-              json.leads.forEach(item => {
-                if (item && item.payload) {
-                  ingestXilotLead(item.payload);
-                }
-              });
-              fetch('http://localhost:3000/api/leads/ack', { method: 'POST' }).catch(() => {});
-            }
-          })
-          .catch(() => {});
-      }, 15000);
+      if (window.location.protocol !== 'https:' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        let pollerFailCount = 0;
+        setInterval(() => {
+          if (pollerFailCount > 3) return; // Stop hammering if local node server isn't running
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2000);
+          fetch('http://localhost:3000/api/leads/pending', { method: 'GET', signal: controller.signal })
+            .then(r => {
+              clearTimeout(timeoutId);
+              pollerFailCount = 0;
+              return r.json();
+            })
+            .then(json => {
+              if (json && json.success && Array.isArray(json.leads) && json.leads.length > 0) {
+                json.leads.forEach(item => {
+                  if (item && item.payload) {
+                    ingestXilotLead(item.payload);
+                  }
+                });
+                fetch('http://localhost:3000/api/leads/ack', { method: 'POST' }).catch(() => {});
+              }
+            })
+            .catch(() => {
+              clearTimeout(timeoutId);
+              pollerFailCount++;
+            });
+        }, 15000);
+      }
 
       lucide.createIcons();
     });
