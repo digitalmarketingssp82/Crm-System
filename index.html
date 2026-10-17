@@ -13711,7 +13711,7 @@
         // Extract Customer Name
         const name = (data.name || data.full_name || data.contact_name || 
                      (data.first_name ? (data.first_name + ' ' + (data.last_name || '')).trim() : '') || 
-                     data.customer_name || 'Inbound Xilot Client').trim();
+                     data.customer_name || 'New Inbound Client').trim();
 
         // Extract Phone & Normalize
         let rawPhone = data.phone || data.mobile || data.phone_number || data.contact_phone || data.mobile_number || '';
@@ -13719,17 +13719,17 @@
         if (cleanDigits.length > 10 && cleanDigits.startsWith('91')) cleanDigits = cleanDigits.slice(2);
         const formattedPhone = cleanDigits.length >= 10 
           ? `+91 ${cleanDigits.slice(-10, -5)} ${cleanDigits.slice(-5)}` 
-          : (String(rawPhone) || '+91 98000 00000');
+          : (String(rawPhone) || '');
 
         // Extract Other Core Attributes
         const email = data.email || data.contact_email || '';
-        const city = data.city || data.location || 'Mohali';
-        const address = data.address || data.street_address || data.customerAddress || (city ? `${city}, Punjab` : 'Showroom Counter');
-        const company = data.company || data.business_name || (name + ' Wood Works');
-        const material = data.material || data.materialType || data.requirement || '18mm Gurjan Plywood & Hardware';
-        const rawDeal = String(data.dealValue || data.budget || data.deal_value || 50000).replace(/[^\d]/g, '');
-        const dealValNum = parseInt(rawDeal, 10) || 50000;
-        const dealValueStr = '₹ ' + dealValNum.toLocaleString('en-IN');
+        const city = data.city || data.location || '';
+        const address = data.address || data.street_address || data.customerAddress || '';
+        const company = data.company || data.business_name || '';
+        const material = data.material || data.materialType || data.requirement || '';
+        const rawDeal = data.dealValue || data.budget || data.deal_value || '';
+        const dealValNum = parseInt(String(rawDeal).replace(/[^\d]/g, ''), 10);
+        const dealValueStr = dealValNum ? ('₹ ' + dealValNum.toLocaleString('en-IN')) : 'Not set';
         const rawNotes = data.notes || data.message || data.requirement || data.details || '';
 
         // ==================== INTELLIGENT DUAL PIPELINE ROUTING ====================
@@ -13752,54 +13752,39 @@
         let targetPipelineId = 'p-walkin';
         let targetPipelineName = 'Walkin-Sheet';
         let source = 'Walk-in';
-        let sourceDetails = 'Xilot Counter Walk-in Registration';
-        let adPlatform = 'Xilot Walk-in';
-        let campaignName = data.campaign || data.campaign_name || 'Showroom Walkin / In-Store Inquiry';
-        let adsetName = data.adset || data.adset_name || 'Counter Registration';
-        let adName = data.ad || data.ad_name || 'Showroom Desk Visit';
-        let formName = data.form || data.form_name || 'Walkin Sheet';
+        let sourceDetails = '';
+        let adPlatform = '';
+        let campaignName = data.campaign || data.campaign_name || data.campaignName || '';
+        let adsetName = data.adset || data.adset_name || data.adsetName || '';
+        let adName = data.ad || data.ad_name || data.adName || '';
+        let formName = data.form || data.form_name || data.formName || '';
 
         // 1. Check if Walk-in
         if (checkStr.includes('walk') || checkStr.includes('counter') || checkStr.includes('store') || checkStr.includes('showroom') || checkStr.includes('offline') || checkStr.includes('p-walkin')) {
           targetPipelineId = 'p-walkin';
           targetPipelineName = 'Walkin-Sheet';
           source = 'Walk-in';
-          sourceDetails = 'Xilot Counter Walk-in Registration';
-          adPlatform = 'Xilot Walk-in';
-          campaignName = data.campaign || 'Showroom Walkin / In-Store Inquiry';
-          formName = 'Walk-in Sheet Entry';
         }
         // 2. Check if Google Ads
         else if (checkStr.includes('google') || checkStr.includes('gmb') || checkStr.includes('adwords') || checkStr.includes('p-google')) {
           targetPipelineId = 'p-google';
           targetPipelineName = 'Google Leads';
           source = 'Google Ads';
-          sourceDetails = 'Xilot Google Ads Sync';
-          adPlatform = 'Google Ads / GMB';
-          campaignName = data.campaign || 'Google Search Plywood Campaign';
-          formName = 'Google Lead Form';
+          adPlatform = 'Google Ads';
         }
         // 3. Check if WhatsApp
         else if (checkStr.includes('whatsapp') || /\bwa\b/.test(checkStr) || checkStr.includes('p-whatsapp')) {
           targetPipelineId = 'p-whatsapp';
           targetPipelineName = 'WhatsApp Leads';
           source = 'WhatsApp';
-          sourceDetails = 'Xilot WhatsApp Sync';
-          adPlatform = 'WhatsApp Business';
-          campaignName = 'WhatsApp Direct Inquiry';
-          formName = 'WhatsApp Chat Bot';
+          adPlatform = 'WhatsApp';
         }
         // 4. Default: Meta / Facebook Ads (Instagram, Lead Forms, Ads Campaigns)
         else {
           targetPipelineId = 'p-fb';
           targetPipelineName = 'Facebook Leads';
           source = 'Facebook Ads';
-          sourceDetails = 'Xilot Meta Ads Webhook';
-          adPlatform = 'Meta Ads (Facebook/Instagram)';
-          campaignName = data.campaign || data.campaign_name || 'Meta Leads Campaign';
-          adsetName = data.adset || data.adset_name || 'Active Audience Set';
-          adName = data.ad || data.ad_name || 'Plywood & Hardware Ad';
-          formName = data.form || data.form_name || 'Instant Lead Form';
+          adPlatform = 'Meta Ads';
         }
 
         // Verify pipeline exists in config
@@ -13823,11 +13808,11 @@
         if (existingLead) {
           // Client already exists — update record and append repeat inquiry interaction
           if (!Array.isArray(existingLead.activities)) existingLead.activities = [];
-          const repeatNote = `🔄 Live repeat inquiry received from Xilot (${source}) for "${material}".`;
+          const repeatNote = `Repeat inquiry received from ${source}${material ? ' for ' + material : ''}.`;
           existingLead.activities.unshift({
             id: 'act-' + Date.now(),
-            userName: 'Xilot Auto-Sync',
-            userEmail: 'xilot@srisriplywoods.com',
+            userName: 'Sri Sri Admin',
+            userEmail: 'sales.ssply@gmail.com',
             type: 'COMMENT',
             notes: repeatNote,
             text: repeatNote,
@@ -13835,8 +13820,8 @@
             timestamp: nowIso
           });
           existingLead.lastActivityAt = nowIso;
-          existingLead.lastActivityText = `Repeat Xilot inquiry (${source})`;
-          existingLead.lastActivityUser = 'Xilot Auto-Sync';
+          existingLead.lastActivityText = `Repeat inquiry (${source})`;
+          existingLead.lastActivityUser = 'Sri Sri Admin';
           if (rawNotes) {
             existingLead.notes = (existingLead.notes ? existingLead.notes + '\n\n' : '') + `[${now.toLocaleDateString()}] ${rawNotes}`;
           }
@@ -13848,16 +13833,14 @@
           if (typeof renderPhonebookTable === 'function') renderPhonebookTable();
           if (typeof initDashboard === 'function') initDashboard();
           if (typeof playReminderSound === 'function') playReminderSound();
-          if (typeof showToast === 'function') showToast(`ℹ️ Repeat Client Updated from Xilot: ${existingLead.name} (${existingLead.phone})`, 'info');
+          if (typeof showToast === 'function') showToast(`Client Updated: ${existingLead.name} (${existingLead.phone})`, 'info');
           return existingLead;
         }
 
         // ==================== CREATE NEW FRESH LEAD ====================
         const newLeadId = 'lead-xilot-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
         const assignee = (typeof loggedInUser !== 'undefined' && loggedInUser) ? loggedInUser : { name: 'Sri Sri Admin', email: 'sales.ssply@gmail.com' };
-        const combinedNotes = rawNotes || (source === 'Walk-in' 
-          ? `Customer visited showroom counter for ${material} quotation.` 
-          : `Captured via Xilot Meta Ads form. Requirement: ${material}`);
+        const combinedNotes = rawNotes || '';
 
         const newLead = {
           id: newLeadId,
@@ -13879,8 +13862,8 @@
           formName: formName,
           fbCampaign: campaignName,
           fbAd: adName,
-          fbPlatform: source === 'Walk-in' ? 'walkin' : 'fb',
-          priority: 'high',
+          fbPlatform: source === 'Walk-in' ? 'walkin' : (source === 'Google Ads' ? 'google' : (source === 'WhatsApp' ? 'whatsapp' : 'fb')),
+          priority: 'medium',
           status: 'Fresh',
           pipelineId: targetPipelineId,
           pipelineName: targetPipelineName,
@@ -13888,23 +13871,23 @@
           stage: 'New Lead',
           assignedToName: assignee.name,
           assignedToEmail: assignee.email,
-          tags: targetPipelineId === 'p-walkin' ? 'walk-in, showroom, xilot-live' : 'ads, meta-lead, xilot-live',
+          tags: '',
           notes: combinedNotes,
           postedNotes: '',
           createdAt: nowIso,
           updatedAt: nowIso,
           lastActivityAt: nowIso,
-          lastActivityText: `Lead ingested real-time from Xilot (${source}) into "${targetPipelineName}"`,
-          lastActivityUser: 'Xilot Webhook Bridge',
+          lastActivityText: 'Lead registered',
+          lastActivityUser: assignee.name,
           activities: [
             {
               id: 'act-' + Date.now(),
-              userName: 'Xilot Webhook Bridge',
-              userEmail: 'xilot@srisriplywoods.com',
-              type: 'COMMENT',
-              notes: `Lead ingested real-time from Xilot (${source}) into "${targetPipelineName}" pipeline. Requirement: ${material}`,
-              text: `Lead ingested real-time from Xilot (${source}) into "${targetPipelineName}" pipeline. Requirement: ${material}`,
-              time: nowIso.slice(0, 10),
+              userName: assignee.name,
+              userEmail: assignee.email,
+              type: 'lead_created',
+              notes: `Lead registered in ${targetPipelineName}`,
+              text: `Lead registered in ${targetPipelineName}`,
+              time: 'Just now',
               timestamp: nowIso
             }
           ]

@@ -59,8 +59,10 @@ module.exports = async (req, res) => {
       const city = data.city || data.location || '';
       const address = data.address || data.street_address || data.customerAddress || '';
       const material = data.material || data.materialType || data.requirement || '';
-      const dealValue = parseInt(String(data.dealValue || data.budget || data.deal_value || 50000).replace(/[^\d]/g, '')) || 50000;
-      const notes = data.notes || data.message || data.requirement || data.material || 'Captured live from Xilot';
+      const rawDealVal = data.dealValue || data.budget || data.deal_value || '';
+      const dealValue = rawDealVal ? String(rawDealVal) : 'Not set';
+      const budget = rawDealVal ? String(rawDealVal) : 'Not set';
+      const notes = data.notes || data.message || data.requirement || '';
 
       // ==================== INTELLIGENT PIPELINE & SOURCE AUTO-ROUTING ====================
       const rawCheck = (
@@ -82,54 +84,39 @@ module.exports = async (req, res) => {
       let pipelineId = 'p-walkin';
       let pipelineName = 'Walkin-Sheet';
       let source = 'Walk-in';
-      let sourceDetails = 'Xilot Counter Walk-in Registration';
-      let adPlatform = 'Xilot Walk-in';
-      let campaignName = data.campaign || data.campaign_name || 'Showroom Walkin';
-      let adsetName = data.adset || data.adset_name || 'Counter Registration';
-      let adName = data.ad || data.ad_name || 'Counter Desk Entry';
-      let formName = data.form || data.form_name || 'Walkin Sheet';
+      let sourceDetails = '';
+      let adPlatform = '';
+      let campaignName = data.campaign || data.campaign_name || '';
+      let adsetName = data.adset || data.adset_name || '';
+      let adName = data.ad || data.ad_name || '';
+      let formName = data.form || data.form_name || '';
 
       // 1. Check if Walk-in
       if (rawCheck.includes('walk') || rawCheck.includes('counter') || rawCheck.includes('store') || rawCheck.includes('showroom') || rawCheck.includes('offline') || rawCheck.includes('p-walkin')) {
         pipelineId = 'p-walkin';
         pipelineName = 'Walkin-Sheet';
         source = 'Walk-in';
-        sourceDetails = 'Xilot Counter Walk-in Registration';
-        adPlatform = 'Xilot Walk-in';
-        campaignName = data.campaign || 'Showroom Walkin / In-Store Inquiry';
-        formName = 'Walk-in Sheet Entry';
       }
       // 2. Check if Google Ads
       else if (rawCheck.includes('google') || rawCheck.includes('gmb') || rawCheck.includes('adwords') || rawCheck.includes('p-google')) {
         pipelineId = 'p-google';
         pipelineName = 'Google Leads';
         source = 'Google Ads';
-        sourceDetails = 'Xilot Google Ads Sync';
-        adPlatform = 'Google Ads / GMB';
-        campaignName = data.campaign || 'Google Search Plywood Campaign';
-        formName = 'Google Lead Form';
+        adPlatform = 'Google';
       }
       // 3. Check if WhatsApp
       else if (rawCheck.includes('whatsapp') || /\bwa\b/.test(rawCheck) || rawCheck.includes('p-whatsapp')) {
         pipelineId = 'p-whatsapp';
         pipelineName = 'WhatsApp Leads';
         source = 'WhatsApp';
-        sourceDetails = 'Xilot WhatsApp Sync';
-        adPlatform = 'WhatsApp Business';
-        campaignName = 'WhatsApp Direct Inquiry';
-        formName = 'WhatsApp Chat Bot';
+        adPlatform = 'WhatsApp';
       }
       // 4. Default: Meta / Facebook Ads (Instagram, Lead Forms, Ads Campaigns)
       else {
         pipelineId = 'p-fb';
         pipelineName = 'Facebook Leads';
         source = 'Facebook Ads';
-        sourceDetails = 'Xilot Meta Ads Webhook';
-        adPlatform = 'Meta Ads (Facebook/Instagram)';
-        campaignName = data.campaign || data.campaign_name || 'Meta Leads Campaign';
-        adsetName = data.adset || data.adset_name || 'Active Audience Set';
-        adName = data.ad || data.ad_name || 'Plywood & Hardware Ad';
-        formName = data.form || data.form_name || 'Instant Lead Form';
+        adPlatform = 'Meta Ads';
       }
 
       const leadId = 'lead-xilot-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
@@ -145,25 +132,25 @@ module.exports = async (req, res) => {
         address: { stringValue: String(address) },
         customerAddress: { stringValue: String(address) },
         materialType: { stringValue: String(material) },
-        dealValue: { integerValue: String(dealValue) },
-        budget: { stringValue: '₹ ' + dealValue.toLocaleString('en-IN') },
-        priority: { stringValue: 'high' },
+        dealValue: { stringValue: String(dealValue) },
+        budget: { stringValue: String(budget) },
+        priority: { stringValue: 'medium' },
         stage: { stringValue: 'New Lead' },
         stageId: { stringValue: 'stg-1' },
         pipelineId: { stringValue: pipelineId },
         pipelineName: { stringValue: pipelineName },
         source: { stringValue: source },
-        sourceDetails: { stringValue: sourceDetails },
+        sourceDetails: { stringValue: String(sourceDetails) },
         campaignName: { stringValue: String(campaignName) },
         adsetName: { stringValue: String(adsetName) },
         adName: { stringValue: String(adName) },
         formName: { stringValue: String(formName) },
-        adPlatform: { stringValue: adPlatform },
+        adPlatform: { stringValue: String(adPlatform) },
         notes: { stringValue: String(notes) },
-        status: { stringValue: 'Fresh' },
+        status: { stringValue: 'New' },
         assignedToName: { stringValue: 'Sri Sri Admin' },
         assignedToEmail: { stringValue: 'sales.ssply@gmail.com' },
-        tags: { stringValue: (pipelineId === 'p-walkin' ? 'walk-in, showroom, xilot-live' : 'ads, meta-lead, xilot-live') },
+        tags: { stringValue: String(data.tags || '') },
         createdAt: { stringValue: nowIso },
         updatedAt: { stringValue: nowIso },
         lastActivityAt: { stringValue: nowIso },
