@@ -6176,7 +6176,7 @@
         } else if (role.id === 'r-field' || role.name === 'Field Salesman') {
           role.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'conv_reply', 'tasks_view', 'tasks_create', 'tasks_complete'];
         } else if (role.id === 'r-coordinator' || role.name === 'Sales cordinator' || role.name.toLowerCase().includes('coordinator')) {
-          role.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete'];
+          role.permissions = ['leads_view', 'leads_view_all', 'leads_create', 'leads_edit', 'leads_import', 'leads_export', 'leads_transfer', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'opp_configure', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete'];
         } else if (role.id === 'r-walkin' || role.name === 'Store Walk-in Manager') {
           role.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete', 'templates_manage'];
         } else {
@@ -6184,7 +6184,7 @@
         }
       }
       if (role.id === 'r-coordinator' || (role.name && role.name.toLowerCase().includes('coordinator')) || (role.name && role.name.toLowerCase().includes('cordinator'))) {
-        role.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete'];
+        role.permissions = ['leads_view', 'leads_view_all', 'leads_create', 'leads_edit', 'leads_import', 'leads_export', 'leads_transfer', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'opp_configure', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete'];
       }
       role.permsCount = role.permissions.length;
     });
@@ -6210,7 +6210,7 @@
       role: 'Sales cordinator',
       status: 'Active',
       password: '123',
-      permissions: ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete']
+      permissions: ['leads_view', 'leads_view_all', 'leads_create', 'leads_edit', 'leads_import', 'leads_export', 'leads_transfer', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'opp_configure', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete']
     };
 
     let users = [];
@@ -6243,7 +6243,7 @@
       if (u.role === 'Organization Admin' || (u.email && u.email.toLowerCase() === 'sriplywoodsgm@gmail.com')) {
         u.permissions = CRM_PERMISSIONS_SCHEMA.flatMap(c => c.permissions.map(p => p.id));
       } else if (u.role && (u.role.toLowerCase().includes('coordinator') || u.role.toLowerCase().includes('cordinator'))) {
-        u.permissions = ['leads_view', 'leads_create', 'leads_edit', 'opp_view', 'opp_move_stage', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete'];
+        u.permissions = ['leads_view', 'leads_view_all', 'leads_create', 'leads_edit', 'leads_import', 'leads_export', 'leads_transfer', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'opp_configure', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete'];
       }
     });
     localStorage.setItem('sri_sri_users', JSON.stringify(users));
@@ -7085,27 +7085,9 @@
       const isManager = loggedInUser.role === 'Manager' || roleLower.includes('manager');
       const hasFullLeadAccess = userHasPermission('leads_view_all') || userHasPermission('leads_distribute');
 
-      // Manager or user with explicit full leads permissions
-      if (isManager || hasFullLeadAccess) {
+      // Super Admin, Manager, and Sales Coordinator work across all pipelines & all leads
+      if (isCoordinator || isManager || hasFullLeadAccess) {
         return leads;
-      }
-
-      // Sales Coordinator: sees ONLY leads she works on:
-      // 1. Leads assigned to her
-      // 2. Unassigned / fresh incoming leads needing qualification & calling
-      // 3. Leads assigned to "Sales Coordinator" / "Calling Team"
-      // (Does NOT see leads assigned to other specific sales representatives)
-      if (isCoordinator) {
-        const myEmail = (loggedInUser.email || '').toLowerCase().trim();
-        const myName = (loggedInUser.name || '').toLowerCase().trim();
-        return leads.filter(l => {
-          const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
-          const lName = (l.assignedToName || l.assignedTo || '').toLowerCase().trim();
-          const isAssignedToMe = (lEmail && lEmail === myEmail) || (lName && (lName === myName || lName.includes(myName)));
-          const isUnassigned = !l.assignedTo || l.assignedTo === 'Unassigned' || l.assignedTo === '' || l.assignedTo === 'None';
-          const isRoleAssigned = lName.includes('coordinator') || lName.includes('cordinator') || lName.includes('calling');
-          return isAssignedToMe || isUnassigned || isRoleAssigned;
-        });
       }
 
       // If user lacks both leads_view and opp_view, zero access
@@ -7113,7 +7095,7 @@
         return [];
       }
 
-      // Regular member (e.g. sales reps): isolate strictly to their assigned leads
+      // Regular field/store salesman: isolate strictly to their assigned leads
       const myEmail = (loggedInUser.email || '').toLowerCase().trim();
       const myName = (loggedInUser.name || '').toLowerCase().trim();
 
@@ -11587,9 +11569,10 @@
           const matchesStaff = (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
           const isUnassigned = !lead.assignedTo || lead.assignedTo === 'Unassigned' || lead.assignedTo === '' || lead.assignedTo === 'None';
           const isRoleAssigned = lName.includes('coordinator') || lName.includes('cordinator') || lName.includes('calling');
+          const isGenericAdmin = lName.includes('admin') || lName === 'sri sri admin' || lEmail.includes('sriplywoodsgm') || lEmail.includes('sales.ssply');
 
-          // If staff is coordinator, include unassigned and role-assigned leads
-          const belongsToStaff = matchesStaff || (isStaffCoordinator && (isUnassigned || isRoleAssigned));
+          // If staff is coordinator, include unassigned, role-assigned, and admin pool leads
+          const belongsToStaff = matchesStaff || (isStaffCoordinator && (isUnassigned || isRoleAssigned || isGenericAdmin));
           if (!belongsToStaff) return;
 
           const p = pipelines.find(x => x.id === lead.pipelineId);
