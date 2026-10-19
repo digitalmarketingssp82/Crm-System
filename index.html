@@ -141,14 +141,18 @@
     /* Ultra-smooth scrolling & zero-lag touch-action containers */
     #opp-table-scroll-body, #opp-kanban-view-container, .kanban-dropzone, #opp-top-scroll-track {
       -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: auto;
       scroll-behavior: auto;
     }
     .kanban-dropzone {
       touch-action: pan-y;
+      overflow-y: auto !important;
+      overscroll-behavior-y: auto !important;
     }
     #opp-kanban-view-container {
       touch-action: pan-x pan-y;
+      overscroll-behavior-y: auto !important;
     }
 
     /* Sticky Frozen Columns for Opportunity Table (Name, Phone & Actions pinned on Left) */
@@ -1478,6 +1482,30 @@
             </button>
             <button type="button" onclick="clearOppSearch(); changeActivePipeline('all');" class="px-4 py-2.5 rounded-xl border border-main bg-card text-main font-bold hover:border-gold transition cursor-pointer flex items-center gap-1.5">
               <span>🌐 View All Pipelines</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Kanban Board Horizontal Navigation Bar -->
+        <div id="opp-kanban-nav-helper" class="px-3.5 py-2 rounded-2xl bg-card border border-main flex flex-wrap items-center justify-between gap-2 text-xs shadow-xs">
+          <div class="flex items-center gap-1.5 text-[11px] text-muted-custom">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-gold font-bold">
+              <i data-lucide="mouse" class="w-3.5 h-3.5"></i> Scroll
+            </span>
+            <span>Niche/Upar scroll karne ke liye mouse wheel use karein • Left/Right slide karne ke liye:</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="scrollOppTable('start')" class="px-2.5 py-1 rounded-lg bg-subtle border border-main hover:border-gold hover:text-gold text-main text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Scroll to First Stage">
+              <i data-lucide="chevrons-left" class="w-3.5 h-3.5"></i> First
+            </button>
+            <button type="button" onclick="scrollOppTable('left')" class="px-2.5 py-1 rounded-lg bg-subtle border border-main hover:border-gold hover:text-gold text-main text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Scroll Left">
+              <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Left
+            </button>
+            <button type="button" onclick="scrollOppTable('right')" class="px-2.5 py-1 rounded-lg bg-subtle border border-main hover:border-gold hover:text-gold text-main text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Scroll Right">
+              Right <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+            <button type="button" onclick="scrollOppTable('end')" class="px-2.5 py-1 rounded-lg bg-subtle border border-main hover:border-gold hover:text-gold text-main text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Scroll to Last Stage">
+              Last <i data-lucide="chevrons-right" class="w-3.5 h-3.5"></i>
             </button>
           </div>
         </div>
@@ -6243,38 +6271,36 @@
     }
 
     function scrollOppTable(direction) {
-      const container = document.getElementById('opp-table-scroll-body');
+      const isKanban = (typeof opportunityViewMode !== 'undefined' && opportunityViewMode === 'kanban');
+      const container = isKanban 
+        ? document.getElementById('opp-kanban-view-container') 
+        : document.getElementById('opp-table-scroll-body');
       if (!container) return;
       const step = 380;
       if (direction === 'left') {
         container.scrollBy({ left: -step, behavior: 'smooth' });
       } else if (direction === 'right') {
         container.scrollBy({ left: step, behavior: 'smooth' });
-      } else if (direction === 'start') {
+      } else if (direction === 'start' || direction === 'first') {
         container.scrollTo({ left: 0, behavior: 'smooth' });
-      } else if (direction === 'end') {
+      } else if (direction === 'end' || direction === 'last') {
         container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
       }
     }
 
-    // Smooth horizontal mouse wheel scroll across Kanban columns
+    // Kanban mouse wheel handler: preserves natural downward vertical scrolling for leads and page
     function setupKanbanWheelScroll() {
       const container = document.getElementById('opp-kanban-view-container');
       if (!container || container.dataset.wheelBound === 'true') return;
       container.dataset.wheelBound = 'true';
       container.addEventListener('wheel', (e) => {
-        // If mouse is inside a dropzone that has vertical scroll space, allow vertical scroll inside dropzone
-        const targetDropzone = e.target.closest('.kanban-dropzone');
-        if (targetDropzone && targetDropzone.scrollHeight > targetDropzone.clientHeight) {
-          const isAtTop = targetDropzone.scrollTop <= 0 && e.deltaY < 0;
-          const isAtBottom = targetDropzone.scrollTop + targetDropzone.clientHeight >= targetDropzone.scrollHeight - 1 && e.deltaY > 0;
-          if (!isAtTop && !isAtBottom) return; // Allow normal vertical scroll inside column
-        }
-        // Horizontal scroll across columns when wheeling over board or headers
-        if (e.deltaY !== 0 && Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
-          container.scrollLeft += e.deltaY * 0.9;
+        // Only if user explicitly holds Shift key, assist horizontal scrolling across columns
+        if (e.shiftKey && e.deltaY !== 0) {
+          container.scrollLeft += e.deltaY;
           e.preventDefault();
         }
+        // Regular vertical mouse wheel (deltaY without shift) is NEVER hijacked:
+        // it scrolls leads downward inside column dropzone or scrolls page smoothly!
       }, { passive: false });
     }
 
@@ -8177,6 +8203,7 @@
 
       const listContainer = document.getElementById('opp-table-view-container');
       const kanbanContainer = document.getElementById('opp-kanban-view-container');
+      const kanbanNavHelper = document.getElementById('opp-kanban-nav-helper');
 
       const bList = document.getElementById('btn-opp-view-list');
       const bKanban = document.getElementById('btn-opp-view-kanban');
@@ -8186,10 +8213,12 @@
       if (opportunityViewMode === 'list') {
         if (listContainer) listContainer.classList.remove('hidden');
         if (kanbanContainer) kanbanContainer.classList.add('hidden');
+        if (kanbanNavHelper) kanbanNavHelper.classList.add('hidden');
         renderOpportunityListTable(filteredLeads, pipeline, baseLeads.length);
       } else {
         if (listContainer) listContainer.classList.add('hidden');
         if (kanbanContainer) kanbanContainer.classList.remove('hidden');
+        if (kanbanNavHelper) kanbanNavHelper.classList.remove('hidden');
         renderOpportunityKanbanBoard(filteredLeads, pipeline);
       }
       } catch(err) {
@@ -10143,7 +10172,7 @@
             </div>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-card border border-main text-muted-custom">${colLeads.length}</span>
           </div>
-          <div class="kanban-dropzone flex-1 p-3 overflow-y-auto custom-scrollbar space-y-2.5 min-h-[140px] transition-colors duration-150" id="kanban-stage-${stg.id}"></div>
+          <div class="kanban-dropzone flex-1 min-h-0 p-3 overflow-y-auto custom-scrollbar space-y-2.5 min-h-[140px] max-h-[calc(75vh-56px)] transition-colors duration-150" id="kanban-stage-${stg.id}"></div>
         `;
         boardFrag.appendChild(col);
 
