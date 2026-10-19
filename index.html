@@ -219,7 +219,7 @@
     })();
   </script>
 </head>
-<body class="h-screen w-screen overflow-hidden flex flex-col select-none antialiased">
+<body class="h-screen w-screen overflow-hidden flex flex-col select-text antialiased">
 
   <!-- ==================== LOGIN SCREEN OVERLAY ==================== -->
   <div id="login-screen" class="fixed inset-0 z-[100] bg-main flex items-center justify-center p-4">
@@ -2305,10 +2305,7 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h3 class="text-base font-bold text-main" id="modal-lead-name">Ajay sharma</h3>
-              <button type="button" onclick="copyModalField('modal-lead-name', 'Client Name')" class="text-muted-custom hover:text-gold p-1 rounded-lg hover:bg-subtle transition" title="Copy Name">
-                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-              </button>
+              <h3 class="text-base font-bold text-main select-text cursor-text" id="modal-lead-name">Ajay sharma</h3>
               <span class="text-[11px] text-indigo-400 font-bold flex items-center gap-1 cursor-pointer hover:underline">
                 <i data-lucide="user" class="w-3 h-3"></i> View Contact
               </span>
@@ -2363,10 +2360,7 @@
             <div>
               <p class="text-[10px] uppercase font-bold text-muted-custom">Phone Number</p>
               <div class="flex items-center gap-2">
-                <p class="font-bold text-main text-sm" id="modal-lead-phone">9813840800</p>
-                <button type="button" onclick="copyModalField('modal-lead-phone', 'Phone Number')" class="text-muted-custom hover:text-gold p-1 rounded-lg hover:bg-subtle transition" title="Copy Phone Number">
-                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                </button>
+                <p class="font-bold text-main text-sm font-mono select-text cursor-text" id="modal-lead-phone">9813840800</p>
               </div>
               <p class="text-[11px] text-muted-custom italic">Direct verified mobile</p>
             </div>
@@ -2417,10 +2411,7 @@
             <div>
               <p class="text-[10px] text-muted-custom font-semibold">DEAL VALUE</p>
               <div class="flex items-center gap-1.5">
-                <p class="font-bold text-main text-sm text-gold" id="modal-lead-deal-value">Not set</p>
-                <button type="button" onclick="copyModalField('modal-lead-deal-value', 'Deal Value')" class="text-muted-custom hover:text-gold p-0.5 rounded hover:bg-subtle transition" title="Copy Deal Value">
-                  <i data-lucide="copy" class="w-3 h-3"></i>
-                </button>
+                <p class="font-bold text-main text-sm text-gold select-text cursor-text" id="modal-lead-deal-value">Not set</p>
               </div>
             </div>
             <div>
@@ -2454,10 +2445,7 @@
             <div>
               <p class="text-[10px] text-muted-custom font-semibold">SITE ADDRESS</p>
               <div class="flex items-start justify-between gap-1">
-                <p class="text-[11px] text-main font-medium" id="modal-lead-address">Not specified</p>
-                <button type="button" onclick="copyModalField('modal-lead-address', 'Site Address')" class="text-muted-custom hover:text-gold p-0.5 rounded hover:bg-subtle transition shrink-0" title="Copy Site Address">
-                  <i data-lucide="copy" class="w-3 h-3"></i>
-                </button>
+                <p class="text-[11px] text-main font-medium select-text cursor-text" id="modal-lead-address">Not specified</p>
               </div>
             </div>
             <div>
@@ -2471,10 +2459,7 @@
             <div>
               <p class="text-[10px] text-muted-custom font-semibold uppercase">REMARKS / NOTES</p>
               <div class="flex items-start justify-between gap-1">
-                <p class="font-bold text-amber-400 text-xs break-words" id="modal-lead-sidebar-notes">—</p>
-                <button type="button" onclick="copyModalField('modal-lead-sidebar-notes', 'Remarks / Notes')" class="text-muted-custom hover:text-gold p-0.5 rounded hover:bg-subtle transition shrink-0" title="Copy Remarks">
-                  <i data-lucide="copy" class="w-3 h-3"></i>
-                </button>
+                <p class="font-bold text-amber-400 text-xs break-words select-text cursor-text" id="modal-lead-sidebar-notes">—</p>
               </div>
             </div>
             <div>
@@ -2617,13 +2602,9 @@
                       <i data-lucide="phone-forwarded" class="w-3.5 h-3.5"></i>
                       <span>Reattempt</span>
                     </button>
-                    <button type="button" onclick="copyModalField('modal-lead-description', 'Description & Notes')" class="text-muted-custom hover:text-gold p-1 rounded-lg hover:bg-subtle transition flex items-center gap-1 text-[11px] font-bold" title="Copy Description & Notes">
-                      <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                      <span>Copy</span>
-                    </button>
                   </div>
                 </div>
-                <div class="font-medium text-main text-xs sm:text-sm leading-relaxed space-y-1.5" id="modal-lead-description">
+                <div class="font-medium text-main text-xs sm:text-sm leading-relaxed space-y-1.5 select-text cursor-text" id="modal-lead-description">
                   Plywood / Hardware requirement discussion
                 </div>
               </div>
@@ -7544,19 +7525,15 @@
         tr.className = 'hover:bg-subtle/50 transition cursor-pointer border-b border-main/50';
 
         tr.innerHTML = `
-          <td class="p-3.5 font-medium text-main text-xs" onclick="handleTableCellClick(event, '${lead.id}')">
+          <td class="p-3.5 font-medium text-main text-xs select-text cursor-text" onclick="handleTableCellClick(event, '${lead.id}')">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${stg.color}"></span>
-              <span class="hover:text-gold">${lead.name}</span>
-              <button type="button" onclick="event.stopPropagation(); copyTextToClipboard('${escapeJs(lead.name)}', 'Client Name');" class="text-muted-custom hover:text-gold p-0.5 rounded transition" title="Copy Client Name">
-                <i data-lucide="copy" class="w-3 h-3"></i>
-              </button>
+              <span class="hover:text-gold select-text cursor-text">${lead.name}</span>
             </div>
           </td>
-          <td class="p-3.5 font-mono text-xs text-main" onclick="handleTableCellClick(event, '${lead.id}')">
+          <td class="p-3.5 font-mono text-xs text-main select-text cursor-text" onclick="handleTableCellClick(event, '${lead.id}')">
             <div class="flex items-center gap-1.5">
-              <span>${lead.phone || '—'}</span>
-              ${lead.phone ? '<button type="button" onclick="event.stopPropagation(); copyTextToClipboard(\'' + lead.phone + '\', \'Phone Number\');" class="text-muted-custom hover:text-gold p-0.5 rounded transition" title="Copy Phone Number"><i data-lucide="copy" class="w-3 h-3"></i></button>' : ''}
+              <span class="select-text cursor-text">${lead.phone || '—'}</span>
             </div>
           </td>
           <td class="p-3.5" onclick="handleTableCellClick(event, '${lead.id}')">
@@ -8010,24 +7987,17 @@
           <td class="p-3 text-center opp-sticky-col-cb" onclick="event.stopPropagation()">
             <input type="checkbox" class="opp-row-cb rounded border-main text-gold" data-lead-id="${lead.id}" onchange="updateBulkActionsState()">
           </td>
-          <td class="p-3 text-main font-medium text-xs col-opportunity opp-sticky-col-name" onclick="handleTableCellClick(event, '${lead.id}')">
+          <td class="p-3 text-main font-medium text-xs col-opportunity opp-sticky-col-name select-text cursor-text" onclick="handleTableCellClick(event, '${lead.id}')">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${stg.color}"></span>
-              <div class="truncate max-w-[170px]">
-                <span class="font-medium text-main hover:text-gold truncate block">${lead.name}</span>
+              <div class="truncate max-w-[200px]">
+                <span class="font-medium text-main hover:text-gold truncate block select-text cursor-text">${lead.name}</span>
                 <span class="text-[9px] text-muted-custom font-normal block truncate">📂 ${leadPipeline.name || 'Direct Lead'}</span>
               </div>
-              <button type="button" onclick="event.stopPropagation(); copyTextToClipboard('${escapeJs(lead.name)}', 'Client Name');" class="text-muted-custom hover:text-gold p-0.5 rounded transition shrink-0" title="Copy Client Name">
-                <i data-lucide="copy" class="w-3 h-3"></i>
-              </button>
             </div>
           </td>
-          <td class="p-3 font-mono text-xs text-muted-custom font-normal col-phone opp-sticky-col-phone" onclick="handleTableCellClick(event, '${lead.id}')">
-            <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-              <a href="javascript:void(0)" onclick="initiateCallWithLogging('${lead.id}'); return false;" class="text-main hover:underline font-mono font-normal" title="Click to Call & Log Outcome">${lead.phone || '—'}</a>
-              ${cleanPhone ? '<button type="button" onclick="copyTextToClipboard(\'' + lead.phone + '\', \'Phone Number\')" class="p-0.5 rounded text-muted-custom hover:text-gold transition" title="Copy Phone Number"><i data-lucide="copy" class="w-3 h-3"></i></button>' : ''}
-              ${cleanPhone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Send WhatsApp Message & Log Text"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i></button>' : ''}
-            </div>
+          <td class="p-3 font-mono text-xs text-muted-custom font-normal col-phone opp-sticky-col-phone select-text cursor-text" onclick="handleTableCellClick(event, '${lead.id}')">
+            <span class="text-main font-mono select-text cursor-text">${lead.phone || '—'}</span>
           </td>
           <td class="p-3 opp-sticky-col-actions text-center" onclick="event.stopPropagation()">
             <div class="flex items-center justify-center gap-1.5">
@@ -9115,15 +9085,15 @@
           card.setAttribute('draggable', 'true');
           
           card.addEventListener('mousedown', (e) => {
-            if (e.target.closest('span, p, a, button, input, [data-copy-target]')) {
+            if (e.target.closest('span, p, a, button, input, .select-text, [data-copy-target]')) {
               card.setAttribute('draggable', 'false');
             } else {
               card.setAttribute('draggable', 'true');
             }
           });
-          card.addEventListener('mouseup', () => {
-            card.setAttribute('draggable', 'true');
-          });
+          const resetCardDraggable = () => { card.setAttribute('draggable', 'true'); };
+          card.addEventListener('mouseup', resetCardDraggable);
+          card.addEventListener('mouseleave', resetCardDraggable);
 
           card.ondragstart = (e) => handleLeadCardDragStart(e, lead.id, stg.id);
           card.ondragend = (e) => handleLeadCardDragEnd(e);
@@ -9135,22 +9105,11 @@
 
           card.innerHTML = `
             <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1 font-medium text-xs text-main">
-                <span class="truncate max-w-[130px]">${lead.name}</span>
-                <button type="button" onclick="event.stopPropagation(); copyTextToClipboard('${escapeJs(lead.name)}', 'Client Name');" class="text-muted-custom hover:text-gold p-0.5 rounded transition shrink-0" title="Copy Client Name">
-                  <i data-lucide="copy" class="w-2.5 h-2.5"></i>
-                </button>
-              </div>
-              <span class="text-[10px] font-medium text-gold shrink-0">${lead.dealValue || lead.budget || ''}</span>
+              <span class="font-medium text-xs text-main truncate max-w-[155px] select-text cursor-text" title="${escapeJs(lead.name)}">${lead.name}</span>
+              <span class="text-[10px] font-medium text-gold shrink-0 select-text">${lead.dealValue || lead.budget || ''}</span>
             </div>
             <div class="flex items-center justify-between text-[11px] font-mono text-muted-custom mt-1">
-              <div class="flex items-center gap-1">
-                <span>${lead.phone || 'No phone'}</span>
-                ${lead.phone ? `
-                <button type="button" onclick="event.stopPropagation(); copyTextToClipboard('${lead.phone}', 'Phone Number');" class="text-muted-custom hover:text-gold p-0.5 rounded transition" title="Copy Phone Number">
-                  <i data-lucide="copy" class="w-2.5 h-2.5"></i>
-                </button>` : ''}
-              </div>
+              <span class="select-text cursor-text text-main/90 font-medium">${lead.phone || 'No phone'}</span>
               <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
                 ${lead.phone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="p-1 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Call & Log Outcome"><i data-lucide="phone" class="w-3 h-3"></i></button>' : ''}
                 ${lead.phone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="Send WhatsApp Message & Log"><i data-lucide="message-circle" class="w-3 h-3"></i></button>' : ''}
@@ -9491,7 +9450,6 @@
                 <i data-lucide="${iconName}" class="w-3 h-3"></i>
                 <span>${escapeHtml(actionTitle)}</span>
               </span>
-              ${noteBody ? `<button type="button" onclick="copyTextToClipboard('${escapeJs(noteBody)}', 'Activity Text')" class="text-muted-custom hover:text-gold p-1 rounded hover:bg-subtle transition" title="Copy Activity Text"><i data-lucide="copy" class="w-3 h-3"></i></button>` : ''}
             </div>
 
             ${noteBody ? `
@@ -10381,13 +10339,8 @@
           </div>
 
           <!-- Note Body -->
-          <div class="p-3 rounded-xl bg-subtle/70 border border-main text-xs text-main leading-relaxed break-words font-sans font-medium">
-            <div class="flex items-start justify-between gap-2">
-              <div class="flex-1 whitespace-pre-wrap">${escapeHtml(noteText)}</div>
-              <button type="button" onclick="copyTextToClipboard(\`${escapeForBacktick(noteText)}\`, 'Comment / Note')" class="text-muted-custom hover:text-gold p-0.5 rounded transition shrink-0" title="Copy Note">
-                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
+          <div class="p-3 rounded-xl bg-subtle/70 border border-main text-xs text-main leading-relaxed break-words font-sans font-medium select-text">
+            <div class="whitespace-pre-wrap select-text">${escapeHtml(noteText)}</div>
           </div>
 
           ${act.imageUrl ? '<div class="pt-1"><img src="' + act.imageUrl + '" class="max-h-60 rounded-xl border border-main object-contain bg-subtle cursor-pointer hover:opacity-95" onclick="window.open(\'' + act.imageUrl + '\')"></div>' : ''}
@@ -16647,10 +16600,7 @@
                 <i data-lucide="external-link" class="w-3 h-3 text-muted-custom"></i>
               </div>
               <div class="flex items-center gap-2 mt-0.5">
-                <span class="font-mono text-[11px] text-gold font-bold">${escapeHtml(call.phone || '—')}</span>
-                <button type="button" onclick="copyToClipboard('${escapeHtml(call.phone)}')" class="text-muted-custom hover:text-white p-0.5" title="Copy Number">
-                  <i data-lucide="copy" class="w-3 h-3"></i>
-                </button>
+                <span class="font-mono text-[11px] text-gold font-bold select-text cursor-text">${escapeHtml(call.phone || '—')}</span>
               </div>
             </td>
             <td class="p-3.5 whitespace-nowrap">
