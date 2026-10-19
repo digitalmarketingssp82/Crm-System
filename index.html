@@ -138,6 +138,19 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.45); border-radius: 4px; border: 1px solid var(--border-main); }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
+    /* Ultra-smooth scrolling & zero-lag touch-action containers */
+    #opp-table-scroll-body, #opp-kanban-view-container, .kanban-dropzone, #opp-top-scroll-track {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      scroll-behavior: auto;
+    }
+    .kanban-dropzone {
+      touch-action: pan-y;
+    }
+    #opp-kanban-view-container {
+      touch-action: pan-x pan-y;
+    }
+
     /* Sticky Frozen Columns for Opportunity Table (Name, Phone & Actions pinned on Left) */
     .opp-sticky-col-cb {
       position: sticky !important;
@@ -1021,7 +1034,7 @@
             <!-- Search -->
             <div class="relative">
               <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom"></i>
-              <input type="search" id="pb-search-input" name="search_pb_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderPhonebookTable()" placeholder="Search name or mobile..." class="w-full pl-8 pr-8 py-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold focus:outline-none">
+              <input type="search" id="pb-search-input" name="search_pb_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="debouncedRenderPhonebookTable()" placeholder="Search name or mobile..." class="w-full pl-8 pr-8 py-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold focus:outline-none">
               <button type="button" id="pb-search-clear-btn" onclick="clearPhonebookSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-custom hover:text-main cursor-pointer" title="Clear search">
                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
               </button>
@@ -1134,7 +1147,7 @@
             <!-- Search Opportunities Input (Protected against browser credential autofill) -->
             <div class="relative flex items-center">
               <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom pointer-events-none"></i>
-              <input type="search" id="opp-search-input" name="search_opp_filter_unique" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="pl-8 pr-8 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-52 sm:w-72">
+              <input type="search" id="opp-search-input" name="search_opp_filter_unique" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="debouncedRenderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="pl-8 pr-8 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-52 sm:w-72">
               <button type="button" id="opp-search-clear-btn" onclick="clearOppSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-custom hover:text-gold text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center transition cursor-pointer" title="Clear search">✕</button>
             </div>
 
@@ -2635,7 +2648,7 @@
                     <span>DESCRIPTION &amp; NOTES</span>
                   </span>
                   <div class="flex items-center gap-2">
-                    <button type="button" onclick="triggerLeadReattemptFromModal()" id="btn-desc-reattempt" class="px-3 py-1.5 rounded-xl border border-gold/50 bg-amber-500/10 hover:bg-gold hover:text-slate-950 text-gold text-xs font-bold transition flex items-center gap-1.5 shadow-xs" title="Reattempt Call & Follow-up">
+                    <button type="button" onclick="openFollowupScheduleModal(currentSelectedLead ? currentSelectedLead.id : null)" id="btn-desc-reattempt" class="px-3 py-1.5 rounded-xl border border-gold/50 bg-amber-500/10 hover:bg-gold hover:text-slate-950 text-gold text-xs font-bold transition flex items-center gap-1.5 shadow-xs" title="Schedule Reattempt / Next Follow-up">
                       <i data-lucide="phone-forwarded" class="w-3.5 h-3.5"></i>
                       <span>Reattempt</span>
                     </button>
@@ -2745,7 +2758,7 @@
                       <option value="Site Visit">Site Visit</option>
                       <option value="Showroom Visit">Showroom Visit</option>
                     </select>
-                    <button type="button" onclick="triggerLeadReattemptFromModal()" id="btn-composer-reattempt" class="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-gold hover:text-slate-950 border border-gold/40 text-gold font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer" title="Reattempt Call & Schedule Next Follow-up">
+                    <button type="button" onclick="openFollowupScheduleModal(currentSelectedLead ? currentSelectedLead.id : null)" id="btn-composer-reattempt" class="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-gold hover:text-slate-950 border border-gold/40 text-gold font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer" title="Schedule Reattempt / Next Follow-up">
                       <i data-lucide="phone-forwarded" class="w-3.5 h-3.5"></i>
                       <span>Reattempt</span>
                     </button>
@@ -2968,7 +2981,7 @@
         <div class="space-y-1.5">
           <label class="font-bold text-main flex items-center gap-1.5 text-xs">
             <i data-lucide="message-square" class="w-3.5 h-3.5 text-purple-400"></i>
-            <span>Reattempt Reason / Update Note: <span class="text-rose-500 font-bold">*Required</span></span>
+            <span>Reattempt Reason / Remark: <span class="text-muted-custom font-normal">(Optional)</span></span>
           </label>
           <textarea id="fu-modal-reason" rows="2" placeholder="e.g. Call not picked up / Asked to call back tomorrow morning..." class="w-full p-2.5 rounded-xl border border-main bg-card text-main text-xs focus:ring-1 focus:ring-gold outline-hidden"></textarea>
         </div>
@@ -6218,23 +6231,15 @@
     // ==================== SYNCHRONIZED OPP TABLE SCROLL SYSTEM ====================
     let isSyncingOppScroll = false;
     function syncOppScroll(sourceEl, targetType) {
-      if (isSyncingOppScroll) return;
+      if (!sourceEl || isSyncingOppScroll) return;
+      const target = (targetType === 'top') 
+        ? document.getElementById('opp-top-scroll-track') 
+        : document.getElementById('opp-table-scroll-body');
+      if (!target) return;
+      if (Math.abs(target.scrollLeft - sourceEl.scrollLeft) <= 1) return;
       isSyncingOppScroll = true;
-      const tableContainer = document.getElementById('opp-table-scroll-body');
-      const topTrack = document.getElementById('opp-top-scroll-track');
-      const dummy = document.getElementById('opp-top-scroll-dummy');
-      const table = document.getElementById('opp-full-table');
-
-      if (table && dummy) {
-        dummy.style.width = table.scrollWidth + 'px';
-      }
-
-      if (targetType === 'top' && topTrack) {
-        topTrack.scrollLeft = sourceEl.scrollLeft;
-      } else if (targetType === 'table' && tableContainer) {
-        tableContainer.scrollLeft = sourceEl.scrollLeft;
-      }
-      setTimeout(() => { isSyncingOppScroll = false; }, 20);
+      target.scrollLeft = sourceEl.scrollLeft;
+      requestAnimationFrame(() => { isSyncingOppScroll = false; });
     }
 
     function scrollOppTable(direction) {
@@ -6250,6 +6255,27 @@
       } else if (direction === 'end') {
         container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
       }
+    }
+
+    // Smooth horizontal mouse wheel scroll across Kanban columns
+    function setupKanbanWheelScroll() {
+      const container = document.getElementById('opp-kanban-view-container');
+      if (!container || container.dataset.wheelBound === 'true') return;
+      container.dataset.wheelBound = 'true';
+      container.addEventListener('wheel', (e) => {
+        // If mouse is inside a dropzone that has vertical scroll space, allow vertical scroll inside dropzone
+        const targetDropzone = e.target.closest('.kanban-dropzone');
+        if (targetDropzone && targetDropzone.scrollHeight > targetDropzone.clientHeight) {
+          const isAtTop = targetDropzone.scrollTop <= 0 && e.deltaY < 0;
+          const isAtBottom = targetDropzone.scrollTop + targetDropzone.clientHeight >= targetDropzone.scrollHeight - 1 && e.deltaY > 0;
+          if (!isAtTop && !isAtBottom) return; // Allow normal vertical scroll inside column
+        }
+        // Horizontal scroll across columns when wheeling over board or headers
+        if (e.deltaY !== 0 && Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
+          container.scrollLeft += e.deltaY * 0.9;
+          e.preventDefault();
+        }
+      }, { passive: false });
     }
 
     function applyColumnPreferences() {
@@ -7756,6 +7782,11 @@
       const elFu = document.getElementById('dash-followup-count');
       if (elFu) elFu.innerText = followupsCount;
 
+      const dashSec = document.getElementById('tab-content-dashboard');
+      if (dashSec && dashSec.classList.contains('hidden')) {
+        return; // Skip expensive Chart.js and heavy activity DOM rebuilds when dashboard is hidden
+      }
+
       renderRealCharts(userLeads);
       renderDashboardRecentActivities(userLeads);
       updatePendingWorkDashboard();
@@ -7856,11 +7887,13 @@
         `;
         container.appendChild(item);
       });
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons({ root: container });
     }
 
     // ==================== PHONEBOOK DIRECTORY ====================
     function renderPhonebookTable() {
+      const tabSec = document.getElementById('tab-content-phonebook');
+      if (tabSec && tabSec.classList.contains('hidden')) return;
       const tbody = document.getElementById('pb-table-body');
       if (!tbody) return;
       tbody.innerHTML = '';
@@ -7965,7 +7998,7 @@
         `;
         tbody.appendChild(tr);
       });
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons({ root: tbody });
     }
 
     function clearPhonebookSearch() {
@@ -8002,8 +8035,27 @@
       renderOpportunities();
     }
 
+    let _debounceOppTimer = null;
+    function debouncedRenderOpportunities() {
+      if (_debounceOppTimer) clearTimeout(_debounceOppTimer);
+      _debounceOppTimer = setTimeout(() => {
+        renderOpportunities();
+      }, 120);
+    }
+
+    let _debouncePbTimer = null;
+    function debouncedRenderPhonebookTable() {
+      if (_debouncePbTimer) clearTimeout(_debouncePbTimer);
+      _debouncePbTimer = setTimeout(() => {
+        renderPhonebookTable();
+      }, 120);
+    }
+
     function renderOpportunities() {
       try {
+        const tabSec = document.getElementById('tab-content-opportunities');
+        if (tabSec && tabSec.classList.contains('hidden')) return;
+
         if (!Array.isArray(pipelines) || pipelines.length === 0) {
           pipelines = JSON.parse(JSON.stringify(defaultPipelines));
         }
@@ -10144,6 +10196,7 @@
         cardContainer.appendChild(colCardFrag);
       });
       container.appendChild(boardFrag);
+      setupKanbanWheelScroll();
       if (window.lucide) lucide.createIcons({ root: container });
       } catch(err) {
         console.error('Fatal error in renderOpportunityKanbanBoard:', err);
@@ -10772,7 +10825,8 @@
 
       // 100% Fail-safe: Always open modal immediately using openModal so inline style="display:none" is reset to "display:flex"
       openModal('lead-modal');
-      if (window.lucide) lucide.createIcons();
+      const modalEl = document.getElementById('lead-modal');
+      if (window.lucide && modalEl) lucide.createIcons({ root: modalEl });
     }
 
     function openLeadModalByPhone(phone) {
@@ -10980,7 +11034,6 @@
     // ==================== FOLLOW-UP & REATTEMPT SCHEDULING ====================
     function onModalNoteCallStatusChanged(val) {
       const timingBox = document.getElementById('call-not-pick-timing-box');
-      const followupInput = document.getElementById('modal-note-followup');
       const indicator = document.getElementById('call-not-pick-indicator');
       
       const isCallNotPicked = (val === 'Call Not Pick' || val === 'User Busy' || val.includes('Not Pick') || val.includes('Busy'));
@@ -10994,13 +11047,7 @@
           indicator.innerText = '⚠️ Call Not Picked: Next Call Set Karein';
           indicator.className = 'px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-500 text-slate-950 shadow-xs animate-pulse';
         }
-        // Auto-prefill Tomorrow 10 AM if currently empty
-        if (followupInput && !followupInput.value) {
-          setFollowupPreset('tomorrow_10');
-        }
-        if (typeof showToast === 'function') {
-          showToast('📞 Call Not Picked! Agli call kab karni hai timing select karein.', 'info');
-        }
+        // Do NOT auto-fill any date! User will manually choose if and when needed.
       } else {
         if (timingBox) {
           timingBox.classList.remove('border-gold', 'bg-amber-500/15', 'ring-2', 'ring-gold/30');
@@ -11019,7 +11066,8 @@
       }
       if (!currentSelectedLead) return;
 
-      setModalFollowupPreset('tomorrow_10');
+      const dtInput = document.getElementById('fu-modal-datetime');
+      if (dtInput) dtInput.value = ''; // Clean & empty: never auto-enter date
       const reasonInput = document.getElementById('fu-modal-reason');
       if (reasonInput) reasonInput.value = '';
       openModal('followup-schedule-modal');
@@ -11027,40 +11075,7 @@
 
     function triggerLeadReattemptFromModal() {
       if (!currentSelectedLead) return;
-
-      const ta = document.getElementById('modal-note-textarea');
-      const text = ta ? ta.value.trim() : '';
-
-      // MANDATORY VALIDATION: Must type a note/comment/update first!
-      if (!text) {
-        showToast('⚠️ Reattempt ke liye pehle message / update note likhna zaroori hai!', 'warning');
-        if (ta) {
-          ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          ta.focus();
-          ta.classList.add('ring-2', 'ring-amber-500', 'border-amber-500');
-          setTimeout(() => {
-            ta.classList.remove('ring-2', 'ring-amber-500', 'border-amber-500');
-          }, 3000);
-        }
-        return;
-      }
-
-      // Check next follow-up timing - default to In 2 Hours if not already picked
-      const fuInput = document.getElementById('modal-note-followup');
-      let fuVal = fuInput ? fuInput.value : '';
-      if (!fuVal) {
-        fuVal = calculateFollowupTime('2h');
-        if (fuInput) fuInput.value = fuVal;
-      }
-
-      // Set call status to Call Not Picked / Reattempt
-      const statusSelect = document.getElementById('modal-note-call-status');
-      if (statusSelect && !statusSelect.value.includes('Not Pick') && !statusSelect.value.includes('Busy')) {
-        statusSelect.value = 'Call Not Pick';
-      }
-
-      // Execute submission
-      submitLeadNote();
+      openFollowupScheduleModal(currentSelectedLead.id);
     }
 
     function scheduleReattemptForLead(leadId) {
@@ -11071,10 +11086,8 @@
       if (!currentSelectedLead) return;
       initiateCallWithLogging(currentSelectedLead.id);
       selectCallOutcome('Call Not Picked');
-      const fuInput = document.getElementById('call-log-next-followup');
-      if (fuInput) fuInput.value = calculateFollowupTime('2h');
       const notesEl = document.getElementById('call-log-notes');
-      if (notesEl) notesEl.value = 'Call not picked up. Scheduled reattempt in 2 hours.';
+      if (notesEl) notesEl.value = 'Call not picked up.';
     }
 
     function setModalFollowupPreset(type) {
@@ -11114,28 +11127,22 @@
       const dtVal = document.getElementById('fu-modal-datetime').value;
 
       if (!dtVal) {
-        showToast('⚠️ Please select a valid Follow-up Date & Time!', 'error');
+        showToast('⚠️ Please select a Follow-up Date & Time!', 'warning');
         return;
       }
 
       const reasonInput = document.getElementById('fu-modal-reason');
       const userReason = reasonInput ? reasonInput.value.trim() : '';
-
-      // MANDATORY VALIDATION: Reason/Update note required for Reattempt
-      if (!userReason) {
-        showToast('⚠️ Reattempt ke liye update note / remark likhna zaroori hai!', 'warning');
-        if (reasonInput) {
-          reasonInput.focus();
-          reasonInput.classList.add('ring-2', 'ring-amber-500', 'border-amber-500');
-          setTimeout(() => reasonInput.classList.remove('ring-2', 'ring-amber-500', 'border-amber-500'), 3000);
-        }
-        return;
-      }
-
-      const noteText = userReason;
+      const noteText = userReason || 'Reattempt scheduled';
 
       currentSelectedLead.nextFollowUp = dtVal;
       currentSelectedLead.nextFollowUpNote = noteText;
+
+      const leadInList = leads.find(l => String(l.id) === String(currentSelectedLead.id));
+      if (leadInList) {
+        leadInList.nextFollowUp = dtVal;
+        leadInList.nextFollowUpNote = noteText;
+      }
 
       // Unified single audit log entry
       logLeadActivity(currentSelectedLead, 'FOLLOWUP_SCHEDULED', noteText, {
@@ -11241,16 +11248,11 @@
 
       const isCallNotPicked = (callStatus === 'Call Not Pick' || callStatus === 'User Busy' || callStatus.includes('Not Pick') || callStatus.includes('Busy'));
 
-      // If Call Not Picked or User Busy and follow-up was empty, automatically default to Tomorrow 10 AM so next call is guaranteed!
-      if (isCallNotPicked && !followupDt) {
-        followupDt = calculateFollowupTime('tomorrow_10');
-        const fuInput = document.getElementById('modal-note-followup');
-        if (fuInput) fuInput.value = followupDt;
-      }
+      // NEVER auto-fill follow-up date: user controls follow-up date manually
 
       // MANDATORY VALIDATION: Must type a note/comment/update first!
       if (!text && !selectedImageBase64 && !selectedAudioBase64) {
-        showToast('⚠️ Reattempt ke liye pehle message / update note likhna zaroori hai!', 'warning');
+        showToast('⚠️ Note post karne ke liye message ya remark likhna zaroori hai!', 'warning');
         const ta = document.getElementById('modal-note-textarea');
         if (ta) {
           ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -11284,7 +11286,7 @@
           dueDate: followupDt,
           status: 'PENDING'
         });
-        localStorage.setItem('sri_sri_tasks', JSON.stringify(tasks));
+        safeStorageSet('sri_sri_tasks', tasks);
       }
 
       currentSelectedLead.lastContactAttempt = {
@@ -11302,7 +11304,18 @@
       currentSelectedLead.lastContactedAt = now.toISOString();
       updateModalLastAttemptCard(currentSelectedLead);
 
-      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      const leadInList = leads.find(l => String(l.id) === String(currentSelectedLead.id));
+      if (leadInList) {
+        if (followupDt) {
+          leadInList.nextFollowUp = followupDt;
+          leadInList.nextFollowUpNote = currentSelectedLead.nextFollowUpNote;
+        }
+        leadInList.lastContactAttempt = currentSelectedLead.lastContactAttempt;
+        leadInList.lastContactMethod = currentSelectedLead.lastContactMethod;
+        leadInList.lastContactedAt = currentSelectedLead.lastContactedAt;
+      }
+
+      safeStorageSet('sri_sri_leads', leads);
       syncLeadToCloud(currentSelectedLead);
 
       document.getElementById('modal-note-textarea').value = '';
