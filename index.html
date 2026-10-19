@@ -8495,9 +8495,10 @@
       }
       if (!currentSelectedLead) return;
 
-      const pipeline = pipelines.find(p => p.id === currentSelectedLead.pipelineId) || pipelines[0];
-      const oldStage = pipeline.stages.find(s => s.id === currentSelectedLead.stageId) || pipeline.stages[0];
-      const newStage = pipeline.stages.find(s => s.id === newStageId) || pipeline.stages[0];
+      const pipeline = (Array.isArray(pipelines) && pipelines.find(p => p.id === currentSelectedLead.pipelineId)) || pipelines[0];
+      const pStages = (pipeline && Array.isArray(pipeline.stages) && pipeline.stages.length > 0) ? pipeline.stages : defaultStagesTemplate;
+      const oldStage = pStages.find(s => s.id === currentSelectedLead.stageId) || defaultStagesTemplate.find(s => s.id === currentSelectedLead.stageId) || defaultStagesTemplate[0];
+      const newStage = pStages.find(s => s.id === newStageId) || defaultStagesTemplate.find(s => s.id === newStageId) || defaultStagesTemplate[0];
 
       if (oldStage.id === newStage.id) {
         showToast('Lead already in stage: ' + newStage.name, 'info');
@@ -8520,22 +8521,22 @@
       const fromBadge = document.getElementById('stage-confirm-from-badge');
       if (fromBadge) {
         fromBadge.innerText = oldStage.name;
-        fromBadge.style.backgroundColor = oldStage.color + '20';
-        fromBadge.style.borderColor = oldStage.color;
-        fromBadge.style.color = oldStage.color;
+        fromBadge.style.backgroundColor = (oldStage.color || '#eab308') + '20';
+        fromBadge.style.borderColor = oldStage.color || '#eab308';
+        fromBadge.style.color = oldStage.color || '#eab308';
       }
 
       const toBadge = document.getElementById('stage-confirm-to-badge');
       if (toBadge) {
         toBadge.innerText = newStage.name;
-        toBadge.style.backgroundColor = newStage.color + '20';
-        toBadge.style.borderColor = newStage.color;
-        toBadge.style.color = newStage.color;
+        toBadge.style.backgroundColor = (newStage.color || '#eab308') + '20';
+        toBadge.style.borderColor = newStage.color || '#eab308';
+        toBadge.style.color = newStage.color || '#eab308';
       }
 
       const msgEl = document.getElementById('stage-confirm-msg');
       if (msgEl) {
-        msgEl.innerHTML = 'Kya aap confirm <strong>"' + currentSelectedLead.name + '"</strong> ki stage badal kar <span class="font-bold text-gold">"' + newStage.name + '"</span> karna chahte hain?';
+        msgEl.innerHTML = 'Kya aap confirm <strong>"' + escapeHtml(currentSelectedLead.name || 'Client') + '"</strong> ki stage badal kar <span class="font-bold text-gold">"' + escapeHtml(newStage.name) + '"</span> karna chahte hain?';
       }
 
       openModal('stage-change-confirm-modal');
@@ -8554,7 +8555,6 @@
 
       executeStageUpdate(newStageId);
       pendingStageChange = null;
-      showToast('Stage updated successfully!', 'success');
     }
 
     function cancelStageChange() {
@@ -8940,11 +8940,12 @@
       const countText = document.getElementById('bulk-stage-count-text');
       if (countText) countText.innerText = selectedIds.length;
 
-      const currentPip = pipelines.find(p => p.id === activePipelineId) || pipelines[0];
+      const currentPip = (Array.isArray(pipelines) && pipelines.find(p => p.id === activePipelineId)) || (Array.isArray(pipelines) && pipelines[0]);
+      const pStages = (currentPip && Array.isArray(currentPip.stages) && currentPip.stages.length > 0) ? currentPip.stages : defaultStagesTemplate;
       const stageSelect = document.getElementById('bulk-target-stage');
       if (stageSelect) {
-        stageSelect.innerHTML = currentPip.stages.map(s => 
-          '<option value="' + s.id + '">' + s.name + '</option>'
+        stageSelect.innerHTML = pStages.map(s => 
+          '<option value="' + s.id + '">' + escapeHtml(s.name) + '</option>'
         ).join('');
       }
 
@@ -8954,23 +8955,34 @@
     function confirmBulkStageChangeProceed() {
       const selectedIds = getSelectedLeadIds();
       const stageSelect = document.getElementById('bulk-target-stage');
-      if (!stageSelect || selectedIds.length === 0) return;
-
       const targetStageId = stageSelect.value;
-      const currentPip = pipelines.find(p => p.id === activePipelineId) || pipelines[0];
-      const targetStage = currentPip.stages.find(s => s.id === targetStageId) || currentPip.stages[0];
+      if (!targetStageId) {
+        showToast('Please select a target stage.', 'warning');
+        return;
+      }
+      const targetStage = getStageById(targetStageId, activePipelineId);
 
       const now = new Date();
       selectedIds.forEach(id => {
-        const lead = leads.find(l => l.id === id);
+        const lead = leads.find(l => String(l.id) === String(id));
         if (lead) {
-          lead.stageId = targetStageId;
+          lead.stageId = targetStage.id;
+          lead.stage = targetStage.name;
+          if (targetStage.isWon) {
+            lead.wonAt = now.toISOString();
+            lead.lossReason = '';
+          } else if (targetStage.isLost) {
+            lead.lossReason = 'Bulk moved to Lost';
+          } else {
+            lead.lossReason = '';
+            lead.lostAt = '';
+          }
           logLeadActivity(lead, 'STAGE_CHANGE', 'Bulk moved to stage: ' + targetStage.name);
           syncLeadToCloud(lead);
         }
       });
 
-      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      safeStorageSet('sri_sri_leads', leads);
       closeModal('bulk-stage-modal');
       deselectAllOpps();
       renderOpportunities();
@@ -9863,7 +9875,7 @@
       draggedLeadId = null;
       draggedFromStageId = null;
       if (e.dataTransfer) {
-        e.dataTransfer.setData('text/stage-id', stageId);
+        e.dataTransfer.setData('text/drag-stage-id', stageId);
         e.dataTransfer.setData('text/plain', stageId);
         e.dataTransfer.effectAllowed = 'move';
       }
@@ -9887,7 +9899,7 @@
       draggedStageId = null;
       if (e.dataTransfer) {
         e.dataTransfer.setData('text/lead-id', leadId);
-        e.dataTransfer.setData('text/stage-id', stageId);
+        e.dataTransfer.setData('text/from-stage-id', stageId);
         e.dataTransfer.setData('text/plain', leadId);
         e.dataTransfer.effectAllowed = 'move';
       }
@@ -9942,41 +9954,33 @@
       if (dropzone) dropzone.classList.remove('ring-2', 'ring-gold', 'bg-gold/10', 'border-dashed');
 
       const dt = e.dataTransfer;
-      const stageIdFromData = dt ? (dt.getData('text/stage-id') || (kanbanDragType === 'stage' ? dt.getData('text/plain') : null)) : null;
-      const leadIdFromData = dt ? (dt.getData('text/lead-id') || (kanbanDragType === 'lead' ? dt.getData('text/plain') : null)) : null;
+      const leadIdFromDt = dt ? dt.getData('text/lead-id') : null;
+      const stageIdFromDt = dt ? dt.getData('text/drag-stage-id') : null;
 
-      const activeStageDragId = draggedStageId || stageIdFromData;
-      const activeLeadDragId = draggedLeadId || leadIdFromData;
+      const leadId = draggedLeadId || leadIdFromDt;
+      const isLeadDrop = (kanbanDragType === 'lead') || (!!leadId && leads.some(l => l.id === leadId));
 
-      // 1. Stage Reordering Drop
-      if (kanbanDragType === 'stage' || (activeStageDragId && activeStageDragId !== activeLeadDragId && !leads.some(l => l.id === activeStageDragId))) {
-        const fromStageId = activeStageDragId;
-        if (fromStageId && fromStageId !== targetStageId) {
-          const pipeline = (Array.isArray(pipelines) && pipelines.find(p => p.id === activePipelineId)) || pipelines[0];
-          const fromIdx = pipeline.stages.findIndex(s => s.id === fromStageId);
-          const toIdx = pipeline.stages.findIndex(s => s.id === targetStageId);
-          if (fromIdx !== -1 && toIdx !== -1) {
-            const [movedStage] = pipeline.stages.splice(fromIdx, 1);
-            pipeline.stages.splice(toIdx, 0, movedStage);
-            localStorage.setItem('sri_sri_pipelines', JSON.stringify(pipelines));
-            renderOpportunities();
-            showToast('Stage position updated: ' + movedStage.name, 'success');
-          }
-        }
-        handleStageDragEnd(e);
-        return;
-      }
-
-      // 2. Lead Card Movement Drop
-      const leadId = activeLeadDragId;
-      if (leadId) {
+      // CASE A: LEAD CARD DROP (Priority 1 - Strictly moves lead card)
+      if (isLeadDrop && leadId) {
         const lead = leads.find(l => l.id === leadId);
         if (lead) {
-          const pipeline = (Array.isArray(pipelines) && pipelines.find(p => p.id === lead.pipelineId)) || pipelines[0];
-          const targetStage = (pipeline && pipeline.stages && pipeline.stages.find(s => s.id === targetStageId)) || defaultStagesTemplate.find(s => s.id === targetStageId) || pipeline.stages[0];
+          const currentPipeline = (Array.isArray(pipelines) && pipelines.find(p => p.id === activePipelineId)) || 
+                                  (Array.isArray(pipelines) && pipelines.find(p => p.id === lead.pipelineId)) || 
+                                  pipelines[0];
+          
+          let targetStage = (currentPipeline && currentPipeline.stages && currentPipeline.stages.find(s => s.id === targetStageId)) ||
+                            defaultStagesTemplate.find(s => s.id === targetStageId);
+          
+          if (!targetStage && Array.isArray(pipelines)) {
+            for (const p of pipelines) {
+              const s = p.stages && p.stages.find(x => x.id === targetStageId);
+              if (s) { targetStage = s; break; }
+            }
+          }
+          if (!targetStage) targetStage = { id: targetStageId, name: 'Stage', color: '#eab308' };
 
           if (lead.stageId === targetStageId) {
-            showToast('Lead already in ' + targetStage.name, 'info');
+            showToast('Lead already in "' + targetStage.name + '"', 'info');
           } else {
             if (targetStage.isLost) {
               currentSelectedLead = lead;
@@ -9984,17 +9988,70 @@
             } else {
               lead.stageId = targetStage.id;
               lead.stage = targetStage.name;
+              if (targetStage.isWon) {
+                lead.wonAt = new Date().toISOString();
+                lead.lossReason = '';
+              } else {
+                lead.lossReason = '';
+                lead.lostAt = '';
+              }
               logLeadActivity(lead, 'STAGE_CHANGE', 'Lead moved to stage: ' + targetStage.name + ' via Drag & Drop');
-              localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+              safeStorageSet('sri_sri_leads', leads);
               syncLeadToCloud(lead);
               renderOpportunities();
               renderPhonebookTable();
               initDashboard();
-              showToast('Lead "' + lead.name + '" moved to ' + targetStage.name + '!', 'success');
+              showToast('Lead "' + (lead.name || 'Client') + '" moved to ' + targetStage.name + '!', 'success');
             }
           }
         }
         handleLeadCardDragEnd(e);
+        return;
+      }
+
+      // CASE B: STAGE REORDERING DROP (Priority 2 - Only when dragging stage headers)
+      const stageDragId = draggedStageId || stageIdFromDt;
+      if (kanbanDragType === 'stage' || (stageDragId && !leads.some(l => l.id === stageDragId))) {
+        const fromStageId = stageDragId;
+        if (fromStageId && fromStageId !== targetStageId) {
+          if (activePipelineId === 'all') {
+            const fromIdx = defaultStagesTemplate.findIndex(s => s.id === fromStageId);
+            const toIdx = defaultStagesTemplate.findIndex(s => s.id === targetStageId);
+            if (fromIdx !== -1 && toIdx !== -1) {
+              const [moved] = defaultStagesTemplate.splice(fromIdx, 1);
+              defaultStagesTemplate.splice(toIdx, 0, moved);
+            }
+            if (Array.isArray(pipelines)) {
+              pipelines.forEach(p => {
+                if (p && Array.isArray(p.stages)) {
+                  const f = p.stages.findIndex(s => s.id === fromStageId);
+                  const t = p.stages.findIndex(s => s.id === targetStageId);
+                  if (f !== -1 && t !== -1) {
+                    const [m] = p.stages.splice(f, 1);
+                    p.stages.splice(t, 0, m);
+                  }
+                }
+              });
+            }
+            safeStorageSet('sri_sri_pipelines', pipelines);
+            renderOpportunities();
+            showToast('Stage position updated across all pipelines!', 'success');
+          } else {
+            const pipeline = (Array.isArray(pipelines) && pipelines.find(p => p.id === activePipelineId)) || pipelines[0];
+            if (pipeline && Array.isArray(pipeline.stages)) {
+              const fromIdx = pipeline.stages.findIndex(s => s.id === fromStageId);
+              const toIdx = pipeline.stages.findIndex(s => s.id === targetStageId);
+              if (fromIdx !== -1 && toIdx !== -1) {
+                const [movedStage] = pipeline.stages.splice(fromIdx, 1);
+                pipeline.stages.splice(toIdx, 0, movedStage);
+                safeStorageSet('sri_sri_pipelines', pipelines);
+                renderOpportunities();
+                showToast('Stage position updated: ' + movedStage.name, 'success');
+              }
+            }
+          }
+        }
+        handleStageDragEnd(e);
         return;
       }
     }
@@ -10011,7 +10068,7 @@
 
         const boardFrag = document.createDocumentFragment();
         stages.forEach(stg => {
-        const colLeads = pipLeads.filter(l => l.stageId === stg.id);
+        const colLeads = pipLeads.filter(l => l.stageId === stg.id || (!l.stageId && l.stage && l.stage.trim().toLowerCase() === stg.name.trim().toLowerCase()));
         const col = document.createElement('div');
         col.id = 'kanban-col-' + stg.id;
         col.className = 'kanban-stage-col w-72 shrink-0 bg-subtle/40 rounded-3xl border border-main flex flex-col max-h-[75vh] overflow-hidden transition-all duration-200';
@@ -10726,31 +10783,46 @@
 
     function renderLeadStagesBar(lead, pipeline) {
       const container = document.getElementById('modal-stages-horizontal-bar');
+      if (!container) return;
       container.innerHTML = '';
 
-      const currentStage = pipeline.stages.find(s => s.id === lead.stageId) || pipeline.stages[0];
-      const statusPill = document.getElementById('modal-lead-status-pill');
-      statusPill.innerText = '• ' + currentStage.name;
-      statusPill.style.backgroundColor = currentStage.color + '20';
-      statusPill.style.color = currentStage.color;
+      const pStages = (pipeline && Array.isArray(pipeline.stages) && pipeline.stages.length > 0)
+        ? pipeline.stages
+        : defaultStagesTemplate;
 
-      const outcomeBox = document.getElementById('modal-outcome-box');
-      if (currentStage.isLost) {
-        outcomeBox.classList.remove('hidden');
-        document.getElementById('modal-loss-reason-text').innerText = lead.lossReason || 'Not specified';
-      } else {
-        outcomeBox.classList.add('hidden');
+      const currentStage = pStages.find(s => s.id === lead.stageId) || 
+                           defaultStagesTemplate.find(s => s.id === lead.stageId) || 
+                           pStages[0] || 
+                           defaultStagesTemplate[0];
+
+      const statusPill = document.getElementById('modal-lead-status-pill');
+      if (statusPill && currentStage) {
+        statusPill.innerText = '• ' + currentStage.name;
+        statusPill.style.backgroundColor = (currentStage.color || '#eab308') + '20';
+        statusPill.style.color = currentStage.color || '#eab308';
       }
 
-      pipeline.stages.forEach(stg => {
+      const outcomeBox = document.getElementById('modal-outcome-box');
+      if (outcomeBox) {
+        if (currentStage && currentStage.isLost) {
+          outcomeBox.classList.remove('hidden');
+          const rText = document.getElementById('modal-loss-reason-text');
+          if (rText) rText.innerText = lead.lossReason || 'Not specified';
+        } else {
+          outcomeBox.classList.add('hidden');
+        }
+      }
+
+      pStages.forEach(stg => {
         const isActive = stg.id === lead.stageId;
         const btn = document.createElement('button');
-        btn.className = 'px-3 py-1.5 rounded-xl font-bold text-xs shrink-0 flex items-center gap-1.5 transition ' + (isActive ? 'shadow-md border-2' : 'border border-main hover:bg-subtle');
-        btn.style.borderColor = stg.color;
-        btn.style.backgroundColor = isActive ? stg.color : 'transparent';
+        btn.type = 'button';
+        btn.className = 'px-3 py-1.5 rounded-xl font-bold text-xs shrink-0 flex items-center gap-1.5 transition cursor-pointer ' + (isActive ? 'shadow-md border-2' : 'border border-main hover:bg-subtle');
+        btn.style.borderColor = stg.color || '#eab308';
+        btn.style.backgroundColor = isActive ? (stg.color || '#eab308') : 'transparent';
         btn.style.color = isActive ? '#020617' : 'inherit';
 
-        btn.innerHTML = isActive ? '<span>✓</span> <span>' + stg.name + '</span>' : '<span>' + stg.name + '</span>';
+        btn.innerHTML = isActive ? '<span>✓</span> <span>' + escapeHtml(stg.name) + '</span>' : '<span>' + escapeHtml(stg.name) + '</span>';
         btn.onclick = () => requestLeadStageChange(stg.id);
         container.appendChild(btn);
       });
@@ -10775,13 +10847,29 @@
       closeModal('lead-loss-reason-modal');
     }
 
+    function getStageById(stageId, pipelineId) {
+      const pipeline = (Array.isArray(pipelines) && pipelines.find(p => p.id === pipelineId)) || 
+                       (Array.isArray(pipelines) && pipelines.find(p => p.id === activePipelineId)) || 
+                       (Array.isArray(pipelines) && pipelines[0]);
+      
+      let stage = (pipeline && Array.isArray(pipeline.stages) && pipeline.stages.find(s => s.id === stageId)) ||
+                  (Array.isArray(defaultStagesTemplate) && defaultStagesTemplate.find(s => s.id === stageId));
+      
+      if (!stage && Array.isArray(pipelines)) {
+        for (const p of pipelines) {
+          const s = p.stages && p.stages.find(x => x.id === stageId);
+          if (s) { stage = s; break; }
+        }
+      }
+      return stage || { id: stageId, name: 'Stage', color: '#eab308' };
+    }
+
     function updateLeadStage(newStageId) {
       if (!isCurrentUserSuperAdmin() && !userHasPermission('opp_move_stage')) { showToast('Permission Denied: You cannot move deal stages.', 'error'); return; }
       if (!currentSelectedLead) return;
-      const pipeline = pipelines.find(p => p.id === currentSelectedLead.pipelineId) || pipelines[0];
-      const targetStage = pipeline.stages.find(s => s.id === newStageId);
+      const targetStage = getStageById(newStageId, currentSelectedLead.pipelineId);
 
-      if (targetStage.isLost) {
+      if (targetStage && targetStage.isLost) {
         openLeadLossReasonModal(newStageId);
         return;
       }
@@ -10810,21 +10898,47 @@
     }
 
     function executeStageUpdate(newStageId) {
-      const pipeline = pipelines.find(p => p.id === currentSelectedLead.pipelineId) || pipelines[0];
-      const targetStage = pipeline.stages.find(s => s.id === newStageId);
+      if (!currentSelectedLead) return;
+      const pipeline = (Array.isArray(pipelines) && pipelines.find(p => p.id === currentSelectedLead.pipelineId)) || 
+                       (Array.isArray(pipelines) && pipelines[0]);
+      const targetStage = getStageById(newStageId, currentSelectedLead.pipelineId);
 
-      currentSelectedLead.stageId = newStageId;
+      // Update both currentSelectedLead and the lead in leads array
+      currentSelectedLead.stageId = targetStage.id;
+      currentSelectedLead.stage = targetStage.name;
+
+      const leadInList = leads.find(l => String(l.id) === String(currentSelectedLead.id));
+      if (leadInList) {
+        leadInList.stageId = targetStage.id;
+        leadInList.stage = targetStage.name;
+      }
 
       // If moving to an active or won stage, clear previous lost reason so old lost reason never persists!
       if (!targetStage.isLost) {
         currentSelectedLead.lossReason = '';
         currentSelectedLead.lostAt = '';
+        if (leadInList) {
+          leadInList.lossReason = '';
+          leadInList.lostAt = '';
+        }
+      } else {
+        if (!currentSelectedLead.lossReason && leadInList && leadInList.lossReason) {
+          currentSelectedLead.lossReason = leadInList.lossReason;
+        } else if (currentSelectedLead.lossReason && leadInList) {
+          leadInList.lossReason = currentSelectedLead.lossReason;
+        }
+      }
+
+      if (targetStage.isWon) {
+        const wonTime = new Date().toISOString();
+        currentSelectedLead.wonAt = wonTime;
+        if (leadInList) leadInList.wonAt = wonTime;
       }
 
       // Audit logging with user, role, device, and IP
-      logLeadActivity(currentSelectedLead, 'STAGE_CHANGE', 'Lead moved to stage: ' + targetStage.name + (targetStage.isLost ? ' (Reason: ' + currentSelectedLead.lossReason + ')' : ''));
+      logLeadActivity(currentSelectedLead, 'STAGE_CHANGE', 'Lead moved to stage: ' + targetStage.name + (targetStage.isLost ? ' (Reason: ' + (currentSelectedLead.lossReason || 'None') + ')' : ''));
 
-      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      safeStorageSet('sri_sri_leads', leads);
       syncLeadToCloud(currentSelectedLead);
       renderLeadStagesBar(currentSelectedLead, pipeline);
       renderLeadTimeline(currentSelectedLead);
@@ -11835,10 +11949,10 @@
 
       // 3. Stage update if selected
       if (newStageId && newStageId !== lead.stageId) {
-        const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
-        const targetStage = p.stages.find(s => s.id === newStageId);
+        const targetStage = getStageById(newStageId, lead.pipelineId);
         if (targetStage) {
-          lead.stageId = newStageId;
+          lead.stageId = targetStage.id;
+          lead.stage = targetStage.name;
           lead.activities.unshift({
             id: 'act-stage-' + Date.now(),
             userName: userName,
@@ -13064,15 +13178,26 @@
       const newPip = pipelines.find(p => p.id === newPipId) || pipelines[0];
       const newStaff = users.find(u => u.email === newStaffEmail) || users[0];
 
+      const firstStage = (newPip.stages && newPip.stages[0]) || defaultStagesTemplate[0];
       currentSelectedLead.pipelineId = newPip.id;
-      currentSelectedLead.stageId = newPip.stages[0].id;
+      currentSelectedLead.stageId = firstStage.id;
+      currentSelectedLead.stage = firstStage.name;
       currentSelectedLead.assignedToName = newStaff.name;
       currentSelectedLead.assignedToEmail = newStaff.email;
+
+      const leadInList = leads.find(l => String(l.id) === String(currentSelectedLead.id));
+      if (leadInList) {
+        leadInList.pipelineId = newPip.id;
+        leadInList.stageId = firstStage.id;
+        leadInList.stage = firstStage.name;
+        leadInList.assignedToName = newStaff.name;
+        leadInList.assignedToEmail = newStaff.email;
+      }
 
       // Audit logging with user, role, device, and IP
       logLeadActivity(currentSelectedLead, 'TRANSFER', 'Lead transferred to pipeline "' + newPip.name + '" and reassigned to ' + newStaff.name + (note ? '. Note: ' + note : ''));
 
-      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      safeStorageSet('sri_sri_leads', leads);
       syncLeadToCloud(currentSelectedLead);
       closeModal('transfer-modal');
       openLeadModal(currentSelectedLead.id);
