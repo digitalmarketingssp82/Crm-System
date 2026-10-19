@@ -3560,12 +3560,17 @@
       </div>
 
       <!-- File Upload Box -->
-      <div class="p-4 rounded-2xl bg-subtle border-2 border-dashed border-main text-center space-y-2 relative cursor-pointer hover:border-gold transition">
-        <input type="file" id="import-file-input" accept=".xlsx, .xls, .csv" onchange="handleImportFile(this)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
-        <div class="w-10 h-10 mx-auto rounded-xl bg-card border border-main flex items-center justify-center text-gold">
+      <div id="import-dropzone" 
+           ondragover="handleImportDragOver(event)" 
+           ondragenter="handleImportDragOver(event)" 
+           ondragleave="handleImportDragLeave(event)" 
+           ondrop="handleImportDrop(event)"
+           class="p-4 rounded-2xl bg-subtle border-2 border-dashed border-main text-center space-y-2 relative cursor-pointer hover:border-gold transition">
+        <input type="file" id="import-file-input" accept=".xlsx, .xls, .csv, text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" onchange="handleImportFile(this)" onclick="this.value=null;" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
+        <div class="w-10 h-10 mx-auto rounded-xl bg-card border border-main flex items-center justify-center text-gold pointer-events-none">
           <i data-lucide="upload-cloud" class="w-5 h-5"></i>
         </div>
-        <div>
+        <div class="pointer-events-none">
           <p class="text-xs font-bold text-main" id="import-file-name-label">Click or Drag &amp; Drop Excel (.xlsx, .xls) or CSV file</p>
           <p class="text-[10px] text-muted-custom">Supports all 42 Columns: Name, Phone, Email, Company, Stage, Pipeline, Source, Tags, Notes, FB Campaign, Form ID, Customer Type, Material, Address, etc.</p>
         </div>
@@ -15867,6 +15872,8 @@
         if (prevSec) prevSec.classList.add('hidden');
         const btn = document.getElementById('btn-execute-import');
         if (btn) btn.disabled = true;
+        const dz = document.getElementById('import-dropzone');
+        if (dz) dz.classList.remove('border-gold', 'bg-gold/10');
       } catch(e) {
         console.warn('Import modal initialization note:', e);
       }
@@ -15905,40 +15912,126 @@
       showToast('Master 42-Column Template downloaded successfully!', 'success');
     }
 
+    function handleImportDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dz = document.getElementById('import-dropzone');
+      if (dz) {
+        dz.classList.add('border-gold', 'bg-gold/10');
+      }
+    }
+
+    function handleImportDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dz = document.getElementById('import-dropzone');
+      if (dz) {
+        dz.classList.remove('border-gold', 'bg-gold/10');
+      }
+    }
+
+    function handleImportDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dz = document.getElementById('import-dropzone');
+      if (dz) {
+        dz.classList.remove('border-gold', 'bg-gold/10');
+      }
+      const files = e.dataTransfer ? e.dataTransfer.files : null;
+      if (files && files.length > 0) {
+        handleImportFile({ files: files });
+      }
+    }
+
     function handleImportFile(input) {
-      const file = input.files[0];
+      const file = (input && input.files) ? input.files[0] : null;
       if (!file) return;
 
       const fileNameLabel = document.getElementById('import-file-name-label');
       if (fileNameLabel) fileNameLabel.innerText = 'Selected: ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
 
-      const ext = file.name.split('.').pop().toLowerCase();
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
 
       if (ext === 'xlsx' || ext === 'xls') {
         const reader = new FileReader();
         reader.onload = function(e) {
           try {
             if (typeof XLSX === 'undefined') {
-              showToast('Excel library loading. If delayed, please save file as .CSV and upload.', 'warning');
+              showToast('Excel library (SheetJS) is loading or unavailable. If offline, please save file as .CSV and upload.', 'error');
+              return;
             }
             const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            // defval: '' is essential to ensure empty cells are never skipped or shifted
-            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            
+            if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+              showToast('Uploaded Excel workbook contains no sheets.', 'error');
+              return;
+            }
+
+            // Find first sheet with actual data rows
+            let targetSheetName = workbook.SheetNames[0];
+            for (const name of workbook.SheetNames) {
+              const ws = workbook.Sheets[name];
+              if (ws && ws['!ref']) {
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                if (range.e.r > 0) {
+                  targetSheetName = name;
+                  break;
+                }
+              }
+            }
+            const worksheet = workbook.Sheets[targetSheetName];
+            // defval: '' prevents empty cells from shifting columns
+            // raw: false formats numbers/phones cleanly as displayed text
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: false });
 
             if (!jsonRows || jsonRows.length < 2) {
               showToast('Uploaded spreadsheet is empty or has no header row.', 'error');
               return;
             }
 
-            const headers = jsonRows[0].map(h => String(h || '').trim());
-            const rows = jsonRows.slice(1).filter(r => r.some(c => c !== null && c !== undefined && String(c).trim() !== ''));
+            // Detect the best header row (first row with at least 2 non-empty cells or known lead field keywords)
+            let headerRowIndex = 0;
+            for (let i = 0; i < Math.min(jsonRows.length, 5); i++) {
+              const r = jsonRows[i];
+              if (!Array.isArray(r)) continue;
+              const nonEmpty = r.filter(c => c !== null && c !== undefined && String(c).trim() !== '');
+              const rowText = r.map(c => String(c || '').toLowerCase()).join(' ');
+              if (nonEmpty.length >= 2 && (rowText.includes('name') || rowText.includes('phone') || rowText.includes('mobile') || rowText.includes('lead') || rowText.includes('client') || rowText.includes('opportunity') || rowText.includes('stage') || rowText.includes('pipeline') || nonEmpty.length >= 3)) {
+                headerRowIndex = i;
+                break;
+              }
+            }
+
+            const rawHeaders = jsonRows[headerRowIndex].map(h => String(h || '').trim());
+            // Filter out empty trailing columns
+            let lastValidCol = rawHeaders.length - 1;
+            while (lastValidCol >= 0 && !rawHeaders[lastValidCol]) lastValidCol--;
+            if (lastValidCol < 0) {
+              showToast('Could not detect valid column headers in spreadsheet.', 'error');
+              return;
+            }
+            const headers = rawHeaders.slice(0, lastValidCol + 1);
+
+            const rawDataRows = jsonRows.slice(headerRowIndex + 1);
+            const rows = rawDataRows.filter(r => r.some(c => c !== null && c !== undefined && String(c).trim() !== '')).map(r => {
+              return headers.map((_, idx) => {
+                let val = r[idx];
+                if (val instanceof Date) {
+                  return val.toISOString().slice(0, 19).replace('T', ' ');
+                }
+                return val !== null && val !== undefined ? String(val).trim() : '';
+              });
+            });
+
+            if (rows.length === 0) {
+              showToast('Excel file contains headers but no data rows.', 'error');
+              return;
+            }
 
             processParsedImportData(headers, rows);
           } catch(err) {
-            console.error(err);
+            console.error('Failed to parse Excel file:', err);
             showToast('Failed to parse Excel file: ' + err.message, 'error');
           }
         };
@@ -16055,42 +16148,42 @@
     }
 
     const CRM_IMPORTABLE_FIELDS = [
-      { id: 'name', label: '👤 Client Name *', match: ['name', 'opportunity', 'client', 'customer'] },
-      { id: 'phone', label: '📞 Phone / WhatsApp', match: ['phone', 'mobile', 'contact', 'whatsapp', 'number', 'tel'] },
-      { id: 'email', label: '📧 Email Address', match: ['email', 'mail'] },
-      { id: 'company', label: '🏢 Company / Firm Name', match: ['company', 'firm', 'business', 'org'] },
-      { id: 'dealValue', label: '💰 Value / Deal Amount (₹)', match: ['value', 'deal value', 'deal', 'budget', 'amount', 'price'] },
-      { id: 'sourceDetails', label: '📢 Campaign / AdSet / Creative Details', match: ['source detail', 'source details', 'source de', 'sub-source', 'adset', 'ad creative'] },
-      { id: 'source', label: '🏷️ Lead Source (Meta Ads, Google, Walk-in)', match: ['source', 'lead source', 'channel'] },
-      { id: 'priority', label: '🔥 Priority (High / Med / Low)', match: ['priority'] },
-      { id: 'stage', label: '📊 Deal Stage / Status', match: ['stage', 'status'] },
-      { id: 'pipeline', label: '🔄 Target Pipeline', match: ['pipeline', 'pipe', 'target pipeline', 'sheet'] },
-      { id: 'assignedTo', label: '👨‍💼 Assigned Staff / Executive', match: ['assigned to', 'assigned', 'executive', 'owner', 'agent', 'staff'] },
+      { id: 'name', label: '👤 Client Name *', match: ['client name', 'customer name', 'lead name', 'full name', 'contact person', 'opportunity', 'name', 'client', 'customer'] },
+      { id: 'phone', label: '📞 Phone / WhatsApp', match: ['phone number', 'mobile number', 'mobile no', 'mobile', 'contact number', 'contact no', 'whatsapp number', 'whatsapp', 'phone', 'tel', 'cell'] },
+      { id: 'email', label: '📧 Email Address', match: ['email address', 'email id', 'email', 'e mail', 'mail'] },
+      { id: 'company', label: '🏢 Company / Firm Name', match: ['company name', 'firm name', 'business name', 'company', 'firm', 'business', 'org', 'organization'] },
+      { id: 'dealValue', label: '💰 Value / Deal Amount (₹)', match: ['deal amount', 'deal value', 'deal price', 'deal budget', 'budget', 'amount', 'price', 'deal', 'value'] },
+      { id: 'sourceDetails', label: '📢 Campaign / AdSet / Creative Details', match: ['campaign details', 'source detail', 'source details', 'sub source', 'adset', 'ad creative', 'ad set'] },
+      { id: 'source', label: '🏷️ Lead Source (Meta Ads, Google, Walk-in)', match: ['lead source', 'channel', 'source'] },
+      { id: 'priority', label: '🔥 Priority (High / Med / Low)', match: ['lead priority', 'priority'] },
+      { id: 'stage', label: '📊 Deal Stage / Status', match: ['deal stage', 'deal status', 'lead stage', 'lead status', 'stage', 'status'] },
+      { id: 'pipeline', label: '🔄 Target Pipeline', match: ['target pipeline', 'pipeline name', 'pipeline', 'pipe', 'sheet'] },
+      { id: 'assignedTo', label: '👨‍💼 Assigned Staff / Executive', match: ['assigned to', 'assigned staff', 'assigned executive', 'assigned', 'executive', 'owner', 'agent', 'staff'] },
       { id: 'attendedBy', label: '👨‍💼 Customer Attended By', match: ['customer attended by', 'attended by', 'caller', 'telecaller'] },
       { id: 'tags', label: '🏷️ Tags / Labels', match: ['tags', 'tag', 'labels', 'label'] },
-      { id: 'notes', label: '💬 Notes / Remarks / Lead Form Details', match: ['notes', 'note', 'description', 'remarks', 'remark', 'comments', 'comment'] },
-      { id: 'postedNotes', label: '📝 Posted Notes / Agent History', match: ['posted notes', 'posted note', 'audit notes', 'call history'] },
-      { id: 'closeDate', label: '📅 Expected Close Date', match: ['expected close', 'expected close date', 'close date', 'target date', 'closing', 'due date', 'expected'] },
+      { id: 'notes', label: '💬 Notes / Remarks / Lead Form Details', match: ['lead form details', 'description', 'remarks', 'remark', 'comments', 'comment', 'notes', 'note'] },
+      { id: 'postedNotes', label: '📝 Posted Notes / Agent History', match: ['posted notes', 'posted note', 'audit notes', 'call history', 'agent history'] },
+      { id: 'closeDate', label: '📅 Expected Close Date', match: ['expected close date', 'expected close', 'close date', 'target date', 'closing date', 'closing', 'due date'] },
       { id: 'lossReason', label: '❌ Lost Reason', match: ['lost reason', 'loss reason', 'reason'] },
-      { id: 'createdAt', label: '🗓️ Created At Date', match: ['created', 'created at', 'entry date', 'creation', 'date'] },
-      { id: 'updatedAt', label: '🔄 Updated At Date', match: ['updated', 'updated at', 'modified'] },
+      { id: 'createdAt', label: '🗓️ Created At Date', match: ['created at', 'created time', 'creation date', 'entry date', 'creation', 'created', 'date'] },
+      { id: 'updatedAt', label: '🔄 Updated At Date', match: ['updated at', 'update date', 'updated', 'modified'] },
       { id: 'wonAt', label: '🏆 Won Date', match: ['won at', 'won date', 'won time'] },
       { id: 'lostAt', label: '🚫 Lost Date', match: ['lost at', 'lost date', 'lost time'] },
-      { id: 'customerType', label: '👥 Customer Type (Home Owner, etc.)', match: ['customer type', 'cust type'] },
+      { id: 'customerType', label: '👥 Customer Type (Home Owner, etc.)', match: ['you are a', 'customer type', 'cust type', 'client category'] },
       { id: 'clientType', label: '👥 New / Existing Customer', match: ['new/existing?', 'new existing', 'client type', 'customer status'] },
-      { id: 'materialType', label: '🪵 Material Type (Plywood, etc.)', match: ['material type', 'material', 'product', 'requirement'] },
-      { id: 'requirementDateTime', label: '⏰ Requirement Timeline', match: ['requirement datetime', 'requirement date time', 'requirement time', 'timeline'] },
+      { id: 'materialType', label: '🪵 Material Type (Plywood, etc.)', match: ['what do you need the material for', 'material type', 'material requirement', 'material', 'product', 'requirement'] },
+      { id: 'requirementDateTime', label: '⏰ Requirement Timeline', match: ['when do you need the material', 'requirement datetime', 'requirement date time', 'requirement timeline', 'requirement time', 'timeline'] },
       { id: 'customerAddress', label: '🏠 Customer Address (FB Form)', match: ['customer address', 'cust address'] },
       { id: 'stateCity', label: '🏙️ State / City', match: ['state/city', 'state city'] },
-      { id: 'address', label: '📍 Address / Street (Walk-in / Sheet)', match: ['address', 'street', 'location', 'site'] },
+      { id: 'address', label: '📍 Address / Street (Walk-in / Sheet)', match: ['street address', 'address', 'street', 'location', 'site'] },
       { id: 'city', label: '🌆 City / State', match: ['city/state', 'city state', 'city', 'state', 'town'] },
-      { id: 'fbCampaign', label: '🎯 FB Campaign Name', match: ['fb campaign', 'campaign name', 'meta campaign'] },
+      { id: 'fbCampaign', label: '🎯 FB Campaign Name', match: ['fb campaign name', 'campaign name', 'meta campaign', 'fb campaign'] },
       { id: 'fbCampaignId', label: '🎯 FB Campaign ID', match: ['fb campaign id', 'campaign id'] },
-      { id: 'fbForm', label: '📋 FB Form Name', match: ['fb form', 'lead form name'] },
+      { id: 'fbForm', label: '📋 FB Form Name', match: ['fb form name', 'lead form name', 'form name', 'fb form'] },
       { id: 'fbFormId', label: '📋 FB Form ID', match: ['fb form id', 'form id'] },
-      { id: 'fbAd', label: '🖼️ FB Ad Name', match: ['fb ad', 'ad name'] },
+      { id: 'fbAd', label: '🖼️ FB Ad Name', match: ['fb ad name', 'ad name', 'fb ad'] },
       { id: 'fbAdId', label: '🖼️ FB Ad ID', match: ['fb ad id', 'ad id'] },
-      { id: 'fbPage', label: '📄 FB Page Name', match: ['fb page', 'page name'] },
+      { id: 'fbPage', label: '📄 FB Page Name', match: ['fb page name', 'page name', 'fb page'] },
       { id: 'fbPlatform', label: '📱 FB / IG Platform', match: ['fb platform', 'platform', 'placement'] },
       { id: 'fbLeadId', label: '🆔 FB Lead ID', match: ['fb lead id', 'lead id'] },
       { id: 'utmSource', label: '🔗 UTM Source', match: ['utm source'] },
@@ -16104,25 +16197,43 @@
     function matchHeaderToField(header) {
       if (!header) return '_skip';
       const cleanHeader = header.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-      // Pass 1: Exact match against cleanHeader
+      
+      // Pass 1: Exact matches (word-by-word)
       for (const f of CRM_IMPORTABLE_FIELDS) {
         if (f.id === '_skip') continue;
         if (f.match.some(m => m.replace(/[^a-z0-9]+/g, ' ').trim() === cleanHeader)) {
           return f.id;
         }
       }
-      // Pass 2: Substring match (longest match first)
-      const sorted = [...CRM_IMPORTABLE_FIELDS.filter(f => f.id !== '_skip')].sort((a,b) => {
-        const maxA = Math.max(...a.match.map(m => m.length));
-        const maxB = Math.max(...b.match.map(m => m.length));
-        return maxB - maxA;
-      });
-      for (const f of sorted) {
-        if (f.match.some(m => cleanHeader.includes(m.replace(/[^a-z0-9]+/g, ' ').trim()))) {
-          return f.id;
+
+      // Pass 2: Substring matches with specific priority (Longest keyword match first)
+      const allMatches = [];
+      for (const f of CRM_IMPORTABLE_FIELDS) {
+        if (f.id === '_skip') continue;
+        for (const kw of f.match) {
+          const cleanKw = kw.replace(/[^a-z0-9]+/g, ' ').trim();
+          if (cleanHeader.includes(cleanKw)) {
+            allMatches.push({ fieldId: f.id, kwLength: cleanKw.length, kw: cleanKw });
+          }
         }
       }
+
+      if (allMatches.length > 0) {
+        allMatches.sort((a, b) => b.kwLength - a.kwLength);
+        return allMatches[0].fieldId;
+      }
+
       return '_skip';
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     function renderFieldMappingTable(headers, sampleRow) {
@@ -16131,7 +16242,7 @@
       tbody.innerHTML = '';
 
       headers.forEach((header, colIdx) => {
-        const sampleVal = sampleRow[colIdx] || '—';
+        const sampleVal = (sampleRow[colIdx] || '').toString();
         const bestMatch = matchHeaderToField(header);
 
         const tr = document.createElement('tr');
@@ -16141,12 +16252,16 @@
           <option value="${f.id}" ${f.id === bestMatch ? 'selected' : ''}>${f.label}</option>
         `).join('');
 
+        const escapedHeader = escapeHtml(header);
+        const displaySample = sampleVal ? escapeHtml(sampleVal.length > 80 ? sampleVal.slice(0, 77) + '...' : sampleVal) : '—';
+        const titleSample = escapeHtml(sampleVal.length > 250 ? sampleVal.slice(0, 247) + '...' : sampleVal);
+
         tr.innerHTML = `
           <td class="py-2.5 px-3 font-bold text-main font-mono text-xs">
-            <span class="px-2.5 py-1 rounded-lg bg-subtle border border-main text-gold shadow-2xs">${header}</span>
+            <span class="px-2.5 py-1 rounded-lg bg-subtle border border-main text-gold shadow-2xs">${escapedHeader}</span>
           </td>
-          <td class="py-2.5 px-3 text-muted-custom font-sans text-xs truncate max-w-[180px]" title="${sampleVal}">
-            <span class="italic text-slate-300">${sampleVal}</span>
+          <td class="py-2.5 px-3 text-muted-custom font-sans text-xs truncate max-w-[180px]" title="${titleSample}">
+            <span class="italic text-slate-300">${displaySample}</span>
           </td>
           <td class="py-2.5 px-3">
             <select class="import-col-mapper w-full p-2 rounded-xl border border-main bg-card text-main font-bold text-xs focus:border-gold outline-none" data-col-index="${colIdx}">
@@ -16164,13 +16279,17 @@
       table.innerHTML = '';
 
       let thead = '<thead><tr class="bg-card text-[10px] uppercase font-bold text-muted-custom border-b border-main">';
-      headers.forEach(h => thead += '<th class="p-2">' + h + '</th>');
+      headers.forEach(h => thead += '<th class="p-2">' + escapeHtml(h) + '</th>');
       thead += '</tr></thead>';
 
       let tbody = '<tbody>';
       rows.forEach(r => {
         tbody += '<tr class="border-b border-main/40">';
-        headers.forEach((h, i) => tbody += '<td class="p-2 font-mono text-[11px] text-main">' + (r[i] || '—') + '</td>');
+        headers.forEach((h, i) => {
+          const val = (r[i] || '').toString();
+          const displayVal = val ? escapeHtml(val.length > 60 ? val.slice(0, 57) + '...' : val) : '—';
+          tbody += '<td class="p-2 font-mono text-[11px] text-main">' + displayVal + '</td>';
+        });
         tbody += '</tr>';
       });
       tbody += '</tbody>';
@@ -16181,6 +16300,7 @@
     function clearTombstoneForImportedPhones(phones) {
       try {
         const deleted = getDeletedLeadIds();
+        if (deleted.size === 0) return;
         let modified = false;
         phones.forEach(p => {
           if (!p) return;
@@ -16223,8 +16343,11 @@
       let importedCount = 0;
       let updatedCount = 0;
 
-      // Clear any tombstone for re-imported leads so new upload is 100% active
-      const allImportedPhones = currentParsedImportData.rows.map(r => r[1] || '');
+      // Clear any tombstone for re-imported leads dynamically finding phone column
+      const phoneColIdx = Object.keys(mappingDict).find(k => mappingDict[k] === 'phone');
+      const allImportedPhones = phoneColIdx !== undefined 
+        ? currentParsedImportData.rows.map(r => r[phoneColIdx] || '')
+        : currentParsedImportData.rows.map(r => r[1] || '');
       clearTombstoneForImportedPhones(allImportedPhones);
       const pipelineBreakdown = {};
       const now = new Date();
