@@ -5933,7 +5933,11 @@
       }
     } catch(e){}
 
-    let activePipelineId = localStorage.getItem('sri_sri_active_pipeline') || 'p-walkin';
+    let activePipelineId = localStorage.getItem('sri_sri_active_pipeline') || 'all';
+    if (activePipelineId === 'p-complaint' || activePipelineId === 'undefined') {
+      activePipelineId = 'all';
+      try { localStorage.setItem('sri_sri_active_pipeline', 'all'); } catch(e){}
+    }
     let opportunityViewMode = localStorage.getItem('sri_sri_opp_view_mode') || 'kanban';
 
     // ==================== COLUMNS CUSTOMIZATION SYSTEM ====================
@@ -6247,6 +6251,7 @@
       }
     });
     localStorage.setItem('sri_sri_users', JSON.stringify(users));
+    window.users = users;
 
     // WHATSAPP TEMPLATES
     let waTemplates = JSON.parse(localStorage.getItem('sri_sri_wa_templates') || JSON.stringify([
@@ -6814,6 +6819,11 @@
       // Super admin alias
       if (!user && (email === 'admin@srisriply.com' || email === 'sriplywoodsgm@gmail.com' || email === 'admin')) {
         user = users.find(u => u.role === 'Organization Admin' || u.email.toLowerCase() === 'sriplywoodsgm@gmail.com') || defaultSuperAdmin;
+      }
+
+      // Sales Coordinator alias
+      if (!user && (email === 'coordinator@srisriply.com' || email === 'salescordinator@gmail.com' || email === 'coordinator' || email === 'cordinator' || email === 'sales coordinator' || email === 'sales cordinator')) {
+        user = users.find(u => (u.role && (u.role.toLowerCase().includes('coordinator') || u.role.toLowerCase().includes('cordinator'))) || (u.email && (u.email.toLowerCase() === 'salescordinator@gmail.com' || u.email.toLowerCase() === 'coordinator@srisriply.com'))) || defaultSalesCoordinator;
       }
 
       if (!user) {
@@ -7565,6 +7575,19 @@
     function changeActivePipeline(pipId) {
       activePipelineId = pipId;
       try { localStorage.setItem('sri_sri_active_pipeline', pipId); } catch(e){}
+      // Whenever user clicks or switches pipeline, reset restrictive filters so leads never vanish
+      if (oppFilterState.datePreset !== 'all' && oppFilterState.datePreset !== 'custom') {
+        oppFilterState.datePreset = 'all';
+        oppFilterState.dateFrom = '';
+        oppFilterState.dateTo = '';
+        highlightDatePresetButton('all');
+      }
+      if (oppFilterState.stageId !== 'all') {
+        oppFilterState.stageId = 'all';
+        const stEl = document.getElementById('filter-stage');
+        if (stEl) stEl.value = 'all';
+      }
+      updateFilterUIIndicators();
       renderOpportunities();
     }
 
@@ -7589,7 +7612,16 @@
 
         // 2. Individual Pipelines
         pipelines.forEach(p => {
-          const count = userLeads.filter(l => l.pipelineId === p.id).length;
+          let count = 0;
+          if (p.id === 'p-walkin') {
+            count = userLeads.filter(l => {
+              if (l.pipelineId === 'p-walkin' || l.pipelineId === 'p-field') return true;
+              const s = (l.source || '').toLowerCase();
+              return s.includes('walk') || s.includes('gmb') || (s.includes('manual') && l.pipelineId !== 'p-fb');
+            }).length;
+          } else {
+            count = userLeads.filter(l => l.pipelineId === p.id).length;
+          }
           const opt = document.createElement('option');
           opt.value = p.id;
           opt.innerText = `${p.name} (${count} Leads)`;
@@ -7602,14 +7634,22 @@
       const searchInput = document.getElementById('opp-search-input');
       const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-      // SMART SEARCH:
+      // SMART SEARCH & PIPELINE DATA:
       // If user typed a search query (name, phone number, etc.), search across ALL pipelines!
-      // If no search query:
-      //   - If 'all' is selected: show all accessible leads
-      //   - If specific pipeline is selected: show only that pipeline's leads
+      // If 'all' is selected: show all accessible leads
+      // If 'p-walkin' (Walkin-Sheet) is selected: show all walk-in, store counter, and manual inquiries (101+ leads)
+      // If specific pipeline is selected: show that pipeline's leads
       let baseLeads;
       if (isAllPipelines || q.length > 0) {
         baseLeads = userLeads;
+      } else if (pipeline.id === 'p-walkin') {
+        baseLeads = userLeads.filter(l => {
+          if (l.pipelineId === 'p-walkin' || l.pipelineId === 'p-field') return true;
+          const s = (l.source || '').toLowerCase();
+          if (s.includes('walk') || s.includes('gmb')) return true;
+          if (s.includes('manual') && l.pipelineId !== 'p-fb') return true;
+          return false;
+        });
       } else {
         baseLeads = userLeads.filter(l => l.pipelineId === pipeline.id);
       }
@@ -8623,6 +8663,8 @@
       renderOpportunities();
       showToast('Filters cleared. Showing all leads.', 'info');
     }
+    window.clearOppFilters = clearOppFilters;
+    window.resetOppFilters = clearOppFilters;
 
     function removeSingleFilter(filterKey) {
       if (filterKey === 'date') {
@@ -8729,6 +8771,23 @@
     }
 
     function getFilteredPipelineLeads(pipLeads, pipeline) {
+      if (!Array.isArray(pipLeads)) {
+        const baseLeads = getAccessibleLeads();
+        if (activePipelineId === 'all') {
+          pipLeads = baseLeads;
+        } else if (activePipelineId === 'p-walkin') {
+          pipLeads = baseLeads.filter(l => {
+            if (l.pipelineId === 'p-walkin' || l.pipelineId === 'p-field') return true;
+            const s = (l.source || '').toLowerCase();
+            if (s.includes('walk') || s.includes('gmb')) return true;
+            if (s.includes('manual') && l.pipelineId !== 'p-fb') return true;
+            return false;
+          });
+        } else {
+          pipLeads = baseLeads.filter(l => l.pipelineId === activePipelineId);
+        }
+      }
+
       // 1. Search Query
       const searchInput = document.getElementById('opp-search-input');
       const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -8947,6 +9006,32 @@
       const container = document.getElementById('opp-kanban-view-container');
       if (!container) return;
       container.innerHTML = '';
+
+      if (pipLeads.length === 0) {
+        const emptyAlert = document.createElement('div');
+        emptyAlert.className = 'w-full mb-4 p-4 rounded-3xl bg-amber-500/10 border border-gold/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs';
+        emptyAlert.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-2xl bg-gold/20 text-gold flex items-center justify-center shrink-0">
+              <i data-lucide="filter-x" class="w-4 h-4"></i>
+            </span>
+            <div>
+              <p class="font-bold text-main text-sm">Is pipeline ya filter criteria mein koi lead nahi mili</p>
+              <p class="text-[11px] text-muted-custom">Selected pipeline (${escapeHtml(pipeline.name)}) ya active filter mein leads 0 hain. Sabhi leads dekhne ke liye Reset karein.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="clearOppFilters()" class="px-4 py-2 rounded-xl bg-gold text-slate-950 font-bold hover:brightness-105 transition cursor-pointer shadow-xs flex items-center gap-1.5">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Reset Filters</span>
+            </button>
+            <button type="button" onclick="changeActivePipeline('all')" class="px-4 py-2 rounded-xl border border-main bg-card text-main font-bold hover:border-gold transition cursor-pointer flex items-center gap-1.5">
+              <span>🌐 View All Pipelines</span>
+            </button>
+          </div>
+        `;
+        container.appendChild(emptyAlert);
+      }
 
       const boardFrag = document.createDocumentFragment();
       pipeline.stages.forEach(stg => {
@@ -11358,7 +11443,14 @@
       if (stream) {
         stream.innerHTML = '';
         if (displayLeads.length === 0) {
-          stream.innerHTML = '<div class="p-6 text-center text-xs text-muted-custom bg-subtle/30 rounded-2xl border border-main">🎉 Shabaash! No pending or overdue work in this category. All up to date!</div>';
+          stream.innerHTML = `
+            <div class="p-6 text-center text-xs bg-subtle/30 rounded-2xl border border-main space-y-2">
+              <p class="text-muted-custom font-medium">Is filter category mein filhaal koi pending lead nahi hai.</p>
+              <button type="button" onclick="filterDashboardPendingView('ALL')" class="px-4 py-1.5 rounded-xl bg-gold text-slate-950 font-bold text-xs shadow-xs hover:brightness-105 transition cursor-pointer">
+                📋 Sabhi Active Pending Leads Dekhein (${uniqueCallingQueueLeads.length} Leads)
+              </button>
+            </div>
+          `;
         } else {
           displayLeads.slice(0, 20).forEach(lead => {
             const due = lead.nextFollowUp ? new Date(lead.nextFollowUp) : null;
