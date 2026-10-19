@@ -994,6 +994,10 @@
                 <i data-lucide="file-up" class="w-4 h-4 text-slate-950"></i>
                 <span>📥 Import Master CSV (All Pipelines)</span>
               </button>
+              <button onclick="openRecycleBinModal()" id="pb-btn-recycle-bin" class="px-3.5 py-2 border border-main bg-card hover:bg-subtle rounded-xl text-xs font-bold text-main flex items-center gap-1.5 transition cursor-pointer shadow-xs" title="View and restore accidentally deleted leads">
+                <i data-lucide="archive-restore" class="w-4 h-4 text-amber-400"></i>
+                <span>Recycle Bin <span id="pb-trash-count-badge" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500/20 text-gold ml-1">0</span></span>
+              </button>
               <button onclick="openClearAllDatabaseModal()" id="pb-btn-clear-all" class="px-3.5 py-2 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500 hover:text-white rounded-xl text-xs font-bold text-rose-400 flex items-center gap-1.5 transition cursor-pointer" title="Permanently wipe all leads to upload fresh CSV data">
                 <i data-lucide="trash-2" class="w-4 h-4 text-rose-400"></i>
                 <span>Wipe / Clear All Leads</span>
@@ -4724,6 +4728,64 @@
     </div>
   </div>
 
+  
+  <!-- ============================================================= -->
+  <!-- ========== MODAL 2C: RECYCLE BIN / TRASH MODAL ============== -->
+  <!-- ============================================================= -->
+  <div id="recycle-bin-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-card w-full max-w-3xl rounded-3xl shadow-2xl p-6 border border-main space-y-4 animate-in fade-in duration-150 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-main shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-gold border border-gold/30 flex items-center justify-center font-bold shrink-0">
+            <i data-lucide="archive-restore" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-main">Recycle Bin / Deleted Leads (कचरा पेटी)</h3>
+            <p class="text-xs text-muted-custom">Yahan se aap galti se delete hui kisi bhi lead ko 1-click mein wapas (Restore/Undo) kar sakte hain.</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('recycle-bin-modal')" class="text-muted-custom hover:text-gold transition p-1 cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 text-xs shrink-0 py-1 bg-subtle/40 p-3 rounded-2xl border border-main">
+        <span class="text-muted-custom font-medium">Trash Records: <strong id="trash-modal-total-count" class="text-gold font-bold text-sm">0</strong> leads</span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="restoreAllLeadsFromTrash()" class="px-3.5 py-1.5 rounded-xl bg-gold text-slate-950 font-bold hover:brightness-105 transition flex items-center gap-1.5 cursor-pointer shadow-xs">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Restore All (Sabhi Wapas Laayein)</span>
+          </button>
+          <button type="button" onclick="emptyRecycleBinProceed()" class="px-3.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white font-bold transition flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Empty Trash</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto custom-scrollbar border border-main rounded-2xl min-h-[220px]">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-subtle/80 sticky top-0 text-[11px] font-bold text-muted-custom uppercase border-b border-main">
+            <tr>
+              <th class="p-3">Client Name & Phone</th>
+              <th class="p-3">Pipeline</th>
+              <th class="p-3">Stage</th>
+              <th class="p-3">Deleted At</th>
+              <th class="p-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="trash-table-body" class="divide-y divide-main">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-end pt-2 shrink-0">
+        <button type="button" onclick="closeModal('recycle-bin-modal')" class="px-4 py-2 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main transition cursor-pointer">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
     <!-- ========== MODAL 3: BULK STAGE CHANGE ======================= -->
   <!-- ============================================================= -->
   <div id="bulk-stage-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -6547,9 +6609,75 @@
     let chartStagesInstance = null;
 
     // ==================== TOAST & CLIPBOARD HELPERS ====================
+    
+    function showUndoToast(message, onUndoCallback, duration = 10000) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      while (container.children.length >= 3) {
+        container.firstElementChild.remove();
+      }
+      const toast = document.createElement('div');
+
+      const bgStyle = 'background: #0f172a; color: #ffffff; border: 2px solid #f59e0b; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.95); z-index: 9999999 !important; position: relative;';
+      toast.style.cssText = bgStyle;
+      toast.className = 'px-4 py-3 rounded-2xl flex items-center justify-between gap-3 text-xs font-extrabold pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0 z-[9999999] max-w-lg shadow-2xl';
+
+      toast.innerHTML = `
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="trash-2" class="w-5 h-5 text-rose-400 shrink-0"></i>
+          <span style="color: #ffffff !important; font-size: 13px; font-weight: 700; line-height: 1.4;">${escapeHtml(message)}</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" class="undo-btn px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 text-slate-950 font-black text-xs shadow-md flex items-center gap-1 cursor-pointer transition active:scale-95">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Undo (वापस लाएं)</span>
+          </button>
+          <button type="button" class="close-btn text-slate-400 hover:text-white p-1 transition cursor-pointer">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `;
+
+      container.appendChild(toast);
+      if (window.lucide) lucide.createIcons({ root: toast });
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      let timeoutId = null;
+      const dismiss = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 350);
+      };
+
+      const undoBtn = toast.querySelector('.undo-btn');
+      if (undoBtn) {
+        undoBtn.onclick = (e) => {
+          e.stopPropagation();
+          dismiss();
+          if (typeof onUndoCallback === 'function') onUndoCallback();
+        };
+      }
+
+      const closeBtn = toast.querySelector('.close-btn');
+      if (closeBtn) {
+        closeBtn.onclick = (e) => {
+          e.stopPropagation();
+          dismiss();
+        };
+      }
+
+      timeoutId = setTimeout(dismiss, duration);
+    }
+
     function showToast(message, type = 'success') {
       const container = document.getElementById('toast-container');
       if (!container) return;
+      while (container.children.length >= 3) {
+        container.firstElementChild.remove();
+      }
       const toast = document.createElement('div');
       
       let bgStyle = 'background: #0f172a; color: #ffffff; border: 2px solid #d4af37; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85); z-index: 9999999 !important; position: relative;';
@@ -8359,6 +8487,168 @@
       showToast('Database wiped clean (0 leads). Ready for fresh CSV/Excel upload!', 'success');
     }
 
+    
+    // ==================== RECYCLE BIN & UNDO DELETE ENGINE ====================
+    function saveToRecycleBin(deletedLeads) {
+      if (!Array.isArray(deletedLeads) || deletedLeads.length === 0) return;
+      try {
+        let trash = JSON.parse(localStorage.getItem('sri_sri_trash_leads') || '[]');
+        const now = new Date().toISOString();
+        const userName = loggedInUser ? loggedInUser.name : 'Sri Sri Admin';
+
+        deletedLeads.forEach(l => {
+          if (!l || !l.id) return;
+          // Avoid duplicate entries in trash
+          trash = trash.filter(t => t.id !== l.id);
+          trash.unshift({
+            ...l,
+            deletedAt: now,
+            deletedByUser: userName
+          });
+        });
+
+        if (trash.length > 250) trash = trash.slice(0, 250);
+        localStorage.setItem('sri_sri_trash_leads', JSON.stringify(trash));
+        updateRecycleBinBadge();
+      } catch(e) {}
+    }
+
+    function updateRecycleBinBadge() {
+      try {
+        const trash = JSON.parse(localStorage.getItem('sri_sri_trash_leads') || '[]');
+        const count = trash.length;
+        const b = document.getElementById('pb-trash-count-badge');
+        if (b) b.innerText = count;
+        const mCount = document.getElementById('trash-modal-total-count');
+        if (mCount) mCount.innerText = count;
+      } catch(e) {}
+    }
+
+    function restoreLeadsBatch(leadsToRestore) {
+      if (!Array.isArray(leadsToRestore) || leadsToRestore.length === 0) return;
+      const restoredIds = leadsToRestore.map(l => l.id);
+
+      // 1. Remove from tombstone so cloud/local never blocks them
+      try {
+        const deleted = getDeletedLeadIds();
+        restoredIds.forEach(id => deleted.delete(id));
+        localStorage.setItem('sri_sri_deleted_lead_ids', JSON.stringify(Array.from(deleted)));
+      } catch(e) {}
+
+      // 2. Remove from trash
+      try {
+        let trash = JSON.parse(localStorage.getItem('sri_sri_trash_leads') || '[]');
+        trash = trash.filter(t => !restoredIds.includes(t.id));
+        localStorage.setItem('sri_sri_trash_leads', JSON.stringify(trash));
+        updateRecycleBinBadge();
+      } catch(e) {}
+
+      // 3. Add back to leads array
+      const existingIds = new Set(leads.map(l => l.id));
+      let restoredCount = 0;
+      leadsToRestore.forEach(lead => {
+        if (!existingIds.has(lead.id)) {
+          const cleanLead = { ...lead };
+          delete cleanLead.deletedAt;
+          delete cleanLead.deletedByUser;
+
+          leads.unshift(cleanLead);
+          existingIds.add(cleanLead.id);
+          syncLeadToCloud(cleanLead);
+          restoredCount++;
+        }
+      });
+
+      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      renderOpportunities();
+      renderPhonebookTable();
+      initDashboard();
+
+      showToast('✅ Restored ' + restoredCount + ' lead' + (restoredCount > 1 ? 's' : '') + ' successfully!', 'success');
+    }
+
+    function openRecycleBinModal() {
+      renderRecycleBinTable();
+      openModal('recycle-bin-modal');
+    }
+
+    function renderRecycleBinTable() {
+      const tbody = document.getElementById('trash-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let trash = [];
+      try {
+        trash = JSON.parse(localStorage.getItem('sri_sri_trash_leads') || '[]');
+      } catch(e){}
+
+      updateRecycleBinBadge();
+
+      if (trash.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-xs text-muted-custom">Recycle Bin is empty. No deleted leads in trash.</td></tr>';
+        return;
+      }
+
+      trash.forEach(lead => {
+        const p = (Array.isArray(pipelines) && pipelines.find(x => x.id === lead.pipelineId)) || { name: 'Walkin-Sheet' };
+        const stgName = lead.stage || 'Lead';
+        const delTime = lead.deletedAt ? (new Date(lead.deletedAt).toLocaleDateString('en-IN') + ' ' + new Date(lead.deletedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : 'Recently';
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-subtle/50 transition border-b border-main/50 text-xs';
+        tr.innerHTML = `
+          <td class="p-3">
+            <div>
+              <span class="font-bold text-main block">${escapeHtml(lead.name || 'Unnamed Client')}</span>
+              <span class="text-[11px] font-mono text-muted-custom">${escapeHtml(lead.phone || 'No phone')}</span>
+            </div>
+          </td>
+          <td class="p-3 text-muted-custom font-medium">🏢 ${escapeHtml(p.name)}</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-gold border border-gold/30">
+              ${escapeHtml(stgName)}
+            </span>
+          </td>
+          <td class="p-3 text-muted-custom text-[11px]">${delTime}</td>
+          <td class="p-3 text-right">
+            <button type="button" onclick="restoreSingleLeadFromTrash('${lead.id}')" class="px-3 py-1 bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 text-slate-950 font-black rounded-lg text-xs transition shadow-xs flex items-center gap-1 ml-auto cursor-pointer">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Restore</span>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (window.lucide) lucide.createIcons({ root: tbody });
+    }
+
+    function restoreSingleLeadFromTrash(leadId) {
+      let trash = JSON.parse(localStorage.getItem('sri_sri_trash_leads') || '[]');
+      const target = trash.find(t => t.id === leadId);
+      if (target) {
+        restoreLeadsBatch([target]);
+        renderRecycleBinTable();
+      }
+    }
+
+    function restoreAllLeadsFromTrash() {
+      let trash = JSON.parse(localStorage.getItem('sri_sri_trash_leads') || '[]');
+      if (trash.length === 0) {
+        showToast('Trash is already empty.', 'info');
+        return;
+      }
+      restoreLeadsBatch(trash);
+      closeModal('recycle-bin-modal');
+    }
+
+    function emptyRecycleBinProceed() {
+      localStorage.setItem('sri_sri_trash_leads', '[]');
+      renderRecycleBinTable();
+      updateRecycleBinBadge();
+      showToast('Recycle Bin emptied successfully.', 'info');
+    }
+
     function confirmBulkDeleteProceed() {
       let idsToDelete = [];
       if (pendingSingleDeleteLeadId) {
@@ -8402,6 +8692,10 @@
         deleteLeadFromCloud(id);
       });
 
+      // Save exact deleted leads batch for Undo & Recycle Bin
+      const deletedLeadsBatch = leads.filter(l => idsToDelete.includes(l.id));
+      if (typeof saveToRecycleBin === 'function') saveToRecycleBin(deletedLeadsBatch);
+
       leads = leads.filter(l => !idsToDelete.includes(l.id));
       tasks = tasks.filter(t => !idsToDelete.includes(t.leadId));
 
@@ -8416,7 +8710,17 @@
       renderPhonebookTable();
       initDashboard();
 
-      showToast(count + ' lead entry removed successfully!', 'success');
+      const leadLabel = deletedLeadsBatch.length === 1
+        ? ('Lead "' + (deletedLeadsBatch[0].name || 'Client') + '"')
+        : (count + ' Leads');
+
+      if (typeof showUndoToast === 'function') {
+        showUndoToast('🗑️ ' + leadLabel + ' deleted', () => {
+          restoreLeadsBatch(deletedLeadsBatch);
+        }, 10000);
+      } else {
+        showToast(count + ' lead entry removed successfully!', 'success');
+      }
     }
 
     // Bulk Stage Change
@@ -8891,6 +9195,7 @@
 
     // Run auto-cleaner once on startup to repair any existing corrupted imports
     sanitizeAllLeads(true);
+    if (typeof updateRecycleBinBadge === 'function') updateRecycleBinBadge();
 
     // ==================== ADVANCED DATE & CRITERIA FILTER ENGINE ====================
     let oppFilterState = {
