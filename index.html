@@ -238,11 +238,11 @@
       <form onsubmit="handleLogin(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-muted-custom mb-1.5">Work Email / User ID</label>
-          <input type="text" id="login-email" required placeholder="sriplywoodsgm@gmail.com or admin" class="w-full px-4 py-3 rounded-xl border border-main bg-subtle text-main font-semibold text-sm focus:border-gold focus:outline-none transition">
+          <input type="text" id="login-email" autocomplete="username" required placeholder="sriplywoodsgm@gmail.com or admin" class="w-full px-4 py-3 rounded-xl border border-main bg-subtle text-main font-semibold text-sm focus:border-gold focus:outline-none transition">
         </div>
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-muted-custom mb-1.5">Password</label>
-          <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-main bg-subtle text-main font-semibold text-sm focus:border-gold focus:outline-none transition">
+          <input type="password" id="login-password" autocomplete="current-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-main bg-subtle text-main font-semibold text-sm focus:border-gold focus:outline-none transition">
         </div>
         <div id="login-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs font-bold text-center"></div>
         <button type="submit" class="w-full py-3.5 rounded-xl bg-gold hover:brightness-110 text-slate-950 font-bold text-sm shadow-lg transition active:scale-[0.99]">
@@ -278,7 +278,7 @@
       <div class="hidden sm:flex items-center flex-1 max-w-md mx-6">
         <div class="relative w-full">
           <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-custom"></i>
-          <input type="text" oninput="handleGlobalSearch(this.value)" placeholder="Search clients, phone, orders, leads..." class="w-full pl-9 pr-12 py-1.5 md:py-2 text-xs rounded-xl bg-subtle border border-main text-main placeholder:text-muted-custom focus:outline-none focus:border-gold transition">
+          <input type="search" id="global-search-input" name="search_global_crm_noautofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="handleGlobalSearch(this.value)" placeholder="Search clients, phone, orders, leads..." class="w-full pl-9 pr-12 py-1.5 md:py-2 text-xs rounded-xl bg-subtle border border-main text-main placeholder:text-muted-custom focus:outline-none focus:border-gold transition">
           <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-custom bg-card px-1.5 py-0.5 rounded border border-main">⌘K</span>
         </div>
       </div>
@@ -908,7 +908,7 @@
                 <button onclick="setConvChannel('instagram')" id="btn-conv-ch-ig" class="flex-1 py-1.5 px-2 rounded-lg text-muted-custom hover:text-main">Instagram</button>
                 <button onclick="setConvChannel('other')" id="btn-conv-ch-other" class="flex-1 py-1.5 px-2 rounded-lg text-muted-custom hover:text-main">Other</button>
               </div>
-              <input type="text" id="conv-search-input" oninput="filterConvThreads(this.value)" placeholder="Search conversations..." class="w-full p-2.5 rounded-xl border border-main bg-subtle text-xs text-main">
+              <input type="search" id="conv-search-input" name="search_conv_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="filterConvThreads(this.value)" placeholder="Search conversations..." class="w-full p-2.5 rounded-xl border border-main bg-subtle text-xs text-main">
               <div class="space-y-1.5 overflow-y-auto max-h-[400px] custom-scrollbar" id="conv-threads-list">
                 <!-- Thread Items -->
               </div>
@@ -1021,7 +1021,10 @@
             <!-- Search -->
             <div class="relative">
               <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom"></i>
-              <input type="text" id="pb-search-input" oninput="renderPhonebookTable()" placeholder="Search name or mobile..." class="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold focus:outline-none">
+              <input type="search" id="pb-search-input" name="search_pb_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderPhonebookTable()" placeholder="Search name or mobile..." class="w-full pl-8 pr-8 py-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold focus:outline-none">
+              <button type="button" id="pb-search-clear-btn" onclick="clearPhonebookSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-custom hover:text-main cursor-pointer" title="Clear search">
+                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+              </button>
             </div>
 
             <!-- Date Filter Dropdown -->
@@ -1537,7 +1540,7 @@
               <span class="px-3 py-1.5 rounded-xl text-muted-custom hover:text-main cursor-pointer">Unfiled</span>
             </div>
             <div class="flex items-center gap-2 w-full sm:w-auto">
-              <input type="text" id="wa-temp-search" oninput="renderWaTemplates()" placeholder="Search templates..." class="p-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold">
+              <input type="search" id="wa-temp-search" name="search_watemp_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderWaTemplates()" placeholder="Search templates..." class="p-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold">
               <select id="wa-temp-status-filter" onchange="renderWaTemplates()" class="p-2 text-xs rounded-xl bg-subtle border border-main text-main font-semibold">
                 <option value="ALL">All Status</option>
                 <option value="APPROVED">Approved</option>
@@ -2050,7 +2053,7 @@
                   <button onclick="filterStaffStatus('ACTIVE')" id="btn-staff-filter-active" class="px-3 py-1.5 rounded-xl bg-subtle text-muted-custom hover:text-main font-bold transition">Active (<span id="team-count-active">6</span>)</button>
                   <button onclick="filterStaffStatus('INACTIVE')" id="btn-staff-filter-inactive" class="px-3 py-1.5 rounded-xl bg-subtle text-muted-custom hover:text-main font-bold transition">Inactive (<span id="team-count-inactive">0</span>)</button>
                 </div>
-                <input type="text" id="team-search-input" oninput="renderStaffManager()" placeholder="Search by name, email, or role..." class="p-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold w-full sm:w-64">
+                <input type="search" id="team-search-input" name="search_team_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderStaffManager()" placeholder="Search by name, email, or role..." class="p-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold w-full sm:w-64">
               </div>
 
               <div class="border border-main rounded-2xl overflow-hidden">
@@ -2250,7 +2253,7 @@
             <!-- Search -->
             <div class="lg:col-span-2 relative">
               <i data-lucide="search" class="w-4 h-4 text-muted-custom absolute left-3 top-3"></i>
-              <input type="text" id="call-log-search-input" oninput="filterTeamCallLogs()" placeholder="Search client name, mobile, or transcript..." class="w-full pl-9 pr-3 py-2 rounded-xl border border-main bg-subtle text-main text-xs focus:ring-1 focus:ring-gold outline-hidden">
+              <input type="search" id="call-log-search-input" name="search_calllog_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="filterTeamCallLogs()" placeholder="Search client name, mobile, or transcript..." class="w-full pl-9 pr-3 py-2 rounded-xl border border-main bg-subtle text-main text-xs focus:ring-1 focus:ring-gold outline-hidden">
             </div>
 
             <!-- Staff Selector (Role-based: open to Owner/Manager, locked for Agent) -->
@@ -4271,7 +4274,7 @@
         <!-- Search / Filter Permissions -->
         <div class="relative">
           <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom"></i>
-          <input type="text" id="mrole-search-perm" oninput="filterRolePerms(this.value)" placeholder="Filter permissions (e.g. export, delete, chat, pipeline, reports)..." class="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-card border border-main text-main placeholder:text-muted-custom focus:outline-none focus:border-gold transition">
+          <input type="search" id="mrole-search-perm" name="search_perms_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="filterRolePerms(this.value)" placeholder="Filter permissions (e.g. export, delete, chat, pipeline, reports)..." class="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-card border border-main text-main placeholder:text-muted-custom focus:outline-none focus:border-gold transition">
         </div>
 
         <!-- Categorized Permissions Grid Container -->
@@ -7517,9 +7520,46 @@
       }
     }
 
+    // Automatically detect and purge browser credential autofill from all search and filter inputs
+    function purgeBrowserAutofillFromSearchInputs() {
+      const knownUserEmails = [
+        'admin@srisriply.com',
+        'sriplywoodsgm@gmail.com',
+        'salescordinator@gmail.com',
+        'coordinator@srisriply.com',
+        'admin'
+      ];
+      const searchIds = [
+        'pb-search-input',
+        'opp-search-input',
+        'conv-search-input',
+        'wa-temp-search',
+        'team-search-input',
+        'call-log-search-input',
+        'global-search-input',
+        'mrole-search-perm'
+      ];
+      let didPurge = false;
+      searchIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const val = (el.value || '').trim().toLowerCase();
+        if (!val) return;
+        const isMatch = knownUserEmails.includes(val) ||
+                        (typeof loggedInUser !== 'undefined' && loggedInUser && loggedInUser.email && val === loggedInUser.email.toLowerCase()) ||
+                        (Array.isArray(users) && users.some(u => u.email && u.email.toLowerCase() === val));
+        if (isMatch) {
+          el.value = '';
+          didPurge = true;
+        }
+      });
+      return didPurge;
+    }
+
     // ==================== NAVIGATION TABS ====================
     function switchTab(tabId) {
       if (tabId === 'conversations') tabId = 'conversation';
+      purgeBrowserAutofillFromSearchInputs();
 
       // Permission Guard: Strict rejection if user lacks required permission
       const isOwner = isCurrentUserSuperAdmin();
@@ -7826,7 +7866,26 @@
       tbody.innerHTML = '';
 
       const userLeads = getAccessibleLeads();
-      const q = (document.getElementById('pb-search-input')?.value || '').toLowerCase().trim();
+      const searchInput = document.getElementById('pb-search-input');
+      let q = '';
+      if (searchInput) {
+        // Automatically detect and purge browser credential autofill
+        const rawVal = searchInput.value.trim();
+        const lowerVal = rawVal.toLowerCase();
+        const knownUserEmails = ['admin@srisriply.com', 'sriplywoodsgm@gmail.com', 'salescordinator@gmail.com', 'coordinator@srisriply.com', 'admin'];
+        const isAutofilled = knownUserEmails.includes(lowerVal) || 
+                             (typeof loggedInUser !== 'undefined' && loggedInUser && loggedInUser.email && lowerVal === loggedInUser.email.toLowerCase()) ||
+                             (Array.isArray(users) && users.some(u => u.email && u.email.toLowerCase() === lowerVal));
+        if (isAutofilled) {
+          searchInput.value = '';
+          q = '';
+        } else {
+          q = lowerVal;
+        }
+
+        const clearBtn = document.getElementById('pb-search-clear-btn');
+        if (clearBtn) clearBtn.classList.toggle('hidden', !q);
+      }
       const sourceFilter = document.getElementById('pb-pipeline-filter')?.value || 'ALL';
       const typeFilter = document.getElementById('pb-type-filter')?.value || 'ALL';
       const dateFilter = document.getElementById('pb-date-filter')?.value || 'ALL';
@@ -7907,6 +7966,14 @@
         tbody.appendChild(tr);
       });
       lucide.createIcons();
+    }
+
+    function clearPhonebookSearch() {
+      const inp = document.getElementById('pb-search-input');
+      if (inp) {
+        inp.value = '';
+        renderPhonebookTable();
+      }
     }
 
     // ==================== OPPORTUNITIES & PIPELINES ====================
@@ -18269,6 +18336,8 @@
     window.ingestXilotLead = ingestXilotLead;
     window.injectLiveXilotLead = injectLiveXilotLead;
     window.syncXilotLiveNow = syncXilotLiveNow;
+    window.clearPhonebookSearch = clearPhonebookSearch;
+    window.purgeBrowserAutofillFromSearchInputs = purgeBrowserAutofillFromSearchInputs;
     window.leads = leads;
     window.pipelines = pipelines;
     window.triggerLeadReattemptFromModal = triggerLeadReattemptFromModal;
@@ -18310,21 +18379,39 @@
             console.warn('Tab/Modal restoration error:', err);
           }
 
-          setTimeout(() => {
-            const sInp = document.getElementById('opp-search-input');
-            if (sInp) {
-              const lVal = sInp.value.trim().toLowerCase();
-              const known = ['admin@srisriply.com', 'sriplywoodsgm@gmail.com', 'salescordinator@gmail.com', 'coordinator@srisriply.com', 'admin'];
-              if (known.includes(lVal) || (loggedInUser && lVal === (loggedInUser.email || '').toLowerCase())) {
-                sInp.value = '';
-                renderOpportunities();
+          // Purge browser credential autofill on load and delayed cycles
+          [50, 150, 300, 600, 1000, 1800].forEach(ms => {
+            setTimeout(() => {
+              const didPurge = purgeBrowserAutofillFromSearchInputs();
+              if (didPurge) {
+                if (typeof currentActiveTab !== 'undefined') {
+                  if (currentActiveTab === 'phonebook') renderPhonebookTable();
+                  if (currentActiveTab === 'opportunities') renderOpportunities();
+                  if (currentActiveTab === 'conversation') filterConvThreads('');
+                  if (currentActiveTab === 'call-logs') filterTeamCallLogs();
+                }
               }
-            }
-          }, 300);
+            }, ms);
+          });
         }
       } catch(e) {
         console.error('Init user setup error:', e);
       }
+
+      // Universal listener to prevent browser credential autofill on any search input
+      document.addEventListener('input', (e) => {
+        if (!e.target) return;
+        const targetId = e.target.id;
+        if (targetId && (targetId === 'pb-search-input' || targetId === 'opp-search-input' || targetId === 'conv-search-input' || targetId === 'global-search-input' || targetId === 'team-search-input' || targetId === 'call-log-search-input')) {
+          const val = (e.target.value || '').trim().toLowerCase();
+          const known = ['admin@srisriply.com', 'sriplywoodsgm@gmail.com', 'salescordinator@gmail.com', 'coordinator@srisriply.com', 'admin'];
+          if (known.includes(val) || (typeof loggedInUser !== 'undefined' && loggedInUser && loggedInUser.email && val === loggedInUser.email.toLowerCase())) {
+            e.target.value = '';
+            if (targetId === 'pb-search-input') renderPhonebookTable();
+            if (targetId === 'opp-search-input') renderOpportunities();
+          }
+        }
+      }, true);
 
       // Bulletproof failsafe: Guarantee that Opportunities is rendered if pipeline select or kanban is empty
       try {
