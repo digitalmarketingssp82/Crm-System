@@ -1094,10 +1094,11 @@
               <i data-lucide="sliders" class="w-4 h-4"></i>
             </button>
 
-            <!-- Search Opportunities Input -->
-            <div class="relative">
-              <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom"></i>
-              <input type="text" id="opp-search-input" oninput="renderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="pl-8 pr-3 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-52 sm:w-72">
+            <!-- Search Opportunities Input (Protected against browser credential autofill) -->
+            <div class="relative flex items-center">
+              <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom pointer-events-none"></i>
+              <input type="search" id="opp-search-input" name="search_opp_filter_unique" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="pl-8 pr-8 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-52 sm:w-72">
+              <button type="button" id="opp-search-clear-btn" onclick="clearOppSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-custom hover:text-gold text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center transition cursor-pointer" title="Clear search">✕</button>
             </div>
 
             <!-- Filters Button & Interactive Filter Dropdown Panel -->
@@ -1406,6 +1407,28 @@
                 <!-- Dynamically populated rows -->
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Empty / No Filter Results Banner (Full Width, never squished) -->
+        <div id="opp-empty-state-banner" class="hidden mb-4 p-5 rounded-3xl bg-amber-500/10 border border-gold/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs shadow-sm">
+          <div class="flex items-center gap-3.5">
+            <span class="w-10 h-10 rounded-2xl bg-gold/20 text-gold flex items-center justify-center shrink-0 shadow-inner">
+              <i data-lucide="filter-x" class="w-5 h-5"></i>
+            </span>
+            <div>
+              <p class="font-bold text-main text-sm" id="opp-empty-banner-title">Is pipeline ya filter criteria mein koi lead nahi mili</p>
+              <p class="text-xs text-muted-custom mt-0.5" id="opp-empty-banner-desc">Selected pipeline ya active filter mein leads 0 hain. Sabhi leads dekhne ke liye Reset karein.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="clearOppFilters()" class="px-4 py-2.5 rounded-xl bg-gold text-slate-950 font-bold hover:brightness-105 transition cursor-pointer shadow-xs flex items-center gap-1.5">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Reset Filters & Search</span>
+            </button>
+            <button type="button" onclick="clearOppSearch(); changeActivePipeline('all');" class="px-4 py-2.5 rounded-xl border border-main bg-card text-main font-bold hover:border-gold transition cursor-pointer flex items-center gap-1.5">
+              <span>🌐 View All Pipelines</span>
+            </button>
           </div>
         </div>
 
@@ -7632,7 +7655,23 @@
       }
 
       const searchInput = document.getElementById('opp-search-input');
-      const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      let q = '';
+      if (searchInput) {
+        // Automatically detect and purge browser credential autofill
+        const rawVal = searchInput.value.trim();
+        const lowerVal = rawVal.toLowerCase();
+        const knownUserEmails = ['admin@srisriply.com', 'sriplywoodsgm@gmail.com', 'salescordinator@gmail.com', 'coordinator@srisriply.com', 'admin'];
+        const isAutofilled = knownUserEmails.includes(lowerVal) || (loggedInUser && loggedInUser.email && lowerVal === loggedInUser.email.toLowerCase());
+        if (isAutofilled) {
+          searchInput.value = '';
+          q = '';
+        } else {
+          q = lowerVal;
+        }
+
+        const clearBtn = document.getElementById('opp-search-clear-btn');
+        if (clearBtn) clearBtn.classList.toggle('hidden', !q);
+      }
 
       // SMART SEARCH & PIPELINE DATA:
       // If user typed a search query (name, phone number, etc.), search across ALL pipelines!
@@ -7666,6 +7705,20 @@
           countBadge.innerText = `${baseLeads.length} Leads`;
         } else {
           countBadge.innerText = `Showing ${filteredLeads.length} of ${baseLeads.length} Leads`;
+        }
+      }
+
+      // Manage full-width empty state banner (never squished in kanban columns)
+      const emptyBanner = document.getElementById('opp-empty-state-banner');
+      if (emptyBanner) {
+        if (filteredLeads.length === 0) {
+          emptyBanner.classList.remove('hidden');
+          const tEl = document.getElementById('opp-empty-banner-title');
+          const dEl = document.getElementById('opp-empty-banner-desc');
+          if (tEl) tEl.innerText = q.length > 0 ? `Search query "${searchInput ? searchInput.value : ''}" se koi lead nahi mili` : `Is pipeline ya filter criteria mein koi lead nahi mili`;
+          if (dEl) dEl.innerText = q.length > 0 ? `Search box ko clear karein ya Reset karein taaki sabhi leads wapas dikhein.` : `Selected pipeline (${escapeHtml(pipeline.name)}) ya active filter mein leads 0 hain. Sabhi leads dekhne ke liye Reset karein.`;
+        } else {
+          emptyBanner.classList.add('hidden');
         }
       }
 
@@ -8632,6 +8685,11 @@
     }
 
     function clearOppFilters() {
+      const searchInput = document.getElementById('opp-search-input');
+      if (searchInput) searchInput.value = '';
+      const clearBtn = document.getElementById('opp-search-clear-btn');
+      if (clearBtn) clearBtn.classList.add('hidden');
+
       oppFilterState = {
         dateType: 'created',
         datePreset: 'all',
@@ -8665,6 +8723,18 @@
     }
     window.clearOppFilters = clearOppFilters;
     window.resetOppFilters = clearOppFilters;
+
+    function clearOppSearch() {
+      const searchInput = document.getElementById('opp-search-input');
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+      }
+      const clearBtn = document.getElementById('opp-search-clear-btn');
+      if (clearBtn) clearBtn.classList.add('hidden');
+      renderOpportunities();
+    }
+    window.clearOppSearch = clearOppSearch;
 
     function removeSingleFilter(filterKey) {
       if (filterKey === 'date') {
@@ -9006,32 +9076,6 @@
       const container = document.getElementById('opp-kanban-view-container');
       if (!container) return;
       container.innerHTML = '';
-
-      if (pipLeads.length === 0) {
-        const emptyAlert = document.createElement('div');
-        emptyAlert.className = 'w-full mb-4 p-4 rounded-3xl bg-amber-500/10 border border-gold/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs';
-        emptyAlert.innerHTML = `
-          <div class="flex items-center gap-3">
-            <span class="w-9 h-9 rounded-2xl bg-gold/20 text-gold flex items-center justify-center shrink-0">
-              <i data-lucide="filter-x" class="w-4 h-4"></i>
-            </span>
-            <div>
-              <p class="font-bold text-main text-sm">Is pipeline ya filter criteria mein koi lead nahi mili</p>
-              <p class="text-[11px] text-muted-custom">Selected pipeline (${escapeHtml(pipeline.name)}) ya active filter mein leads 0 hain. Sabhi leads dekhne ke liye Reset karein.</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button type="button" onclick="clearOppFilters()" class="px-4 py-2 rounded-xl bg-gold text-slate-950 font-bold hover:brightness-105 transition cursor-pointer shadow-xs flex items-center gap-1.5">
-              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-              <span>Reset Filters</span>
-            </button>
-            <button type="button" onclick="changeActivePipeline('all')" class="px-4 py-2 rounded-xl border border-main bg-card text-main font-bold hover:border-gold transition cursor-pointer flex items-center gap-1.5">
-              <span>🌐 View All Pipelines</span>
-            </button>
-          </div>
-        `;
-        container.appendChild(emptyAlert);
-      }
 
       const boardFrag = document.createDocumentFragment();
       pipeline.stages.forEach(stg => {
@@ -17223,6 +17267,18 @@
         } catch(err) {
           console.warn('Tab/Modal restoration error:', err);
         }
+
+        setTimeout(() => {
+          const sInp = document.getElementById('opp-search-input');
+          if (sInp) {
+            const lVal = sInp.value.trim().toLowerCase();
+            const known = ['admin@srisriply.com', 'sriplywoodsgm@gmail.com', 'salescordinator@gmail.com', 'coordinator@srisriply.com', 'admin'];
+            if (known.includes(lVal) || (loggedInUser && lVal === (loggedInUser.email || '').toLowerCase())) {
+              sInp.value = '';
+              renderOpportunities();
+            }
+          }
+        }, 300);
       }
 
       // URL Hash Navigation Sync (Back/Forward browser buttons)
