@@ -1049,12 +1049,35 @@
         </div>
 
         <!-- Phonebook Contacts Table -->
-        <div class="bg-card border border-main rounded-3xl overflow-hidden shadow-sm">
+        <div class="bg-card border border-main rounded-3xl overflow-hidden shadow-sm flex flex-col">
+          
+          <!-- BULK SELECTION ACTIONS TOOLBAR FOR PHONEBOOK -->
+          <div id="pb-bulk-actions-bar" class="hidden px-4 py-2.5 bg-gradient-to-r from-amber-500/20 via-card to-amber-500/10 border-b-2 border-gold flex flex-wrap items-center justify-between gap-3 text-xs animate-in slide-in-from-top duration-200">
+            <div class="flex items-center gap-2.5">
+              <span id="pb-bulk-count-badge" class="px-3 py-1 rounded-full bg-gold text-slate-950 font-extrabold text-xs shadow-xs">
+                0 Leads Selected
+              </span>
+              <span class="text-muted-custom text-[11px] font-medium hidden sm:inline">Bulk actions for selected directory contacts:</span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- Bulk Delete Button -->
+              <button type="button" onclick="openBulkDeleteModal()" class="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Delete Selected Leads</span>
+              </button>
+
+              <!-- Deselect All Button -->
+              <button type="button" onclick="deselectAllPhonebook()" class="px-2.5 py-1.5 rounded-xl text-muted-custom hover:text-main text-xs font-semibold cursor-pointer">
+                Deselect All
+              </button>
+            </div>
+          </div>
+
           <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left border-collapse text-xs">
               <thead>
                 <tr class="border-b border-main bg-subtle/50 text-muted-custom uppercase tracking-wider text-[10px] font-semibold">
-                  <th class="p-3.5 w-10 text-center"><input type="checkbox" class="rounded"></th>
+                  <th class="p-3.5 w-10 text-center"><input type="checkbox" id="pb-select-all-cb" onchange="toggleSelectAllPhonebook(this.checked)" class="rounded border-main text-gold cursor-pointer" title="Select All"></th>
                   <th class="p-3.5">Client Name & Type</th>
                   <th class="p-3.5">Contact / Actions</th>
                   <th class="p-3.5">Pipeline & Requirement</th>
@@ -7521,42 +7544,51 @@
       filtered.forEach(lead => {
         const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
         const stg = p.stages.find(s => s.id === lead.stageId) || p.stages[0];
+        const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-subtle/50 transition cursor-pointer border-b border-main/50';
+        tr.className = 'hover:bg-subtle/50 transition cursor-pointer border-b border-main/50 text-xs';
 
         tr.innerHTML = `
+          <td class="p-3.5 w-10 text-center" onclick="event.stopPropagation()">
+            <input type="checkbox" class="pb-row-cb rounded border-main text-gold cursor-pointer" data-lead-id="${lead.id}" onchange="updatePhonebookBulkState()">
+          </td>
           <td class="p-3.5 font-medium text-main text-xs select-text cursor-text" onclick="handleTableCellClick(event, '${lead.id}')">
             <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${stg.color}"></span>
-              <span class="hover:text-gold select-text cursor-text">${lead.name}</span>
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${stg.color}"></span>
+              <div>
+                <span class="hover:text-gold select-text cursor-text font-bold block">${lead.name}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-subtle text-gold border border-gold/20 inline-block mt-0.5">${lead.clientType || 'Existing Customer'}</span>
+              </div>
             </div>
           </td>
-          <td class="p-3.5 font-mono text-xs text-main select-text cursor-text" onclick="handleTableCellClick(event, '${lead.id}')">
-            <div class="flex items-center gap-1.5">
-              <span class="select-text cursor-text">${lead.phone || '—'}</span>
+          <td class="p-3.5 font-mono text-xs select-text cursor-text" onclick="handleTableCellClick(event, '${lead.id}')">
+            <div class="space-y-1">
+              <span class="text-main font-bold select-text cursor-text block">${lead.phone || '—'}</span>
+              <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+                ${cleanPhone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="p-1 rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Direct Phone Call"><i data-lucide="phone" class="w-3 h-3"></i></button>' : ''}
+                ${cleanPhone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="WhatsApp Message"><i data-lucide="message-circle" class="w-3 h-3"></i></button>' : ''}
+              </div>
+            </div>
+          </td>
+          <td class="p-3.5 text-xs" onclick="handleTableCellClick(event, '${lead.id}')">
+            <div>
+              <span class="text-main font-semibold block">🏢 ${p.name}</span>
+              <span class="text-[11px] text-muted-custom truncate max-w-[180px] block">${lead.materialType || lead.notes || lead.dealValue || 'Standard Inquiry'}</span>
             </div>
           </td>
           <td class="p-3.5" onclick="handleTableCellClick(event, '${lead.id}')">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-subtle text-gold border border-gold/20">${lead.clientType || 'Existing Customer'}</span>
-          </td>
-          <td class="p-3.5 text-xs text-muted-custom" onclick="handleTableCellClick(event, '${lead.id}')">${p.name}</td>
-          <td class="p-3.5" onclick="handleTableCellClick(event, '${lead.id}')">
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium" style="background-color: ${stg.color}20; color: ${stg.color}">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold inline-block" style="background-color: ${stg.color}20; color: ${stg.color}">
               ${stg.name}
             </span>
           </td>
-          <td class="p-3.5 text-xs font-medium text-gold" onclick="handleTableCellClick(event, '${lead.id}')">${lead.dealValue || lead.budget || '—'}</td>
           <td class="p-3.5 text-[11px]" onclick="handleTableCellClick(event, '${lead.id}')">
-            ${lead.nextFollowUp ? '<span class="text-amber-400 font-medium flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i>' + formatFollowupDate(lead.nextFollowUp) + '</span>' : '<span class="text-muted-custom">No Follow-up</span>'}
+            ${lead.nextFollowUp ? '<span class="text-amber-400 font-bold flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3 text-gold"></i>' + formatFollowupDate(lead.nextFollowUp) + '</span>' : '<span class="text-muted-custom font-medium">No follow-up set</span>'}
           </td>
           <td class="p-3.5 text-right text-xs" onclick="event.stopPropagation()">
             <div class="flex items-center justify-end gap-1.5">
-              ${lead.phone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Call & Log Outcome"><i data-lucide="phone" class="w-3.5 h-3.5"></i></button>' : ''}
-              ${lead.phone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="WhatsApp & Log Text"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i></button>' : ''}
-              <button type="button" onclick="scheduleReattemptForLead(\'' + lead.id + '\')" class="p-1.5 rounded-lg bg-amber-500/15 text-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer" title="⏱️ Schedule Next Call / Reattempt"><i data-lucide="clock" class="w-3.5 h-3.5"></i></button>
-              <button onclick="openLeadModal('${lead.id}')" class="p-1.5 rounded-lg border border-main hover:border-gold text-main" title="Open Lead Details">
-                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-              </button>
+              <button type="button" onclick="scheduleReattemptForLead('${lead.id}')" class="p-1.5 rounded-lg bg-amber-500/15 text-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer" title="⏱️ Schedule Next Call / Reattempt"><i data-lucide="clock" class="w-3.5 h-3.5"></i></button>
+              <button onclick="openLeadModal('${lead.id}')" class="px-2.5 py-1 bg-gold/15 hover:bg-gold hover:text-slate-950 border border-gold/40 rounded-lg text-xs font-bold text-gold transition shadow-xs cursor-pointer">Open</button>
+              <button onclick="deleteSingleLeadFromPhonebook('${lead.id}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition cursor-pointer" title="Delete Lead"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
             </div>
           </td>
         `;
@@ -8137,12 +8169,12 @@
 
     // ==================== BULK SELECTION & OPERATIONS ENGINE ====================
     function getSelectedLeadIds() {
-      const cbs = document.querySelectorAll('.opp-row-cb:checked');
+      const cbs = document.querySelectorAll('.opp-row-cb:checked, .pb-row-cb:checked');
       return Array.from(cbs).map(cb => cb.dataset.leadId).filter(Boolean);
     }
 
     function updateBulkActionsState() {
-      const selectedIds = getSelectedLeadIds();
+      const selectedIds = Array.from(document.querySelectorAll('.opp-row-cb:checked')).map(cb => cb.dataset.leadId);
       const bar = document.getElementById('opp-bulk-actions-bar');
       const countBadge = document.getElementById('opp-bulk-count-badge');
       const selectAllCb = document.getElementById('opp-select-all');
@@ -8168,6 +8200,45 @@
 
     function deselectAllOpps() {
       toggleSelectAllOpps(false);
+    }
+
+    // Phonebook Directory Bulk Selection Functions
+    function updatePhonebookBulkState() {
+      const selectedIds = Array.from(document.querySelectorAll('.pb-row-cb:checked')).map(cb => cb.dataset.leadId);
+      const bar = document.getElementById('pb-bulk-actions-bar');
+      const countBadge = document.getElementById('pb-bulk-count-badge');
+      const selectAllCb = document.getElementById('pb-select-all-cb');
+
+      const allRowCbs = document.querySelectorAll('.pb-row-cb');
+      if (selectAllCb) {
+        selectAllCb.checked = (allRowCbs.length > 0 && selectedIds.length === allRowCbs.length);
+        selectAllCb.indeterminate = (selectedIds.length > 0 && selectedIds.length < allRowCbs.length);
+      }
+
+      if (selectedIds.length > 0) {
+        if (bar) bar.classList.remove('hidden');
+        if (countBadge) countBadge.innerText = selectedIds.length + ' Lead' + (selectedIds.length > 1 ? 's' : '') + ' Selected';
+      } else {
+        if (bar) bar.classList.add('hidden');
+      }
+    }
+
+    function toggleSelectAllPhonebook(isChecked) {
+      document.querySelectorAll('.pb-row-cb').forEach(cb => cb.checked = isChecked);
+      updatePhonebookBulkState();
+    }
+
+    function deselectAllPhonebook() {
+      toggleSelectAllPhonebook(false);
+    }
+
+    function deleteSingleLeadFromPhonebook(leadId) {
+      pendingSingleDeleteLeadId = leadId;
+      const countText = document.getElementById('bulk-del-count-text');
+      if (countText) countText.innerText = '1';
+      const btnCount = document.getElementById('bulk-del-btn-count');
+      if (btnCount) btnCount.innerText = '1';
+      openModal('bulk-delete-confirm-modal');
     }
 
     // Bulk Delete
@@ -8235,6 +8306,7 @@
       closeModal('bulk-delete-confirm-modal');
       closeModal('lead-modal');
       deselectAllOpps();
+      deselectAllPhonebook();
       renderOpportunities();
       renderPhonebookTable();
       initDashboard();
