@@ -8110,6 +8110,10 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-subtle/50 transition cursor-pointer border-b border-main/50 text-xs';
 
+        const phoneBtn = cleanPhone ? `<button type="button" onclick="initiateCallWithLogging('${lead.id}')" class="p-1 rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Direct Phone Call">${SVG_ICONS.phone}</button>` : '';
+        const waBtn = cleanPhone ? `<button type="button" onclick="openWhatsAppComposerModal('${lead.id}')" class="p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="WhatsApp Message">${SVG_ICONS.messageCircle}</button>` : '';
+        const followupSpan = lead.nextFollowUp ? `<span class="text-amber-400 font-bold flex items-center gap-1">${SVG_ICONS.clock} ${formatFollowupDate(lead.nextFollowUp)}</span>` : '<span class="text-muted-custom font-medium">No follow-up set</span>';
+
         tr.innerHTML = `
           <td class="p-3.5 w-10 text-center" onclick="event.stopPropagation()">
             <input type="checkbox" class="pb-row-cb rounded border-main text-gold cursor-pointer" data-lead-id="${lead.id}" onchange="updatePhonebookBulkState()">
@@ -8127,8 +8131,8 @@
             <div class="space-y-1">
               <span class="text-main font-bold select-text cursor-text block">${lead.phone || '—'}</span>
               <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-                ${cleanPhone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="p-1 rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Direct Phone Call">' + SVG_ICONS.phone + '</button>' : ''}
-                ${cleanPhone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="WhatsApp Message">' + SVG_ICONS.messageCircle + '</button>' : ''}
+                ${phoneBtn}
+                ${waBtn}
               </div>
             </div>
           </td>
@@ -8144,7 +8148,7 @@
             </span>
           </td>
           <td class="p-3.5 text-[11px]" onclick="handleTableCellClick(event, '${lead.id}')">
-            ${lead.nextFollowUp ? '<span class="text-amber-400 font-bold flex items-center gap-1">' + SVG_ICONS.clock + ' ' + formatFollowupDate(lead.nextFollowUp) + '</span>' : '<span class="text-muted-custom font-medium">No follow-up set</span>'}
+            ${followupSpan}
           </td>
           <td class="p-3.5 text-right text-xs" onclick="event.stopPropagation()">
             <div class="flex items-center justify-end gap-1.5">
@@ -10332,6 +10336,11 @@
             if (sel && sel.toString().trim().length > 0) return;
             openLeadModal(lead.id);
           };
+
+          const phoneBtn = lead.phone ? `<button type="button" onclick="initiateCallWithLogging('${lead.id}')" class="p-1 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Call & Log Outcome">${SVG_ICONS.phone}</button>` : '';
+          const waBtn = lead.phone ? `<button type="button" onclick="openWhatsAppComposerModal('${lead.id}')" class="p-1 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="Send WhatsApp Message & Log">${SVG_ICONS.messageCircle}</button>` : '';
+          const followupBtn = lead.nextFollowUp ? `<button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead('${lead.id}')" class="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer">${SVG_ICONS.clockSm} ${formatFollowupDate(lead.nextFollowUp)}</button>` : `<button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead('${lead.id}')" class="px-2 py-0.5 rounded bg-amber-500/10 text-gold hover:bg-gold hover:text-slate-950 font-bold transition flex items-center gap-1 cursor-pointer">${SVG_ICONS.clockSm} ⏱️ Reattempt</button>`;
+
           card.innerHTML = `
             <div class="flex items-center justify-between">
               <span class="font-medium text-xs text-main truncate max-w-[155px] select-text cursor-text" title="${escapeJs(lead.name)}">${lead.name}</span>
@@ -10340,15 +10349,15 @@
             <div class="flex items-center justify-between text-[11px] font-mono text-muted-custom mt-1">
               <span class="select-text cursor-text text-main/90 font-medium">${lead.phone || 'No phone'}</span>
               <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-                ${lead.phone ? '<button type="button" onclick="initiateCallWithLogging(\'' + lead.id + '\')" class="p-1 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Call & Log Outcome">' + SVG_ICONS.phone + '</button>' : ''}
-                ${lead.phone ? '<button type="button" onclick="openWhatsAppComposerModal(\'' + lead.id + '\')" class="p-1 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="Send WhatsApp Message & Log">' + SVG_ICONS.messageCircle + '</button>' : ''}
-                <button type="button" onclick="scheduleReattemptForLead(\'' + lead.id + '\')" class="p-1 rounded-md bg-amber-500/15 text-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer font-bold" title="⏱️ Schedule Next Call / Reattempt">' + SVG_ICONS.clock + '</button>
-                <button type="button" onclick="event.stopPropagation(); deleteSingleLeadFromPhonebook(\'' + lead.id + '\')" class="p-1 rounded-md bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition cursor-pointer" title="Delete Lead">' + SVG_ICONS.trash + '</button>
+                ${phoneBtn}
+                ${waBtn}
+                <button type="button" onclick="scheduleReattemptForLead('${lead.id}')" class="p-1 rounded-md bg-amber-500/15 text-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer font-bold" title="⏱️ Schedule Next Call / Reattempt">${SVG_ICONS.clock}</button>
+                <button type="button" onclick="event.stopPropagation(); deleteSingleLeadFromPhonebook('${lead.id}')" class="p-1 rounded-md bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition cursor-pointer" title="Delete Lead">${SVG_ICONS.trash}</button>
               </div>
             </div>
             <div class="flex items-center justify-between pt-1 border-t border-main/40 text-[10px] mt-1">
               <span class="text-muted-custom">${lead.clientType || 'Client'}</span>
-              ${lead.nextFollowUp ? '<button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead(\'' + lead.id + '\')" class="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer">' + SVG_ICONS.clockSm + ' ' + formatFollowupDate(lead.nextFollowUp) + '</button>' : '<button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead(\'' + lead.id + '\')" class="px-2 py-0.5 rounded bg-amber-500/10 text-gold hover:bg-gold hover:text-slate-950 font-bold transition flex items-center gap-1 cursor-pointer">' + SVG_ICONS.clockSm + ' ⏱️ Reattempt</button>'}
+              ${followupBtn}
             </div>
           `;
           colCardFrag.appendChild(card);
