@@ -6506,7 +6506,7 @@
     }
 
     // Ensure Sales Coordinator is present
-    const coordinatorExists = users.some(u => u.email && (u.email.toLowerCase() === 'coordinator@srisriply.com' || (u.role && u.role.toLowerCase().includes('coordinator')) || (u.role && u.role.toLowerCase().includes('cordinator'))));
+    const coordinatorExists = users.some(u => u.email && (u.email.toLowerCase() === 'coordinator@srisriply.com' || u.email.toLowerCase() === 'salescordinator@gmail.com' || (u.role && (u.role.toLowerCase().includes('coordinator') || u.role.toLowerCase().includes('cordinator')))));
     if (!coordinatorExists) {
       users.push(defaultSalesCoordinator);
     }
@@ -6515,8 +6515,10 @@
     users.forEach(u => {
       if (u.role === 'Organization Admin' || (u.email && u.email.toLowerCase() === 'sriplywoodsgm@gmail.com')) {
         u.permissions = CRM_PERMISSIONS_SCHEMA.flatMap(c => c.permissions.map(p => p.id));
-      } else if (u.role && (u.role.toLowerCase().includes('coordinator') || u.role.toLowerCase().includes('cordinator'))) {
-        u.permissions = ['leads_view', 'leads_view_all', 'leads_create', 'leads_edit', 'leads_import', 'leads_export', 'leads_transfer', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'opp_configure', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete'];
+      } else if ((u.role && (u.role.toLowerCase().includes('coordinator') || u.role.toLowerCase().includes('cordinator') || u.role.toLowerCase().includes('calling') || u.role.toLowerCase().includes('telecall'))) ||
+                 (u.email && (u.email.toLowerCase().includes('coordinator') || u.email.toLowerCase().includes('cordinator') || u.email.toLowerCase().includes('salescordinator'))) ||
+                 (u.name && (u.name.toLowerCase().includes('coordinator') || u.name.toLowerCase().includes('cordinator')))) {
+        u.permissions = ['leads_view', 'leads_view_all', 'leads_create', 'leads_edit', 'leads_import', 'leads_export', 'leads_transfer', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'opp_configure', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete', 'reports_view'];
       }
     });
     safeStorageSet('sri_sri_users', users);
@@ -7256,6 +7258,19 @@
       loggedInUser = user;
       errorDiv.classList.add('hidden');
 
+      // Reset filters so the profile immediately sees all company leads smoothly
+      activePipelineId = 'all';
+      try { localStorage.setItem('sri_sri_active_pipeline', 'all'); } catch(e){}
+      if (typeof oppFilterState !== 'undefined') {
+        oppFilterState.assignee = 'all';
+        oppFilterState.stageId = 'all';
+        oppFilterState.priority = 'all';
+        oppFilterState.sourceText = '';
+        oppFilterState.datePreset = 'all';
+        oppFilterState.dateFrom = '';
+        oppFilterState.dateTo = '';
+      }
+
       checkSession();
       applyUserPermissions(user);
       updateAllChannelStatusBadges();
@@ -7300,6 +7315,18 @@
       if (isCurrentUserSuperAdmin()) return true;
       if (!loggedInUser) return false;
 
+      const roleLower = (loggedInUser.role || '').toLowerCase();
+      const emailLower = (loggedInUser.email || '').toLowerCase();
+      const nameLower = (loggedInUser.name || '').toLowerCase();
+      const isCoordinator = roleLower.includes('coordinator') || roleLower.includes('cordinator') || roleLower.includes('calling') || roleLower.includes('telecall') ||
+                            emailLower.includes('coordinator') || emailLower.includes('cordinator') || emailLower.includes('salescordinator') ||
+                            nameLower.includes('coordinator') || nameLower.includes('cordinator');
+
+      // Sales Coordinator is guaranteed full view access to all company leads, opportunities & conversations
+      if (isCoordinator && (permId === 'leads_view' || permId === 'leads_view_all' || permId === 'opp_view' || permId === 'conv_view_all' || permId === 'tasks_view')) {
+        return true;
+      }
+
       // STRICT: If user has their own permissions array, only check against it!
       if (Array.isArray(loggedInUser.permissions)) {
         return loggedInUser.permissions.includes(permId);
@@ -7318,7 +7345,11 @@
       if (!user) return;
       const isOwner = isCurrentUserSuperAdmin();
       const roleLower = (user.role || '').toLowerCase();
-      const isCoordinator = roleLower.includes('cordinator') || roleLower.includes('coordinator') || roleLower.includes('calling');
+      const emailLower = (user.email || '').toLowerCase();
+      const nameLower = (user.name || '').toLowerCase();
+      const isCoordinator = roleLower.includes('cordinator') || roleLower.includes('coordinator') || roleLower.includes('calling') || roleLower.includes('telecall') ||
+                            emailLower.includes('coordinator') || emailLower.includes('cordinator') || emailLower.includes('salescordinator') ||
+                            nameLower.includes('coordinator') || nameLower.includes('cordinator');
       const isManager = user.role === 'Manager' || roleLower.includes('manager');
 
       // 1. Navigation Visibility
@@ -7482,12 +7513,19 @@
         if (isCurrentUserSuperAdmin()) return leads;
 
         const roleLower = (loggedInUser.role || '').toLowerCase();
-        const isCoordinator = roleLower.includes('cordinator') || roleLower.includes('coordinator') || roleLower.includes('calling');
-        const isManager = loggedInUser.role === 'Manager' || roleLower.includes('manager');
-        const hasFullLeadAccess = userHasPermission('leads_view_all') || userHasPermission('leads_distribute');
+        const emailLower = (loggedInUser.email || '').toLowerCase();
+        const nameLower = (loggedInUser.name || '').toLowerCase();
 
-        // Super Admin, Manager, and Sales Coordinator work across all pipelines & all leads
-        if (isCoordinator || isManager || hasFullLeadAccess) {
+        // Comprehensive check: role, email, or name indicating Sales Coordinator / Calling Person
+        const isCoordinator = roleLower.includes('cordinator') || roleLower.includes('coordinator') || roleLower.includes('calling') || roleLower.includes('telecall') ||
+                              emailLower.includes('coordinator') || emailLower.includes('cordinator') || emailLower.includes('salescordinator') ||
+                              nameLower.includes('coordinator') || nameLower.includes('cordinator') || nameLower.includes('calling') || nameLower.includes('telecall');
+
+        const isManager = loggedInUser.role === 'Manager' || roleLower.includes('manager') || roleLower.includes('supervisor');
+        const hasFullLeadAccess = isCoordinator || isManager || userHasPermission('leads_view_all') || userHasPermission('leads_distribute');
+
+        // Super Admin, Manager, and Sales Coordinator work across ALL pipelines & ALL company leads
+        if (hasFullLeadAccess) {
           return leads;
         }
 
@@ -7497,8 +7535,8 @@
         }
 
         // Regular field/store salesman: isolate strictly to their assigned leads
-        const myEmail = (loggedInUser.email || '').toLowerCase().trim();
-        const myName = (loggedInUser.name || '').toLowerCase().trim();
+        const myEmail = emailLower.trim();
+        const myName = nameLower.trim();
 
         return leads.filter(l => {
           const lEmail = (l.assignedToEmail || '').toLowerCase().trim();
@@ -12760,7 +12798,9 @@
         const uEmail = (staffUser.email || '').toLowerCase().trim();
         const uName = (staffUser.name || '').toLowerCase().trim();
         const uRole = (staffUser.role || '').toLowerCase().trim();
-        const isStaffCoordinator = uRole.includes('coordinator') || uRole.includes('cordinator') || uRole.includes('calling');
+        const isStaffCoordinator = uRole.includes('coordinator') || uRole.includes('cordinator') || uRole.includes('calling') || uRole.includes('telecall') ||
+                                   uEmail.includes('coordinator') || uEmail.includes('cordinator') || uEmail.includes('salescordinator') ||
+                                   uName.includes('coordinator') || uName.includes('cordinator') || uName.includes('calling') || uName.includes('telecall');
 
         const now = new Date();
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
@@ -12777,11 +12817,11 @@
           const lName = (lead.assignedToName || lead.assignedTo || '').toLowerCase().trim();
           const matchesStaff = (lEmail && lEmail === uEmail) || (lName && (lName === uName || lName.includes(uName)));
           const isUnassigned = !lead.assignedTo || lead.assignedTo === 'Unassigned' || lead.assignedTo === '' || lead.assignedTo === 'None';
-          const isRoleAssigned = lName.includes('coordinator') || lName.includes('cordinator') || lName.includes('calling');
+          const isRoleAssigned = lName.includes('coordinator') || lName.includes('cordinator') || lName.includes('calling') || lName.includes('telecall');
           const isGenericAdmin = lName.includes('admin') || lName === 'sri sri admin' || lEmail.includes('sriplywoodsgm') || lEmail.includes('sales.ssply');
 
-          // If staff is coordinator, include unassigned, role-assigned, and admin pool leads
-          const belongsToStaff = matchesStaff || (isStaffCoordinator && (isUnassigned || isRoleAssigned || isGenericAdmin));
+          // Sales Coordinator coordinates calls for ALL company leads; regular staff sees assigned/unassigned/pool
+          const belongsToStaff = isStaffCoordinator || matchesStaff || isUnassigned || isRoleAssigned || isGenericAdmin;
           if (!belongsToStaff) return;
 
           const p = pipelines.find(x => x.id === lead.pipelineId);
@@ -14303,6 +14343,16 @@
 
       // Collect checked permissions
       const checkedPerms = Array.from(document.querySelectorAll('.mstaff-perm-checkbox:checked')).map(cb => cb.dataset.permId);
+
+      // Ensure Sales Coordinator profile always preserves complete company-wide leads access
+      const isCoord = (role && (role.toLowerCase().includes('coordinator') || role.toLowerCase().includes('cordinator') || role.toLowerCase().includes('calling') || role.toLowerCase().includes('telecall'))) ||
+                      (email && (email.toLowerCase().includes('coordinator') || email.toLowerCase().includes('cordinator') || email.toLowerCase().includes('salescordinator'))) ||
+                      (name && (name.toLowerCase().includes('coordinator') || name.toLowerCase().includes('cordinator')));
+      if (isCoord) {
+        ['leads_view', 'leads_view_all', 'opp_view', 'conv_view_all', 'tasks_view'].forEach(p => {
+          if (!checkedPerms.includes(p)) checkedPerms.push(p);
+        });
+      }
 
       user.name = name;
       user.email = email.toLowerCase();
@@ -17295,10 +17345,34 @@
             });
           }
 
+          // Combine cloud leads with any preseeded historical leads not yet in cloud and not deleted
+          const leadMap = new Map();
+          cloudLeads.forEach(l => {
+            leadMap.set(l.id, l);
+          });
+
+          const unseededToPush = [];
+          if (Array.isArray(PRESEEDED_HISTORICAL_LEADS)) {
+            PRESEEDED_HISTORICAL_LEADS.forEach(pl => {
+              if (pl && pl.id && !leadMap.has(pl.id) && !isLeadDeleted(pl) && !deletedIds.has(pl.id)) {
+                leadMap.set(pl.id, pl);
+                unseededToPush.push(pl);
+              }
+            });
+          }
+
           // Sort leads by activity or creation
-          cloudLeads.sort((a,b) => new Date(b.lastActivityAt || b.createdAt || 0) - new Date(a.lastActivityAt || a.createdAt || 0));
-          leads = cloudLeads.filter(l => !isLeadDeleted(l));
+          const combinedLeads = Array.from(leadMap.values());
+          combinedLeads.sort((a,b) => new Date(b.lastActivityAt || b.createdAt || 0) - new Date(a.lastActivityAt || a.createdAt || 0));
+          leads = combinedLeads.filter(l => !isLeadDeleted(l));
           safeStorageSet('sri_sri_leads', leads);
+
+          // Push unseeded preseeded leads to cloud in background so Firestore stays 100% complete
+          if (unseededToPush.length > 0 && isInitialLeadsSyncDone) {
+            unseededToPush.slice(0, 50).forEach(l => {
+              db.collection('crm_leads').doc(l.id).set(l, { merge: true }).catch(() => {});
+            });
+          }
 
           // Auto-refresh active view
           if (typeof currentActiveTab !== 'undefined') {
@@ -17321,7 +17395,22 @@
           const cloudUsers = [];
           snapshot.forEach(doc => {
             const data = doc.data();
-            if (data && data.id) cloudUsers.push(data);
+            if (data && data.id) {
+              const r = (data.role || '').toLowerCase();
+              const em = (data.email || '').toLowerCase();
+              const nm = (data.name || '').toLowerCase();
+              const isCoord = r.includes('coordinator') || r.includes('cordinator') || r.includes('calling') || r.includes('telecall') ||
+                              em.includes('coordinator') || em.includes('cordinator') || em.includes('salescordinator') ||
+                              nm.includes('coordinator') || nm.includes('cordinator');
+              if (isCoord) {
+                if (!Array.isArray(data.permissions)) data.permissions = [];
+                const coordPerms = ['leads_view', 'leads_view_all', 'leads_create', 'leads_edit', 'leads_import', 'leads_export', 'leads_transfer', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'opp_configure', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete', 'reports_view'];
+                coordPerms.forEach(cp => {
+                  if (!data.permissions.includes(cp)) data.permissions.push(cp);
+                });
+              }
+              cloudUsers.push(data);
+            }
           });
           users = cloudUsers;
           localStorage.setItem('sri_sri_users', JSON.stringify(users));
@@ -17332,6 +17421,7 @@
               loggedInUser = { ...loggedInUser, ...currentRef };
               sessionStorage.setItem('sri_sri_active_session', JSON.stringify(loggedInUser));
               updateUserSessionUI(loggedInUser);
+              applyUserPermissions(loggedInUser);
             }
           }
           renderStaffManager();
