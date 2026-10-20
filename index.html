@@ -1,9 +1,33 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sri Sri Plywoods - Business Suite & CRM</title>
+  
+  <!-- Zero-FOUC Instant Theme Initializer (prevents dark mode flash on refresh) -->
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('sri_sri_theme') || 'light';
+        var isDark = false;
+        if (savedTheme === 'dark') {
+          isDark = true;
+        } else if (savedTheme === 'light') {
+          isDark = false;
+        } else {
+          isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        }
+      } catch (e) {}
+    })();
+  </script>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -1271,6 +1295,13 @@
 
               </div>
             </div>
+
+            <!-- Quick Pending Calling Toggle Button -->
+            <button type="button" id="btn-opp-pending-calling" onclick="toggleOppPendingCallingFilter()" class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-500 flex items-center gap-1.5 transition shadow-xs cursor-pointer" title="Only show Pending Calling & Overdue Leads">
+              <i data-lucide="phone-call" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Pending Calling</span>
+              <span id="opp-pending-calling-count" class="px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 font-extrabold text-[10px]">0</span>
+            </button>
 
             <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-gold/10 text-gold border border-gold/30" id="opp-count-badge">0 Leads</span>
           </div>
@@ -7656,13 +7687,233 @@
              d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    function getLeadUrgencyStatus(lead) {
+      if (!lead || !lead.nextFollowUp) {
+        const hasContact = lead && (lead.lastContactAttempt || (lead.activities && lead.activities.length > 0));
+        return {
+          hasFollowup: false,
+          isUncontacted: !hasContact,
+          isOverdue: false,
+          isDueSoon: false,
+          isDueToday: false,
+          isDueTomorrow: false,
+          isFuture: false,
+          diffMins: 0,
+          diffMs: 0
+        };
+      }
+
+      const due = new Date(lead.nextFollowUp);
+      if (isNaN(due.getTime())) {
+        return { hasFollowup: false, isOverdue: false, isDueSoon: false, isDueToday: false, isFuture: false };
+      }
+
+      const now = new Date();
+      const diffMs = due.getTime() - now.getTime();
+      const diffMins = Math.round(diffMs / 60000);
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      const tomorrowEnd = new Date(endOfToday.getTime() + 86400000);
+
+      const isOverdue = diffMs < 0;
+      const isDueSoon = !isOverdue && diffMins >= 0 && diffMins <= 30;
+      const isDueToday = !isOverdue && due.getTime() <= endOfToday.getTime();
+      const isDueTomorrow = !isOverdue && due.getTime() > endOfToday.getTime() && due.getTime() <= tomorrowEnd.getTime();
+      const isFuture = !isOverdue && due.getTime() > endOfToday.getTime();
+
+      return {
+        hasFollowup: true,
+        isOverdue,
+        isDueSoon,
+        isDueToday,
+        isDueTomorrow,
+        isFuture,
+        diffMins,
+        diffMs,
+        due,
+        dateStr: due.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+        timeStr: due.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+    }
+
+    function formatFollowupBadgeHtml(lead, isButton = true) {
+      const urgency = getLeadUrgencyStatus(lead);
+      const leadId = lead ? lead.id : '';
+
+      if (!urgency.hasFollowup) {
+        if (isButton) {
+          return `<button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead('${leadId}')" class="px-2 py-0.5 rounded-lg bg-amber-500/10 text-gold hover:bg-gold hover:text-slate-950 font-bold text-[10px] transition flex items-center gap-1 cursor-pointer" title="Click to schedule next call / reattempt">${SVG_ICONS.clockSm} ⏱️ Reattempt</button>`;
+        }
+        return `<span class="text-muted-custom font-medium text-[10px]">No follow-up set</span>`;
+      }
+
+      const { isOverdue, isDueSoon, isDueToday, isDueTomorrow, diffMins, dateStr, timeStr } = urgency;
+
+      if (isOverdue) {
+        const absMins = Math.abs(diffMins);
+        let overdueLabel = '';
+        if (absMins < 60) {
+          overdueLabel = `${absMins}m ago`;
+        } else if (absMins < 1440) {
+          const hrs = Math.floor(absMins / 60);
+          const remMins = absMins % 60;
+          overdueLabel = remMins > 0 ? `${hrs}h ${remMins}m ago` : `${hrs}h ago`;
+        } else {
+          const days = Math.floor(absMins / 1440);
+          overdueLabel = days === 1 ? 'Yesterday' : `${days}d ago`;
+        }
+
+        if (isButton) {
+          return `
+            <button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead('${leadId}')"
+              class="px-2 py-0.5 rounded-lg bg-rose-500/15 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/40 font-extrabold text-[10px] flex items-center gap-1 transition shadow-xs cursor-pointer animate-pulse"
+              title="🚨 OVERDUE by ${overdueLabel}! Scheduled for ${dateStr} ${timeStr}. Click to call or reschedule">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0"></span>
+              <span>🚨 Overdue (${overdueLabel}) · ${timeStr}</span>
+            </button>
+          `;
+        }
+        return `
+          <span class="px-2.5 py-1 rounded-xl bg-rose-500/20 text-rose-500 border border-rose-500/50 font-extrabold text-[11px] inline-flex items-center gap-1.5 animate-pulse">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0"></span>
+            <span>🚨 OVERDUE (${overdueLabel}) · ${dateStr} ${timeStr}</span>
+          </span>
+        `;
+      }
+
+      if (isDueSoon) {
+        if (isButton) {
+          return `
+            <button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead('${leadId}')"
+              class="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-500 hover:bg-gold hover:text-slate-950 border border-amber-500/40 font-extrabold text-[10px] flex items-center gap-1 transition shadow-xs cursor-pointer animate-pulse"
+              title="⚡ DUE SOON in ${diffMins}m (${timeStr})! Click to call or reschedule">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping shrink-0"></span>
+              <span>⚡ Due in ${diffMins}m · ${timeStr}</span>
+            </button>
+          `;
+        }
+        return `
+          <span class="px-2.5 py-1 rounded-xl bg-amber-500/25 text-amber-500 border border-amber-500/50 font-extrabold text-[11px] inline-flex items-center gap-1.5 animate-pulse">
+            <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0"></span>
+            <span>⚡ DUE IN ${diffMins}m · Today ${timeStr}</span>
+          </span>
+        `;
+      }
+
+      if (isDueToday) {
+        if (isButton) {
+          return `
+            <button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead('${leadId}')"
+              class="px-2 py-0.5 rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white border border-blue-500/30 font-bold text-[10px] flex items-center gap-1 transition cursor-pointer"
+              title="Scheduled for Today at ${timeStr}">
+              <span>⏱️ Today · ${timeStr}</span>
+            </button>
+          `;
+        }
+        return `
+          <span class="px-2.5 py-1 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/40 font-bold text-[11px] inline-flex items-center gap-1.5">
+            <span>⏱️ Today · ${timeStr}</span>
+          </span>
+        `;
+      }
+
+      if (isDueTomorrow) {
+        if (isButton) {
+          return `
+            <button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead('${leadId}')"
+              class="px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white border border-indigo-500/30 font-bold text-[10px] flex items-center gap-1 transition cursor-pointer"
+              title="Scheduled for Tomorrow at ${timeStr}">
+              <span>📅 Tomorrow · ${timeStr}</span>
+            </button>
+          `;
+        }
+        return `
+          <span class="px-2.5 py-1 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 font-bold text-[11px] inline-flex items-center gap-1.5">
+            <span>📅 Tomorrow · ${timeStr}</span>
+          </span>
+        `;
+      }
+
+      // Future scheduled
+      if (isButton) {
+        return `
+          <button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead('${leadId}')"
+            class="px-2 py-0.5 rounded-lg bg-subtle text-muted-custom hover:text-gold border border-main text-[10px] font-medium flex items-center gap-1 transition cursor-pointer"
+            title="Scheduled for ${dateStr} ${timeStr}">
+            <span>📅 ${dateStr} · ${timeStr}</span>
+          </button>
+        `;
+      }
+      return `
+        <span class="px-2.5 py-1 rounded-xl bg-subtle text-main border border-main font-semibold text-[11px] inline-flex items-center gap-1.5">
+          <span>📅 ${dateStr} · ${timeStr}</span>
+        </span>
+      `;
+    }
+
+    function sortKanbanLeadsByUrgency(leadsList) {
+      if (!Array.isArray(leadsList) || leadsList.length <= 1) return leadsList;
+      const now = new Date();
+      const nowMs = now.getTime();
+      const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+
+      return [...leadsList].sort((a, b) => {
+        const getRank = (lead) => {
+          if (lead.nextFollowUp) {
+            const d = new Date(lead.nextFollowUp);
+            const t = d.getTime();
+            if (!isNaN(t)) {
+              if (t < nowMs) {
+                // Tier 1: Overdue! Oldest overdue first (t ascending)
+                return { tier: 1, key: t };
+              }
+              if (t <= endOfToday) {
+                // Tier 2: Due Today! Earliest due today first (t ascending)
+                return { tier: 2, key: t };
+              }
+              // Tier 3: Future scheduled! Earliest upcoming date first (t ascending)
+              return { tier: 3, key: t };
+            }
+          }
+          const hasContact = lead.lastContactAttempt || (lead.activities && lead.activities.length > 0);
+          const cTime = lead.createdAt ? new Date(lead.createdAt).getTime() : 0;
+          if (!hasContact) {
+            // Tier 4: Uncontacted / Fresh untouched lead. Newest first (-cTime)
+            return { tier: 4, key: -cTime };
+          }
+          // Tier 5: Contacted lead without pending followup. Newest first (-cTime)
+          return { tier: 5, key: -cTime };
+        };
+
+        const rA = getRank(a);
+        const rB = getRank(b);
+
+        if (rA.tier !== rB.tier) {
+          return rA.tier - rB.tier;
+        }
+        return rA.key - rB.key;
+      });
+    }
+
+    let isOppPendingCallingOnly = false;
+
+    function toggleOppPendingCallingFilter() {
+      isOppPendingCallingOnly = !isOppPendingCallingOnly;
+      renderOpportunities();
+      if (isOppPendingCallingOnly) {
+        showToast('📞 Filtered: Showing only Pending Calling & Overdue Leads!', 'info');
+      } else {
+        showToast('Showing all pipeline leads', 'info');
+      }
+    }
+
     // ==================== THEME MANAGEMENT ====================
     function initTheme() {
       const savedTheme = localStorage.getItem('sri_sri_theme') || 'system';
-      setTheme(savedTheme);
+      setTheme(savedTheme, false);
     }
 
-    function setTheme(theme) {
+    function setTheme(theme, refreshCharts = true) {
       localStorage.setItem('sri_sri_theme', theme);
       const html = document.documentElement;
 
@@ -7693,7 +7944,7 @@
         }
       }
 
-      if (chartSourcesInstance || chartStagesInstance) {
+      if (refreshCharts && (chartSourcesInstance || chartStagesInstance)) {
         initDashboard();
       }
     }
@@ -7938,6 +8189,10 @@
       const elFu = document.getElementById('dash-followup-count');
       if (elFu) elFu.innerText = followupsCount;
 
+      // Always keep pending work metrics and calling queue up-to-date!
+      updatePendingWorkDashboard();
+      checkAndTrigger30MinReminders(false);
+
       const dashSec = document.getElementById('tab-content-dashboard');
       if (dashSec && dashSec.classList.contains('hidden')) {
         return; // Skip expensive Chart.js and heavy activity DOM rebuilds when dashboard is hidden
@@ -7945,8 +8200,6 @@
 
       renderRealCharts(userLeads);
       renderDashboardRecentActivities(userLeads);
-      updatePendingWorkDashboard();
-      checkAndTrigger30MinReminders(false);
     }
 
     function renderRealCharts(userLeads) {
@@ -8110,7 +8363,7 @@
 
         const phoneBtn = cleanPhone ? `<button type="button" onclick="initiateCallWithLogging('${lead.id}')" class="p-1 rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Direct Phone Call">${SVG_ICONS.phone}</button>` : '';
         const waBtn = cleanPhone ? `<button type="button" onclick="openWhatsAppComposerModal('${lead.id}')" class="p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="WhatsApp Message">${SVG_ICONS.messageCircle}</button>` : '';
-        const followupSpan = lead.nextFollowUp ? `<span class="text-amber-400 font-bold flex items-center gap-1">${SVG_ICONS.clock} ${formatFollowupDate(lead.nextFollowUp)}</span>` : '<span class="text-muted-custom font-medium">No follow-up set</span>';
+        const followupSpan = formatFollowupBadgeHtml(lead, true);
 
         tr.innerHTML = `
           <td class="p-3.5 w-10 text-center" onclick="event.stopPropagation()">
@@ -8305,11 +8558,33 @@
         baseLeads = userLeads.filter(l => l.pipelineId === pipeline.id);
       }
 
+      // Update Pending Calling Counter & Toggle Button State
+      const pendingCallingCount = baseLeads.filter(l => {
+        const p = pipelines.find(x => x.id === l.pipelineId);
+        const stg = p ? p.stages.find(s => s.id === l.stageId) : null;
+        if (stg && (stg.isWon || stg.isLost)) return false;
+        const hasContact = l.lastContactAttempt || (l.activities && l.activities.length > 0);
+        return !!l.nextFollowUp || !hasContact;
+      }).length;
+
+      const btnPendingCalling = document.getElementById('btn-opp-pending-calling');
+      const badgePendingCalling = document.getElementById('opp-pending-calling-count');
+      if (badgePendingCalling) badgePendingCalling.innerText = pendingCallingCount;
+      if (btnPendingCalling) {
+        if (isOppPendingCallingOnly) {
+          btnPendingCalling.className = 'px-3 py-2 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition shadow-md ring-2 ring-gold cursor-pointer';
+        } else {
+          btnPendingCalling.className = 'px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-500 flex items-center gap-1.5 transition shadow-xs cursor-pointer';
+        }
+      }
+
       const filteredLeads = getFilteredPipelineLeads(baseLeads, pipeline);
 
       const countBadge = document.getElementById('opp-count-badge');
       if (countBadge) {
-        if (q.length > 0) {
+        if (isOppPendingCallingOnly) {
+          countBadge.innerText = `📞 Showing ${filteredLeads.length} of ${pendingCallingCount} Pending Calling Leads`;
+        } else if (q.length > 0) {
           countBadge.innerText = `🔍 Found ${filteredLeads.length} across all pipelines`;
         } else if (isAllPipelines) {
           countBadge.innerText = `${filteredLeads.length} Total Leads (All Pipelines)`;
@@ -8709,52 +8984,8 @@
       }
       if (!currentSelectedLead) return;
 
-      const pipeline = (Array.isArray(pipelines) && pipelines.find(p => p.id === currentSelectedLead.pipelineId)) || pipelines[0];
-      const pStages = (pipeline && Array.isArray(pipeline.stages) && pipeline.stages.length > 0) ? pipeline.stages : defaultStagesTemplate;
-      const oldStage = pStages.find(s => s.id === currentSelectedLead.stageId) || defaultStagesTemplate.find(s => s.id === currentSelectedLead.stageId) || defaultStagesTemplate[0];
-      const newStage = pStages.find(s => s.id === newStageId) || defaultStagesTemplate.find(s => s.id === newStageId) || defaultStagesTemplate[0];
-
-      if (oldStage.id === newStage.id) {
-        showToast('Lead already in stage: ' + newStage.name, 'info');
-        return;
-      }
-
-      pendingStageChange = {
-        leadId: currentSelectedLead.id,
-        newStageId: newStageId,
-        oldStageName: oldStage.name,
-        newStageName: newStage.name,
-        oldStageColor: oldStage.color,
-        newStageColor: newStage.color,
-        isLost: !!newStage.isLost
-      };
-
-      const nameEl = document.getElementById('stage-confirm-lead-name');
-      if (nameEl) nameEl.innerText = currentSelectedLead.name || 'This Client';
-
-      const fromBadge = document.getElementById('stage-confirm-from-badge');
-      if (fromBadge) {
-        fromBadge.innerText = oldStage.name;
-        fromBadge.style.backgroundColor = (oldStage.color || '#eab308') + '20';
-        fromBadge.style.borderColor = oldStage.color || '#eab308';
-        fromBadge.style.color = oldStage.color || '#eab308';
-      }
-
-      const toBadge = document.getElementById('stage-confirm-to-badge');
-      if (toBadge) {
-        toBadge.innerText = newStage.name;
-        toBadge.style.backgroundColor = (newStage.color || '#eab308') + '20';
-        toBadge.style.borderColor = newStage.color || '#eab308';
-        toBadge.style.color = newStage.color || '#eab308';
-      }
-
-      const msgEl = document.getElementById('stage-confirm-msg');
-      if (msgEl) {
-        msgEl.innerHTML = 'Kya aap confirm <strong>"' + escapeHtml(currentSelectedLead.name || 'Client') + '"</strong> ki stage badal kar <span class="font-bold text-gold">"' + escapeHtml(newStage.name) + '"</span> karna chahte hain?';
-      }
-
-      openModal('stage-change-confirm-modal');
-      if (window.lucide) lucide.createIcons();
+      // Directly update lead stage for fast, frictionless user experience
+      updateLeadStage(newStageId);
     }
 
     function confirmStageChangeProceed() {
@@ -9639,8 +9870,13 @@
       }
     }
 
-    // Run auto-cleaner once on startup to repair any existing corrupted imports
-    sanitizeAllLeads(true);
+    // Run auto-cleaner once on first run, avoid blocking every refresh
+    try {
+      if (!localStorage.getItem('sri_sri_sanitized_init_done')) {
+        sanitizeAllLeads(true);
+        localStorage.setItem('sri_sri_sanitized_init_done', 'true');
+      }
+    } catch(e){}
     if (typeof updateRecycleBinBadge === 'function') updateRecycleBinBadge();
 
     // ==================== ADVANCED DATE & CRITERIA FILTER ENGINE ====================
@@ -9863,6 +10099,7 @@
       const srEl = document.getElementById('filter-source');
       if (srEl) srEl.value = '';
 
+      isOppPendingCallingOnly = false;
       highlightDatePresetButton('all');
       updateFilterUIIndicators();
       renderOpportunities();
@@ -10025,6 +10262,16 @@
                         (oppFilterState.dateType === 'followup' ? 'nextFollowUp' : 'createdAt');
 
       return pipLeads.filter(l => {
+        // Pending Calling quick toggle filter
+        if (isOppPendingCallingOnly) {
+          const p = pipelines.find(x => x.id === l.pipelineId);
+          const stg = p ? p.stages.find(s => s.id === l.stageId) : null;
+          if (stg && (stg.isWon || stg.isLost)) return false;
+          const hasContact = l.lastContactAttempt || (l.activities && l.activities.length > 0);
+          const isPendingCall = !!l.nextFollowUp || !hasContact;
+          if (!isPendingCall) return false;
+        }
+
         // Search match
         if (q) {
           const cleanQ = q.replace(/[^0-9]/g, '');
@@ -10295,7 +10542,18 @@
 
         const boardFrag = document.createDocumentFragment();
         stages.forEach(stg => {
-        const colLeads = pipLeads.filter(l => l.stageId === stg.id || (!l.stageId && l.stage && l.stage.trim().toLowerCase() === stg.name.trim().toLowerCase()));
+        const rawColLeads = pipLeads.filter(l => l.stageId === stg.id || (!l.stageId && l.stage && l.stage.trim().toLowerCase() === stg.name.trim().toLowerCase()));
+        const colLeads = sortKanbanLeadsByUrgency(rawColLeads);
+
+        // Count how many are overdue in this column
+        const now = new Date();
+        const nowMs = now.getTime();
+        const overdueCount = colLeads.filter(l => {
+          if (!l.nextFollowUp) return false;
+          const d = new Date(l.nextFollowUp);
+          return !isNaN(d.getTime()) && d.getTime() < nowMs;
+        }).length;
+
         const col = document.createElement('div');
         col.id = 'kanban-col-' + stg.id;
         col.className = 'kanban-stage-col w-72 shrink-0 bg-subtle/40 rounded-3xl border border-main flex flex-col max-h-[75vh] overflow-hidden transition-all duration-200';
@@ -10316,7 +10574,10 @@
               <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${stg.color}"></span>
               <h4 class="font-bold text-xs text-main truncate">${stg.name}</h4>
             </div>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-card border border-main text-muted-custom">${colLeads.length}</span>
+            <div class="flex items-center gap-1.5">
+              ${overdueCount > 0 ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/20 text-rose-500 border border-rose-500/40 animate-pulse shadow-xs" title="${overdueCount} Overdue call(s) in ${escapeJs(stg.name)}">${overdueCount} 🚨 OVERDUE</span>` : ''}
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-card border border-main text-muted-custom">${colLeads.length}</span>
+            </div>
           </div>
           <div class="kanban-dropzone flex-1 min-h-0 p-3 overflow-y-auto custom-scrollbar space-y-2.5 min-h-[140px] max-h-[calc(75vh-56px)] transition-colors duration-150" style="overscroll-behavior-y: contain; touch-action: pan-y;" id="kanban-stage-${stg.id}"></div>
         `;
@@ -10330,7 +10591,22 @@
         colLeads.forEach(lead => {
           const card = document.createElement('div');
           card.id = 'kanban-card-' + lead.id;
-          card.className = 'kanban-lead-card p-3.5 rounded-2xl bg-card border border-main shadow-xs hover:border-gold cursor-grab active:cursor-grabbing transition space-y-2';
+
+          const urgency = getLeadUrgencyStatus(lead);
+          let cardBorderClass = 'border border-main shadow-xs hover:border-gold';
+          let topStrip = '';
+          if (urgency.isOverdue) {
+            cardBorderClass = 'border-2 border-rose-500/80 bg-rose-500/[0.04] shadow-[0_0_12px_rgba(244,63,94,0.2)] ring-1 ring-rose-500/40';
+            topStrip = '<div class="w-full h-1 bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 rounded-t-xl -mt-3.5 -mx-3.5 mb-2.5"></div>';
+          } else if (urgency.isDueSoon) {
+            cardBorderClass = 'border-2 border-amber-500/80 bg-amber-500/[0.04] shadow-[0_0_12px_rgba(245,158,11,0.2)] ring-1 ring-amber-500/40';
+            topStrip = '<div class="w-full h-1 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-t-xl -mt-3.5 -mx-3.5 mb-2.5"></div>';
+          } else if (urgency.isDueToday) {
+            cardBorderClass = 'border border-blue-500/40 bg-blue-500/[0.02] shadow-xs hover:border-blue-500';
+            topStrip = '<div class="w-full h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-t-xl -mt-3.5 -mx-3.5 mb-2"></div>';
+          }
+
+          card.className = `kanban-lead-card p-3.5 rounded-2xl bg-card ${cardBorderClass} cursor-grab active:cursor-grabbing transition space-y-2 relative`;
           card.setAttribute('draggable', 'true');
 
           card.ondragstart = (e) => {
@@ -10350,9 +10626,10 @@
 
           const phoneBtn = lead.phone ? `<button type="button" onclick="initiateCallWithLogging('${lead.id}')" class="p-1 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Call & Log Outcome">${SVG_ICONS.phone}</button>` : '';
           const waBtn = lead.phone ? `<button type="button" onclick="openWhatsAppComposerModal('${lead.id}')" class="p-1 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="Send WhatsApp Message & Log">${SVG_ICONS.messageCircle}</button>` : '';
-          const followupBtn = lead.nextFollowUp ? `<button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead('${lead.id}')" class="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer">${SVG_ICONS.clockSm} ${formatFollowupDate(lead.nextFollowUp)}</button>` : `<button type="button" onclick="event.stopPropagation(); scheduleReattemptForLead('${lead.id}')" class="px-2 py-0.5 rounded bg-amber-500/10 text-gold hover:bg-gold hover:text-slate-950 font-bold transition flex items-center gap-1 cursor-pointer">${SVG_ICONS.clockSm} ⏱️ Reattempt</button>`;
+          const followupBtn = formatFollowupBadgeHtml(lead, true);
 
           card.innerHTML = `
+            ${topStrip}
             <div class="flex items-center justify-between">
               <span class="font-medium text-xs text-main truncate max-w-[155px] select-text cursor-text" title="${escapeJs(lead.name)}">${lead.name}</span>
               <span class="text-[10px] font-medium text-gold shrink-0 select-text">${lead.dealValue || lead.budget || ''}</span>
@@ -10366,9 +10643,9 @@
                 ${isCurrentUserSuperAdmin() ? `<button type="button" onclick="event.stopPropagation(); deleteSingleLeadFromPhonebook('${lead.id}')" class="p-1 rounded-md bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition cursor-pointer" title="Delete Lead">${SVG_ICONS.trash}</button>` : ''}
               </div>
             </div>
-            <div class="flex items-center justify-between pt-1 border-t border-main/40 text-[10px] mt-1">
-              <span class="text-muted-custom">${lead.clientType || 'Client'}</span>
-              ${followupBtn}
+            <div class="flex items-center justify-between pt-1 border-t border-main/40 text-[10px] mt-1 gap-1">
+              <span class="text-muted-custom truncate">${lead.clientType || 'Client'}</span>
+              <div class="shrink-0">${followupBtn}</div>
             </div>
           `;
           colCardFrag.appendChild(card);
@@ -10955,16 +11232,17 @@
         const mainNextDate = document.getElementById('modal-main-next-date');
         const mainAttemptHistory = document.getElementById('modal-main-attempt-history');
         if (lead.nextFollowUp) {
-          if (mainNextDate) mainNextDate.innerText = formatFollowupDate(lead.nextFollowUp);
+          if (mainNextDate) mainNextDate.innerHTML = formatFollowupBadgeHtml(lead, false);
           if (mainAttemptHistory) {
-            mainAttemptHistory.innerHTML = `<span><strong class="text-main">${currentStg.name}</strong> · attempt #1 · due <span class="text-gold font-bold">${formatFollowupDate(lead.nextFollowUp)}</span></span> <span class="text-[10px] text-muted-custom font-mono">(${formatFollowupDate(lead.createdAt || new Date())} · by ${lead.assignedToName || 'Sri Sri Admin'})</span>`;
+            const attemptCount = (lead.activities ? lead.activities.filter(a => a.type === 'CALL' || a.type === 'NOTE').length : 0) + 1;
+            mainAttemptHistory.innerHTML = `<span><strong class="text-main">${currentStg.name}</strong> · attempt #${attemptCount} · due <span class="text-gold font-bold">${formatFollowupDate(lead.nextFollowUp)}</span></span> <span class="text-[10px] text-muted-custom font-mono">(${formatFollowupDate(lead.createdAt || new Date())} · by ${lead.assignedToName || 'Sri Sri Admin'})</span>`;
           }
           const nextUpEl = document.getElementById('modal-lead-next-update');
-          if (nextUpEl) nextUpEl.innerHTML = '<i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i> <span class="text-amber-400 font-bold">' + formatFollowupDate(lead.nextFollowUp) + '</span>';
+          if (nextUpEl) nextUpEl.innerHTML = formatFollowupBadgeHtml(lead, false);
           const nextNoteEl = document.getElementById('modal-lead-next-note');
           if (nextNoteEl) nextNoteEl.innerText = lead.nextFollowUpNote || 'Reattempt scheduled';
         } else {
-          if (mainNextDate) mainNextDate.innerText = 'No upcoming action scheduled';
+          if (mainNextDate) mainNextDate.innerHTML = '<span class="text-muted-custom font-medium text-xs">No upcoming action scheduled</span>';
           if (mainAttemptHistory) mainAttemptHistory.innerText = `${currentStg.name} · Initial inquiry captured · Click Re-attempt to schedule`;
           const nextUpEl = document.getElementById('modal-lead-next-update');
           if (nextUpEl) nextUpEl.innerHTML = '<i data-lucide="calendar" class="w-3.5 h-3.5 text-gold"></i> <span>No follow-up set</span>';
@@ -11056,7 +11334,7 @@
         btn.style.color = isActive ? '#020617' : 'inherit';
 
         btn.innerHTML = isActive ? '<span>✓</span> <span>' + escapeHtml(stg.name) + '</span>' : '<span>' + escapeHtml(stg.name) + '</span>';
-        btn.onclick = () => requestLeadStageChange(stg.id);
+        btn.onclick = () => updateLeadStage(stg.id);
         container.appendChild(btn);
       });
     }
@@ -11357,12 +11635,15 @@
           renderLeadActivityAudit(currentSelectedLead, currentAuditFilter);
         }
         const nextUpEl = document.getElementById('modal-lead-next-update');
-        if (nextUpEl) nextUpEl.innerText = formatFollowupDate(dtVal);
+        if (nextUpEl) nextUpEl.innerHTML = formatFollowupBadgeHtml(currentSelectedLead, false);
+        const mainNextDate = document.getElementById('modal-main-next-date');
+        if (mainNextDate) mainNextDate.innerHTML = formatFollowupBadgeHtml(currentSelectedLead, false);
         const nextNoteEl = document.getElementById('modal-lead-next-note');
         if (nextNoteEl) nextNoteEl.innerText = noteText;
       }
       renderOpportunities();
       renderPhonebookTable();
+      updatePendingWorkDashboard();
       initDashboard();
       showToast('⏱️ Next Call Reattempt scheduled for ' + formatFollowupDate(dtVal) + '!', 'success');
     }
@@ -11502,13 +11783,24 @@
       clearSelectedImage();
       clearSelectedAudio();
 
+      const leadPip = (Array.isArray(pipelines) && pipelines.find(p => p.id === currentSelectedLead.pipelineId)) || pipelines[0];
+      renderLeadStagesBar(currentSelectedLead, leadPip);
       renderLeadTimeline(currentSelectedLead);
       updateLeadModalActivityBadge(currentSelectedLead);
       if (currentLeadModalTab === 'activity') {
         renderLeadActivityAudit(currentSelectedLead, currentAuditFilter);
       }
+      if (followupDt) {
+        const nextUpEl = document.getElementById('modal-lead-next-update');
+        if (nextUpEl) nextUpEl.innerHTML = formatFollowupBadgeHtml(currentSelectedLead, false);
+        const mainNextDate = document.getElementById('modal-main-next-date');
+        if (mainNextDate) mainNextDate.innerHTML = formatFollowupBadgeHtml(currentSelectedLead, false);
+        const nextNoteEl = document.getElementById('modal-lead-next-note');
+        if (nextNoteEl) nextNoteEl.innerText = currentSelectedLead.nextFollowUpNote || 'Reattempt scheduled';
+      }
       renderOpportunities();
       renderPhonebookTable();
+      updatePendingWorkDashboard();
       initDashboard();
 
       if (followupDt) {
@@ -11521,12 +11813,20 @@
     function isLeadCommentOrRemark(act) {
       if (!act) return false;
       const t = (act.type || '').toUpperCase();
+      const txt = (act.notes || act.text || act.content || act.note || '').trim();
+      if (!txt) return false;
+
+      // Transfer remarks and direct human notes/comments must always appear in the notes feed
+      if (t === 'TRANSFER_REMARK' || t === 'COMMENT' || t === 'NOTE' || t.includes('TRANSFER')) {
+        if (txt.includes('Remark:') || txt.includes('Note:') || txt.includes('[Transfer') || t === 'TRANSFER_REMARK') {
+          return true;
+        }
+      }
+
       // Exclude system audit activity types - they belong exclusively in the Activity tab
       if (t === 'FOLLOWUP_SCHEDULED' || t === 'STAGE_CHANGE' || t === 'LEAD_CREATED' || t === 'TRANSFER' || t === 'EDIT') {
         return false;
       }
-      const txt = (act.notes || act.text || act.content || act.note || '').trim();
-      if (!txt) return false;
       // Exclude auto-generated system logs
       if (/^reattempt call scheduled/i.test(txt)) return false;
       if (/^lead moved/i.test(txt)) return false;
@@ -12248,10 +12548,17 @@
         renderLeadStagesBar(lead, p);
         const descEl = document.getElementById('modal-lead-description');
         if (descEl) descEl.innerHTML = formatLeadDescription(lead);
+        if (lead.nextFollowUp) {
+          const nextUpEl = document.getElementById('modal-lead-next-update');
+          if (nextUpEl) nextUpEl.innerHTML = formatFollowupBadgeHtml(lead, false);
+          const mainNextDate = document.getElementById('modal-main-next-date');
+          if (mainNextDate) mainNextDate.innerHTML = formatFollowupBadgeHtml(lead, false);
+        }
       }
       renderOpportunities();
       renderPhonebookTable();
       renderTeamCallLogsTable();
+      updatePendingWorkDashboard();
       initDashboard();
 
       showToast('Call logged: ' + outcome + ' & AI summary filed into customer notes!', 'success');
@@ -12539,6 +12846,7 @@
       // Past Days Backlog Lists
       const backlogOverdueLeads = [];    // Due yesterday or older dates (< startOfToday)
       const backlogMissedLeads = [];     // Arrived before today with 0 contact attempts made and no followup scheduled
+      const futureScheduledLeads = [];   // Scheduled for upcoming dates
 
       userLeads.forEach(lead => {
         const p = pipelines.find(x => x.id === lead.pipelineId);
@@ -12559,16 +12867,17 @@
               backlogOverdueLeads.push(lead);
             } else if (due <= endOfToday) {
               // Belongs to TODAY
-              if (diffMs < -60000) {
-                // More than 1 min past due earlier today
+              if (diffMs < 0) {
+                // Past due earlier today
                 todayOverdueLeads.push(lead);
-              } else if (diffMins > 0 && diffMins <= 30) {
+              } else if (diffMins <= 30) {
                 upcoming30mLeads.push(lead);
-              } else if (diffMs >= 0) {
+              } else {
                 dueTodayRemainingLeads.push(lead);
               }
             } else {
               // Future days follow-up
+              futureScheduledLeads.push(lead);
             }
           }
         } else if (!hasContact) {
@@ -12581,12 +12890,13 @@
         }
       });
 
-      // Total Calling Queue (Prioritized: Backlog Overdue + Today Overdue + Upcoming 30m + Due Today + Today Missed + Backlog Missed)
+      // Total Calling Queue (Prioritized: Backlog Overdue + Today Overdue + Upcoming 30m + Due Today + Future Scheduled + Today Missed + Backlog Missed)
       const callingQueueLeads = [
         ...backlogOverdueLeads,
         ...todayOverdueLeads,
         ...upcoming30mLeads,
         ...dueTodayRemainingLeads,
+        ...futureScheduledLeads,
         ...todayMissedLeads,
         ...backlogMissedLeads
       ];
@@ -12949,10 +13259,11 @@
               if (due < startOfToday) {
                 backlog.push(lead);
               } else if (due <= endOfToday) {
-                const diffMins = Math.round((due - now) / 60000);
-                if (diffMins < -1) {
+                const diffMs = due.getTime() - now.getTime();
+                const diffMins = Math.round(diffMs / 60000);
+                if (diffMs < 0) {
                   overdue.push(lead);
-                } else if (diffMins >= 0 && diffMins <= 30) {
+                } else if (diffMins <= 30) {
                   upcoming30m.push(lead);
                 } else {
                   dueToday.push(lead);
@@ -13367,7 +13678,8 @@
       if (!currentSelectedLead) return;
       const newPipId = document.getElementById('transfer-target-pipeline').value;
       const newStaffEmail = document.getElementById('transfer-target-staff').value;
-      const note = document.getElementById('transfer-note').value.trim();
+      const noteEl = document.getElementById('transfer-note');
+      const note = noteEl ? noteEl.value.trim() : '';
 
       const newPip = pipelines.find(p => p.id === newPipId) || pipelines[0];
       const newStaff = users.find(u => u.email === newStaffEmail) || users[0];
@@ -13388,11 +13700,39 @@
         leadInList.assignedToEmail = newStaff.email;
       }
 
+      // If user typed a transfer note/remark, attach it permanently to lead notes & remarks
+      if (note) {
+        const transferRemark = `🔄 [Transfer to ${newPip.name} (${newStaff.name})]: ${note}`;
+        currentSelectedLead.notes = currentSelectedLead.notes && currentSelectedLead.notes.trim()
+          ? (transferRemark + '\n\n' + currentSelectedLead.notes)
+          : transferRemark;
+        if (leadInList) leadInList.notes = currentSelectedLead.notes;
+
+        // Log dedicated user remark/comment so it shows in Notes feed & badge
+        logLeadActivity(currentSelectedLead, 'TRANSFER_REMARK', transferRemark);
+
+        // Update last contact attempt
+        const now = new Date();
+        currentSelectedLead.lastContactAttempt = {
+          type: 'NOTE',
+          outcome: 'Transfer Remark',
+          note: note,
+          text: note,
+          time: now.toISOString(),
+          formattedTime: now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          user: loggedInUser ? loggedInUser.name : 'Sri Sri Admin',
+          device: currentClientDevice,
+          ip: currentClientIp
+        };
+        if (leadInList) leadInList.lastContactAttempt = currentSelectedLead.lastContactAttempt;
+      }
+
       // Audit logging with user, role, device, and IP
       logLeadActivity(currentSelectedLead, 'TRANSFER', 'Lead transferred to pipeline "' + newPip.name + '" and reassigned to ' + newStaff.name + (note ? '. Note: ' + note : ''));
 
       safeStorageSet('sri_sri_leads', leads);
       syncLeadToCloud(currentSelectedLead);
+      if (noteEl) noteEl.value = '';
       closeModal('transfer-modal');
       openLeadModal(currentSelectedLead.id);
       renderOpportunities();
@@ -17308,12 +17648,14 @@
     }
 
     // ==================== GLOBAL HELPERS ====================
+    let globalModalZIndexCounter = 100000;
     function openModal(modalId) {
       const m = document.getElementById(modalId);
       if (m) {
+        globalModalZIndexCounter += 10;
         m.classList.remove('hidden');
         m.style.display = 'flex';
-        m.style.zIndex = '99999';
+        m.style.zIndex = String(globalModalZIndexCounter);
       }
     }
 
@@ -18762,8 +19104,8 @@
             console.warn('Tab/Modal restoration error:', err);
           }
 
-          // Purge browser credential autofill on load and delayed cycles
-          [50, 150, 300, 600, 1000, 1800].forEach(ms => {
+          // Purge browser credential autofill cleanly without thrashing render cycles
+          [100, 600].forEach(ms => {
             setTimeout(() => {
               const didPurge = purgeBrowserAutofillFromSearchInputs();
               if (didPurge) {
