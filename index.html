@@ -1096,7 +1096,7 @@
             </div>
             <div class="flex items-center gap-2 flex-wrap">
               <!-- Bulk Delete Button -->
-              <button type="button" onclick="openBulkDeleteModal()" class="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer">
+              <button type="button" id="pb-btn-bulk-delete" onclick="openBulkDeleteModal()" class="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer">
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 <span>Delete Selected Leads</span>
               </button>
@@ -1387,7 +1387,7 @@
               </button>
 
               <!-- Bulk Delete Button -->
-              <button type="button" onclick="openBulkDeleteModal()" class="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs">
+              <button type="button" id="opp-btn-bulk-delete" onclick="openBulkDeleteModal()" class="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs">
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 <span>Delete Selected</span>
               </button>
@@ -7405,25 +7405,16 @@
       if (isCurrentUserSuperAdmin()) return true;
       if (!loggedInUser) return false;
 
-      const roleLower = (loggedInUser.role || '').toLowerCase();
-      const emailLower = (loggedInUser.email || '').toLowerCase();
-      const nameLower = (loggedInUser.name || '').toLowerCase();
-      const isCoordinator = roleLower.includes('coordinator') || roleLower.includes('cordinator') || roleLower.includes('calling') || roleLower.includes('telecall') ||
-                            emailLower.includes('coordinator') || emailLower.includes('cordinator') || emailLower.includes('salescordinator') ||
-                            nameLower.includes('coordinator') || nameLower.includes('cordinator');
+      // STRICT SECURITY: Lead deletion is strictly Super Admin exclusive!
+      if (permId === 'leads_delete') return false;
 
-      // Sales Coordinator is guaranteed full view access to all company leads, opportunities & conversations
-      if (isCoordinator && (permId === 'leads_view' || permId === 'leads_view_all' || permId === 'opp_view' || permId === 'conv_view_all' || permId === 'tasks_view')) {
-        return true;
-      }
-
-      // STRICT: If user has their own permissions array, only check against it!
+      // STRICT: Respect permissions array configured by Super Admin in Admin Panel!
       if (Array.isArray(loggedInUser.permissions)) {
         return loggedInUser.permissions.includes(permId);
       }
 
       // Fallback to role permissions ONLY if user.permissions was never set
-      const userRole = roles.find(r => r.name === loggedInUser.role);
+      const userRole = roles.find(r => r.name === loggedInUser.role || r.id === loggedInUser.roleId);
       if (userRole && Array.isArray(userRole.permissions)) {
         return userRole.permissions.includes(permId);
       }
@@ -7531,6 +7522,13 @@
       const canConfigPip = isOwner || userHasPermission('opp_configure');
       const pipCfgBtn = document.getElementById('opp-btn-config-pipeline');
       if (pipCfgBtn) pipCfgBtn.style.display = canConfigPip ? '' : 'none';
+
+      // Lead Deletion Permissions: Strictly Super Admin ONLY!
+      const canDelete = isOwner;
+      ['pb-btn-clear-all', 'pb-btn-bulk-delete', 'opp-btn-bulk-delete', 'pb-btn-recycle-bin', 'btn-lead-modal-delete'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = canDelete ? '' : 'none';
+      });
 
       const btnAddStaff = document.getElementById('btn-add-staff-member');
       if (btnAddStaff) btnAddStaff.style.display = canTeam ? '' : 'none';
@@ -8154,7 +8152,7 @@
             <div class="flex items-center justify-end gap-1.5">
               <button type="button" onclick="scheduleReattemptForLead('${lead.id}')" class="p-1.5 rounded-lg bg-amber-500/15 text-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer font-bold" title="⏱️ Schedule Next Call / Reattempt">${SVG_ICONS.clock}</button>
               <button onclick="openLeadModal('${lead.id}')" class="px-2.5 py-1 bg-gold/15 hover:bg-gold hover:text-slate-950 border border-gold/40 rounded-lg text-xs font-bold text-gold transition shadow-xs cursor-pointer">Open</button>
-              <button onclick="deleteSingleLeadFromPhonebook('${lead.id}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition cursor-pointer" title="Delete Lead">${SVG_ICONS.trashSm}</button>
+              ${isCurrentUserSuperAdmin() ? `<button onclick="deleteSingleLeadFromPhonebook('${lead.id}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition cursor-pointer" title="Delete Lead">${SVG_ICONS.trashSm}</button>` : ''}
             </div>
           </td>
         `;
@@ -8844,6 +8842,10 @@
     }
 
     function deleteSingleLeadFromPhonebook(leadId) {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can delete leads.', 'error');
+        return;
+      }
       pendingSingleDeleteLeadId = leadId;
       const countText = document.getElementById('bulk-del-count-text');
       if (countText) countText.innerText = '1';
@@ -8854,6 +8856,10 @@
 
     // Bulk Delete
     function openBulkDeleteModal() {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can delete leads.', 'error');
+        return;
+      }
       const selectedIds = getSelectedLeadIds();
       if (selectedIds.length === 0) {
         showToast('Please select at least one lead to delete.', 'info');
@@ -9069,6 +9075,11 @@
     }
 
     function confirmBulkDeleteProceed() {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can delete leads.', 'error');
+        closeModal('bulk-delete-confirm-modal');
+        return;
+      }
       let idsToDelete = [];
       if (pendingSingleDeleteLeadId) {
         idsToDelete = [pendingSingleDeleteLeadId];
@@ -10352,7 +10363,7 @@
                 ${phoneBtn}
                 ${waBtn}
                 <button type="button" onclick="scheduleReattemptForLead('${lead.id}')" class="p-1 rounded-md bg-amber-500/15 text-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer font-bold" title="⏱️ Schedule Next Call / Reattempt">${SVG_ICONS.clock}</button>
-                <button type="button" onclick="event.stopPropagation(); deleteSingleLeadFromPhonebook('${lead.id}')" class="p-1 rounded-md bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition cursor-pointer" title="Delete Lead">${SVG_ICONS.trash}</button>
+                ${isCurrentUserSuperAdmin() ? `<button type="button" onclick="event.stopPropagation(); deleteSingleLeadFromPhonebook('${lead.id}')" class="p-1 rounded-md bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition cursor-pointer" title="Delete Lead">${SVG_ICONS.trash}</button>` : ''}
               </div>
             </div>
             <div class="flex items-center justify-between pt-1 border-t border-main/40 text-[10px] mt-1">
@@ -14384,18 +14395,36 @@
         const catBox = document.createElement('div');
         catBox.className = 'p-2 rounded-xl bg-card border border-main space-y-1.5';
 
+        const isSuperAdminAccount = user.role === 'Organization Admin' || (user.email && user.email.toLowerCase().includes('sriplywoodsgm@gmail.com'));
         let permsHtml = '';
         cat.permissions.forEach(p => {
-          const isChecked = userPerms.includes(p.id) || user.role === 'Organization Admin';
-          permsHtml += `
-            <label class="flex items-start gap-2 p-1 rounded-md hover:bg-subtle cursor-pointer transition text-[11px]">
-              <input type="checkbox" class="mstaff-perm-checkbox mt-0.5 rounded border-main text-gold focus:ring-gold" data-perm-id="${p.id}" ${isChecked ? 'checked' : ''} onchange="updateMstaffPermsCount()">
-              <div>
-                <p class="font-bold text-main">${p.name}</p>
-                <p class="text-[9px] text-muted-custom">${p.desc}</p>
-              </div>
-            </label>
-          `;
+          const isDeletePerm = p.id === 'leads_delete';
+          const isChecked = isSuperAdminAccount ? true : (isDeletePerm ? false : userPerms.includes(p.id));
+
+          if (isDeletePerm && !isSuperAdminAccount) {
+            permsHtml += `
+              <label class="flex items-start gap-2 p-1.5 rounded-lg bg-rose-500/5 border border-rose-500/20 text-[11px] opacity-75 cursor-not-allowed">
+                <input type="checkbox" disabled class="mt-0.5 rounded border-main text-rose-500 cursor-not-allowed" data-perm-id="${p.id}">
+                <div>
+                  <p class="font-bold text-main flex items-center gap-1.5">
+                    <span>${p.name}</span>
+                    <span class="px-1.5 py-0.2 rounded text-[8px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">🔒 Super Admin Only</span>
+                  </p>
+                  <p class="text-[9px] text-muted-custom">Lead deletion is strictly reserved for Super Admin only (Restricted from Coordinator & Staff).</p>
+                </div>
+              </label>
+            `;
+          } else {
+            permsHtml += `
+              <label class="flex items-start gap-2 p-1 rounded-md hover:bg-subtle cursor-pointer transition text-[11px]">
+                <input type="checkbox" class="mstaff-perm-checkbox mt-0.5 rounded border-main text-gold focus:ring-gold cursor-pointer" data-perm-id="${p.id}" ${isChecked ? 'checked' : ''} onchange="updateMstaffPermsCount()">
+                <div>
+                  <p class="font-bold text-main">${p.name}</p>
+                  <p class="text-[9px] text-muted-custom">${p.desc}</p>
+                </div>
+              </label>
+            `;
+          }
         });
 
         catBox.innerHTML = `
@@ -14442,17 +14471,11 @@
         return;
       }
 
-      // Collect checked permissions
-      const checkedPerms = Array.from(document.querySelectorAll('.mstaff-perm-checkbox:checked')).map(cb => cb.dataset.permId);
-
-      // Ensure Sales Coordinator profile always preserves complete company-wide leads access
-      const isCoord = (role && (role.toLowerCase().includes('coordinator') || role.toLowerCase().includes('cordinator') || role.toLowerCase().includes('calling') || role.toLowerCase().includes('telecall'))) ||
-                      (email && (email.toLowerCase().includes('coordinator') || email.toLowerCase().includes('cordinator') || email.toLowerCase().includes('salescordinator'))) ||
-                      (name && (name.toLowerCase().includes('coordinator') || name.toLowerCase().includes('cordinator')));
-      if (isCoord) {
-        ['leads_view', 'leads_view_all', 'opp_view', 'conv_view_all', 'tasks_view'].forEach(p => {
-          if (!checkedPerms.includes(p)) checkedPerms.push(p);
-        });
+      // Collect checked permissions (excluding leads_delete for non-superadmin accounts)
+      let checkedPerms = Array.from(document.querySelectorAll('.mstaff-perm-checkbox:checked')).map(cb => cb.dataset.permId);
+      const isSuperAdminAccount = role === 'Organization Admin' || (email && email.toLowerCase().includes('sriplywoodsgm@gmail.com'));
+      if (!isSuperAdminAccount) {
+        checkedPerms = checkedPerms.filter(p => p !== 'leads_delete');
       }
 
       user.name = name;
