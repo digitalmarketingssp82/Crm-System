@@ -2664,6 +2664,12 @@
                 <span>Activity</span>
                 <span id="tab-activity-count-badge" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-subtle border border-main text-gold">0</span>
               </button>
+              <!-- 3. Call History Tab (Automatic Call Recordings & AI Summary) -->
+              <button type="button" id="tab-btn-call-history" onclick="switchLeadModalTab('call-history')" class="modal-tab-btn px-3.5 py-1.5 rounded-full text-xs font-medium text-muted-custom hover:text-main hover:bg-subtle transition flex items-center gap-1.5 cursor-pointer" title="View Customer Call Recordings & AI Summaries">
+                <i data-lucide="phone-call" class="w-3.5 h-3.5 text-blue-400"></i>
+                <span>Call History</span>
+                <span id="tab-call-history-count-badge" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/30 text-blue-400">0</span>
+              </button>
               <!-- 3. Tasks Tab -->
               <button type="button" id="tab-btn-tasks" onclick="switchLeadModalTab('tasks')" class="modal-tab-btn px-3 py-1.5 rounded-full text-xs font-medium text-muted-custom hover:text-main hover:bg-subtle transition flex items-center gap-1.5 cursor-pointer">
                 <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
@@ -2870,6 +2876,22 @@
                 </div>
                 <div class="space-y-3" id="modal-timeline-stream"></div>
               </div>
+
+              <!-- 5. CALL HISTORY & AI RECORDINGS TIMELINE WIDGET (User Requested) -->
+              <div id="modal-lead-call-history-widget" class="space-y-3 pt-4 border-t border-main/60">
+                <div class="flex items-center justify-between pb-1 border-b border-main/50">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-main flex items-center gap-2">
+                    <i data-lucide="phone-call" class="w-4 h-4 text-blue-400"></i>
+                    <span>CALL HISTORY &amp; AI RECORDINGS</span>
+                    <span id="widget-call-history-count" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/30 text-blue-400">0 Calls</span>
+                  </h4>
+                  <button type="button" onclick="switchLeadModalTab('call-history')" class="text-[11px] font-bold text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 cursor-pointer">
+                    <span>Open Full Tab</span>
+                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                  </button>
+                </div>
+                <div class="space-y-3" id="widget-call-history-list"></div>
+              </div>
             </div>
 
             <!-- ==================== TAB 2: ACTIVITY AUDIT CONTENT (User Requested) ==================== -->
@@ -2902,6 +2924,28 @@
               <!-- Activity Stream Container -->
               <div id="modal-activity-audit-list" class="space-y-3">
                 <!-- Dynamically populated by renderLeadActivityAudit -->
+              </div>
+            </div>
+
+            <!-- ==================== TAB: CALL HISTORY CONTENT (Automatic Call Recording & AI Transcription) ==================== -->
+            <div id="modal-tab-content-call-history" class="hidden p-4 sm:p-5 space-y-4">
+              <!-- Call History Header Box -->
+              <div class="p-4 rounded-3xl bg-card border border-main space-y-3 shadow-xs">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 class="text-sm font-extrabold text-main flex items-center gap-2">
+                      <i data-lucide="phone-call" class="w-4 h-4 text-blue-400"></i>
+                      <span>Automatic Call Recordings &amp; AI Transcription</span>
+                    </h3>
+                    <p class="text-[11px] text-muted-custom">Inbound &amp; outbound call recordings with instant AI structured summaries and audio playback</p>
+                  </div>
+                  <span id="modal-call-history-total-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 self-start sm:self-auto">0 Recordings</span>
+                </div>
+              </div>
+
+              <!-- Call History Stream Container -->
+              <div id="modal-call-history-full-list" class="space-y-3">
+                <!-- Dynamically populated by renderLeadCallHistory -->
               </div>
             </div>
 
@@ -10665,7 +10709,7 @@
 
     function switchLeadModalTab(tabName) {
       currentLeadModalTab = tabName;
-      const tabs = ['notes', 'activity', 'tasks', 'team', 'files', 'products', 'pipelines'];
+      const tabs = ['notes', 'activity', 'call-history', 'tasks', 'team', 'files', 'products', 'pipelines'];
       
       tabs.forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
@@ -10686,9 +10730,252 @@
 
       if (tabName === 'activity') {
         renderLeadActivityAudit(currentSelectedLead, currentAuditFilter);
+      } else if (tabName === 'call-history') {
+        renderLeadCallHistory(currentSelectedLead);
       } else if (tabName === 'files') {
         renderLeadFilesTab(currentSelectedLead);
       }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // ==================== CALL LOGS & AI TRANSCRIPTION CLIENT ENGINE ====================
+    let sriCallLogs = [];
+    try {
+      const cached = localStorage.getItem('sri_call_logs');
+      if (cached) sriCallLogs = JSON.parse(cached);
+    } catch(e) {
+      sriCallLogs = [];
+    }
+
+    function getStoredClientCallLogs() {
+      if (!Array.isArray(sriCallLogs)) sriCallLogs = [];
+      return sriCallLogs;
+    }
+
+    function saveStoredClientCallLogs(logs) {
+      sriCallLogs = Array.isArray(logs) ? logs : [];
+      try {
+        localStorage.setItem('sri_call_logs', JSON.stringify(sriCallLogs));
+      } catch(e) {}
+    }
+
+    function formatCallDuration(secs) {
+      secs = parseInt(secs, 10) || 0;
+      if (secs <= 0) return '0s';
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      if (m === 0) return `${s}s`;
+      return `${m}m ${s < 10 ? '0' : ''}${s}s`;
+    }
+
+    function formatAiSummaryHtml(aiSummaryText) {
+      if (!aiSummaryText || !aiSummaryText.trim()) {
+        return '<span class="text-muted-custom italic">AI summary will appear automatically once audio is transcribed.</span>';
+      }
+      const lines = aiSummaryText.trim().split('\n').map(l => l.trim()).filter(Boolean);
+      const formattedLines = lines.map(line => {
+        let cleanLine = line.replace(/^[•\-\*]\s*/, '');
+        let badge = '';
+        if (/^key discussion/i.test(cleanLine)) {
+          badge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 mr-1.5 shrink-0">Key Discussion</span>';
+          cleanLine = cleanLine.replace(/^key discussion[:\s-]*/i, '');
+        } else if (/^customer requirement/i.test(cleanLine)) {
+          badge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 mr-1.5 shrink-0">Requirement</span>';
+          cleanLine = cleanLine.replace(/^customer requirement[:\s-]*/i, '');
+        } else if (/^next action/i.test(cleanLine)) {
+          badge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 mr-1.5 shrink-0">Next Action</span>';
+          cleanLine = cleanLine.replace(/^next action item[:\s-]*|^next action[:\s-]*/i, '');
+        }
+        return `
+          <div class="flex items-start gap-1.5 text-xs text-main leading-relaxed">
+            ${badge ? badge : '<span class="text-blue-400 font-bold shrink-0">•</span>'}
+            <span class="font-medium">${escapeHtml(cleanLine)}</span>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-blue-900/10 via-purple-900/10 to-indigo-900/10 border border-blue-500/20 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-blue-400">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-400"></i>
+              <span>AI Audio Transcription &amp; Summary</span>
+            </div>
+            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Zero Manual Typing</span>
+          </div>
+          <div class="space-y-1.5 pt-1">
+            ${formattedLines}
+          </div>
+        </div>
+      `;
+    }
+
+    function getCallLogsForLead(lead) {
+      if (!lead) return [];
+      const all = getStoredClientCallLogs();
+      const cleanLeadPhone = (lead.phone || '').replace(/\\D/g, '').slice(-10);
+      
+      const matches = all.filter(log => {
+        if (log.lead_id && (log.lead_id === lead.id || log.lead_id === 'lead-phone-' + cleanLeadPhone)) return true;
+        if (cleanLeadPhone) {
+          const c1 = (log.caller_number || '').replace(/\\D/g, '').slice(-10);
+          const c2 = (log.receiver_number || '').replace(/\\D/g, '').slice(-10);
+          if (c1 === cleanLeadPhone || c2 === cleanLeadPhone) return true;
+        }
+        return false;
+      });
+
+      // Non-destructive: Also include any recordings in lead.activities if not duplicate
+      if (lead.activities && Array.isArray(lead.activities)) {
+        lead.activities.forEach(act => {
+          const recUrl = act.audioUrl || act.recording_url || act.recordingUrl;
+          if (recUrl && !matches.some(m => m.recording_url === recUrl)) {
+            matches.push({
+              id: act.id || ('call-act-' + Date.now()),
+              lead_id: lead.id,
+              caller_number: lead.phone || '',
+              receiver_number: '',
+              call_duration: act.duration || 60,
+              recording_url: recUrl,
+              ai_summary: act.ai_summary || act.notes || act.text || 'Call recorded via CRM telephony action.',
+              created_at: act.timestamp || act.time || lead.createdAt
+            });
+          }
+        });
+      }
+
+      // Sort newest first
+      return matches.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    }
+
+    async function fetchLiveCallLogs(lead) {
+      if (!lead) return;
+      const cleanLeadPhone = (lead.phone || '').replace(/\\D/g, '').slice(-10);
+      try {
+        const queryParams = new URLSearchParams();
+        if (cleanLeadPhone) queryParams.set('phone', cleanLeadPhone);
+        if (lead.id) queryParams.set('lead_id', lead.id);
+
+        const res = await fetch('/api/webhook/call-log?' + queryParams.toString());
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.call_logs) && data.call_logs.length > 0) {
+            const existing = getStoredClientCallLogs();
+            let changed = false;
+            data.call_logs.forEach(remoteLog => {
+              const idx = existing.findIndex(l => l.id === remoteLog.id);
+              if (idx === -1) {
+                existing.unshift(remoteLog);
+                changed = true;
+              } else {
+                if (!existing[idx].ai_summary && remoteLog.ai_summary) {
+                  existing[idx] = remoteLog;
+                  changed = true;
+                }
+              }
+            });
+            if (changed) {
+              saveStoredClientCallLogs(existing);
+              if (currentSelectedLead && currentSelectedLead.id === lead.id) {
+                renderLeadCallHistory(lead);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        // Quiet fallback if offline or standalone static view
+      }
+    }
+
+    function renderLeadCallHistory(lead) {
+      const widgetContainer = document.getElementById('widget-call-history-list');
+      const fullContainer = document.getElementById('modal-call-history-full-list');
+      const tabBadge = document.getElementById('tab-call-history-count-badge');
+      const widgetBadge = document.getElementById('widget-call-history-count');
+      const totalBadge = document.getElementById('modal-call-history-total-badge');
+
+      if (!lead) return;
+      const calls = getCallLogsForLead(lead);
+      const count = calls.length;
+
+      if (tabBadge) tabBadge.innerText = String(count);
+      if (widgetBadge) widgetBadge.innerText = `${count} ${count === 1 ? 'Call' : 'Calls'}`;
+      if (totalBadge) totalBadge.innerText = `${count} ${count === 1 ? 'Recording' : 'Recordings'}`;
+
+      if (count === 0) {
+        if (widgetContainer) {
+          widgetContainer.innerHTML = `
+            <div class="p-4 text-center text-xs text-muted-custom bg-subtle/30 rounded-2xl border border-main">
+              No call recordings logged yet. Inbound calls via webhook will appear here automatically with AI summary.
+            </div>
+          `;
+        }
+        if (fullContainer) {
+          fullContainer.innerHTML = `
+            <div class="p-8 text-center text-xs text-muted-custom bg-card rounded-3xl border border-main space-y-2">
+              <div class="w-12 h-12 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto">
+                <i data-lucide="phone-call" class="w-6 h-6"></i>
+              </div>
+              <p class="font-extrabold text-main text-sm">No Call Recordings Found</p>
+              <p class="text-[11px] text-muted-custom max-w-sm mx-auto">
+                Inbound/outbound calls sent to <code class="px-1.5 py-0.5 rounded bg-subtle text-blue-400 font-mono text-[10px]">/api/webhook/call-log</code> are automatically matched to this lead by phone number and transcribed with AI.
+              </p>
+            </div>
+          `;
+        }
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      const cardsHtml = calls.map(log => {
+        const audioPlayerHtml = log.recording_url ? `
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between text-[11px] font-bold text-purple-400">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5 text-purple-400"></i>
+                <span>Audio Playback</span>
+              </span>
+              <a href="${escapeHtml(log.recording_url)}" target="_blank" download class="text-[10px] text-muted-custom hover:text-gold flex items-center gap-1 font-semibold">
+                <i data-lucide="download" class="w-3 h-3"></i> Download Audio
+              </a>
+            </div>
+            <audio controls class="w-full h-9 rounded-xl bg-subtle border border-main p-1" src="${escapeHtml(log.recording_url)}" preload="metadata"></audio>
+          </div>
+        ` : `
+          <div class="text-[11px] text-muted-custom italic flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-muted-custom"></i> Audio recording URL not attached
+          </div>
+        `;
+
+        return `
+          <div class="p-4 rounded-2xl bg-card border border-main space-y-3 shadow-xs hover:border-blue-500/40 transition">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-main/50">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-full bg-blue-500/15 text-blue-400 flex items-center justify-center border border-blue-500/25 shrink-0">
+                  <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-main flex items-center gap-1.5">
+                    <span>Call Recording</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-subtle border border-main text-gold">${formatCallDuration(log.call_duration)}</span>
+                  </div>
+                  <p class="text-[10px] text-muted-custom font-mono">Caller: ${escapeHtml(log.caller_number || 'Customer')} ${log.receiver_number ? '→ Receiver: ' + escapeHtml(log.receiver_number) : ''}</p>
+                </div>
+              </div>
+              <span class="text-gold text-[10px] font-mono font-bold flex items-center gap-1 shrink-0">
+                <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
+                <span>${formatFollowupDate(log.created_at || new Date())}</span>
+              </span>
+            </div>
+
+            ${audioPlayerHtml}
+            ${formatAiSummaryHtml(log.ai_summary)}
+          </div>
+        `;
+      }).join('');
+
+      if (widgetContainer) widgetContainer.innerHTML = cardsHtml;
+      if (fullContainer) fullContainer.innerHTML = cardsHtml;
       if (window.lucide) lucide.createIcons();
     }
 
@@ -11265,6 +11552,8 @@
         renderLeadStagesBar(lead, p);
         renderLeadTimeline(lead);
         updateLeadModalActivityBadge(lead);
+        renderLeadCallHistory(lead);
+        fetchLiveCallLogs(lead);
         switchLeadModalTab('notes');
 
         // Enforce lead modal action button permissions
@@ -12546,6 +12835,7 @@
         renderLeadTimeline(lead);
         const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
         renderLeadStagesBar(lead, p);
+        renderLeadCallHistory(lead);
         const descEl = document.getElementById('modal-lead-description');
         if (descEl) descEl.innerHTML = formatLeadDescription(lead);
         if (lead.nextFollowUp) {
