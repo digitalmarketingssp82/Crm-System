@@ -2251,10 +2251,6 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2.5">
-            <button onclick="openCallRecordingSettingsModal()" class="px-3.5 py-2 rounded-xl bg-card hover:bg-subtle border border-main text-xs font-bold text-main hover:text-gold transition flex items-center gap-2 shadow-xs cursor-pointer">
-              <i data-lucide="settings" class="w-4 h-4 text-gold"></i>
-              <span>Call Recording Settings</span>
-            </button>
             <button onclick="syncAndroidCalls()" class="px-3.5 py-2 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-xs font-bold text-blue-300 transition flex items-center gap-2 shadow-xs cursor-pointer">
               <i data-lucide="refresh-cw" class="w-4 h-4 text-blue-400" id="sync-calls-spin-icon"></i>
               <span>Sync Android Calls</span>
@@ -2264,11 +2260,6 @@
               <span>+ Log Call Activity</span>
             </button>
           </div>
-        </div>
-
-        <!-- Android Call Recording Module Feature / Activation Banner -->
-        <div id="call-module-banner-container" class="transition-all">
-          <!-- Dynamic rendering via renderCallModuleBanner() -->
         </div>
 
         <!-- KPI Summary Cards -->
@@ -2325,7 +2316,7 @@
 
         <!-- Filter Controls Bar -->
         <div class="p-4 rounded-2xl bg-card border border-main space-y-3 shadow-xs">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <!-- Search -->
             <div class="lg:col-span-2 relative">
               <i data-lucide="search" class="w-4 h-4 text-muted-custom absolute left-3 top-3"></i>
@@ -2336,15 +2327,6 @@
             <div>
               <select id="call-log-filter-staff" onchange="filterTeamCallLogs()" class="w-full p-2 rounded-xl border border-main bg-subtle text-main text-xs font-semibold focus:ring-1 focus:ring-gold outline-hidden">
                 <option value="ALL">All Team Members (Whole Team)</option>
-              </select>
-            </div>
-
-            <!-- SIM Selector -->
-            <div>
-              <select id="call-log-filter-sim" onchange="filterTeamCallLogs()" class="w-full p-2 rounded-xl border border-main bg-subtle text-main text-xs font-semibold focus:ring-1 focus:ring-gold outline-hidden">
-                <option value="ALL">All SIM Slots</option>
-                <option value="SIM 1">SIM 1 (Business)</option>
-                <option value="SIM 2">SIM 2 (Secondary)</option>
               </select>
             </div>
 
@@ -2372,7 +2354,7 @@
                   <th class="p-3.5">Date &amp; Time</th>
                   <th class="p-3.5">Customer / Lead</th>
                   <th class="p-3.5">Team Member (Agent)</th>
-                  <th class="p-3.5">SIM &amp; Type</th>
+                  <th class="p-3.5">Call Type</th>
                   <th class="p-3.5">Duration &amp; Audio</th>
                   <th class="p-3.5">Call Outcome</th>
                   <th class="p-3.5">AI Transcript &amp; CRM Notes</th>
@@ -5058,7 +5040,7 @@
           <div>
             <div class="flex items-center gap-2">
               <h3 class="text-sm font-bold text-main" id="call-log-title">Log Call Activity</h3>
-              <span id="call-log-sim-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">📶 SIM 1 (Business)</span>
+              <span id="call-log-sim-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">Phone Call</span>
             </div>
             <p class="text-[11px] text-muted-custom">Record call outcome, audio recording &amp; AI discussion notes</p>
           </div>
@@ -5101,10 +5083,10 @@
 
           <!-- 4 Genuine Calling Method Buttons (Zero Fake Softphone) -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px] font-bold">
-            <!-- Tool 1: Instant Scan & Dial QR Code (Real Mobile SIM) -->
-            <button type="button" onclick="toggleScanAndDialQr()" class="p-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500 text-gold hover:text-slate-950 border border-gold/30 flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs" title="Scan QR Code with Android Phone Camera to Dial from SIM 1 / SIM 2 Instantly">
+            <!-- Tool 1: Instant Scan & Dial QR Code -->
+            <button type="button" onclick="toggleScanAndDialQr()" class="p-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500 text-gold hover:text-slate-950 border border-gold/30 flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs" title="Scan QR Code with Android Phone Camera to Dial Instantly">
               <i data-lucide="qr-code" class="w-3.5 h-3.5 text-gold"></i>
-              <span id="btn-qr-dial-text">📲 Scan QR (SIM)</span>
+              <span id="btn-qr-dial-text">📲 Scan QR &amp; Dial</span>
             </button>
 
             <!-- Tool 2: 1-Click Copy Number -->
@@ -5391,43 +5373,7 @@
         </label>
       </div>
 
-      <!-- Section: Choose which SIM records -->
-      <div class="space-y-2.5">
-        <label class="block text-xs font-black uppercase tracking-wider text-main flex items-center gap-1.5">
-          <i data-lucide="sim" class="w-3.5 h-3.5 text-gold"></i>
-          <span>Choose Which SIM Records *</span>
-        </label>
-        <p class="text-[11px] text-muted-custom">Select which SIM card slot the companion Android app should monitor and record calls from.</p>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          <div onclick="selectSimRecordingChoice('SIM 1')" id="sim-choice-card-sim1" class="cursor-pointer p-3 rounded-2xl border border-gold bg-gold/10 transition flex flex-col justify-between space-y-1.5 shadow-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-black text-gold">SIM 1</span>
-              <i data-lucide="check-circle-2" class="w-4 h-4 text-gold" id="sim-choice-check-sim1"></i>
-            </div>
-            <p class="text-[11px] font-bold text-main">Primary Business SIM</p>
-            <p class="text-[10px] text-muted-custom">Recommended for business phone numbers (Jio Business / Airtel).</p>
-          </div>
-
-          <div onclick="selectSimRecordingChoice('SIM 2')" id="sim-choice-card-sim2" class="cursor-pointer p-3 rounded-2xl border border-main bg-card hover:border-gold/50 transition flex flex-col justify-between space-y-1.5 shadow-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-black text-muted-custom" id="sim-choice-title-sim2">SIM 2</span>
-              <i data-lucide="circle" class="w-4 h-4 text-muted-custom" id="sim-choice-check-sim2"></i>
-            </div>
-            <p class="text-[11px] font-bold text-main">Secondary SIM</p>
-            <p class="text-[10px] text-muted-custom">Record calls received or dialed from secondary SIM slot.</p>
-          </div>
-
-          <div onclick="selectSimRecordingChoice('Both SIMs')" id="sim-choice-card-both" class="cursor-pointer p-3 rounded-2xl border border-main bg-card hover:border-gold/50 transition flex flex-col justify-between space-y-1.5 shadow-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-black text-muted-custom" id="sim-choice-title-both">Both SIMs</span>
-              <i data-lucide="circle" class="w-4 h-4 text-muted-custom" id="sim-choice-check-both"></i>
-            </div>
-            <p class="text-[11px] font-bold text-main">Dual SIM Recording</p>
-            <p class="text-[10px] text-muted-custom">Records all calls across both SIM 1 &amp; SIM 2 slots.</p>
-          </div>
-        </div>
-        <input type="hidden" id="call-module-selected-sim" value="SIM 1">
-      </div>
+      <input type="hidden" id="call-module-selected-sim" value="All Calls">
 
       <!-- Section: Restrict recording to approved numbers -->
       <div class="p-3.5 rounded-2xl bg-card border border-main space-y-2">
@@ -5568,8 +5514,8 @@
           <span id="call-transcript-staff" class="font-bold text-main">Sri Sri Admin</span>
         </div>
         <div>
-          <span class="text-[10px] text-muted-custom block font-bold uppercase">SIM Used</span>
-          <span id="call-transcript-sim" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">SIM 1</span>
+          <span class="text-[10px] text-muted-custom block font-bold uppercase">Call Type</span>
+          <span id="call-transcript-sim" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">Phone Call</span>
         </div>
       </div>
 
@@ -6763,10 +6709,59 @@
 
     let deletedLeadIds = getDeletedLeadIds();
     let deletedLeadPhones = getDeletedLeadPhones();
+
+    // Universal Lead Deduplication by ID & 10-Digit Phone
+    function deduplicateLeads(leadsArray) {
+      if (!Array.isArray(leadsArray)) return [];
+      const seenIds = new Set();
+      const seenPhones = new Map();
+      const deduped = [];
+      const duplicateIdsToDelete = [];
+
+      for (let i = 0; i < leadsArray.length; i++) {
+        const l = leadsArray[i];
+        if (!l || isLeadDeleted(l)) continue;
+        if (l.id && seenIds.has(l.id)) continue;
+
+        const cleanP = (l.phone || '').replace(/\D/g, '').slice(-10);
+        if (cleanP && cleanP.length === 10) {
+          if (seenPhones.has(cleanP)) {
+            // Duplicate phone! Merge activities into the primary lead so no notes are lost
+            const primary = seenPhones.get(cleanP);
+            if (Array.isArray(l.activities) && l.activities.length > 0) {
+              primary.activities = primary.activities || [];
+              l.activities.forEach(act => {
+                if (!primary.activities.some(pa => pa.id === act.id || (pa.text && pa.text === act.text))) {
+                  primary.activities.push(act);
+                }
+              });
+            }
+            if (!primary.notes && l.notes) primary.notes = l.notes;
+            if (l.id) duplicateIdsToDelete.push(l.id);
+            continue; // Skip duplicate lead!
+          }
+          seenPhones.set(cleanP, l);
+        }
+
+        if (l.id) seenIds.add(l.id);
+        deduped.push(l);
+      }
+
+      if (duplicateIdsToDelete.length > 0) {
+        if (typeof recordDeletedLeadIds === 'function') recordDeletedLeadIds(duplicateIdsToDelete);
+        if (typeof deleteLeadFromCloud === 'function') duplicateIdsToDelete.forEach(id => deleteLeadFromCloud(id));
+      }
+
+      return deduped;
+    }
+
     let leads = safeStorageGet('sri_sri_leads', []);
     if (!Array.isArray(leads)) leads = [];
-    // Filter out any deleted leads immediately so deleted leads never appear
-    leads = leads.filter(l => !isLeadDeleted(l));
+    // Strict Deduplication & deletion filter on startup
+    leads = deduplicateLeads(leads);
+    try {
+      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+    } catch(e) {}
 
     // Auto-seeding permanently disabled - deleted leads will NEVER come back!
     try {
@@ -10748,6 +10743,16 @@
     }
 
     function getStoredClientCallLogs() {
+      try {
+        const cached = localStorage.getItem('sri_call_logs');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) {
+            sriCallLogs = parsed;
+            return sriCallLogs;
+          }
+        }
+      } catch(e) {}
       if (!Array.isArray(sriCallLogs)) sriCallLogs = [];
       return sriCallLogs;
     }
@@ -12765,10 +12770,9 @@
 
       // 5. Save AI Call Summary directly into Customer CRM Notes (User specification)
       const shouldFileNotes = document.getElementById('call-log-auto-file-crm-notes') ? document.getElementById('call-log-auto-file-crm-notes').checked : (callModuleConfig.autoFileNotes !== false);
-      const simSlotUsed = callModuleConfig.simChoice || 'SIM 1';
       
       if (shouldFileNotes) {
-        const aiNoteHeader = `[Android Call Recording & AI Summary · ${simSlotUsed} · ${outcome}]`;
+        const aiNoteHeader = `[Android Call Recording & AI Summary · ${outcome}]`;
         const fullFiledNote = `${aiNoteHeader}\nDate: ${timeStr} | Agent: ${userName} (${loggedInUser ? loggedInUser.role : 'Staff'})\n${notes}`;
         
         if (lead.notes && lead.notes.trim()) {
@@ -17852,14 +17856,16 @@
         const cleanPhone = (leadObj.phone || '').replace(/[^0-9]/g, '').slice(-10);
         let existingLead = cleanPhone ? leads.find(l => (l.phone || '').replace(/[^0-9]/g, '').slice(-10) === cleanPhone) : null;
         if (existingLead) {
+          const origId = existingLead.id;
           Object.assign(existingLead, newLead);
-          existingLead.id = existingLead.id; // preserve ID
+          existingLead.id = origId; // preserve existing ID
+          newLead.id = origId;
           updatedCount++;
         } else {
           leads.unshift(newLead);
           importedCount++;
         }
-        syncLeadToCloud(newLead);
+        syncLeadToCloud(existingLead || newLead);
       });
 
       localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
@@ -18134,7 +18140,8 @@
           // Sort leads by activity or creation
           const combinedLeads = Array.from(leadMap.values());
           combinedLeads.sort((a,b) => new Date(b.lastActivityAt || b.createdAt || 0) - new Date(a.lastActivityAt || a.createdAt || 0));
-          leads = combinedLeads.filter(l => !isLeadDeleted(l));
+          // Deduplicate leads by ID & 10-digit phone
+          leads = deduplicateLeads(combinedLeads);
           safeStorageSet('sri_sri_leads', leads);
 
           // Debounced safe view refresh to prevent lag & UI freezing
@@ -18312,128 +18319,94 @@
     let callLogs = [];
     function initCallLogs() {
       try {
-        callLogs = safeStorageGet('sri_sri_call_logs', []);
+        let stored = safeStorageGet('sri_sri_call_logs', []);
+        // Purge legacy mockup / demo calls (call-101 to call-105)
+        if (Array.isArray(stored)) {
+          stored = stored.filter(c => c && !String(c.id).startsWith('call-10'));
+          callLogs = stored;
+        } else {
+          callLogs = [];
+        }
       } catch(e) {
-        console.error('Error loading call logs:', e);
+        callLogs = [];
       }
 
-      if (!callLogs || callLogs.length === 0) {
-        callLogs = [
-          {
-            id: 'call-101',
-            leadId: (leads[0] ? leads[0].id : 'lead-1'),
-            leadName: (leads[0] ? leads[0].name : 'Shreeji Interiors'),
-            phone: (leads[0] ? leads[0].phone : '+91 98765 43210'),
-            userName: 'Sri Sri Admin',
-            userEmail: 'sales.ssply@gmail.com',
-            userRole: 'Super Admin',
-            userId: 'usr-admin-1',
-            sim: 'SIM 1',
-            direction: 'OUTBOUND',
-            duration: 135,
-            formattedDuration: '2m 15s',
-            outcome: 'Baat Hui (Connected)',
-            time: '16/10/2026, 04:30 PM',
-            timestamp: new Date(Date.now() - 1800000).toISOString(),
-            hasAudio: true,
-            audioFileName: 'rec_shreeji_interiors_20261016.mp3',
-            transcript: 'Agent: "Namaste sir, Sri Sri Plywoods se call kar raha hu regarding your 19mm Gurjan Plywood and Flush Doors inquiry."\nClient: "Haanji, mujhe 35 sheets 19mm waterproof plywood aur 4 teak veneer doors chahiye the, quotation chahiye."\nAgent: "Sir waterproof plywood humara 84/sqft hai, agar cash advance karenge to 80/sqft de denge with free tempo delivery."\nClient: "Theek hai, kal subah 11 baje site par sample bhej do, mai booking advance transfer karta hu."\nAgent: "Bilkul sir, team ko dispatch karwa diya hai. Thank you!"',
-            aiSummary: '📌 Client Requirement: 35 Sheets 19mm Gurjan Waterproof Plywood + 4 Teak Veneer Flush Doors.\n💰 Rates Discussed: Quoted ₹84/sqft, finalized at ₹80/sqft with free tempo delivery on cash advance.\n🚀 Action / Next Step: Dispatch physical sample to site tomorrow at 11:00 AM for advance payment & order booking.',
-            filedInCrmNotes: true
-          },
-          {
-            id: 'call-102',
-            leadId: (leads[1] ? leads[1].id : 'lead-2'),
-            leadName: (leads[1] ? leads[1].name : 'Royal Woodcrafts'),
-            phone: (leads[1] ? leads[1].phone : '+91 98123 45678'),
-            userName: 'Rahul Sharma',
-            userEmail: 'rahul.sales@srisriply.com',
-            userRole: 'Sales Executive',
-            userId: 'usr-staff-rahul',
-            sim: 'SIM 1',
-            direction: 'INBOUND',
-            duration: 210,
-            formattedDuration: '3m 30s',
-            outcome: 'Baat Hui (Connected)',
-            time: '16/10/2026, 03:45 PM',
-            timestamp: new Date(Date.now() - 5400000).toISOString(),
-            hasAudio: true,
-            audioFileName: 'rec_royal_woodcrafts_20261016.mp3',
-            transcript: 'Client: "Hello Rahul ji, Sri Sri Ply se baat kar rahe hain? Hume hotel project ke liye commercial block boards chahiye."\nAgent: "Haan sir, 19mm aur 25mm Pine blockboards available hain, A-grade quality."\nClient: "50 sheets ka kya rate doge?"\nAgent: "Sir bulk rate 72/sqft lag jayega with GST invoice."\nClient: "Perfect, quotation WhatsApp par bhej do PO release kar dete hain."\nAgent: "Ji sir, WhatsApp par formal PDF quotation abhi send kar raha hu."',
-            aiSummary: '📌 Client Requirement: 50 sheets 19mm Pine Blockboards for hotel project.\n💰 Rates Discussed: Quoted ₹72/sqft bulk rate including GST invoice.\n🚀 Action / Next Step: Send formal PDF quotation on WhatsApp for immediate PO approval.',
-            filedInCrmNotes: true
-          },
-          {
-            id: 'call-103',
-            leadId: (leads[2] ? leads[2].id : 'lead-3'),
-            leadName: (leads[2] ? leads[2].name : 'Vikas Furniture & Decors'),
-            phone: (leads[2] ? leads[2].phone : '+91 97234 56789'),
-            userName: 'Pooja Verma',
-            userEmail: 'pooja.verma@srisriply.com',
-            userRole: 'Telecaller',
-            userId: 'usr-staff-pooja',
-            sim: 'SIM 1',
-            direction: 'OUTBOUND',
-            duration: 85,
-            formattedDuration: '1m 25s',
-            outcome: 'Baat Hui (Connected)',
-            time: '16/10/2026, 02:15 PM',
-            timestamp: new Date(Date.now() - 10800000).toISOString(),
-            hasAudio: true,
-            audioFileName: 'rec_vikas_furniture_20261016.mp3',
-            transcript: 'Agent: "Namaste Vikas ji, Sri Sri Plywoods se Pooja baat kar rahi hu. Kal aapne catalogue download kiya tha."\nClient: "Haanji madam, hume laminates 1mm mica sheets aur acrylic sheets dekhni thi."\nAgent: "Sir humare showroom par 200+ exclusive textures ready stock hain. Aap visit kab plan karenge?"\nClient: "Mai kal dopahar 2 baje showroom aata hu sample selection ke liye."\nAgent: "Noted sir, reception par apke liye physical swatch folder ready rakhenge."',
-            aiSummary: '📌 Client Requirement: 1mm Mica Laminates & Acrylic decorative sheets.\n💰 Rates Discussed: Standard catalogue rates shared; volume discount on showroom visit.\n🚀 Action / Next Step: Client visiting showroom tomorrow at 2:00 PM for texture selection.',
-            filedInCrmNotes: true
-          },
-          {
-            id: 'call-104',
-            leadId: (leads[3] ? leads[3].id : 'lead-4'),
-            leadName: (leads[3] ? leads[3].name : 'Apex Builders & Architects'),
-            phone: (leads[3] ? leads[3].phone : '+91 99887 76655'),
-            userName: 'Amit Patel',
-            userEmail: 'amit.patel@srisriply.com',
-            userRole: 'Sales Executive',
-            userId: 'usr-staff-amit',
-            sim: 'SIM 1',
-            direction: 'OUTBOUND',
-            duration: 45,
-            formattedDuration: '0m 45s',
-            outcome: 'Call Not Picked',
-            time: '16/10/2026, 01:20 PM',
-            timestamp: new Date(Date.now() - 14400000).toISOString(),
-            hasAudio: false,
-            audioFileName: '',
-            transcript: 'Automated Log: Outbound call placed via SIM 1 (Business). Dial tone rang for 45s without answer.',
-            aiSummary: '📌 Call Outcome: Ringing, not picked up.\n🚀 Action / Next Step: Automated WhatsApp follow-up reminder sent. Scheduled redial for evening 6:00 PM.',
-            filedInCrmNotes: true
-          },
-          {
-            id: 'call-105',
-            leadId: (leads[4] ? leads[4].id : 'lead-5'),
-            leadName: (leads[4] ? leads[4].name : 'Modern Living Plywoods'),
-            phone: (leads[4] ? leads[4].phone : '+91 91234 56780'),
-            userName: 'Rahul Sharma',
-            userEmail: 'rahul.sales@srisriply.com',
-            userRole: 'Sales Executive',
-            userId: 'usr-staff-rahul',
-            sim: 'SIM 2',
-            direction: 'OUTBOUND',
-            duration: 250,
-            formattedDuration: '4m 10s',
-            outcome: 'Baat Hui (Connected)',
-            time: '16/10/2026, 11:30 AM',
-            timestamp: new Date(Date.now() - 21600000).toISOString(),
-            hasAudio: true,
-            audioFileName: 'rec_modern_living_20261016.mp3',
-            transcript: 'Agent: "Namaste sir, Sri Sri Plywood se Rahul. Shuttering plywood ka order update chahiye tha."\nClient: "Haan Rahul, hume 100 sheets film-faced shuttering ply chahiye Gurugram construction site par."\nAgent: "Sir 12mm 34kg grade 48/sqft hai. Kal morning dispatch ho jayegi direct truck se."\nClient: "Done hai, advance 50% transfer kar raha hu bank account me."\nAgent: "Thank you sir! Invoice aur transport LR WhatsApp kar dunga."',
-            aiSummary: '📌 Client Requirement: 100 Sheets 12mm Film-Faced Shuttering Plywood (34kg grade).\n💰 Rates Discussed: ₹48/sqft bulk site rate confirmed.\n🚀 Action / Next Step: 50% advance being transferred. Schedule truck dispatch for tomorrow morning.',
-            filedInCrmNotes: true
+      // 1. Merge all live incoming webhook call logs from sriCallLogs & localStorage
+      const webhookLogs = getStoredClientCallLogs();
+      if (Array.isArray(webhookLogs) && webhookLogs.length > 0) {
+        webhookLogs.forEach(wLog => {
+          if (!callLogs.some(c => c.id === wLog.id)) {
+            const rawPhone = wLog.caller_number || wLog.receiver_number || '';
+            const cleanP = rawPhone.replace(/\D/g, '').slice(-10);
+            const matchedLead = cleanP ? leads.find(l => (l.phone || '').replace(/\D/g, '').slice(-10) === cleanP) : null;
+            const leadName = matchedLead ? matchedLead.name : (cleanP ? ('Lead (' + cleanP + ')') : 'Direct Phone Inbound');
+            const leadId = matchedLead ? matchedLead.id : (wLog.lead_id || (leads[0] ? leads[0].id : 'lead-1'));
+
+            callLogs.unshift({
+              id: wLog.id,
+              leadId: leadId,
+              leadName: leadName,
+              phone: rawPhone || 'Incoming Mobile Call',
+              userName: loggedInUser ? loggedInUser.name : 'Sri Sri Admin',
+              userEmail: loggedInUser ? loggedInUser.email : 'sales.ssply@gmail.com',
+              userRole: loggedInUser ? loggedInUser.role : 'Super Admin',
+              direction: wLog.receiver_number ? 'OUTBOUND' : 'INBOUND',
+              duration: wLog.call_duration || 60,
+              formattedDuration: formatCallDuration(wLog.call_duration || 60),
+              outcome: 'Baat Hui (Connected)',
+              time: formatFollowupDate(wLog.created_at || new Date()),
+              timestamp: wLog.created_at || new Date().toISOString(),
+              hasAudio: !!wLog.recording_url,
+              audioFileName: 'call_recording.mp3',
+              audioUrl: wLog.recording_url || '',
+              aiSummary: wLog.ai_summary || 'Call recorded and logged via Android phone webhook.',
+              transcript: wLog.ai_summary || '',
+              filedInCrmNotes: true
+            });
           }
-        ];
-        try {
-          localStorage.setItem('sri_sri_call_logs', JSON.stringify(callLogs));
-        } catch(e) {}
+        });
       }
+
+      // 2. Also merge any real call activities logged inside leads (Lost, Followup, Any Stage!)
+      leads.forEach(l => {
+        if (l && Array.isArray(l.activities)) {
+          l.activities.forEach(act => {
+            if (act.type === 'CALL_LOG' || act.callOutcome) {
+              const actId = act.id || ('act-call-' + l.id);
+              if (!callLogs.some(c => c.id === actId)) {
+                callLogs.push({
+                  id: actId,
+                  leadId: l.id,
+                  leadName: l.name || 'Customer',
+                  phone: l.phone || '—',
+                  userName: act.userName || l.assignedToName || 'Sri Sri Admin',
+                  userEmail: act.userEmail || 'sales.ssply@gmail.com',
+                  userRole: act.userRole || 'Sales Executive',
+                  direction: 'OUTBOUND',
+                  duration: act.duration || 60,
+                  formattedDuration: formatCallDuration(act.duration || 60),
+                  outcome: act.callOutcome || 'Baat Hui (Connected)',
+                  time: formatFollowupDate(act.timestamp || act.time || l.createdAt),
+                  timestamp: act.timestamp || l.createdAt || new Date().toISOString(),
+                  hasAudio: !!(act.audioUrl || act.recording_url),
+                  audioFileName: 'call_recording.mp3',
+                  audioUrl: act.audioUrl || act.recording_url || '',
+                  aiSummary: act.ai_summary || act.notes || act.text || 'Call logged from CRM.',
+                  transcript: act.notes || act.text || '',
+                  filedInCrmNotes: true
+                });
+              }
+            }
+          });
+        }
+      });
+
+      // Sort newest first
+      callLogs.sort((a,b) => new Date(b.timestamp || b.time || 0) - new Date(a.timestamp || a.time || 0));
+
+      try {
+        localStorage.setItem('sri_sri_call_logs', JSON.stringify(callLogs));
+      } catch(e) {}
     }
 
     function generateSampleTranscriptForLead(lead) {
@@ -18555,54 +18528,8 @@
 
     function renderCallModuleBanner() {
       const container = document.getElementById('call-module-banner-container');
-      if (!container) return;
-
-      if (callModuleConfig.enabled) {
-        container.innerHTML = `
-          <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-transparent border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold shrink-0">
-                <i data-lucide="shield-check" class="w-5 h-5"></i>
-              </div>
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-black text-main">Android Business Call Recording Module Active</span>
-                  <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Auto-Filing to Notes</span>
-                </div>
-                <p class="text-[11px] text-muted-custom mt-0.5 font-medium">
-                  Recording: <strong class="text-gold">${escapeHtml(callModuleConfig.simChoice || 'SIM 1')}</strong> · 
-                  Privacy Guard: <strong class="text-emerald-400">${callModuleConfig.restrictApprovedNumbers ? 'Approved Numbers Only' : 'All Calls'}</strong> · 
-                  Device: ${escapeHtml(callModuleConfig.pairedDevice || 'Samsung Galaxy S24 Ultra')}
-                </p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <button onclick="openCallRecordingSettingsModal()" class="px-3 py-1.5 rounded-xl bg-card hover:bg-subtle border border-main text-xs font-bold text-main hover:text-gold transition">
-                Change SIM / Settings
-              </button>
-            </div>
-          </div>
-        `;
-      } else {
-        container.innerHTML = `
-          <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-blue-500/10 border border-gold/40 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md">
-            <div class="space-y-1.5">
-              <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-gold animate-ping"></span>
-                <span class="text-xs font-black text-gold uppercase tracking-wider">Android Call Recording & AI Transcription</span>
-              </div>
-              <p class="text-xs font-bold text-main leading-relaxed max-w-3xl">
-                &ldquo;Record business calls from the Android app, auto-transcribe them and file an AI summary into the customer's CRM notes — with a complete call log. Owners and managers review the whole team's calls; agents see their own. Choose which SIM records and restrict recording to approved numbers.&rdquo;
-              </p>
-            </div>
-            <button onclick="enableCallModuleDirectly()" class="px-5 py-2.5 rounded-2xl bg-gold hover:brightness-105 text-slate-950 font-black text-xs shadow-lg transition shrink-0 cursor-pointer flex items-center gap-2">
-              <i data-lucide="power" class="w-4 h-4"></i>
-              <span>Enable this module to get started</span>
-            </button>
-          </div>
-        `;
-      }
-      if (window.lucide) lucide.createIcons();
+      if (container) container.innerHTML = '';
+      return;
     }
 
     function enableCallModuleDirectly() {
@@ -18631,7 +18558,8 @@
       // 1. Role-Based Permissions & Isolation
       // Specification: "Owners and managers review the whole team's calls; agents see their own."
       const isOwnerOrManager = isCurrentUserSuperAdmin() || 
-        (loggedInUser && (loggedInUser.role === 'Super Admin' || loggedInUser.role === 'Manager' || loggedInUser.role === 'Admin'));
+        !loggedInUser ||
+        (loggedInUser && (loggedInUser.role === 'Super Admin' || loggedInUser.role === 'Manager' || loggedInUser.role === 'Admin' || loggedInUser.role === 'Sales Coordinator'));
 
       const roleBanner = document.getElementById('call-logs-role-banner');
       if (roleBanner) {
@@ -18686,7 +18614,6 @@
       // 3. Filter Records
       const searchQuery = (document.getElementById('call-log-search-input') ? document.getElementById('call-log-search-input').value.toLowerCase().trim() : '');
       const filterStaff = (staffSelect ? staffSelect.value : 'ALL');
-      const filterSim = (document.getElementById('call-log-filter-sim') ? document.getElementById('call-log-filter-sim').value : 'ALL');
       const filterOutcome = (document.getElementById('call-log-filter-outcome') ? document.getElementById('call-log-filter-outcome').value : 'ALL');
 
       let filtered = callLogs.slice();
@@ -18698,12 +18625,8 @@
           c.userEmail === loggedInUser.email || 
           (c.userId && loggedInUser.id && c.userId === loggedInUser.id)
         );
-      } else if (filterStaff !== 'ALL') {
+      } else if (isOwnerOrManager && filterStaff && filterStaff !== 'ALL') {
         filtered = filtered.filter(c => c.userName === filterStaff);
-      }
-
-      if (filterSim !== 'ALL') {
-        filtered = filtered.filter(c => c.sim === filterSim);
       }
 
       if (filterOutcome !== 'ALL') {
@@ -18790,8 +18713,8 @@
               </div>
             </td>
             <td class="p-3.5 whitespace-nowrap">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">
-                📶 ${escapeHtml(call.sim || 'SIM 1')}
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${call.direction === 'INBOUND' ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' : 'bg-blue-500/15 text-blue-400 border border-blue-500/30'} flex items-center gap-1 w-max">
+                <span>${call.direction === 'INBOUND' ? '↙ Inbound Call' : '↗ Outbound Dialed'}</span>
               </span>
             </td>
             <td class="p-3.5 whitespace-nowrap">
@@ -19056,7 +18979,7 @@
       if (custEl) custEl.innerText = call.leadName || 'Customer';
       if (phoneEl) phoneEl.innerText = call.phone || '—';
       if (staffEl) staffEl.innerText = (call.userName || 'Staff') + ' (' + (call.userRole || 'Agent') + ')';
-      if (simEl) simEl.innerText = call.sim || 'SIM 1';
+      if (simEl) simEl.innerText = (call.direction === 'INBOUND' ? '↙ Inbound Call' : '↗ Outbound Call');
       if (fileNameEl) fileNameEl.innerText = call.audioFileName || 'business_call_recording.mp3';
       if (durEl) durEl.innerText = (call.formattedDuration || '2m 15s') + ' · ' + (call.outcome || 'Baat Hui');
 
@@ -19137,20 +19060,42 @@
     }
 
     // Android Companion App Sync
-    function syncAndroidCalls() {
+    async function syncAndroidCalls() {
       const spinIcon = document.getElementById('sync-calls-spin-icon');
       if (spinIcon) spinIcon.classList.add('animate-spin');
 
-      showToast('Connecting to Android Companion App (Samsung Galaxy S24 Ultra)...', 'info');
+      showToast('Fetching latest Android calls & AI transcripts from Cloud...', 'info');
+
+      try {
+        const res = await fetch('/api/webhook/call-log');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.call_logs)) {
+            const existing = getStoredClientCallLogs();
+            let addedCount = 0;
+            data.call_logs.forEach(remoteLog => {
+              if (!existing.some(l => l.id === remoteLog.id)) {
+                existing.unshift(remoteLog);
+                addedCount++;
+              }
+            });
+            saveStoredClientCallLogs(existing);
+          }
+        }
+      } catch (err) {
+        console.warn('Sync Android calls error:', err);
+      }
+
       setTimeout(() => {
         if (spinIcon) spinIcon.classList.remove('animate-spin');
         callModuleConfig.lastSyncTime = new Date().toISOString();
         try {
           localStorage.setItem('sri_sri_call_module_config', JSON.stringify(callModuleConfig));
         } catch(e) {}
+        initCallLogs();
         renderTeamCallLogsTable();
-        showToast('🟢 Android Companion App: Call recordings & AI transcripts synchronized with CRM notes!', 'success');
-      }, 1000);
+        showToast('🟢 Android Calls & AI Transcripts synchronized successfully with CRM!', 'success');
+      }, 700);
     }
 
     function showAndroidQrPairModal() {
@@ -19356,6 +19301,9 @@
     window.leads = leads;
     window.pipelines = pipelines;
     window.triggerLeadReattemptFromModal = triggerLeadReattemptFromModal;
+    window.initCallLogs = initCallLogs;
+    window.getStoredClientCallLogs = getStoredClientCallLogs;
+    window.saveStoredClientCallLogs = saveStoredClientCallLogs;
 
     window.addEventListener('DOMContentLoaded', () => {
       try { initFirebaseCloudSync(); } catch(e) { console.warn('Cloud sync note:', e); }

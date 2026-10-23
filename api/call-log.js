@@ -185,6 +185,34 @@ async function syncCallLogToFirestore(callLogRecord) {
   }
 }
 
+async function getFirestoreCallLogs() {
+  return new Promise((resolve) => {
+    https.get('https://firestore.googleapis.com/v1/projects/crm-f4bf7/databases/(default)/documents/call_logs', (res) => {
+      let d = ''; res.on('data', c => d += c);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(d);
+          if (!parsed.documents) return resolve([]);
+          const logs = parsed.documents.map(doc => {
+            const f = doc.fields || {};
+            return {
+              id: f.id?.stringValue || '',
+              lead_id: f.lead_id?.stringValue || '',
+              caller_number: f.caller_number?.stringValue || '',
+              receiver_number: f.receiver_number?.stringValue || '',
+              call_duration: parseInt(f.call_duration?.integerValue || 0, 10),
+              recording_url: f.recording_url?.stringValue || '',
+              ai_summary: f.ai_summary?.stringValue || '',
+              created_at: f.created_at?.stringValue || ''
+            };
+          });
+          resolve(logs);
+        } catch(e) { resolve([]); }
+      });
+    }).on('error', () => resolve([]));
+  });
+}
+
 // ==================== MAIN WEBHOOK HANDLER ====================
 module.exports = async (req, res) => {
   // CORS Headers
@@ -207,7 +235,17 @@ module.exports = async (req, res) => {
     const leadId = query.lead_id || query.leadId;
     const phone = cleanPhone(query.phone || query.number);
 
-    const allLogs = getStoredCallLogs();
+    let allLogs = getStoredCallLogs();
+    try {
+      const cloudLogs = await getFirestoreCallLogs();
+      if (cloudLogs.length > 0) {
+        cloudLogs.forEach(cl => {
+          if (!allLogs.some(l => l.id === cl.id)) {
+            allLogs.push(cl);
+          }
+        });
+      }
+    } catch(e) {}
 
     if (leadId) {
       const filtered = allLogs.filter(c => String(c.lead_id) === String(leadId));
@@ -219,14 +257,17 @@ module.exports = async (req, res) => {
       return sendResponse(res, 200, { success: true, count: filtered.length, call_logs: filtered });
     }
 
-    // Default status probe
+    // Default status probe & data sync
     return sendResponse(res, 200, {
       status: 'active',
+      success: true,
       service: 'Sri Sri Plywoods CRM - Automatic Call Recording & AI Transcription Webhook Engine',
       endpoint: '/api/webhook/call-log',
       database_table: 'call_logs',
       columns: ['id', 'lead_id', 'caller_number', 'receiver_number', 'call_duration', 'recording_url', 'ai_summary', 'created_at'],
       total_call_logs_stored: allLogs.length,
+      count: allLogs.length,
+      call_logs: allLogs,
       time: new Date().toISOString()
     });
   }
