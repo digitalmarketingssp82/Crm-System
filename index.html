@@ -14116,7 +14116,7 @@
       openModal('bulk-delete-confirm-modal');
     }
 
-    function openNewLeadModal() {
+    function openNewLeadModal(prefillPhone) {
       if (!isCurrentUserSuperAdmin() && !userHasPermission('leads_create')) { showToast('Permission Denied: You do not have permission to create leads.', 'error'); return; }
       const pipSelect = document.getElementById('nl-pipeline');
       pipSelect.innerHTML = '';
@@ -14129,7 +14129,7 @@
       });
 
       document.getElementById('nl-name').value = '';
-      document.getElementById('nl-phone').value = '';
+      document.getElementById('nl-phone').value = (typeof prefillPhone === 'string' ? prefillPhone : '');
       document.getElementById('nl-deal-value').value = '';
       document.getElementById('nl-followup').value = '';
       document.getElementById('nl-address').value = '';
@@ -18217,6 +18217,42 @@
       }, err => {
         console.warn('Tasks cloud listener:', err.message);
       });
+
+      // 4. Call Logs Collection Realtime Sync (Instant live phone webhook sync)
+      db.collection('call_logs').onSnapshot(snapshot => {
+        if (!snapshot.empty) {
+          const cloudLogs = [];
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data) {
+              cloudLogs.push({
+                id: data.id || doc.id,
+                lead_id: data.lead_id || '',
+                caller_number: data.caller_number || '',
+                receiver_number: data.receiver_number || '',
+                call_duration: parseInt(data.call_duration || 0, 10),
+                recording_url: data.recording_url || '',
+                ai_summary: data.ai_summary || '',
+                created_at: data.created_at || new Date().toISOString()
+              });
+            }
+          });
+
+          // Sort newest first
+          cloudLogs.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+          saveStoredClientCallLogs(cloudLogs);
+          initCallLogs();
+
+          if (typeof currentActiveTab !== 'undefined' && currentActiveTab === 'call-logs') {
+            renderTeamCallLogsTable();
+          }
+          if (typeof currentSelectedLead !== 'undefined' && currentSelectedLead) {
+            renderLeadCallHistory(currentSelectedLead);
+          }
+        }
+      }, err => {
+        console.warn('Call logs cloud listener:', err.message);
+      });
     }
 
     function syncLeadToCloud(lead) {
@@ -18339,8 +18375,41 @@
             const rawPhone = wLog.caller_number || wLog.receiver_number || '';
             const cleanP = rawPhone.replace(/\D/g, '').slice(-10);
             const matchedLead = cleanP ? leads.find(l => (l.phone || '').replace(/\D/g, '').slice(-10) === cleanP) : null;
-            const leadName = matchedLead ? matchedLead.name : (cleanP ? ('Lead (' + cleanP + ')') : 'Direct Phone Inbound');
-            const leadId = matchedLead ? matchedLead.id : (wLog.lead_id || (leads[0] ? leads[0].id : 'lead-1'));
+            const leadName = matchedLead ? matchedLead.name : (cleanP ? ('Direct Call (' + cleanP + ')') : 'Direct Phone Call');
+            const leadId = matchedLead ? matchedLead.id : '';
+
+            // Auto-file into matched lead's activities & CRM notes if lead exists
+            if (matchedLead) {
+              matchedLead.activities = matchedLead.activities || [];
+              const actId = 'act-call-' + wLog.id;
+              if (!matchedLead.activities.some(a => a.id === actId)) {
+                matchedLead.activities.unshift({
+                  id: actId,
+                  type: 'CALL_LOG',
+                  callOutcome: 'Baat Hui (Connected)',
+                  duration: wLog.call_duration || 60,
+                  audioUrl: wLog.recording_url || '',
+                  notes: wLog.ai_summary || 'Call logged via phone webhook.',
+                  ai_summary: wLog.ai_summary || '',
+                  userName: loggedInUser ? loggedInUser.name : 'Sri Sri Admin',
+                  time: formatFollowupDate(wLog.created_at || new Date()),
+                  timestamp: wLog.created_at || new Date().toISOString()
+                });
+                
+                const noteHeader = `[Android Call Recording & AI Summary · Baat Hui (Connected)]`;
+                const fullNote = `${noteHeader}\nDate: ${formatFollowupDate(wLog.created_at || new Date())}\n${wLog.ai_summary || 'Call discussion recorded.'}`;
+                if (matchedLead.notes && !matchedLead.notes.includes(actId)) {
+                  matchedLead.notes = fullNote + '\n\n-------------------------\n\n' + matchedLead.notes;
+                } else if (!matchedLead.notes) {
+                  matchedLead.notes = fullNote;
+                }
+                
+                matchedLead.lastActivityAt = wLog.created_at || new Date().toISOString();
+                matchedLead.lastActivityText = 'Phone call: ' + formatCallDuration(wLog.call_duration || 60);
+                
+                if (typeof syncLeadToCloud === 'function') syncLeadToCloud(matchedLead);
+              }
+            }
 
             callLogs.unshift({
               id: wLog.id,
@@ -18361,7 +18430,7 @@
               audioUrl: wLog.recording_url || '',
               aiSummary: wLog.ai_summary || 'Call recorded and logged via Android phone webhook.',
               transcript: wLog.ai_summary || '',
-              filedInCrmNotes: true
+              filedInCrmNotes: !!matchedLead
             });
           }
         });
@@ -18693,10 +18762,19 @@
               <span class="text-[10px] text-muted-custom">${call.direction === 'INBOUND' ? '↙ Inbound Call' : '↗ Outbound Dialed'}</span>
             </td>
             <td class="p-3.5">
-              <div class="font-bold text-main cursor-pointer hover:text-gold transition flex items-center gap-1.5" onclick="openLeadModal('${call.leadId}')">
-                <span>${escapeHtml(call.leadName || 'Customer')}</span>
-                <i data-lucide="external-link" class="w-3 h-3 text-muted-custom"></i>
-              </div>
+              ${call.leadId ? `
+                <div class="font-bold text-main cursor-pointer hover:text-gold transition flex items-center gap-1.5" onclick="openLeadModal('${call.leadId}')">
+                  <span>${escapeHtml(call.leadName || 'Customer')}</span>
+                  <i data-lucide="external-link" class="w-3 h-3 text-muted-custom"></i>
+                </div>
+              ` : `
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-main">${escapeHtml(call.leadName || 'Direct Phone Call')}</span>
+                  <button type="button" onclick="openNewLeadModal('${escapeHtml(call.phone || '')}')" class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-gold/15 text-gold border border-gold/30 hover:bg-gold hover:text-slate-950 transition cursor-pointer">
+                    + Create Lead
+                  </button>
+                </div>
+              `}
               <div class="flex items-center gap-2 mt-0.5">
                 <span class="font-mono text-[11px] text-gold font-bold select-text cursor-text">${escapeHtml(call.phone || '—')}</span>
               </div>
@@ -18719,12 +18797,20 @@
             </td>
             <td class="p-3.5 whitespace-nowrap">
               <div class="flex items-center gap-2">
-                <button type="button" onclick="playInlineCallAudio('${call.id}')" class="w-7 h-7 rounded-lg ${isPlayingThis ? 'bg-amber-500 text-slate-950' : 'bg-gold/20 text-gold hover:bg-gold hover:text-slate-950'} font-bold flex items-center justify-center transition cursor-pointer" title="Listen Audio Recording">
-                  <i data-lucide="${isPlayingThis ? 'pause' : 'play'}" class="w-3.5 h-3.5 ml-0.5"></i>
-                </button>
+                ${call.hasAudio || call.audioUrl ? `
+                  <button type="button" onclick="playInlineCallAudio('${call.id}')" class="w-7 h-7 rounded-lg ${isPlayingThis ? 'bg-amber-500 text-slate-950' : 'bg-gold/20 text-gold hover:bg-gold hover:text-slate-950'} font-bold flex items-center justify-center transition cursor-pointer" title="Listen Audio Recording">
+                    <i data-lucide="${isPlayingThis ? 'pause' : 'play'}" class="w-3.5 h-3.5 ml-0.5"></i>
+                  </button>
+                ` : `
+                  <button type="button" onclick="attachAudioFileToCall('${call.id}')" class="w-7 h-7 rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white border border-blue-500/30 font-bold flex items-center justify-center transition cursor-pointer" title="Attach Audio (.mp3/.m4a)">
+                    <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                  </button>
+                `}
                 <div>
-                  <span class="font-mono font-bold text-main text-xs block">${escapeHtml(call.formattedDuration || '2m 15s')}</span>
-                  <span class="text-[9px] text-purple-400 font-semibold">${call.hasAudio ? 'Audio Synced' : 'No Recording'}</span>
+                  <span class="font-mono font-bold text-main text-xs block">${escapeHtml(call.formattedDuration || 'Connected')}</span>
+                  <span class="text-[9px] ${call.hasAudio || call.audioUrl ? 'text-emerald-400' : 'text-blue-400 cursor-pointer hover:underline'} font-semibold" onclick="${call.hasAudio || call.audioUrl ? `playInlineCallAudio('${call.id}')` : `attachAudioFileToCall('${call.id}')`}">
+                    ${call.hasAudio || call.audioUrl ? 'Audio Synced' : 'Attach Audio'}
+                  </span>
                 </div>
               </div>
             </td>
@@ -18755,12 +18841,18 @@
                 <button type="button" onclick="openCallTranscriptModal('${call.id}')" class="p-1.5 rounded-xl border border-main bg-card hover:border-gold hover:text-gold text-muted-custom transition cursor-pointer" title="View Full AI Transcript">
                   <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i>
                 </button>
+                ${call.leadId ? `
                 <button type="button" onclick="openLeadModal('${call.leadId}')" class="p-1.5 rounded-xl border border-main bg-card hover:border-gold hover:text-gold text-muted-custom transition cursor-pointer" title="Open Customer Profile">
                   <i data-lucide="user" class="w-3.5 h-3.5"></i>
                 </button>
                 <button type="button" onclick="initiateCallWithLogging('${call.leadId}')" class="p-1.5 rounded-xl bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white border border-blue-500/30 transition cursor-pointer" title="Redial Customer">
                   <i data-lucide="phone" class="w-3.5 h-3.5"></i>
                 </button>
+                ` : `
+                <button type="button" onclick="openNewLeadModal('${escapeHtml(call.phone || '')}')" class="p-1.5 rounded-xl border border-gold bg-gold/15 hover:bg-gold hover:text-slate-950 text-gold transition cursor-pointer" title="Create Lead for this Caller">
+                  <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                </button>
+                `}
               </div>
             </td>
           </tr>
@@ -18947,17 +19039,73 @@
       }
     }
 
-    // Inline Table Audio Playback
+    // Inline Table Audio Playback & Attachment Engine
+    let inlineAudioElement = null;
     function playInlineCallAudio(callId) {
+      const call = callLogs.find(c => c.id === callId);
+      if (!call) return;
+
       if (currentActiveCallAudioId === callId) {
+        if (inlineAudioElement) inlineAudioElement.pause();
         currentActiveCallAudioId = null;
         showToast('Audio playback paused.', 'info');
-      } else {
-        currentActiveCallAudioId = callId;
-        const call = callLogs.find(c => c.id === callId);
-        showToast('Playing recording: ' + ((call && call.leadName) || 'Call Audio') + ' (' + ((call && call.formattedDuration) || '2m 15s') + ')', 'success');
+        renderTeamCallLogsTable();
+        return;
       }
-      renderTeamCallLogsTable();
+
+      if (inlineAudioElement) {
+        inlineAudioElement.pause();
+        inlineAudioElement = null;
+      }
+
+      const audioSrc = call.audioUrl || call.recording_url || '';
+      if (audioSrc) {
+        try {
+          inlineAudioElement = new Audio(audioSrc);
+          inlineAudioElement.onended = () => {
+            currentActiveCallAudioId = null;
+            renderTeamCallLogsTable();
+          };
+          inlineAudioElement.play().catch(e => console.warn('Play error:', e));
+          currentActiveCallAudioId = callId;
+          showToast('▶ Playing recording: ' + (call.leadName || call.phone), 'success');
+          renderTeamCallLogsTable();
+        } catch(e) {
+          showToast('Could not play audio: ' + e.message, 'error');
+        }
+      } else {
+        attachAudioFileToCall(callId);
+      }
+    }
+
+    function attachAudioFileToCall(callId) {
+      let fileInput = document.getElementById('call-log-inline-audio-input');
+      if (!fileInput) {
+        fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = 'call-log-inline-audio-input';
+        fileInput.accept = 'audio/*,.mp3,.m4a,.wav,.aac,.ogg,.amr';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+      }
+      fileInput.onchange = function(e) {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          const objectUrl = URL.createObjectURL(file);
+          const call = callLogs.find(c => c.id === callId);
+          if (call) {
+            call.audioUrl = objectUrl;
+            call.recording_url = objectUrl;
+            call.hasAudio = true;
+            call.audioFileName = file.name;
+            saveStoredClientCallLogs(callLogs);
+            showToast('🟢 Call recording attached: ' + file.name, 'success');
+            renderTeamCallLogsTable();
+          }
+        }
+      };
+      showToast('Select call recording file (.m4a/.mp3) from your device', 'info');
+      fileInput.click();
     }
 
     // ==================== FULL TRANSCRIPT MODAL ====================
@@ -19291,6 +19439,7 @@
     window.copyFullTranscriptText = copyFullTranscriptText;
     window.openLeadModalFromCallLog = openLeadModalFromCallLog;
     window.syncAndroidCalls = syncAndroidCalls;
+    window.attachAudioFileToCall = attachAudioFileToCall;
     window.showAndroidQrPairModal = showAndroidQrPairModal;
     window.openCallLogModal = openCallLogModal;
     window.ingestXilotLead = ingestXilotLead;
@@ -19310,6 +19459,20 @@
       try { initTheme(); } catch(e) { console.warn('Theme init note:', e); }
       try { checkSession(); } catch(e) { console.warn('Session check note:', e); }
       try { updateAllChannelStatusBadges(); } catch(e) { console.warn('Channel badges note:', e); }
+
+      // Auto-sync call logs from cloud on startup & periodically
+      try {
+        setTimeout(() => {
+          if (typeof syncAndroidCalls === 'function') {
+            syncAndroidCalls();
+          }
+        }, 300);
+        setInterval(() => {
+          if (typeof syncAndroidCalls === 'function') {
+            syncAndroidCalls();
+          }
+        }, 20000);
+      } catch(e) {}
 
       try {
         if (loggedInUser) {
