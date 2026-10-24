@@ -90,13 +90,13 @@ Keep the summary professional, actionable, and formatted in clean bullet points.
       const geminiResult = await new Promise((resolve) => {
         const req = https.request({
           hostname: 'generativelanguage.googleapis.com',
-          path: `/v1beta/models/gemini-3.5-transcribe:generateContent?key=${geminiApiKey}`,
+          path: `/v1beta/models/gemini-3.8-flash:generateContent?key=${geminiApiKey}`,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(requestBody)
           },
-          timeout: 10000
+          timeout: 15000
         }, (res) => {
           let data = '';
           res.on('data', chunk => data += chunk);
@@ -125,23 +125,8 @@ Keep the summary professional, actionable, and formatted in clean bullet points.
     }
   }
 
-  // 2. Intelligent Contextual AI Summary Generator Fallback (Zero Manual Typing)
-  const durationMin = Math.max(1, Math.round((callDuration || 90) / 60));
-  const isQuick = durationMin <= 1;
-
-  if (isQuick) {
-    return [
-      `• Key Discussion: Customer called from ${callerNumber || 'mobile'} regarding standard price catalog and product availability.`,
-      `• Customer Requirement: Inquired about 19mm commercial plywood sheet rates and flush door specifications.`,
-      `• Next Action Item: Sales team to send digital catalog and price breakdown on WhatsApp, then schedule follow-up call.`
-    ].join('\n');
-  }
-
-  return [
-    `• Key Discussion: In-depth discussion regarding bulk material requirement for ongoing residential interior site.`,
-    `• Customer Requirement: Client requested rates for 35 sheets 19mm Gurjan BWP waterproof plywood and 5 teak veneer flush doors.`,
-    `• Next Action Item: Sales executive to share customized quotation on WhatsApp with free tempo delivery terms and arrange physical sample visit tomorrow.`
-  ].join('\n');
+  // 2. Strict Zero-Hallucination: If no audio recording was supplied, NEVER fabricate fake discussions!
+  return 'Call connected with ' + (callerNumber || 'customer') + '. (Discussion notes pending / Attach audio recording)';
 }
 
 // ==================== FIRESTORE CLOUD PERSISTENCE ====================
@@ -156,6 +141,10 @@ async function syncCallLogToFirestore(callLogRecord) {
         call_duration: { integerValue: String(callLogRecord.call_duration || 0) },
         recording_url: { stringValue: String(callLogRecord.recording_url || '') },
         ai_summary: { stringValue: String(callLogRecord.ai_summary || '') },
+        direction: { stringValue: String(callLogRecord.direction || 'INBOUND') },
+        call_outcome: { stringValue: String(callLogRecord.call_outcome || 'Baat Hui (Connected)') },
+        staff_name: { stringValue: String(callLogRecord.staff_name || 'Staff') },
+        device_name: { stringValue: String(callLogRecord.device_name || 'Android Phone') },
         created_at: { stringValue: callLogRecord.created_at }
       }
     });
@@ -203,6 +192,10 @@ async function getFirestoreCallLogs() {
               call_duration: parseInt(f.call_duration?.integerValue || 0, 10),
               recording_url: f.recording_url?.stringValue || '',
               ai_summary: f.ai_summary?.stringValue || '',
+              direction: f.direction?.stringValue || (f.receiver_number?.stringValue ? 'OUTBOUND' : 'INBOUND'),
+              call_outcome: f.call_outcome?.stringValue || 'Baat Hui (Connected)',
+              staff_name: f.staff_name?.stringValue || 'Staff',
+              device_name: f.device_name?.stringValue || 'Android Phone',
               created_at: f.created_at?.stringValue || ''
             };
           });
@@ -304,6 +297,31 @@ module.exports = async (req, res) => {
       const rawDuration = data.call_duration || data.duration || data.CallDuration || data.duration_seconds || 0;
       const call_duration = parseInt(rawDuration, 10) || 0;
 
+      // Extract Call Type & Direction (Inbound vs Outbound vs Missed)
+      let rawType = String(data.call_type || data.type || data.direction || data.call_direction || '').toUpperCase();
+      let isMissed = (data.is_missed === true || data.is_missed === 'true' || rawType.includes('MISSED') || String(data.call_outcome || '').toLowerCase().includes('missed'));
+
+      let direction = 'INBOUND';
+      if (rawType.includes('OUT') || rawType.includes('DIAL') || (!isMissed && receiver_number && !caller_number)) {
+        direction = 'OUTBOUND';
+      }
+
+      // Determine Call Outcome (Baat Hui vs Missed Call vs Call Not Picked)
+      let call_outcome = data.call_outcome || data.outcome || data.status || '';
+      if (!call_outcome) {
+        if (isMissed) {
+          call_outcome = 'Missed Call';
+        } else if (call_duration === 0) {
+          call_outcome = (direction === 'INBOUND') ? 'Missed Call' : 'Call Not Picked / User Busy';
+        } else {
+          call_outcome = 'Baat Hui (Connected)';
+        }
+      }
+
+      // Multi-Phone Staff & Device Identification (Supports 3-4 phones)
+      const staff_name = String(data.staff_name || data.agent_name || data.staff || data.user_name || 'Sri Sri Staff').trim();
+      const device_name = String(data.device_name || data.device || data.phone_name || 'Staff Android').trim();
+
       // Check if lead_id was explicitly supplied in payload
       let lead_id = data.lead_id || data.leadId || '';
 
@@ -317,10 +335,18 @@ module.exports = async (req, res) => {
         lead_id = 'lead-incoming-' + Date.now();
       }
 
-      // Speech-to-Text & AI Summary Generation (Zero manual typing)
+      // Speech-to-Text & AI Summary / Note Generation based on outcome
       let ai_summary = data.ai_summary || data.summary || '';
       if (!ai_summary || ai_summary.trim().length === 0) {
-        ai_summary = await generateAiCallSummary(recording_url, effectiveCustomerPhone, call_duration);
+        if (call_outcome.includes('Missed')) {
+          ai_summary = `🚨 Inbound Missed Call from customer ${effectiveCustomerPhone} on ${staff_name} (${device_name}). Customer wait kiya par call attend nahi ho payi — callback required.`;
+        } else if (call_outcome.includes('Not Picked') || call_outcome.includes('Busy')) {
+          ai_summary = `📞 Outbound call dialed by ${staff_name} (${device_name}) to ${effectiveCustomerPhone}. Customer did not pick up / phone busy.`;
+        } else if (recording_url) {
+          ai_summary = await generateAiCallSummary(recording_url, effectiveCustomerPhone, call_duration);
+        } else {
+          ai_summary = `Call connected (${formatCallDuration(call_duration)}) between ${staff_name} (${device_name}) and customer ${effectiveCustomerPhone}. (Discussion notes pending / Attach audio recording)`;
+        }
       }
 
       // Unique Call Log Record adhering strictly to requested call_logs table schema:
@@ -336,6 +362,10 @@ module.exports = async (req, res) => {
         call_duration: call_duration,
         recording_url: String(recording_url),
         ai_summary: String(ai_summary),
+        direction: direction,
+        call_outcome: call_outcome,
+        staff_name: staff_name,
+        device_name: device_name,
         created_at: nowIso
       };
 
