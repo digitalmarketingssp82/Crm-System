@@ -18537,7 +18537,7 @@
             const id = String(c.id);
             const num = String(c.phone || c.caller_number || c.receiver_number || '');
             if (id.startsWith('call-10') || id.startsWith('call-sample-') || id.startsWith('call-real-00') || id.includes('test-call')) return false;
-            if (num === '9876543210' || num === '01234567890' || num === '?' || num.includes('8000000000')) return false;
+            if (num === '9876543210' || num === '01234567890' || (num === '?' && !c.call_outcome && !c.outcome) || num.includes('8000000000')) return false;
             return true;
           });
           stored.forEach(c => {
@@ -18578,7 +18578,8 @@
             wLog.notes = 'Phone call connected. (Click to add discussion notes or attach recording)';
           }
           if (!callLogs.some(c => c.id === wLog.id)) {
-            const rawPhone = wLog.caller_number || wLog.receiver_number || '';
+            let rawPhone = wLog.caller_number || wLog.receiver_number || '';
+            if (rawPhone === '?' || !rawPhone) rawPhone = (wLog.call_outcome === 'Missed Call' || wLog.direction === 'INBOUND') ? 'Missed Call (New Caller)' : 'Direct Customer Call';
             const cleanP = rawPhone.replace(/\D/g, '').slice(-10);
             const matchedLead = cleanP ? leads.find(l => (l.phone || '').replace(/\D/g, '').slice(-10) === cleanP) : null;
             const leadName = matchedLead ? matchedLead.name : (cleanP ? ('Direct Call (' + cleanP + ')') : 'Direct Phone Call');

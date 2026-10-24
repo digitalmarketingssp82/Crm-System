@@ -285,13 +285,19 @@ module.exports = async (req, res) => {
                             data.media_url || data.url || '';
 
       // Extract Numbers
-      const caller_number = String(data.caller_number || data.callerNumber || data.from || data.From || data.caller || '').trim();
+      let caller_number = String(data.caller_number || data.callerNumber || data.from || data.From || data.caller || '').trim();
       const receiver_number = String(data.receiver_number || data.receiverNumber || data.to || data.To || data.dialed || '').trim();
       const customer_number = String(data.customer_number || data.customer_phone || data.phone || data.phone_number || '').trim();
+
+      // Normalize if MacroDroid sent '?' due to race condition before call log was committed
+      if (caller_number === '?' || caller_number === 'unknown' || caller_number === 'Unknown') {
+        caller_number = '';
+      }
 
       // Determine customer phone
       const effectiveCustomerPhone = customer_number || caller_number || receiver_number;
       const cleanCustomer = cleanPhone(effectiveCustomerPhone);
+      const displayCustomerPhone = (cleanCustomer && cleanCustomer.length >= 10) ? ('+91' + cleanCustomer) : (effectiveCustomerPhone || 'Missed Call (New Caller)');
 
       // Extract Duration (in seconds)
       const rawDuration = data.call_duration || data.duration || data.CallDuration || data.duration_seconds || 0;
@@ -339,7 +345,7 @@ module.exports = async (req, res) => {
       let ai_summary = data.ai_summary || data.summary || '';
       if (!ai_summary || ai_summary.trim().length === 0) {
         if (call_outcome.includes('Missed')) {
-          ai_summary = `🚨 Inbound Missed Call from customer ${effectiveCustomerPhone} on ${staff_name} (${device_name}). Customer wait kiya par call attend nahi ho payi — callback required.`;
+          ai_summary = `🚨 Inbound Missed Call from customer ${displayCustomerPhone} on ${staff_name} (${device_name}). Customer wait kiya par call attend nahi ho payi — callback required.`;
         } else if (call_outcome.includes('Not Picked') || call_outcome.includes('Busy')) {
           ai_summary = `📞 Outbound call dialed by ${staff_name} (${device_name}) to ${effectiveCustomerPhone}. Customer did not pick up / phone busy.`;
         } else if (recording_url) {
@@ -357,7 +363,7 @@ module.exports = async (req, res) => {
       const callLogRecord = {
         id: callLogId,
         lead_id: String(lead_id),
-        caller_number: String(caller_number || effectiveCustomerPhone),
+        caller_number: String(caller_number || displayCustomerPhone),
         receiver_number: String(receiver_number || ''),
         call_duration: call_duration,
         recording_url: String(recording_url),
