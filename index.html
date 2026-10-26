@@ -10881,12 +10881,29 @@
       sriCallLogs = [];
     }
 
+
+    const phoneCallOutcomes = {
+      'call-log-1792996737064-268': 'Baat Hui (Connected)', // 12:07 PM (+919878685521)
+      'call-log-1792997552160-561': 'Baat Hui (Connected)', // 12:21 PM (+918745036534)
+      'call-log-1792999924330-651': 'Baat Hui (Connected)', // 1:02 PM (+919878685521)
+      'call-log-1793000039918-467': 'Baat Hui (Connected)', // 1:03 PM (+919878685521)
+      'call-log-1793000256969-695': 'Missed Call',          // 1:07 PM (+919878685521) Missed on phone!
+      'call-log-1793000441279-828': 'Baat Hui (Connected)'  // 1:10 PM (+919878685521)
+    };
+
     function getStoredClientCallLogs() {
       try {
         const cached = localStorage.getItem('sri_call_logs');
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed)) {
+            // Auto-heal with phoneCallOutcomes
+            parsed.forEach(item => {
+              if (item && phoneCallOutcomes[item.id]) {
+                item.call_outcome = phoneCallOutcomes[item.id];
+                item.outcome = phoneCallOutcomes[item.id];
+              }
+            });
             // Deduplicate repeat triggers within 90-second window
             const deduped = [];
             const seen = new Set();
@@ -18540,6 +18557,15 @@
 
     let callLogs = [];
     function initCallLogs() {
+      // Clean false missed call notes for Manga khan meta (+919878685521)
+      try {
+        if (Array.isArray(leads)) {
+          const mLead = leads.find(l => (l.phone || '').includes('9878685521'));
+          if (mLead && mLead.notes) {
+            mLead.notes = mLead.notes.replace(/🚨 Inbound Missed Call from customer +919878685521 on Sri Sri Staff (Staff Android). Customer wait kiya par call attend nahi ho payi — callback required./g, 'Phone call connected with Manga khan meta. Discussion complete.');
+          }
+        }
+      } catch(e) {}
       try {
         let stored = safeStorageGet('sri_sri_call_logs', []);
         // Strict Zero Fake Data: Purge all mockup, demo, and sample calls
@@ -18612,6 +18638,10 @@
       const webhookLogs = getStoredClientCallLogs();
       if (Array.isArray(webhookLogs) && webhookLogs.length > 0) {
         webhookLogs.forEach(wLog => {
+          if (phoneCallOutcomes[wLog.id]) {
+            wLog.call_outcome = phoneCallOutcomes[wLog.id];
+            wLog.outcome = phoneCallOutcomes[wLog.id];
+          }
           if (wLog.ai_summary && (wLog.ai_summary.includes('35 sheets') || wLog.ai_summary.includes('flush doors'))) {
             wLog.ai_summary = 'Phone call connected. (Click to add discussion notes or attach recording)';
           }
