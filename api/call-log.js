@@ -25,10 +25,27 @@ function sendResponse(res, statusCode, data) {
 // Helper to read call_logs table
 function getStoredCallLogs() {
   try {
+    // If running in /tmp and file does not exist yet, seed from bundled call_logs.json
+    if (!fs.existsSync(CALL_LOGS_FILE)) {
+      const bundledPath = path.join(__dirname, '..', 'call_logs.json');
+      if (fs.existsSync(bundledPath)) {
+        try {
+          const seedData = fs.readFileSync(bundledPath, 'utf8');
+          fs.writeFileSync(CALL_LOGS_FILE, seedData, 'utf8');
+        } catch(e) {}
+      }
+    }
     if (fs.existsSync(CALL_LOGS_FILE)) {
       const content = fs.readFileSync(CALL_LOGS_FILE, 'utf8');
       const parsed = JSON.parse(content);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    // Fallback: directly read bundled file if /tmp was empty
+    const bundledPath = path.join(__dirname, '..', 'call_logs.json');
+    if (fs.existsSync(bundledPath)) {
+      const bContent = fs.readFileSync(bundledPath, 'utf8');
+      const bParsed = JSON.parse(bContent);
+      if (Array.isArray(bParsed)) return bParsed;
     }
   } catch (err) {
     console.error('[call_logs DB Read Error]:', err.message);
@@ -52,31 +69,50 @@ function cleanPhone(num) {
   return digits.length >= 10 ? digits.slice(-10) : digits;
 }
 
+// Format duration helper
+function formatCallDuration(sec) {
+  const s = parseInt(sec, 10) || 0;
+  if (s <= 0) return '0s';
+  const mins = Math.floor(s / 60);
+  const rem = s % 60;
+  if (mins === 0) return `${rem}s`;
+  return `${mins}m ${rem}s`;
+}
+
 // ==================== BACKGROUND AI SPEECH-TO-TEXT & SUMMARY ENGINE ====================
 async function generateAiCallSummary(audioUrl, callerNumber, callDuration) {
   const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
-  const openaiApiKey = process.env.OPENAI_API_KEY;
 
-  // 1. Try Gemini API if API key is provided
-  if (geminiApiKey && audioUrl) {
+  // 1. Process actual audio via Gemini API if API key is provided
+  if (geminiApiKey && audioUrl && audioUrl.length > 100) {
     try {
       console.log('[AI Worker] Calling Gemini API for audio transcription and summary...');
-      const promptText = `You are an expert sales transcription analyst for Sri Sri Plywoods CRM.
-Analyze this customer phone call recording (Hindi/Hinglish/English).
-Generate a concise 3-4 bullet point summary:
-• Key discussion points
-• Customer requirement / Product details (e.g. 19mm Gurjan plywood, flush doors, laminates, quantities, budget)
-• Next action item (e.g. site visit, sample delivery, quotation follow-up, payment terms)
-Keep the summary professional, actionable, and formatted in clean bullet points.`;
+      const promptText = `You are an expert sales conversation analyst for Sri Sri Plywoods CRM.
+Listen to this real customer phone call recording and transcribe the actual conversation.
+Generate a concise, factual 3-bullet summary based strictly on what was spoken in this recording:
+• Key Discussion: Summary of the real conversation between staff and caller
+• Customer Requirement: Specific products mentioned (e.g. 19mm Gurjan plywood, flush doors, laminates, quantities, thickness, budget)
+• Next Action Item: Follow-up required (quotation, site measurement, sample dispatch)
+Strict Rule: Zero-Hallucination. Do NOT invent, assume, or hallucinate any details not spoken in the audio.`;
+
+      let mimeType = 'audio/mp4';
+      let b64Data = '';
+      if (audioUrl.startsWith('data:')) {
+        const parts = audioUrl.split(';base64,');
+        mimeType = parts[0].replace('data:', '') || 'audio/mp4';
+        b64Data = parts[1] || '';
+      } else {
+        b64Data = audioUrl;
+      }
 
       const requestBody = JSON.stringify({
         contents: [
           {
             parts: [
               {
-                fileData: {
-                  fileUri: audioUrl,
-                  mimeType: 'audio/mp3'
+                inlineData: {
+                  mimeType: mimeType,
+                  data: b64Data
                 }
               },
               {
@@ -90,13 +126,13 @@ Keep the summary professional, actionable, and formatted in clean bullet points.
       const geminiResult = await new Promise((resolve) => {
         const req = https.request({
           hostname: 'generativelanguage.googleapis.com',
-          path: `/v1beta/models/gemini-3.8-flash:generateContent?key=${geminiApiKey}`,
+          path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(requestBody)
           },
-          timeout: 15000
+          timeout: 25000
         }, (res) => {
           let data = '';
           res.on('data', chunk => data += chunk);
@@ -126,7 +162,7 @@ Keep the summary professional, actionable, and formatted in clean bullet points.
   }
 
   // 2. Strict Zero-Hallucination: If no audio recording was supplied, NEVER fabricate fake discussions!
-  return 'Call connected with ' + (callerNumber || 'customer') + '. (Discussion notes pending / Attach audio recording)';
+  return 'Call connected with ' + (callerNumber || 'customer') + '. (Discussion complete / Awaiting phone voice recording)';
 }
 
 // ==================== FIRESTORE CLOUD PERSISTENCE ====================
@@ -137,6 +173,7 @@ async function syncCallLogToFirestore(callLogRecord) {
         id: { stringValue: callLogRecord.id },
         lead_id: { stringValue: callLogRecord.lead_id },
         caller_number: { stringValue: String(callLogRecord.caller_number || '') },
+        caller_name: { stringValue: String(callLogRecord.caller_name || '') },
         receiver_number: { stringValue: String(callLogRecord.receiver_number || '') },
         call_duration: { integerValue: String(callLogRecord.call_duration || 0) },
         recording_url: { stringValue: String(callLogRecord.recording_url || '') },
@@ -192,7 +229,7 @@ async function getFirestoreCallLogs() {
               call_duration: parseInt(f.call_duration?.integerValue || 0, 10),
               recording_url: f.recording_url?.stringValue || '',
               ai_summary: f.ai_summary?.stringValue || '',
-              direction: f.direction?.stringValue || (f.receiver_number?.stringValue ? 'OUTBOUND' : 'INBOUND'),
+              direction: f.direction?.stringValue || 'INBOUND',
               call_outcome: f.call_outcome?.stringValue || 'Baat Hui (Connected)',
               staff_name: f.staff_name?.stringValue || 'Staff',
               device_name: f.device_name?.stringValue || 'Android Phone',
@@ -233,8 +270,11 @@ module.exports = async (req, res) => {
       const cloudLogs = await getFirestoreCallLogs();
       if (cloudLogs.length > 0) {
         cloudLogs.forEach(cl => {
-          if (!allLogs.some(l => l.id === cl.id)) {
+          const exIdx = allLogs.findIndex(l => l.id === cl.id);
+          if (exIdx === -1) {
             allLogs.push(cl);
+          } else {
+            allLogs[exIdx] = cl;
           }
         });
       }
@@ -268,36 +308,96 @@ module.exports = async (req, res) => {
   // 2. POST: Inbound Call Recording Webhook Handler
   if (req.method === 'POST') {
     try {
-      let body = req.body;
-      if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch(e){}
+      // 1. Collect full body buffer if not already parsed (supports direct binary and multipart uploads from Android)
+      let rawBuffer = null;
+      if (Buffer.isBuffer(req.body)) {
+        rawBuffer = req.body;
+      } else if (typeof req.body === 'string') {
+        rawBuffer = Buffer.from(req.body);
+      } else if (!req.body && req.readable) {
+        rawBuffer = await new Promise((resolve) => {
+          const chunks = [];
+          req.on('data', c => chunks.push(c));
+          req.on('end', () => resolve(Buffer.concat(chunks)));
+          req.on('error', () => resolve(Buffer.alloc(0)));
+        });
       }
-      body = body || {};
 
+      let body = {};
+      const cType = String((req.headers && req.headers['content-type']) || '').toLowerCase();
+      
+      // If JSON or parsed object
+      if (typeof req.body === 'object' && !Buffer.isBuffer(req.body) && req.body !== null) {
+        body = req.body;
+      } else if (rawBuffer && rawBuffer.length > 0 && (cType.includes('application/json') || (!cType.includes('multipart') && !cType.includes('audio')))) {
+        try { body = JSON.parse(rawBuffer.toString('utf8')); } catch(e){}
+      }
+
+      // Merge query parameters into body/data (e.g. from MacroDroid HTTP Request URL params)
+      const query = req.query || {};
+      for (const k of ['customer_number', 'caller_number', 'call_duration', 'staff_name', 'device_name', 'call_type', 'call_outcome', 'recording_url']) {
+        if (query[k] && !body[k]) body[k] = query[k];
+      }
+
+      console.log('[Call-Log Webhook Inbound Content-Type]:', cType);
       console.log('[Call-Log Webhook Inbound Payload]:', JSON.stringify(body));
 
       // Unwrap nested payload (support Twilio, Exotel, MyOperator, Asterisk, Android Companion)
       const data = body.data || body.payload || body.call || body;
 
-      // Extract Audio Recording URL
-      const recording_url = data.recording_url || data.recordingUrl || data.audio_url || 
+      // Extract Audio Recording URL or Base64 Audio
+      let recording_url = data.recording_url || data.recordingUrl || data.audio_url || 
                             data.audioUrl || data.RecordingUrl || data.file_url || 
                             data.media_url || data.url || '';
+
+      const audio_base64 = data.audio_base64 || data.recording_base64 || data.audioBase64 || body.audio_base64 || '';
+      if (!recording_url && audio_base64) {
+        if (audio_base64.startsWith('data:audio')) {
+          recording_url = audio_base64;
+        } else {
+          recording_url = 'data:audio/mp4;base64,' + audio_base64;
+        }
+      }
+
+      // If audio sent as direct binary or multipart/form-data from Android phone
+      if (!recording_url && rawBuffer && rawBuffer.length > 500) {
+        if (cType.includes('audio') || cType.includes('octet-stream')) {
+          recording_url = 'data:audio/mp4;base64,' + rawBuffer.toString('base64');
+        } else if (cType.includes('multipart')) {
+          const bufStr = rawBuffer.toString('binary');
+          const fileMatch = bufStr.match(/filename="([^"]+)"[\r\n]+Content-Type: ([^\r\n]+)[\r\n]+[\r\n]+([\s\S]+?)(\r?\n--)/);
+          if (fileMatch) {
+            const fileBytes = Buffer.from(fileMatch[3], 'binary');
+            recording_url = 'data:audio/mp4;base64,' + fileBytes.toString('base64');
+          } else {
+            recording_url = 'data:audio/mp4;base64,' + rawBuffer.toString('base64');
+          }
+        }
+      }
 
       // Extract Numbers
       let caller_number = String(data.caller_number || data.callerNumber || data.from || data.From || data.caller || '').trim();
       const receiver_number = String(data.receiver_number || data.receiverNumber || data.to || data.To || data.dialed || '').trim();
       const customer_number = String(data.customer_number || data.customer_phone || data.phone || data.phone_number || '').trim();
+      const rawCallerName = String(data.caller_name || data.callerName || data.contact_name || data.name || data.company || '').trim();
+      const validCallerName = (rawCallerName && rawCallerName !== '{call_name}' && rawCallerName !== 'null' && rawCallerName !== 'undefined') ? rawCallerName : '';
 
-      // Normalize if MacroDroid sent '?' due to race condition before call log was committed
-      if (caller_number === '?' || caller_number === 'unknown' || caller_number === 'Unknown') {
-        caller_number = '';
+      // Determine customer phone & handle spam / unknown / unsaved numbers cleanly
+      let effectiveCustomerPhone = customer_number || caller_number || receiver_number || '';
+      if (effectiveCustomerPhone === '{call_number}' || effectiveCustomerPhone === '?' || effectiveCustomerPhone.toLowerCase() === 'unknown') {
+        effectiveCustomerPhone = '';
       }
-
-      // Determine customer phone
-      const effectiveCustomerPhone = customer_number || caller_number || receiver_number;
       const cleanCustomer = cleanPhone(effectiveCustomerPhone);
-      const displayCustomerPhone = (cleanCustomer && cleanCustomer.length >= 10) ? ('+91' + cleanCustomer) : (effectiveCustomerPhone || 'Missed Call (New Caller)');
+      let displayCustomerPhone = '';
+      if (cleanCustomer && cleanCustomer.length >= 10) {
+        displayCustomerPhone = '+91' + cleanCustomer + (validCallerName ? (' (' + validCallerName + ')') : '');
+      } else if (validCallerName) {
+        displayCustomerPhone = validCallerName + (effectiveCustomerPhone ? (' (' + effectiveCustomerPhone + ')') : '');
+      } else if (effectiveCustomerPhone) {
+        displayCustomerPhone = effectiveCustomerPhone;
+      } else {
+        displayCustomerPhone = 'Spam / Unknown Incoming Caller';
+      }
 
       // Extract Duration (in seconds)
       const rawDuration = data.call_duration || data.duration || data.CallDuration || data.duration_seconds || 0;
@@ -307,20 +407,28 @@ module.exports = async (req, res) => {
       let rawType = String(data.call_type || data.type || data.direction || data.call_direction || '').toUpperCase();
       let isMissed = (data.is_missed === true || data.is_missed === 'true' || rawType.includes('MISSED') || String(data.call_outcome || '').toLowerCase().includes('missed'));
 
+      // If duration > 0, the parties actually talked, so it cannot be missed
+      if (call_duration > 0) {
+        isMissed = false;
+      }
+
+      // Inbound is the universal default for phone companion sync
       let direction = 'INBOUND';
-      if (rawType.includes('OUT') || rawType.includes('DIAL') || (!isMissed && receiver_number && !caller_number)) {
+      if (rawType.includes('OUTBOUND') || rawType.includes('DIALED') || rawType.includes('OUTGOING')) {
         direction = 'OUTBOUND';
       }
 
       // Determine Call Outcome (Baat Hui vs Missed Call vs Call Not Picked)
       let call_outcome = data.call_outcome || data.outcome || data.status || '';
       if (!call_outcome) {
-        if (isMissed) {
+        if (isMissed || (call_duration === 0 && rawType.includes('MISSED'))) {
           call_outcome = 'Missed Call';
-        } else if (call_duration === 0) {
-          call_outcome = (direction === 'INBOUND') ? 'Missed Call' : 'Call Not Picked / User Busy';
-        } else {
+        } else if (direction === 'OUTBOUND' && call_duration === 0) {
+          call_outcome = 'Call Not Picked / User Busy';
+        } else if (call_duration > 0) {
           call_outcome = 'Baat Hui (Connected)';
+        } else {
+          call_outcome = isMissed ? 'Missed Call' : 'Baat Hui (Connected)';
         }
       }
 
@@ -363,7 +471,8 @@ module.exports = async (req, res) => {
       const callLogRecord = {
         id: callLogId,
         lead_id: String(lead_id),
-        caller_number: String(caller_number || displayCustomerPhone),
+        caller_number: String(displayCustomerPhone),
+        caller_name: validCallerName,
         receiver_number: String(receiver_number || ''),
         call_duration: call_duration,
         recording_url: String(recording_url),
