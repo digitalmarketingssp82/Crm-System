@@ -18603,6 +18603,20 @@
             let staffName = wLog.staff_name || (loggedInUser ? loggedInUser.name : 'Sri Sri Staff');
             let deviceName = wLog.device_name || 'Staff Phone';
 
+            // Deduplicate rapid repeat webhook triggers for the same call event within 90 seconds
+            const isRapidDuplicate = callLogs.some(c => {
+              if (c.id === wLog.id) return true;
+              const num1 = (c.phone || '').replace(/\D/g, '').slice(-10);
+              const num2 = (rawPhone || '').replace(/\D/g, '').slice(-10);
+              if (num1 && num2 && num1 === num2) {
+                const t1 = new Date(c.timestamp || c.time || 0).getTime();
+                const t2 = new Date(wLog.created_at || 0).getTime();
+                if (Math.abs(t1 - t2) < 90000) return true;
+              }
+              return false;
+            });
+            if (isRapidDuplicate) return;
+
             // Auto-file into matched lead's activities & CRM notes if lead exists
             if (matchedLead) {
               matchedLead.activities = matchedLead.activities || [];
