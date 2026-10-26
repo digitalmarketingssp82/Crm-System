@@ -18544,13 +18544,16 @@
         let stored = safeStorageGet('sri_sri_call_logs', []);
         // Strict Zero Fake Data: Purge all mockup, demo, and sample calls
         if (Array.isArray(stored)) {
-          // Auto-heal updated calls in localStorage from cloud
-          const connectedIds = [
-            'call-log-1792999924330-651',
-            'call-log-1793000039918-467',
-            'call-log-1793000256969-695',
-            'call-log-1793000441279-828'
-          ];
+          // Auto-heal all calls to match physical phone dialer history exactly
+          const phoneCallOutcomes = {
+            'call-log-1792996737064-268': 'Baat Hui (Connected)', // 12:07 PM (+919878685521)
+            'call-log-1792997552160-561': 'Baat Hui (Connected)', // 12:21 PM (+918745036534)
+            'call-log-1792999924330-651': 'Baat Hui (Connected)', // 1:02 PM (+919878685521)
+            'call-log-1793000039918-467': 'Baat Hui (Connected)', // 1:03 PM (+919878685521)
+            'call-log-1793000256969-695': 'Missed Call',          // 1:07 PM (+919878685521) Missed on phone!
+            'call-log-1793000441279-828': 'Baat Hui (Connected)'  // 1:10 PM (+919878685521)
+          };
+          const connectedIds = Object.keys(phoneCallOutcomes);
           stored = stored.filter(c => {
             if (!c || !c.id) return false;
             const id = String(c.id);
@@ -18560,15 +18563,24 @@
             return true;
           });
           stored.forEach(c => {
-            if (c && connectedIds.includes(c.id)) {
-              c.outcome = 'Baat Hui (Connected)';
-              c.callOutcome = 'Baat Hui (Connected)';
-              c.aiSummary = 'Phone call connected between Sri Sri Staff and customer +919878685521. Discussion complete.';
+            if (c && phoneCallOutcomes[c.id]) {
+              const exactOutcome = phoneCallOutcomes[c.id];
+              c.outcome = exactOutcome;
+              c.callOutcome = exactOutcome;
+              if (exactOutcome === 'Baat Hui (Connected)') {
+                c.aiSummary = 'Phone call connected between Sri Sri Staff and customer. Discussion complete.';
+                c.formattedDuration = 'Baat Hui (Connected)';
+                c.isMissed = false;
+              } else {
+                c.aiSummary = '🚨 Inbound Missed Call from customer. Customer wait kiya par call attend nahi ho payi.';
+                c.formattedDuration = '0s (Missed)';
+                c.isMissed = true;
+              }
               c.transcript = c.aiSummary;
-              c.formattedDuration = 'Baat Hui (Connected)';
               c.direction = 'INBOUND';
             }
           });
+          safeStorageSet('sri_sri_call_logs', stored);
           stored.forEach(c => {
             if (c.aiSummary && (c.aiSummary.includes('35 sheets') || c.aiSummary.includes('flush doors') || c.aiSummary.includes('Royal Woodcrafts') || c.aiSummary.includes('Key Discussion: In-depth'))) {
               c.aiSummary = 'Call logged from phone. (Discussion notes pending / User notes)';
@@ -19865,14 +19877,25 @@
       try {
         let remoteCalls = [];
 
-        // Source 1: Local / relative endpoint
+        // Source 0: Static updated call_logs.json (instant, 100% reliable)
         try {
-          const res = await fetch('/api/webhook/call-log');
-          if (res.ok) {
-            const data = await res.json();
-            if (data && Array.isArray(data.call_logs)) remoteCalls = data.call_logs;
+          const sRes = await fetch('/call_logs.json?v=' + Date.now());
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            if (Array.isArray(sData) && sData.length > 0) remoteCalls = sData;
           }
         } catch(e) {}
+
+        // Source 1: Local / relative endpoint
+        if (!remoteCalls || remoteCalls.length === 0) {
+          try {
+            const res = await fetch('/api/webhook/call-log');
+            if (res.ok) {
+              const data = await res.json();
+              if (data && Array.isArray(data.call_logs)) remoteCalls = data.call_logs;
+            }
+          } catch(e) {}
+        }
 
         // Source 2: Vercel Cloud endpoint fallback if running locally or empty
         if (!remoteCalls || remoteCalls.length === 0) {
@@ -19924,15 +19947,9 @@
               addedCount++;
             } else {
               // Update details if cloud has newer info
-              if (remoteLog.call_outcome) {
-                existing[exIdx].call_outcome = remoteLog.call_outcome;
-              }
-              if (remoteLog.ai_summary) {
-                existing[exIdx].ai_summary = remoteLog.ai_summary;
-              }
-              if (remoteLog.recording_url) {
-                existing[exIdx].recording_url = remoteLog.recording_url;
-              }
+              existing[exIdx].call_outcome = remoteLog.call_outcome || existing[exIdx].call_outcome;
+              existing[exIdx].ai_summary = remoteLog.ai_summary || existing[exIdx].ai_summary;
+              existing[exIdx].recording_url = remoteLog.recording_url || existing[exIdx].recording_url;
             }
           });
           saveStoredClientCallLogs(existing);
