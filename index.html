@@ -10887,7 +10887,19 @@
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed)) {
-            sriCallLogs = parsed;
+            // Deduplicate repeat triggers within 90-second window
+            const deduped = [];
+            const seen = new Set();
+            for (const log of parsed) {
+              const normPhone = (log.caller_number || '').replace(/[^0-9]/g, '').slice(-10);
+              const logTime = new Date(log.created_at || 0).getTime();
+              const timeSlot = Math.floor(logTime / (90 * 1000));
+              const sig = normPhone ? (normPhone + '_' + (log.direction || '') + '_' + (log.call_outcome || '') + '_' + timeSlot) : null;
+              if (sig && seen.has(sig)) continue;
+              if (sig) seen.add(sig);
+              deduped.push(log);
+            }
+            sriCallLogs = deduped;
             return sriCallLogs;
           }
         }
@@ -19886,10 +19898,13 @@
               addedCount++;
             } else {
               // Update details if cloud has newer info
-              if (!existing[exIdx].ai_summary && remoteLog.ai_summary) {
+              if (remoteLog.call_outcome) {
+                existing[exIdx].call_outcome = remoteLog.call_outcome;
+              }
+              if (remoteLog.ai_summary) {
                 existing[exIdx].ai_summary = remoteLog.ai_summary;
               }
-              if (!existing[exIdx].recording_url && remoteLog.recording_url) {
+              if (remoteLog.recording_url) {
                 existing[exIdx].recording_url = remoteLog.recording_url;
               }
             }
