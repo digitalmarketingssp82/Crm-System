@@ -280,6 +280,14 @@ module.exports = async (req, res) => {
       }
     } catch(e) {}
 
+    // Strict filter: Never return test numbers, mockup calls, or orphaned spam
+    allLogs = allLogs.filter(c => {
+      if (!c) return false;
+      const num = String(c.caller_number || c.phone || '');
+      if (num.includes('9999988888') || num.includes('8000000000') || c.id === 'call-log-1793081339671-686' || c.caller_number === 'Spam / Unknown Incoming Caller') return false;
+      return true;
+    });
+
     if (leadId) {
       const filtered = allLogs.filter(c => String(c.lead_id) === String(leadId));
       return sendResponse(res, 200, { success: true, count: filtered.length, call_logs: filtered });
@@ -335,7 +343,7 @@ module.exports = async (req, res) => {
 
       // Merge query parameters into body/data (e.g. from MacroDroid HTTP Request URL params)
       const query = req.query || {};
-      for (const k of ['customer_number', 'caller_number', 'call_duration', 'staff_name', 'device_name', 'call_type', 'call_outcome', 'recording_url']) {
+      for (const k of ['customer_number', 'caller_number', 'call_duration', 'staff_name', 'device_name', 'call_type', 'call_outcome', 'recording_url', 'file_name', 'filename']) {
         if (query[k] && !body[k]) body[k] = query[k];
       }
 
@@ -359,7 +367,7 @@ module.exports = async (req, res) => {
         }
       }
 
-      let extractedFileName = '';
+      let extractedFileName = query.file_name || query.filename || data.file_name || data.filename || '';
       // If audio sent as direct binary or multipart/form-data from Android phone
       if (!recording_url && rawBuffer && rawBuffer.length > 500) {
         if (cType.includes('audio') || cType.includes('octet-stream')) {
@@ -501,7 +509,33 @@ module.exports = async (req, res) => {
       // 1. Persist to independent call_logs table / store
       const allLogs = getStoredCallLogs();
 
-      // Auto-heal: If this customer had a recent Missed Call within 8 minutes, upgrade that record to Baat Hui with this audio/duration instead of leaving a phantom missed call!
+      // Auto-heal 1: If recording arrives for a recent call (within 10 minutes) that doesn't have audio yet, attach it directly!
+      if (recording_url && cleanCustomer && cleanCustomer.length >= 10) {
+        const recentPendingAudioIdx = allLogs.findIndex(l => {
+          const isSameNum = cleanPhone(l.caller_number) === cleanCustomer;
+          const isRecent = (Date.now() - new Date(l.created_at).getTime() < 10 * 60 * 1000);
+          return isSameNum && isRecent && (!l.recording_url || l.recording_url.length < 100);
+        });
+        if (recentPendingAudioIdx !== -1) {
+          allLogs[recentPendingAudioIdx].call_outcome = 'Baat Hui (Connected)';
+          allLogs[recentPendingAudioIdx].outcome = 'Baat Hui (Connected)';
+          allLogs[recentPendingAudioIdx].recording_url = recording_url;
+          if (call_duration) allLogs[recentPendingAudioIdx].call_duration = call_duration;
+          if (ai_summary) allLogs[recentPendingAudioIdx].ai_summary = ai_summary;
+          if (device_name) allLogs[recentPendingAudioIdx].device_name = device_name;
+          if (staff_name) allLogs[recentPendingAudioIdx].staff_name = staff_name;
+          saveStoredCallLogs(allLogs);
+          await syncCallLogToFirestore(allLogs[recentPendingAudioIdx]);
+          console.log(`[Call-Log Auto-Heal]: Successfully attached audio recording & AI summary to existing call for ${cleanCustomer}`);
+          return sendResponse(res, 200, {
+            success: true,
+            message: 'Attached audio recording and AI summary to existing call',
+            call_log: allLogs[recentPendingAudioIdx]
+          });
+        }
+      }
+
+      // Auto-heal 2: If this customer had a recent Missed Call within 8 minutes, upgrade that record to Baat Hui
       if (call_outcome === 'Baat Hui (Connected)' && cleanCustomer && cleanCustomer.length >= 10) {
         const recentMissedIdx = allLogs.findIndex(l => {
           const isSameNum = cleanPhone(l.caller_number) === cleanCustomer;
