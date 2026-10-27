@@ -359,6 +359,7 @@ module.exports = async (req, res) => {
         }
       }
 
+      let extractedFileName = '';
       // If audio sent as direct binary or multipart/form-data from Android phone
       if (!recording_url && rawBuffer && rawBuffer.length > 500) {
         if (cType.includes('audio') || cType.includes('octet-stream')) {
@@ -367,6 +368,7 @@ module.exports = async (req, res) => {
           const bufStr = rawBuffer.toString('binary');
           const fileMatch = bufStr.match(/filename="([^"]+)"[\r\n]+Content-Type: ([^\r\n]+)[\r\n]+[\r\n]+([\s\S]+?)(\r?\n--)/);
           if (fileMatch) {
+            extractedFileName = fileMatch[1];
             const fileBytes = Buffer.from(fileMatch[3], 'binary');
             recording_url = 'data:audio/mp4;base64,' + fileBytes.toString('base64');
           } else {
@@ -387,6 +389,20 @@ module.exports = async (req, res) => {
       if (effectiveCustomerPhone === '{call_number}' || effectiveCustomerPhone === '?' || effectiveCustomerPhone.toLowerCase() === 'unknown') {
         effectiveCustomerPhone = '';
       }
+      // If missing from payload, extract from audio recording filename
+      if (extractedFileName && (!effectiveCustomerPhone || effectiveCustomerPhone.length < 10)) {
+        const fMatch = extractedFileName.match(/(\d{10})/);
+        if (fMatch) effectiveCustomerPhone = fMatch[1];
+      }
+      // If still missing, check recent call log from same device/time
+      const existingLogs = getStoredCallLogs();
+      if (!effectiveCustomerPhone && existingLogs.length > 0) {
+        const recentLog = existingLogs.find(l => l.caller_number && l.caller_number.length >= 10 && !l.caller_number.includes('Spam') && (Date.now() - new Date(l.created_at).getTime() < 10 * 60 * 1000));
+        if (recentLog) {
+          effectiveCustomerPhone = cleanPhone(recentLog.caller_number);
+        }
+      }
+
       const cleanCustomer = cleanPhone(effectiveCustomerPhone);
       let displayCustomerPhone = '';
       if (cleanCustomer && cleanCustomer.length >= 10) {
@@ -421,14 +437,12 @@ module.exports = async (req, res) => {
       // Determine Call Outcome (Baat Hui vs Missed Call vs Call Not Picked)
       let call_outcome = data.call_outcome || data.outcome || data.status || '';
       if (!call_outcome) {
-        if (isMissed || (call_duration === 0 && rawType.includes('MISSED'))) {
+        if (isMissed || rawType.includes('MISSED')) {
           call_outcome = 'Missed Call';
         } else if (direction === 'OUTBOUND' && call_duration === 0) {
           call_outcome = 'Call Not Picked / User Busy';
-        } else if (call_duration > 0) {
-          call_outcome = 'Baat Hui (Connected)';
         } else {
-          call_outcome = isMissed ? 'Missed Call' : 'Baat Hui (Connected)';
+          call_outcome = 'Baat Hui (Connected)';
         }
       }
 
@@ -486,6 +500,32 @@ module.exports = async (req, res) => {
 
       // 1. Persist to independent call_logs table / store
       const allLogs = getStoredCallLogs();
+
+      // Auto-heal: If this customer had a recent Missed Call within 8 minutes, upgrade that record to Baat Hui with this audio/duration instead of leaving a phantom missed call!
+      if (call_outcome === 'Baat Hui (Connected)' && cleanCustomer && cleanCustomer.length >= 10) {
+        const recentMissedIdx = allLogs.findIndex(l => {
+          const isSameNum = cleanPhone(l.caller_number) === cleanCustomer;
+          const isRecent = (Date.now() - new Date(l.created_at).getTime() < 8 * 60 * 1000);
+          return isSameNum && isRecent && (String(l.call_outcome || '').includes('Missed'));
+        });
+        if (recentMissedIdx !== -1) {
+          allLogs[recentMissedIdx].call_outcome = 'Baat Hui (Connected)';
+          allLogs[recentMissedIdx].call_duration = call_duration || allLogs[recentMissedIdx].call_duration || 45;
+          if (recording_url) allLogs[recentMissedIdx].recording_url = recording_url;
+          if (ai_summary) allLogs[recentMissedIdx].ai_summary = ai_summary;
+          if (device_name) allLogs[recentMissedIdx].device_name = device_name;
+          if (staff_name) allLogs[recentMissedIdx].staff_name = staff_name;
+          saveStoredCallLogs(allLogs);
+          await syncCallLogToFirestore(allLogs[recentMissedIdx]);
+          console.log(`[Call-Log Auto-Heal]: Upgraded recent missed call for ${cleanCustomer} to Baat Hui (Connected)`);
+          return sendResponse(res, 200, {
+            success: true,
+            message: 'Upgraded recent missed call to connected with audio',
+            call_log: allLogs[recentMissedIdx]
+          });
+        }
+      }
+
       allLogs.unshift(callLogRecord);
       saveStoredCallLogs(allLogs);
 

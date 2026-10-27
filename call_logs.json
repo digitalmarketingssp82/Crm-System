@@ -1,5 +1,21 @@
 [
   {
+    "id": "call-log-1793081320981-675",
+    "lead_id": "lead-phone-6239089562",
+    "caller_number": "+916239089562",
+    "caller_name": "",
+    "receiver_number": "",
+    "call_duration": 45,
+    "recording_url": "",
+    "ai_summary": "Phone call connected between Sri Sri Staff (Samsung Galaxy) and customer +916239089562. Discussion complete.",
+    "direction": "INBOUND",
+    "call_outcome": "Baat Hui (Connected)",
+    "staff_name": "Sri Sri Staff",
+    "device_name": "Samsung Galaxy",
+    "created_at": "2026-10-27T06:08:40.981Z",
+    "hasAudio": false
+  },
+  {
     "id": "call-log-1793000441279-828",
     "lead_id": "lead-phone-9878685521",
     "caller_number": "+919878685521",
@@ -89,14 +105,16 @@
     "lead_id": "lead-phone-7814214801",
     "caller_number": "+917814214801",
     "receiver_number": "",
-    "call_duration": 0,
+    "call_duration": 80,
     "recording_url": "",
-    "ai_summary": "🚨 Inbound Missed Call from customer +917814214801 on Sri Sri Staff (Staff Android). Customer wait kiya par call attend nahi ho payi — callback required.",
+    "ai_summary": "Phone call connected between Sri Sri Staff and customer +917814214801. Discussion complete.",
     "direction": "INBOUND",
-    "call_outcome": "Missed Call",
+    "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-25T13:48:46.485Z"
+    "created_at": "2026-10-25T13:48:46.485Z",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 80
   },
   {
     "id": "call-log-1792936126085-605",
@@ -131,14 +149,16 @@
     "lead_id": "lead-phone-9878685521",
     "caller_number": "+919878685521",
     "receiver_number": "",
-    "call_duration": 0,
+    "call_duration": 135,
     "recording_url": "",
-    "ai_summary": "🚨 Inbound Missed Call from customer +919878685521 on Sri Sri Staff (Staff Android). Customer wait kiya par call attend nahi ho payi — callback required.",
+    "ai_summary": "Phone call connected between Sri Sri Staff and Manga Khan (+919878685521). Discussion complete.",
     "direction": "INBOUND",
-    "call_outcome": "Missed Call",
+    "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-25T09:26:37.539Z"
+    "created_at": "2026-10-25T09:26:37.539Z",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 135
   },
   {
     "id": "call-log-1792920397418-184",

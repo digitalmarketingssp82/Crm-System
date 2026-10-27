@@ -10917,15 +10917,34 @@
     const phoneCallRecordings = {};
 
     const phoneCallOutcomes = {
+      'call-log-1793081320981-675': 'Baat Hui (Connected)', // 11:38 AM (+916239089562)
       'call-log-1792996737064-268': 'Baat Hui (Connected)', // 12:07 PM (+919878685521)
       'call-log-1792997552160-561': 'Baat Hui (Connected)', // 12:21 PM (+918745036534)
       'call-log-1792999924330-651': 'Baat Hui (Connected)', // 1:02 PM (+919878685521)
       'call-log-1793000039918-467': 'Baat Hui (Connected)', // 1:03 PM (+919878685521)
       'call-log-1793000256969-695': 'Missed Call',          // 1:07 PM (+919878685521) Missed on phone!
-      'call-log-1793000441279-828': 'Baat Hui (Connected)'  // 1:10 PM (+919878685521)
+      'call-log-1793000441279-828': 'Baat Hui (Connected)', // 1:10 PM (+919878685521)
+      'call-log-1792936126485-527': 'Baat Hui (Connected)', // 7:18 PM (+917814214801)
+      'call-log-1792920397539-995': 'Baat Hui (Connected)'  // 2:56 PM (+919878685521)
     };
 
     const DEFAULT_BUNDLED_CALL_LOGS = [
+  {
+    "id": "call-log-1793081320981-675",
+    "lead_id": "lead-phone-6239089562",
+    "caller_number": "+916239089562",
+    "caller_name": "",
+    "receiver_number": "",
+    "call_duration": 45,
+    "recording_url": "",
+    "ai_summary": "Phone call connected between Sri Sri Staff (Samsung Galaxy) and customer +916239089562. Discussion complete.",
+    "direction": "INBOUND",
+    "call_outcome": "Baat Hui (Connected)",
+    "staff_name": "Sri Sri Staff",
+    "device_name": "Samsung Galaxy",
+    "created_at": "2026-10-27T06:08:40.981Z",
+    "hasAudio": false
+  },
   {
     "id": "call-log-1793000441279-828",
     "lead_id": "lead-phone-9878685521",
@@ -11016,14 +11035,16 @@
     "lead_id": "lead-phone-7814214801",
     "caller_number": "+917814214801",
     "receiver_number": "",
-    "call_duration": 0,
+    "call_duration": 80,
     "recording_url": "",
-    "ai_summary": "🚨 Inbound Missed Call from customer +917814214801 on Sri Sri Staff (Staff Android). Customer wait kiya par call attend nahi ho payi — callback required.",
+    "ai_summary": "Phone call connected between Sri Sri Staff and customer +917814214801. Discussion complete.",
     "direction": "INBOUND",
-    "call_outcome": "Missed Call",
+    "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-25T13:48:46.485Z"
+    "created_at": "2026-10-25T13:48:46.485Z",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 80
   },
   {
     "id": "call-log-1792936126085-605",
@@ -11058,14 +11079,16 @@
     "lead_id": "lead-phone-9878685521",
     "caller_number": "+919878685521",
     "receiver_number": "",
-    "call_duration": 0,
+    "call_duration": 135,
     "recording_url": "",
-    "ai_summary": "🚨 Inbound Missed Call from customer +919878685521 on Sri Sri Staff (Staff Android). Customer wait kiya par call attend nahi ho payi — callback required.",
+    "ai_summary": "Phone call connected between Sri Sri Staff and Manga Khan (+919878685521). Discussion complete.",
     "direction": "INBOUND",
-    "call_outcome": "Missed Call",
+    "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-25T09:26:37.539Z"
+    "created_at": "2026-10-25T09:26:37.539Z",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 135
   },
   {
     "id": "call-log-1792920397418-184",
@@ -11150,6 +11173,12 @@
           parsed = JSON.parse(JSON.stringify(DEFAULT_BUNDLED_CALL_LOGS));
         }
         if (Array.isArray(parsed)) {
+            parsed = parsed.filter(item => {
+              if (!item) return false;
+              const num = String(item.caller_number || item.phone || '');
+              if (num.includes('9999988888') || num.includes('8000000000') || item.id === 'call-log-1793081339671-686' || item.caller_number === 'Spam / Unknown Incoming Caller') return false;
+              return true;
+            });
             // Auto-heal with phoneCallOutcomes and purge any dummy sample audio
             parsed.forEach(item => {
               if ((item && item.recording_url && (item.recording_url.includes('sample_call_audio') || item.recording_url.includes('UklGRiR9AABXQVZFZm'))) ||
@@ -18973,12 +19002,15 @@
         if (Array.isArray(stored)) {
           // Auto-heal all calls to match physical phone dialer history exactly
           const phoneCallOutcomes = {
+            'call-log-1793081320981-675': 'Baat Hui (Connected)', // 11:38 AM (+916239089562)
             'call-log-1792996737064-268': 'Baat Hui (Connected)', // 12:07 PM (+919878685521)
             'call-log-1792997552160-561': 'Baat Hui (Connected)', // 12:21 PM (+918745036534)
             'call-log-1792999924330-651': 'Baat Hui (Connected)', // 1:02 PM (+919878685521)
             'call-log-1793000039918-467': 'Baat Hui (Connected)', // 1:03 PM (+919878685521)
             'call-log-1793000256969-695': 'Missed Call',          // 1:07 PM (+919878685521) Missed on phone!
-            'call-log-1793000441279-828': 'Baat Hui (Connected)'  // 1:10 PM (+919878685521)
+            'call-log-1793000441279-828': 'Baat Hui (Connected)', // 1:10 PM (+919878685521)
+            'call-log-1792936126485-527': 'Baat Hui (Connected)', // 7:18 PM (+917814214801)
+            'call-log-1792920397539-995': 'Baat Hui (Connected)'  // 2:56 PM (+919878685521)
           };
           const connectedIds = Object.keys(phoneCallOutcomes);
           stored = stored.filter(c => {
@@ -18986,7 +19018,7 @@
             const id = String(c.id);
             const num = String(c.phone || c.caller_number || c.receiver_number || '');
             if (id.startsWith('call-10') || id.startsWith('call-sample-') || id.startsWith('call-real-00') || id.includes('test-call') || id.startsWith('act-call-call-log-')) return false;
-            if (num === '9876543210' || num === '01234567890' || (num === '?' && !c.call_outcome && !c.outcome) || num.includes('8000000000')) return false;
+            if (num === '9876543210' || num === '01234567890' || (num === '?' && !c.call_outcome && !c.outcome) || num.includes('8000000000') || num.includes('9999988888') || c.caller_number === 'Spam / Unknown Incoming Caller' || c.id === 'call-log-1793081339671-686') return false;
             // Normalize direction for all stored calls: default is always INBOUND
             if (!c.direction || String(c.direction).toUpperCase() !== 'OUTBOUND') {
               c.direction = 'INBOUND';
@@ -19388,8 +19420,15 @@
       if (!c) return 'Baat Hui (Connected)';
       const id = String(c.id || '');
 
-      // Specific known historical dialer records from 25/26 Oct
-      if (id === 'call-log-1793000256969-695' || id === 'call-log-1792936126485-527' || id === 'call-log-1792936126085-605' || id === 'call-log-1792936096037-479' || id === 'call-log-1792920397539-995' || id === 'call-log-1792920397418-184') {
+      // Specific known historical dialer records from 25/26/27 Oct
+      const num = String(c.caller_number || c.phone || '');
+      if (num.includes('6239089562') || id === 'call-log-1793081320981-675' || id === 'call-log-1793081339671-686') {
+        return 'Baat Hui (Connected)';
+      }
+      if (id === 'call-log-1792936126485-527' || id === 'call-log-1792920397539-995') {
+        return 'Baat Hui (Connected)';
+      }
+      if (id === 'call-log-1793000256969-695' || id === 'call-log-1792936126085-605' || id === 'call-log-1792936096037-479' || id === 'call-log-1792920397418-184') {
         return 'Missed Call';
       }
       if (id === 'call-log-1793000441279-828' || id === 'call-log-1793000039918-467' || id === 'call-log-1792999924330-651' || id === 'call-log-1792997552160-561' || id === 'call-log-1792996737064-268' || id === 'call-log-1792825199143-118' || id === 'call-log-1792823268672-708' || id === 'call-log-1792758511155-839') {
@@ -19531,7 +19570,12 @@
       const filterStaff = (staffSelect ? staffSelect.value : 'ALL');
       const filterOutcome = (document.getElementById('call-log-filter-outcome') ? document.getElementById('call-log-filter-outcome').value : 'ALL');
 
-      let filtered = callLogs.slice();
+      let filtered = callLogs.slice().filter(c => {
+        if (!c) return false;
+        const num = String(c.caller_number || c.phone || '');
+        if (num.includes('9999988888') || num.includes('8000000000') || c.id === 'call-log-1793081339671-686' || c.caller_number === 'Spam / Unknown Incoming Caller') return false;
+        return true;
+      });
 
       // Enforce Agent Isolation
       if (!isOwnerOrManager && loggedInUser) {
@@ -19697,9 +19741,9 @@
                   <span>↗ Outbound Dialed</span>
                 </span>
               ` : `
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 flex items-center gap-1 w-max">
-                  <i data-lucide="arrow-down-left" class="w-3 h-3"></i>
-                  <span>↙ Inbound Call</span>
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 w-max">
+                  <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-400"></i>
+                  <span>✓ Baat Hui (Connected)</span>
                 </span>
               `}
             </td>
@@ -20656,6 +20700,11 @@
         }
 
         if (Array.isArray(freshLogs) && freshLogs.length > 0) {
+          freshLogs = freshLogs.filter(l => {
+            const num = String(l.caller_number || l.phone || '');
+            if (num.includes('9999988888') || num.includes('8000000000') || l.id === 'call-log-1793081339671-686' || l.caller_number === 'Spam / Unknown Incoming Caller') return false;
+            return true;
+          });
           const signature = freshLogs.map(l => (l.id || '') + ':' + (l.call_outcome || l.outcome || '') + ':' + (l.call_duration || l.duration || 0) + ':' + (l.direction || '')).join('|');
           if (signature !== lastCallLogsSyncSignature) {
             lastCallLogsSyncSignature = signature;
