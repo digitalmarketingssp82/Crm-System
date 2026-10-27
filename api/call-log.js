@@ -1,4 +1,7 @@
 const PHANTOM_CALL_IDS = new Set([
+  'call-log-1793081320981-675',
+  'call-log-1793081074929-41',
+  'call-log-1793095511751-514',
   'call-log-1793000441279-828',
   'call-log-1793000039918-467',
   'call-log-1792999924330-651',
@@ -54,14 +57,32 @@ function getStoredCallLogs() {
     if (fs.existsSync(CALL_LOGS_FILE)) {
       const content = fs.readFileSync(CALL_LOGS_FILE, 'utf8');
       const parsed = JSON.parse(content);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed.filter(c => !PHANTOM_CALL_IDS.has(c.id));
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.filter(c => !PHANTOM_CALL_IDS.has(c.id)).map(c => {
+          if (c.recording_url && (c.recording_url.includes('UklGRuRdAABX') || c.recording_url.includes('data:audio/wav;base64'))) {
+            c.recording_url = '';
+            c.audioUrl = '';
+            c.hasAudio = false;
+          }
+          return c;
+        });
+      }
     }
     // Fallback: directly read bundled file if /tmp was empty
     const bundledPath = path.join(__dirname, '..', 'call_logs.json');
     if (fs.existsSync(bundledPath)) {
       const bContent = fs.readFileSync(bundledPath, 'utf8');
       const bParsed = JSON.parse(bContent);
-      if (Array.isArray(bParsed)) return bParsed;
+      if (Array.isArray(bParsed)) {
+        return bParsed.map(c => {
+          if (c.recording_url && (c.recording_url.includes('UklGRuRdAABX') || c.recording_url.includes('data:audio/wav;base64'))) {
+            c.recording_url = '';
+            c.audioUrl = '';
+            c.hasAudio = false;
+          }
+          return c;
+        });
+      }
     }
   } catch (err) {
     console.error('[call_logs DB Read Error]:', err.message);
@@ -116,88 +137,8 @@ function formatCallDuration(sec) {
 
 // ==================== BACKGROUND AI SPEECH-TO-TEXT & SUMMARY ENGINE ====================
 async function generateAiCallSummary(audioUrl, callerNumber, callDuration) {
-  const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
-
-  // 1. Process actual audio via Gemini API if API key is provided
-  if (geminiApiKey && audioUrl && audioUrl.length > 100) {
-    try {
-      console.log('[AI Worker] Calling Gemini API for audio transcription and summary...');
-      const promptText = `You are an expert sales conversation analyst for Sri Sri Plywoods CRM.
-Listen to this real customer phone call recording and transcribe the actual conversation.
-Generate a concise, factual 3-bullet summary based strictly on what was spoken in this recording:
-• Key Discussion: Summary of the real conversation between staff and caller
-• Customer Requirement: Specific products mentioned (e.g. 19mm Gurjan plywood, flush doors, laminates, quantities, thickness, budget)
-• Next Action Item: Follow-up required (quotation, site measurement, sample dispatch)
-Strict Rule: Zero-Hallucination. Do NOT invent, assume, or hallucinate any details not spoken in the audio.`;
-
-      let mimeType = 'audio/mp4';
-      let b64Data = '';
-      if (audioUrl.startsWith('data:')) {
-        const parts = audioUrl.split(';base64,');
-        mimeType = parts[0].replace('data:', '') || 'audio/mp4';
-        b64Data = parts[1] || '';
-      } else {
-        b64Data = audioUrl;
-      }
-
-      const requestBody = JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                inlineData: {
-                  mimeType: mimeType,
-                  data: b64Data
-                }
-              },
-              {
-                text: promptText
-              }
-            ]
-          }
-        ]
-      });
-
-      const geminiResult = await new Promise((resolve) => {
-        const req = https.request({
-          hostname: 'generativelanguage.googleapis.com',
-          path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(requestBody)
-          },
-          timeout: 25000
-        }, (res) => {
-          let data = '';
-          res.on('data', chunk => data += chunk);
-          res.on('end', () => {
-            try {
-              const parsed = JSON.parse(data);
-              const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
-              resolve(text || null);
-            } catch (e) {
-              resolve(null);
-            }
-          });
-        });
-
-        req.on('error', () => resolve(null));
-        req.on('timeout', () => { req.destroy(); resolve(null); });
-        req.write(requestBody);
-        req.end();
-      });
-
-      if (geminiResult && geminiResult.trim().length > 20) {
-        return geminiResult.trim();
-      }
-    } catch (err) {
-      console.warn('[AI Worker Gemini Exception]:', err.message);
-    }
-  }
-
-  // 2. Strict Zero-Hallucination: If no audio recording was supplied, NEVER fabricate fake discussions!
-  return 'Call connected with ' + (callerNumber || 'customer') + '. (Discussion complete / Awaiting phone voice recording)';
+  // AI summary generation completely suppressed as per user specification (zero hallucination)
+  return '';
 }
 
 // ==================== FIRESTORE CLOUD PERSISTENCE ====================
@@ -315,9 +256,12 @@ module.exports = async (req, res) => {
       }
     } catch(e) {}
 
-    // Strict filter: Never return test numbers, mockup calls, or orphaned spam
+    // Strict filter: Never return test numbers, mockup calls, 27 Oct phantom test calls, or orphaned spam
     allLogs = allLogs.filter(c => {
       if (!c) return false;
+      if (PHANTOM_CALL_IDS.has(c.id)) return false;
+      if (c.time && c.time.includes('27 Oct')) return false;
+      if (c.created_at && c.created_at.includes('2026-10-27')) return false;
       const num = String(c.caller_number || c.phone || '');
       if (num.includes('9999988888') || num.includes('8000000000') || c.id === 'call-log-1793081339671-686' || c.caller_number === 'Spam / Unknown Incoming Caller') return false;
       return true;
@@ -480,16 +424,16 @@ module.exports = async (req, res) => {
         direction = 'OUTBOUND';
       }
 
-      // Determine Call Outcome (Baat Hui vs Missed Call vs Call Not Picked)
-      let call_outcome = data.call_outcome || data.outcome || data.status || '';
-      if (!call_outcome) {
-        if (recording_url || call_duration > 0) {
-          call_outcome = 'Connected';
-        } else if (direction === 'OUTBOUND' && call_duration === 0) {
-          call_outcome = 'Call Not Picked / User Busy';
-        } else {
-          call_outcome = 'Missed Call';
-        }
+      // Determine Call Outcome strictly based on duration and audio (zero ambiguity):
+      // If duration > 0 or audio recording exists -> ALWAYS 'Connected' ("Baat hui")
+      // If duration == 0 and no audio -> ALWAYS 'Missed Call' (or 'Call Not Picked / User Busy' if outbound)
+      let call_outcome = 'Missed Call';
+      if (call_duration > 0 || (recording_url && recording_url.length > 500)) {
+        call_outcome = 'Connected';
+      } else if (direction === 'OUTBOUND') {
+        call_outcome = 'Call Not Picked / User Busy';
+      } else {
+        call_outcome = 'Missed Call';
       }
 
       // Multi-Phone Staff & Device Identification (Supports 3-4 phones)
@@ -509,24 +453,29 @@ module.exports = async (req, res) => {
         lead_id = 'lead-incoming-' + Date.now();
       }
 
-      // Speech-to-Text & AI Summary / Note Generation based on outcome
-      let ai_summary = data.ai_summary || data.summary || '';
-      if (!ai_summary || ai_summary.trim().length === 0) {
-        if (call_outcome.includes('Missed')) {
-          ai_summary = `🚨 Inbound Missed Call from customer ${displayCustomerPhone} on ${staff_name} (${device_name}). Customer wait kiya par call attend nahi ho payi — callback required.`;
-        } else if (call_outcome.includes('Not Picked') || call_outcome.includes('Busy')) {
-          ai_summary = `📞 Outbound call dialed by ${staff_name} (${device_name}) to ${effectiveCustomerPhone}. Customer did not pick up / phone busy.`;
-        } else if (recording_url) {
-          ai_summary = await generateAiCallSummary(recording_url, effectiveCustomerPhone, call_duration);
-        } else {
-          ai_summary = `Call connected (${formatCallDuration(call_duration)}) between ${staff_name} (${device_name}) and customer ${effectiveCustomerPhone}. (Discussion notes pending / Attach audio recording)`;
-        }
-      }
+      // AI summary suppressed as per user specification (zero hallucination)
+      let ai_summary = '';
 
       // Unique Call Log Record adhering strictly to requested call_logs table schema:
       // (id, lead_id, caller_number, receiver_number, call_duration, recording_url, ai_summary, created_at)
       const callLogId = 'call-log-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-      const nowIso = new Date().toISOString();
+
+      // Extract accurate phone timestamp (support MacroDroid magic text variables or ISO date)
+      let phoneTimestamp = data.call_time_iso || data.created_at || data.timestamp || data.call_time || data.time || query.call_time || query.timestamp;
+      let callDateObj = new Date();
+      if (phoneTimestamp && phoneTimestamp !== '{system_time}' && phoneTimestamp !== '{call_date} {call_time}') {
+        if (/^\d{10,13}$/.test(String(phoneTimestamp).trim())) {
+          const epochNum = parseInt(String(phoneTimestamp).trim(), 10);
+          callDateObj = new Date(epochNum < 1e11 ? epochNum * 1000 : epochNum);
+        } else {
+          const parsed = new Date(phoneTimestamp);
+          if (!isNaN(parsed.getTime())) {
+            callDateObj = parsed;
+          }
+        }
+      }
+      const callIso = callDateObj.toISOString();
+      const callFormattedTime = formatCallLogTime(callIso);
 
       const callLogRecord = {
         id: callLogId,
@@ -541,8 +490,8 @@ module.exports = async (req, res) => {
         call_outcome: call_outcome,
         staff_name: staff_name,
         device_name: device_name,
-        created_at: nowIso,
-        time: formatCallLogTime(nowIso),
+        created_at: callIso,
+        time: callFormattedTime,
         outcome: call_outcome,
         duration: call_duration
       };
