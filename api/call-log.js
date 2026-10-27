@@ -70,6 +70,25 @@ function cleanPhone(num) {
 }
 
 // Format duration helper
+function formatCallLogTime(isoDate) {
+  if (!isoDate) return "—";
+  try {
+    const d = new Date(isoDate);
+    if (isNaN(d.getTime())) return String(isoDate);
+    const parts = new Intl.DateTimeFormat("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    }).format(d);
+    return parts.replace(/am$/i, "AM").replace(/pm$/i, "PM");
+  } catch(e) {
+    return String(isoDate);
+  }
+}
+
 function formatCallDuration(sec) {
   const s = parseInt(sec, 10) || 0;
   if (s <= 0) return '0s';
@@ -288,6 +307,9 @@ module.exports = async (req, res) => {
       return true;
     });
 
+    allLogs.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    allLogs.forEach(l => { if (!l.time) l.time = formatCallLogTime(l.created_at); });
+
     if (leadId) {
       const filtered = allLogs.filter(c => String(c.lead_id) === String(leadId));
       return sendResponse(res, 200, { success: true, count: filtered.length, call_logs: filtered });
@@ -445,12 +467,12 @@ module.exports = async (req, res) => {
       // Determine Call Outcome (Baat Hui vs Missed Call vs Call Not Picked)
       let call_outcome = data.call_outcome || data.outcome || data.status || '';
       if (!call_outcome) {
-        if (isMissed || rawType.includes('MISSED')) {
-          call_outcome = 'Missed Call';
+        if (recording_url || call_duration > 0) {
+          call_outcome = 'Baat Hui (Connected)';
         } else if (direction === 'OUTBOUND' && call_duration === 0) {
           call_outcome = 'Call Not Picked / User Busy';
         } else {
-          call_outcome = 'Baat Hui (Connected)';
+          call_outcome = 'Missed Call';
         }
       }
 
@@ -503,7 +525,10 @@ module.exports = async (req, res) => {
         call_outcome: call_outcome,
         staff_name: staff_name,
         device_name: device_name,
-        created_at: nowIso
+        created_at: nowIso,
+        time: formatCallLogTime(nowIso),
+        outcome: call_outcome,
+        duration: call_duration
       };
 
       // 1. Persist to independent call_logs table / store
@@ -535,30 +560,7 @@ module.exports = async (req, res) => {
         }
       }
 
-      // Auto-heal 2: If this customer had a recent Missed Call within 8 minutes, upgrade that record to Baat Hui
-      if (call_outcome === 'Baat Hui (Connected)' && cleanCustomer && cleanCustomer.length >= 10) {
-        const recentMissedIdx = allLogs.findIndex(l => {
-          const isSameNum = cleanPhone(l.caller_number) === cleanCustomer;
-          const isRecent = (Date.now() - new Date(l.created_at).getTime() < 8 * 60 * 1000);
-          return isSameNum && isRecent && (String(l.call_outcome || '').includes('Missed'));
-        });
-        if (recentMissedIdx !== -1) {
-          allLogs[recentMissedIdx].call_outcome = 'Baat Hui (Connected)';
-          allLogs[recentMissedIdx].call_duration = call_duration || allLogs[recentMissedIdx].call_duration || 45;
-          if (recording_url) allLogs[recentMissedIdx].recording_url = recording_url;
-          if (ai_summary) allLogs[recentMissedIdx].ai_summary = ai_summary;
-          if (device_name) allLogs[recentMissedIdx].device_name = device_name;
-          if (staff_name) allLogs[recentMissedIdx].staff_name = staff_name;
-          saveStoredCallLogs(allLogs);
-          await syncCallLogToFirestore(allLogs[recentMissedIdx]);
-          console.log(`[Call-Log Auto-Heal]: Upgraded recent missed call for ${cleanCustomer} to Baat Hui (Connected)`);
-          return sendResponse(res, 200, {
-            success: true,
-            message: 'Upgraded recent missed call to connected with audio',
-            call_log: allLogs[recentMissedIdx]
-          });
-        }
-      }
+      // Preserving repeat call history: Each interaction is preserved with its exact phone timestamp
 
       allLogs.unshift(callLogRecord);
       saveStoredCallLogs(allLogs);

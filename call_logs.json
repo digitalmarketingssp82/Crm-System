@@ -15,7 +15,8 @@
     "created_at": "2026-10-27T06:08:40.981Z",
     "hasAudio": false,
     "outcome": "Missed Call",
-    "duration": 0
+    "duration": 0,
+    "time": "27 Oct, 11:38 AM"
   },
   {
     "id": "call-log-1793000441279-828",
@@ -30,7 +31,10 @@
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
     "created_at": "2026-10-26T07:40:41.279Z",
-    "hasAudio": false
+    "hasAudio": false,
+    "time": "26 Oct, 01:10 PM",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 45
   },
   {
     "id": "call-log-1793000256969-695",
@@ -44,7 +48,10 @@
     "call_outcome": "Missed Call",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-26T07:37:36.969Z"
+    "created_at": "2026-10-26T07:37:36.969Z",
+    "time": "26 Oct, 01:07 PM",
+    "outcome": "Missed Call",
+    "duration": 0
   },
   {
     "id": "call-log-1793000039918-467",
@@ -58,7 +65,10 @@
     "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-26T07:33:59.918Z"
+    "created_at": "2026-10-26T07:33:59.918Z",
+    "time": "26 Oct, 01:03 PM",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 0
   },
   {
     "id": "call-log-1792999924330-651",
@@ -72,7 +82,10 @@
     "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-26T07:32:04.330Z"
+    "created_at": "2026-10-26T07:32:04.330Z",
+    "time": "26 Oct, 01:02 PM",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 0
   },
   {
     "id": "call-log-1792997552160-561",
@@ -86,7 +99,10 @@
     "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-26T06:52:32.160Z"
+    "created_at": "2026-10-26T06:52:32.160Z",
+    "time": "26 Oct, 12:22 PM",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 0
   },
   {
     "id": "call-log-1792996737064-268",
@@ -100,7 +116,10 @@
     "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-26T06:38:57.064Z"
+    "created_at": "2026-10-26T06:38:57.064Z",
+    "time": "26 Oct, 12:08 PM",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 0
   },
   {
     "id": "call-log-1792936126485-527",
@@ -116,7 +135,8 @@
     "device_name": "Staff Android",
     "created_at": "2026-10-25T13:48:46.485Z",
     "outcome": "Baat Hui (Connected)",
-    "duration": 80
+    "duration": 80,
+    "time": "25 Oct, 07:18 PM"
   },
   {
     "id": "call-log-1792936126085-605",
@@ -132,7 +152,8 @@
     "device_name": "Staff Android",
     "created_at": "2026-10-25T13:48:46.085Z",
     "outcome": "Baat Hui (Connected)",
-    "duration": 80
+    "duration": 80,
+    "time": "25 Oct, 07:18 PM"
   },
   {
     "id": "call-log-1792936096037-479",
@@ -148,7 +169,8 @@
     "device_name": "Staff Android",
     "created_at": "2026-10-25T13:48:16.037Z",
     "outcome": "Baat Hui (Connected)",
-    "duration": 80
+    "duration": 80,
+    "time": "25 Oct, 07:18 PM"
   },
   {
     "id": "call-log-1792920397539-995",
@@ -164,7 +186,8 @@
     "device_name": "Staff Android",
     "created_at": "2026-10-25T09:26:37.539Z",
     "outcome": "Baat Hui (Connected)",
-    "duration": 135
+    "duration": 135,
+    "time": "25 Oct, 02:56 PM"
   },
   {
     "id": "call-log-1792920397418-184",
@@ -178,7 +201,10 @@
     "call_outcome": "Missed Call",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-25T09:26:37.418Z"
+    "created_at": "2026-10-25T09:26:37.418Z",
+    "time": "25 Oct, 02:56 PM",
+    "outcome": "Missed Call",
+    "duration": 0
   },
   {
     "id": "call-log-1792844823364-448",
@@ -192,7 +218,10 @@
     "call_outcome": "Missed Call",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-24T12:27:03.364Z"
+    "created_at": "2026-10-24T12:27:03.364Z",
+    "time": "24 Oct, 05:57 PM",
+    "outcome": "Missed Call",
+    "duration": 0
   },
   {
     "id": "call-log-1792825199143-118",
@@ -206,7 +235,10 @@
     "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Staff",
     "device_name": "Android Phone",
-    "created_at": "2026-10-24T06:59:59.143Z"
+    "created_at": "2026-10-24T06:59:59.143Z",
+    "time": "24 Oct, 12:29 PM",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 0
   },
   {
     "id": "call-log-1792823268672-708",
@@ -220,7 +252,10 @@
     "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Staff",
     "device_name": "Android Phone",
-    "created_at": "2026-10-24T06:27:48.672Z"
+    "created_at": "2026-10-24T06:27:48.672Z",
+    "time": "24 Oct, 11:57 AM",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 0
   },
   {
     "id": "call-log-1792758511155-839",
@@ -234,6 +269,9 @@
     "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Staff",
     "device_name": "Android Phone",
-    "created_at": "2026-10-23T12:28:31.155Z"
+    "created_at": "2026-10-23T12:28:31.155Z",
+    "time": "23 Oct, 05:58 PM",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 0
   }
 ]

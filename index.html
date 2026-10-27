@@ -10905,6 +10905,31 @@
     }
 
     // ==================== CALL LOGS & AI TRANSCRIPTION CLIENT ENGINE ====================
+    function formatCallLogTime(callOrDate) {
+      if (!callOrDate) return '—';
+      let dateVal = callOrDate;
+      if (typeof callOrDate === 'object' && callOrDate !== null) {
+        dateVal = callOrDate.created_at || callOrDate.timestamp || callOrDate.time || callOrDate.createdAt;
+      }
+      if (!dateVal) return '—';
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return String(dateVal);
+      try {
+        const formatted = new Intl.DateTimeFormat('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          day: '2-digit',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        }).format(d);
+        return formatted.replace(/am$/i, 'AM').replace(/pm$/i, 'PM');
+      } catch (err) {
+        return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) + ', ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+    window.formatCallLogTime = formatCallLogTime;
+
     let sriCallLogs = [];
     try {
       const cached = localStorage.getItem('sri_call_logs');
@@ -11338,13 +11363,20 @@
       for (const rawLog of allPool) {
         if (!rawLog) continue;
         if (isMatch(rawLog)) {
-          const dedupeKey = rawLog.id || (String(rawLog.created_at || rawLog.timestamp || '') + '_' + String(rawLog.call_duration || rawLog.duration || '0'));
+          const baseId = String(rawLog.id || '').replace(/^act-call-/, '');
+          const dedupeKey = baseId || (String(rawLog.created_at || rawLog.timestamp || '') + '_' + String(rawLog.call_duration || rawLog.duration || '0'));
           if (seenIds.has(dedupeKey)) continue;
           seenIds.add(dedupeKey);
+          if (baseId) seenIds.add(baseId);
           
-          const dur = parseInt(rawLog.call_duration || rawLog.duration || 0, 10);
-          const rawOut = String(rawLog.call_outcome || rawLog.callOutcome || rawLog.outcome || '').trim();
-          const isMissed = rawOut.toLowerCase().includes('missed') || rawLog.isMissed;
+          let dur = parseInt(rawLog.call_duration !== undefined ? rawLog.call_duration : (rawLog.duration !== undefined ? rawLog.duration : 0), 10);
+          let rawOut = '';
+          if (typeof phoneCallOutcomes !== 'undefined' && phoneCallOutcomes[rawLog.id]) {
+            rawOut = phoneCallOutcomes[rawLog.id];
+          } else {
+            rawOut = String(rawLog.call_outcome || rawLog.callOutcome || rawLog.outcome || '').trim();
+          }
+          const isMissed = rawOut.toLowerCase().includes('missed') || rawLog.isMissed || (dur === 0 && !rawLog.recording_url && !rawLog.audioUrl && rawOut === 'Missed Call');
           const isNotPicked = rawOut.includes('Not Picked') || rawOut.includes('Busy');
           const outcome = rawOut || (isMissed ? 'Missed Call' : (isNotPicked ? 'Call Not Picked / User Busy' : 'Baat Hui (Connected)'));
           const recUrl = rawLog.recording_url || rawLog.audioUrl || rawLog.audio_url || '';
@@ -11368,7 +11400,8 @@
             direction: direction,
             staff_name: rawLog.staff_name || rawLog.userName || 'Sri Sri Staff',
             device_name: rawLog.device_name || rawLog.deviceName || 'Staff Android',
-            created_at: createdAt
+            created_at: createdAt,
+            time: formatCallLogTime(createdAt)
           });
         }
       }
@@ -11378,30 +11411,35 @@
           if (!act) return;
           const isCall = act.type === 'CALL_LOG' || act.type === 'CALL' || act.audioUrl || act.callOutcome;
           if (isCall) {
-            const actKey = act.id || (String(act.timestamp || act.time || '') + '_act');
-            if (!seenIds.has(actKey)) {
+            const baseActId = String(act.id || '').replace(/^act-call-/, '');
+            const actKey = baseActId || (String(act.timestamp || act.time || '') + '_act');
+            if (!seenIds.has(actKey) && (!baseActId || !seenIds.has(baseActId))) {
               seenIds.add(actKey);
+              if (baseActId) seenIds.add(baseActId);
+              const actDur = parseInt(act.duration || 0, 10);
+              const actOutcome = act.callOutcome || (actDur > 0 ? 'Baat Hui (Connected)' : 'Missed Call');
               matches.push({
                 id: act.id || ('call-act-' + Date.now()),
                 lead_id: leadId,
                 caller_number: lead.phone || '',
                 receiver_number: '',
-                call_duration: act.duration || 0,
+                call_duration: actDur,
                 recording_url: act.audioUrl || act.recording_url || '',
                 ai_summary: act.ai_summary || act.notes || act.text || 'Call recorded via CRM telephony.',
-                call_outcome: act.callOutcome || 'Baat Hui (Connected)',
-                outcome: act.callOutcome || 'Baat Hui (Connected)',
+                call_outcome: actOutcome,
+                outcome: actOutcome,
                 direction: act.direction || 'INBOUND',
                 staff_name: act.userName || 'Sri Sri Staff',
                 device_name: act.device || 'Staff Phone',
-                created_at: act.timestamp || act.time || lead.createdAt || new Date().toISOString()
+                created_at: act.timestamp || act.time || lead.createdAt || new Date().toISOString(),
+                time: formatCallLogTime(act.timestamp || act.time || lead.createdAt)
               });
             }
           }
         });
       }
 
-      return matches.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      return matches.sort((a,b) => new Date(b.created_at || b.time || 0) - new Date(a.created_at || a.time || 0));
     }
 
     async function fetchLiveCallLogs(lead) {
@@ -11438,9 +11476,7 @@
             }
           }
         }
-      } catch (err) {
-        // Quiet fallback if offline or standalone static view
-      }
+      } catch (err) {}
     }
 
     function renderLeadCallHistory(lead) {
@@ -11455,8 +11491,8 @@
       const count = calls.length;
 
       if (tabBadge) tabBadge.innerText = String(count);
-      if (widgetBadge) widgetBadge.innerText = `${count} ${count === 1 ? 'Call' : 'Calls'}`;
-      if (totalBadge) totalBadge.innerText = `${count} ${count === 1 ? 'Recording' : 'Recordings'}`;
+      if (widgetBadge) widgetBadge.innerText = count + ' ' + (count === 1 ? 'Call' : 'Calls');
+      if (totalBadge) totalBadge.innerText = count + ' ' + (count === 1 ? 'Recording' : 'Recordings');
 
       if (count === 0) {
         if (widgetContainer) {
@@ -11483,7 +11519,25 @@
         return;
       }
 
-      const cardsHtml = calls.map(log => {
+      const repeatBanner = (count > 1) ? `
+        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 to-gold/10 border border-gold/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-gold/20 text-gold flex items-center justify-center font-bold shrink-0">
+              <i data-lucide="phone-forwarded" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="font-extrabold text-main block text-xs">Customer Call History (${count} Calls Recorded)</span>
+              <span class="text-[11px] text-muted-custom block">All calls strictly ordered according to physical phone dialer timestamps (newest to oldest).</span>
+            </div>
+          </div>
+          <span class="px-3 py-1 rounded-full text-[10px] font-extrabold bg-gold text-slate-950 shrink-0 shadow-xs">${count} Repeat Calls</span>
+        </div>
+      ` : '';
+
+      const cardsHtml = repeatBanner + calls.map((log, index) => {
+        const callSeq = calls.length - index;
+        const isLatest = (index === 0);
+
         const audioPlayerHtml = log.recording_url ? `
           <div class="space-y-1.5 pt-1">
             <div class="flex items-center justify-between text-[11px] font-bold text-emerald-400">
@@ -11525,16 +11579,18 @@
         let outcomeBadgeText = '✓ Baat Hui (Connected)';
         if (isMissed) {
           outcomeBadgeClass = 'bg-rose-500/15 border-rose-500/30 text-rose-400';
-          outcomeBadgeText = '🚨 Missed Call';
+          outcomeBadgeText = '🔴 Inbound Missed';
         } else if (isNotPicked) {
           outcomeBadgeClass = 'bg-amber-500/15 border-amber-500/30 text-amber-400';
-          outcomeBadgeText = '⏳ Not Picked / Busy';
+          outcomeBadgeText = '🟡 Outbound Not Picked';
         }
 
         const isOutbound = (log.direction || '').toUpperCase() === 'OUTBOUND';
         const directionBadge = isOutbound
           ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">↑ Outbound Call</span>`
           : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">↓ Inbound Call</span>`;
+
+        const formattedTimeStr = formatCallLogTime(log.created_at || log.timestamp || log.time);
 
         return `
           <div class="p-4 rounded-2xl bg-card border border-main space-y-3 shadow-xs hover:border-blue-500/40 transition">
@@ -11545,6 +11601,7 @@
                 </span>
                 <div>
                   <div class="text-xs font-bold text-main flex flex-wrap items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${isLatest ? 'bg-gold/20 text-gold border border-gold/40' : 'bg-subtle text-muted-custom border border-main'}">Call #${callSeq}${isLatest && count > 1 ? ' (Latest)' : ''}</span>
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${outcomeBadgeClass}">${outcomeBadgeText}</span>
                     ${directionBadge}
                     <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-subtle border border-main text-gold">${log.call_duration > 0 ? formatCallDuration(log.call_duration) : (isMissed ? '0s (Missed)' : 'Connected')}</span>
@@ -11560,10 +11617,13 @@
                   </p>
                 </div>
               </div>
-              <span class="text-gold text-[10px] font-mono font-bold flex items-center gap-1 shrink-0">
-                <i data-lucide="clock" class="w-3 h-3 text-gold"></i>
-                <span>${formatFollowupDate(log.created_at || new Date())}</span>
-              </span>
+              <div class="text-right shrink-0">
+                <span class="text-gold text-xs font-mono font-bold flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3.5 h-3.5 text-gold"></i>
+                  <span>${escapeHtml(formattedTimeStr)}</span>
+                </span>
+                <span class="text-[9px] text-muted-custom font-medium">IST Phone Time</span>
+              </div>
             </div>
 
             ${audioPlayerHtml}
@@ -19597,6 +19657,13 @@
         return true;
       });
 
+      // Strictly sort descending by phone clock timestamp (newest to oldest)
+      filtered.sort((a, b) => {
+        const tA = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
+        const tB = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
+        return tB - tA;
+      });
+
       // Enforce Agent Isolation
       if (!isOwnerOrManager && loggedInUser) {
         filtered = filtered.filter(c => 
@@ -19689,7 +19756,7 @@
         return `
           <tr class="hover:bg-subtle/40 transition border-b border-main/50">
             <td class="p-3.5 whitespace-nowrap">
-              <span class="font-bold text-main block">${escapeHtml(call.time || '16/10/2026, 04:30 PM')}</span>
+              <span class="font-bold text-main block font-mono">${escapeHtml(formatCallLogTime(call))}</span>
               ${isMissed ? `
                 <span class="text-[10px] text-rose-400 font-bold flex items-center gap-1">
                   <i data-lucide="phone-missed" class="w-3 h-3 text-rose-500"></i>
@@ -19713,19 +19780,26 @@
               `}
             </td>
             <td class="p-3.5">
-              ${call.leadId ? `
-                <div class="font-bold text-main cursor-pointer hover:text-gold transition flex items-center gap-1.5" onclick="openLeadModal('${call.leadId}')">
-                  <span>${escapeHtml(call.leadName || 'Customer')}</span>
-                  <i data-lucide="external-link" class="w-3 h-3 text-muted-custom"></i>
-                </div>
-              ` : `
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-main">${escapeHtml(call.leadName || 'Direct Phone Call')}</span>
-                  <button type="button" onclick="openNewLeadModal('${escapeHtml(call.phone || '')}')" class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-gold/15 text-gold border border-gold/30 hover:bg-gold hover:text-slate-950 transition cursor-pointer">
-                    + Create Lead
-                  </button>
-                </div>
-              `}
+              ${(() => {
+                const custClean = (call.phone || call.caller_number || '').replace(/\D/g, '').slice(-10);
+                const repCount = custClean ? callLogs.filter(c => (c.phone || c.caller_number || '').replace(/\D/g, '').slice(-10) === custClean).length : 1;
+                const repBadge = (repCount > 1) ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-blue-500/15 text-blue-400 border border-blue-500/30" title="Total ${repCount} calls from this phone">${repCount} Calls</span>` : '';
+                return call.leadId ? `
+                  <div class="font-bold text-main cursor-pointer hover:text-gold transition flex items-center gap-1.5" onclick="openLeadModal('${call.leadId}')">
+                    <span>${escapeHtml(call.leadName || 'Customer')}</span>
+                    ${repBadge}
+                    <i data-lucide="external-link" class="w-3 h-3 text-muted-custom"></i>
+                  </div>
+                ` : `
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-main">${escapeHtml(call.leadName || 'Direct Phone Call')}</span>
+                    ${repBadge}
+                    <button type="button" onclick="openNewLeadModal('${escapeHtml(call.phone || '')}')" class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-gold/15 text-gold border border-gold/30 hover:bg-gold hover:text-slate-950 transition cursor-pointer">
+                      + Create Lead
+                    </button>
+                  </div>
+                `;
+              })()}
               <div class="flex items-center gap-2 mt-0.5">
                 <span class="font-mono text-[11px] text-gold font-bold select-text cursor-text">${escapeHtml(call.phone || '—')}</span>
               </div>
