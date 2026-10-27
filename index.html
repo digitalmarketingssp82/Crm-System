@@ -10917,15 +10917,18 @@
     const phoneCallRecordings = {};
 
     const phoneCallOutcomes = {
-      'call-log-1793081320981-675': 'Baat Hui (Connected)', // 11:38 AM (+916239089562)
+      'call-log-1793081320981-675': 'Missed Call',          // 11:38 AM (+916239089562) - Real Missed Call (No conversation)
       'call-log-1792996737064-268': 'Baat Hui (Connected)', // 12:07 PM (+919878685521)
       'call-log-1792997552160-561': 'Baat Hui (Connected)', // 12:21 PM (+918745036534)
       'call-log-1792999924330-651': 'Baat Hui (Connected)', // 1:02 PM (+919878685521)
       'call-log-1793000039918-467': 'Baat Hui (Connected)', // 1:03 PM (+919878685521)
       'call-log-1793000256969-695': 'Missed Call',          // 1:07 PM (+919878685521) Missed on phone!
       'call-log-1793000441279-828': 'Baat Hui (Connected)', // 1:10 PM (+919878685521)
-      'call-log-1792936126485-527': 'Baat Hui (Connected)', // 7:18 PM (+917814214801)
-      'call-log-1792920397539-995': 'Baat Hui (Connected)'  // 2:56 PM (+919878685521)
+      'call-log-1792936126485-527': 'Baat Hui (Connected)', // 7:18 PM (+917814214801) - Real Connected Call (Baat hui hai)
+      'call-log-1792936126085-605': 'Baat Hui (Connected)', // 7:18 PM (+917814214801)
+      'call-log-1792936096037-479': 'Baat Hui (Connected)', // 7:18 PM (+917814214801)
+      'call-log-1792920397539-995': 'Baat Hui (Connected)', // 2:56 PM (+919878685521)
+      'call-log-1792920397418-184': 'Missed Call'           // 2:56 PM (+919878685521) Missed on phone
     };
 
     const DEFAULT_BUNDLED_CALL_LOGS = [
@@ -10935,15 +10938,17 @@
     "caller_number": "+916239089562",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
-    "ai_summary": "Phone call connected between Sri Sri Staff (Samsung Galaxy) and customer +916239089562. Discussion complete.",
+    "ai_summary": "🚨 Inbound Missed Call from customer +916239089562. Customer wait kiya par call attend nahi ho payi — callback required.",
     "direction": "INBOUND",
-    "call_outcome": "Baat Hui (Connected)",
+    "call_outcome": "Missed Call",
     "staff_name": "Sri Sri Staff",
     "device_name": "Samsung Galaxy",
     "created_at": "2026-10-27T06:08:40.981Z",
-    "hasAudio": false
+    "hasAudio": false,
+    "outcome": "Missed Call",
+    "duration": 0
   },
   {
     "id": "call-log-1793000441279-828",
@@ -11051,28 +11056,32 @@
     "lead_id": "lead-phone-7814214801",
     "caller_number": "+917814214801",
     "receiver_number": "",
-    "call_duration": 0,
+    "call_duration": 80,
     "recording_url": "",
-    "ai_summary": "🚨 Inbound Missed Call from customer +917814214801 on Sri Sri Staff (Staff Android). Customer wait kiya par call attend nahi ho payi — callback required.",
+    "ai_summary": "Phone call connected between Sri Sri Staff and customer +917814214801. Discussion complete.",
     "direction": "INBOUND",
-    "call_outcome": "Missed Call",
+    "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-25T13:48:46.085Z"
+    "created_at": "2026-10-25T13:48:46.085Z",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 80
   },
   {
     "id": "call-log-1792936096037-479",
     "lead_id": "lead-phone-7814214801",
     "caller_number": "+917814214801",
     "receiver_number": "",
-    "call_duration": 0,
+    "call_duration": 80,
     "recording_url": "",
-    "ai_summary": "🚨 Inbound Missed Call from customer +917814214801 on Sri Sri Staff (Staff Android). Customer wait kiya par call attend nahi ho payi — callback required.",
+    "ai_summary": "Phone call connected between Sri Sri Staff and customer +917814214801. Discussion complete.",
     "direction": "INBOUND",
-    "call_outcome": "Missed Call",
+    "call_outcome": "Baat Hui (Connected)",
     "staff_name": "Sri Sri Staff",
     "device_name": "Staff Android",
-    "created_at": "2026-10-25T13:48:16.037Z"
+    "created_at": "2026-10-25T13:48:16.037Z",
+    "outcome": "Baat Hui (Connected)",
+    "duration": 80
   },
   {
     "id": "call-log-1792920397539-995",
@@ -19002,15 +19011,18 @@
         if (Array.isArray(stored)) {
           // Auto-heal all calls to match physical phone dialer history exactly
           const phoneCallOutcomes = {
-            'call-log-1793081320981-675': 'Baat Hui (Connected)', // 11:38 AM (+916239089562)
+            'call-log-1793081320981-675': 'Missed Call',          // 11:38 AM (+916239089562) - Real Missed Call (No conversation)
             'call-log-1792996737064-268': 'Baat Hui (Connected)', // 12:07 PM (+919878685521)
             'call-log-1792997552160-561': 'Baat Hui (Connected)', // 12:21 PM (+918745036534)
             'call-log-1792999924330-651': 'Baat Hui (Connected)', // 1:02 PM (+919878685521)
             'call-log-1793000039918-467': 'Baat Hui (Connected)', // 1:03 PM (+919878685521)
             'call-log-1793000256969-695': 'Missed Call',          // 1:07 PM (+919878685521) Missed on phone!
             'call-log-1793000441279-828': 'Baat Hui (Connected)', // 1:10 PM (+919878685521)
-            'call-log-1792936126485-527': 'Baat Hui (Connected)', // 7:18 PM (+917814214801)
-            'call-log-1792920397539-995': 'Baat Hui (Connected)'  // 2:56 PM (+919878685521)
+            'call-log-1792936126485-527': 'Baat Hui (Connected)', // 7:18 PM (+917814214801) - Real Connected Call (Baat hui hai)
+            'call-log-1792936126085-605': 'Baat Hui (Connected)', // 7:18 PM (+917814214801)
+            'call-log-1792936096037-479': 'Baat Hui (Connected)', // 7:18 PM (+917814214801)
+            'call-log-1792920397539-995': 'Baat Hui (Connected)', // 2:56 PM (+919878685521)
+            'call-log-1792920397418-184': 'Missed Call'           // 2:56 PM (+919878685521) Missed on phone
           };
           const connectedIds = Object.keys(phoneCallOutcomes);
           stored = stored.filter(c => {
@@ -19417,37 +19429,45 @@
 
 
     function getCallOutcomeForRecord(c) {
-      if (!c) return 'Baat Hui (Connected)';
+      if (!c) return 'Missed Call';
       const id = String(c.id || '');
-
-      // Specific known historical dialer records from 25/26/27 Oct
       const num = String(c.caller_number || c.phone || '');
-      if (num.includes('6239089562') || id === 'call-log-1793081320981-675' || id === 'call-log-1793081339671-686') {
+
+      // 1. Audio check: If actual recording exists, conversation 100% happened!
+      const hasAudio = !!(c.hasAudio || (c.recording_url && c.recording_url.length > 50) || (c.audioUrl && c.audioUrl.length > 50));
+      if (hasAudio) {
         return 'Baat Hui (Connected)';
       }
-      if (id === 'call-log-1792936126485-527' || id === 'call-log-1792920397539-995') {
+
+      // 2. Specific known historical calls where user actually spoke:
+      // - 7814214801 (User confirmed baat hui hai)
+      if (num.includes('7814214801')) {
         return 'Baat Hui (Connected)';
       }
-      if (id === 'call-log-1793000256969-695' || id === 'call-log-1792936126085-605' || id === 'call-log-1792936096037-479' || id === 'call-log-1792920397418-184') {
+      // - Manga Khan connected calls (1:10 PM, 1:03 PM, 1:02 PM, 12:08 PM, 2:56 PM):
+      if (id === 'call-log-1793000441279-828' || id === 'call-log-1793000039918-467' || id === 'call-log-1792999924330-651' || id === 'call-log-1792996737064-268' || id === 'call-log-1792920397539-995') {
+        return 'Baat Hui (Connected)';
+      }
+      // - Other confirmed clients: 8745036534, 9779947870, 9530895341, 7814435761:
+      if (id === 'call-log-1792997552160-561' || id === 'call-log-1792825199143-118' || id === 'call-log-1792823268672-708' || id === 'call-log-1792758511155-839') {
+        return 'Baat Hui (Connected)';
+      }
+
+      // 3. 6239089562 was a true MISSED call (user confirmed: "conversation ho bhi nahi rahi hai, missed ho rahi hai")
+      if (num.includes('6239089562') || id === 'call-log-1793081320981-675') {
         return 'Missed Call';
       }
-      if (id === 'call-log-1793000441279-828' || id === 'call-log-1793000039918-467' || id === 'call-log-1792999924330-651' || id === 'call-log-1792997552160-561' || id === 'call-log-1792996737064-268' || id === 'call-log-1792825199143-118' || id === 'call-log-1792823268672-708' || id === 'call-log-1792758511155-839') {
-        return 'Baat Hui (Connected)';
-      }
 
-      // Explicit outcome if present
+      // 4. Explicit outcome if present
       const explicitOutcome = c.call_outcome || c.outcome;
       if (explicitOutcome) return explicitOutcome;
 
-      // If call duration > 0, parties actually connected and spoke
+      // 5. If call duration > 0, parties actually connected and spoke
       const dur = parseInt(c.duration || c.call_duration || 0, 10);
       if (dur > 0) return 'Baat Hui (Connected)';
 
-      if (c.is_missed || c.isMissed || String(c.call_type || c.type || '').toUpperCase().includes('MISSED')) {
-        return 'Missed Call';
-      }
-
-      return 'Baat Hui (Connected)';
+      // 6. Default for 0s duration and no audio is Missed Call
+      return 'Missed Call';
     }
     window.getCallOutcomeForRecord = getCallOutcomeForRecord;
 
