@@ -1,3 +1,19 @@
+const PHANTOM_CALL_IDS = new Set([
+  'call-log-1793000441279-828',
+  'call-log-1793000039918-467',
+  'call-log-1792999924330-651',
+  'call-log-1792997552160-561',
+  'call-log-1792996737064-268',
+  'call-log-1792936126485-527',
+  'call-log-1792936126085-605',
+  'call-log-1792936096037-479',
+  'call-log-1792920397539-995',
+  'call-log-1792920397418-184',
+  'call-log-1792844823364-448',
+  'call-log-1792825199143-118',
+  'call-log-1792823268672-708',
+  'call-log-1792758511155-839'
+]);
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
@@ -38,7 +54,7 @@ function getStoredCallLogs() {
     if (fs.existsSync(CALL_LOGS_FILE)) {
       const content = fs.readFileSync(CALL_LOGS_FILE, 'utf8');
       const parsed = JSON.parse(content);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.filter(c => !PHANTOM_CALL_IDS.has(c.id));
     }
     // Fallback: directly read bundled file if /tmp was empty
     const bundledPath = path.join(__dirname, '..', 'call_logs.json');
@@ -198,7 +214,7 @@ async function syncCallLogToFirestore(callLogRecord) {
         recording_url: { stringValue: String(callLogRecord.recording_url || '') },
         ai_summary: { stringValue: String(callLogRecord.ai_summary || '') },
         direction: { stringValue: String(callLogRecord.direction || 'INBOUND') },
-        call_outcome: { stringValue: String(callLogRecord.call_outcome || 'Baat Hui (Connected)') },
+        call_outcome: { stringValue: String(callLogRecord.call_outcome || 'Connected') },
         staff_name: { stringValue: String(callLogRecord.staff_name || 'Staff') },
         device_name: { stringValue: String(callLogRecord.device_name || 'Android Phone') },
         created_at: { stringValue: callLogRecord.created_at }
@@ -249,7 +265,7 @@ async function getFirestoreCallLogs() {
               recording_url: f.recording_url?.stringValue || '',
               ai_summary: f.ai_summary?.stringValue || '',
               direction: f.direction?.stringValue || 'INBOUND',
-              call_outcome: f.call_outcome?.stringValue || 'Baat Hui (Connected)',
+              call_outcome: f.call_outcome?.stringValue || 'Connected',
               staff_name: f.staff_name?.stringValue || 'Staff',
               device_name: f.device_name?.stringValue || 'Android Phone',
               created_at: f.created_at?.stringValue || ''
@@ -468,7 +484,7 @@ module.exports = async (req, res) => {
       let call_outcome = data.call_outcome || data.outcome || data.status || '';
       if (!call_outcome) {
         if (recording_url || call_duration > 0) {
-          call_outcome = 'Baat Hui (Connected)';
+          call_outcome = 'Connected';
         } else if (direction === 'OUTBOUND' && call_duration === 0) {
           call_outcome = 'Call Not Picked / User Busy';
         } else {
@@ -477,8 +493,8 @@ module.exports = async (req, res) => {
       }
 
       // Multi-Phone Staff & Device Identification (Supports 3-4 phones)
-      const staff_name = String(data.staff_name || data.agent_name || data.staff || data.user_name || 'Sri Sri Staff').trim();
-      const device_name = String(data.device_name || data.device || data.phone_name || 'Staff Android').trim();
+      const staff_name = 'Samsung Galaxy';
+      const device_name = 'Samsung Galaxy';
 
       // Check if lead_id was explicitly supplied in payload
       let lead_id = data.lead_id || data.leadId || '';
@@ -542,8 +558,8 @@ module.exports = async (req, res) => {
           return isSameNum && isRecent && (!l.recording_url || l.recording_url.length < 100);
         });
         if (recentPendingAudioIdx !== -1) {
-          allLogs[recentPendingAudioIdx].call_outcome = 'Baat Hui (Connected)';
-          allLogs[recentPendingAudioIdx].outcome = 'Baat Hui (Connected)';
+          allLogs[recentPendingAudioIdx].call_outcome = 'Connected';
+          allLogs[recentPendingAudioIdx].outcome = 'Connected';
           allLogs[recentPendingAudioIdx].recording_url = recording_url;
           if (call_duration) allLogs[recentPendingAudioIdx].call_duration = call_duration;
           if (ai_summary) allLogs[recentPendingAudioIdx].ai_summary = ai_summary;
