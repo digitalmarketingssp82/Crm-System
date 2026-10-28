@@ -11256,12 +11256,12 @@
           }
           const isMissed = rawOut.toLowerCase().includes('missed') || rawLog.isMissed || (dur === 0 && !rawLog.recording_url && !rawLog.audioUrl && rawOut === 'Missed Call');
           const isNotPicked = rawOut.includes('Not Picked') || rawOut.includes('Busy');
-          const outcome = rawOut || (isMissed ? 'Missed Call' : (isNotPicked ? 'Call Not Picked / User Busy' : 'Baat Hui (Connected)'));
+          const outcome = rawOut || (isMissed ? 'Missed Call' : (isNotPicked ? 'Call Not Picked / User Busy' : 'Connected'));
           let recUrl = rawLog.recording_url || rawLog.audioUrl || rawLog.audio_url || '';
           if (recUrl && (recUrl.includes('UklGRuRdAABX') || recUrl.includes('data:audio/wav;base64'))) recUrl = '';
-          const summary = rawLog.ai_summary || rawLog.aiSummary || rawLog.transcript || rawLog.notes || rawLog.text || (isMissed ? '🚨 Inbound Missed Call from customer.' : 'Phone call connected between Sri Sri Staff and customer.');
+          const summary = rawLog.ai_summary || rawLog.aiSummary || rawLog.transcript || rawLog.notes || rawLog.text || (isMissed ? '🚨 Inbound Missed Call from customer.' : 'Phone call connected between Samsung Galaxy and customer.');
           const createdAt = rawLog.created_at || rawLog.timestamp || rawLog.time || new Date().toISOString();
-          const callerNum = rawLog.caller_number || rawLog.phone || (rawLog.direction === 'OUTBOUND' ? (rawLog.staff_name || 'Sri Sri Staff') : (lead.phone || 'Customer'));
+          const callerNum = rawLog.caller_number || rawLog.phone || (rawLog.direction === 'OUTBOUND' ? (rawLog.staff_name || 'Samsung Galaxy') : (lead.phone || 'Customer'));
           const receiverNum = rawLog.receiver_number || (rawLog.direction === 'OUTBOUND' ? (lead.phone || rawLog.phone || '') : '');
           const isOut = (rawLog.direction || '').toUpperCase() === 'OUTBOUND';
           const direction = isOut ? 'OUTBOUND' : 'INBOUND';
@@ -11277,8 +11277,8 @@
             call_outcome: outcome,
             outcome: outcome,
             direction: direction,
-            staff_name: rawLog.staff_name || rawLog.userName || 'Sri Sri Staff',
-            device_name: rawLog.device_name || rawLog.deviceName || 'Staff Android',
+            staff_name: rawLog.staff_name || rawLog.userName || 'Samsung Galaxy',
+            device_name: rawLog.device_name || rawLog.deviceName || 'Samsung Galaxy',
             created_at: createdAt,
             time: formatCallLogTime(createdAt)
           });
@@ -11296,7 +11296,7 @@
               seenIds.add(actKey);
               if (baseActId) seenIds.add(baseActId);
               const actDur = parseInt(act.duration || 0, 10);
-              const actOutcome = act.callOutcome || (actDur > 0 ? 'Baat Hui (Connected)' : 'Missed Call');
+              const actOutcome = act.callOutcome || (actDur > 0 ? 'Connected' : 'Missed Call');
               let actRecUrl = act.audioUrl || act.recording_url || '';
               if (actRecUrl && (actRecUrl.includes('UklGRuRdAABX') || actRecUrl.includes('data:audio/wav;base64'))) actRecUrl = '';
               matches.push({
@@ -11310,7 +11310,7 @@
                 call_outcome: actOutcome,
                 outcome: actOutcome,
                 direction: act.direction || 'INBOUND',
-                staff_name: act.userName || 'Sri Sri Staff',
+                staff_name: act.userName || 'Samsung Galaxy',
                 device_name: act.device || 'Staff Phone',
                 created_at: act.timestamp || act.time || lead.createdAt || new Date().toISOString(),
                 time: formatCallLogTime(act.timestamp || act.time || lead.createdAt)
@@ -18843,7 +18843,7 @@
             if (data) {
               const dur = parseInt(data.call_duration || data.duration || 0, 10);
               const dir = (String(data.direction || '').toUpperCase() === 'OUTBOUND') ? 'OUTBOUND' : 'INBOUND';
-              const out = data.call_outcome || data.outcome || (dur > 0 ? 'Baat Hui (Connected)' : (data.is_missed ? 'Missed Call' : 'Baat Hui (Connected)'));
+              const out = data.call_outcome || data.outcome || (dur > 0 ? 'Connected' : (data.is_missed ? 'Missed Call' : 'Connected'));
               cloudLogs.push({
                 id: data.id || doc.id,
                 lead_id: data.lead_id || '',
@@ -18857,8 +18857,8 @@
                 direction: dir,
                 call_outcome: out,
                 outcome: out,
-                staff_name: data.staff_name || data.userName || 'Sri Sri Staff',
-                device_name: data.device_name || data.deviceName || 'Staff Android',
+                staff_name: data.staff_name || data.userName || 'Samsung Galaxy',
+                device_name: data.device_name || data.deviceName || 'Samsung Galaxy',
                 created_at: data.created_at || data.time || new Date().toISOString()
               });
             }
@@ -19144,10 +19144,10 @@
 
             const isNotPicked = (rawOutcome.includes('Not Picked') || rawOutcome.includes('Busy'));
 
-            let callOutcome = rawOutcome || (isMissed ? 'Missed Call' : (isNotPicked ? 'Call Not Picked / User Busy' : 'Baat Hui (Connected)'));
+            let callOutcome = rawOutcome || (isMissed ? 'Missed Call' : (isNotPicked ? 'Call Not Picked / User Busy' : 'Connected'));
             const isExplicitOutbound = rawType.includes('OUTBOUND') || rawType.includes('DIALED') || rawType.includes('OUTGOING') || String(wLog.direction || '').toUpperCase() === 'OUTBOUND';
             let callDirection = isExplicitOutbound ? 'OUTBOUND' : 'INBOUND';
-            let staffName = wLog.staff_name || wLog.userName || (loggedInUser ? loggedInUser.name : 'Sri Sri Staff');
+            let staffName = wLog.staff_name || wLog.userName || (loggedInUser ? loggedInUser.name : 'Samsung Galaxy');
             let deviceName = wLog.device_name || wLog.deviceName || 'Staff Phone';
 
             // Deduplicate only identical rapid retry triggers (same outcome within 8 seconds)
@@ -19215,7 +19215,7 @@
               deviceName: deviceName,
               direction: callDirection,
               duration: callDur,
-              formattedDuration: callDur > 0 ? formatCallDuration(callDur) : (isMissed ? '0s (Missed)' : isNotPicked ? '0s (Not Picked)' : 'Baat Hui (Connected)'),
+              formattedDuration: callDur > 0 ? formatCallDuration(callDur) : (isMissed ? '0s (Missed)' : isNotPicked ? '0s (Not Picked)' : 'Connected'),
               outcome: callOutcome,
               time: formatFollowupDate(wLog.created_at || new Date()),
               timestamp: wLog.created_at || new Date().toISOString(),
@@ -19242,7 +19242,7 @@
               const alreadyExists = callLogs.some(c => c.id === actId || c.id === underlyingCallId || ('act-call-' + c.id) === actId);
               if (!alreadyExists) {
                 const actDur = parseInt(act.duration || 0, 10);
-                const actOut = act.callOutcome || (actDur > 0 ? 'Baat Hui (Connected)' : 'Missed Call');
+                const actOut = act.callOutcome || (actDur > 0 ? 'Connected' : 'Missed Call');
                 const isMiss = actOut.toLowerCase().includes('missed');
                 const actDir = (String(act.direction || '').toUpperCase() === 'OUTBOUND') ? 'OUTBOUND' : 'INBOUND';
                 callLogs.push({
@@ -19250,13 +19250,13 @@
                   leadId: l.id,
                   leadName: l.name || 'Customer',
                   phone: l.phone || '—',
-                  userName: act.userName || l.assignedToName || 'Sri Sri Staff',
+                  userName: act.userName || l.assignedToName || 'Samsung Galaxy',
                   userEmail: act.userEmail || 'staff@srisriply.com',
                   userRole: act.userRole || 'Sales Agent',
-                  deviceName: act.device || 'Staff Android',
+                  deviceName: act.device || 'Samsung Galaxy',
                   direction: actDir,
                   duration: actDur,
-                  formattedDuration: actDur > 0 ? formatCallDuration(actDur) : (isMiss ? '0s (Missed)' : 'Baat Hui (Connected)'),
+                  formattedDuration: actDur > 0 ? formatCallDuration(actDur) : (isMiss ? '0s (Missed)' : 'Connected'),
                   outcome: actOut,
                   time: formatFollowupDate(act.timestamp || act.time || l.createdAt),
                   timestamp: act.timestamp || l.createdAt || new Date().toISOString(),
@@ -20486,67 +20486,74 @@
       try {
         let remoteCalls = [];
 
-        // Source 0: Static updated call_logs.json (instant, 100% reliable)
+        // Source 0: Baseline from local call_logs.json
         try {
           let sRes = await fetch('./call_logs.json?v=' + Date.now()).catch(() => null);
           if (!sRes || !sRes.ok) sRes = await fetch('call_logs.json?v=' + Date.now()).catch(() => null);
           if (!sRes || !sRes.ok) sRes = await fetch('/call_logs.json?v=' + Date.now()).catch(() => null);
           if (sRes && sRes.ok) {
             const sData = await sRes.json();
-            if (Array.isArray(sData) && sData.length > 0) remoteCalls = sData;
+            if (Array.isArray(sData)) remoteCalls.push(...sData);
           }
         } catch(e) {}
 
-        // Source 1: Local / relative endpoint
-        if (!remoteCalls || remoteCalls.length === 0) {
-          try {
-            const res = await fetch('/api/webhook/call-log');
-            if (res.ok) {
-              const data = await res.json();
-              if (data && Array.isArray(data.call_logs)) remoteCalls = data.call_logs;
+        // Source 1: Live Cloud Webhook API (ALWAYS fetch live cloud calls)
+        try {
+          const endpointUrl = window.location.origin.includes('vercel.app') 
+            ? '/api/webhook/call-log' 
+            : 'https://crm-system-chi-amber.vercel.app/api/webhook/call-log';
+          const vRes = await fetch(endpointUrl + '?t=' + Date.now()).catch(() => null);
+          if (vRes && vRes.ok) {
+            const vData = await vRes.json();
+            if (vData && Array.isArray(vData.call_logs)) {
+              vData.call_logs.forEach(cl => {
+                const exIdx = remoteCalls.findIndex(r => r.id === cl.id);
+                if (exIdx === -1) {
+                  remoteCalls.unshift(cl);
+                } else {
+                  remoteCalls[exIdx] = { ...remoteCalls[exIdx], ...cl };
+                }
+              });
             }
-          } catch(e) {}
-        }
+          }
+        } catch(e) {}
 
-        // Source 2: Vercel Cloud endpoint fallback if running locally or empty
-        if (!remoteCalls || remoteCalls.length === 0) {
-          try {
-            const vRes = await fetch('https://crm-system-chi-amber.vercel.app/api/webhook/call-log');
-            if (vRes.ok) {
-              const vData = await vRes.json();
-              if (vData && Array.isArray(vData.call_logs)) remoteCalls = vData.call_logs;
+        // Source 2: Direct Firestore REST API (Live cloud persistence)
+        try {
+          const fRes = await fetch('https://firestore.googleapis.com/v1/projects/crm-f4bf7/databases/(default)/documents/call_logs?t=' + Date.now()).catch(() => null);
+          if (fRes && fRes.ok) {
+            const fData = await fRes.json();
+            if (fData && Array.isArray(fData.documents)) {
+              fData.documents.forEach(doc => {
+                const f = doc.fields || {};
+                const id = f.id?.stringValue || doc.name.split('/').pop();
+                const callObj = {
+                  id: id,
+                  lead_id: f.lead_id?.stringValue || '',
+                  caller_number: f.caller_number?.stringValue || f.phone?.stringValue || '',
+                  caller_name: f.caller_name?.stringValue || '',
+                  receiver_number: f.receiver_number?.stringValue || '',
+                  call_duration: parseInt(f.call_duration?.integerValue || 0, 10),
+                  duration: parseInt(f.call_duration?.integerValue || 0, 10),
+                  recording_url: f.recording_url?.stringValue || '',
+                  ai_summary: f.ai_summary?.stringValue || '',
+                  direction: (f.direction?.stringValue || '').toUpperCase() === 'OUTBOUND' ? 'OUTBOUND' : 'INBOUND',
+                  call_outcome: f.call_outcome?.stringValue || 'Connected',
+                  outcome: f.call_outcome?.stringValue || 'Connected',
+                  staff_name: f.staff_name?.stringValue || 'Samsung Galaxy',
+                  device_name: f.device_name?.stringValue || 'Samsung Galaxy',
+                  created_at: f.created_at?.stringValue || new Date().toISOString()
+                };
+                const exIdx = remoteCalls.findIndex(r => r.id === id);
+                if (exIdx === -1) {
+                  remoteCalls.unshift(callObj);
+                } else {
+                  remoteCalls[exIdx] = { ...remoteCalls[exIdx], ...callObj };
+                }
+              });
             }
-          } catch(e) {}
-        }
-
-        // Source 3: Direct Firestore REST API fallback (guaranteed cloud persistence)
-        if (!remoteCalls || remoteCalls.length === 0) {
-          try {
-            const fRes = await fetch('https://firestore.googleapis.com/v1/projects/crm-f4bf7/databases/(default)/documents/call_logs');
-            if (fRes.ok) {
-              const fData = await fRes.json();
-              if (fData && Array.isArray(fData.documents)) {
-                remoteCalls = fData.documents.map(doc => {
-                  const f = doc.fields || {};
-                  return {
-                    id: f.id?.stringValue || doc.name.split('/').pop(),
-                    lead_id: f.lead_id?.stringValue || '',
-                    caller_number: f.caller_number?.stringValue || '',
-                    receiver_number: f.receiver_number?.stringValue || '',
-                    call_duration: parseInt(f.call_duration?.integerValue || 0, 10),
-                    recording_url: f.recording_url?.stringValue || '',
-                    ai_summary: f.ai_summary?.stringValue || '',
-                    direction: (f.direction?.stringValue || '').toUpperCase() === 'OUTBOUND' ? 'OUTBOUND' : 'INBOUND',
-                    call_outcome: f.call_outcome?.stringValue || 'Baat Hui (Connected)',
-                    staff_name: f.staff_name?.stringValue || 'Staff Phone',
-                    device_name: f.device_name?.stringValue || 'Staff Phone',
-                    created_at: f.created_at?.stringValue || new Date().toISOString()
-                  };
-                });
-              }
-            }
-          } catch(e) {}
-        }
+          }
+        } catch(e) {}
 
         if (Array.isArray(remoteCalls) && remoteCalls.length > 0) {
           const PHANTOM_IDS_SYNC = new Set([
@@ -20571,8 +20578,6 @@
           remoteCalls = remoteCalls.filter(c => {
             if (!c || !c.id) return false;
             if (PHANTOM_IDS_SYNC.has(c.id)) return false;
-            if (c.time && c.time.includes('27 Oct')) return false;
-            if (c.created_at && c.created_at.includes('2026-10-27')) return false;
             return true;
           });
           const existing = getStoredClientCallLogs();
@@ -20637,14 +20642,46 @@
           }
         } catch(e) {}
 
-        // Source 2: Vercel Cloud endpoint fallback if running locally or empty
+        // Source 2: Vercel Cloud endpoint fallback
         if (!freshLogs || freshLogs.length === 0) {
           try {
-            const vRes = await fetch('https://crm-system-chi-amber.vercel.app/api/webhook/call-log');
+            const vRes = await fetch('https://crm-system-chi-amber.vercel.app/api/webhook/call-log?t=' + Date.now());
             if (vRes.ok) {
               const vData = await vRes.json();
               if (vData && Array.isArray(vData.call_logs) && vData.call_logs.length > 0) {
                 freshLogs = vData.call_logs;
+              }
+            }
+          } catch(e) {}
+        }
+
+        // Source 2b: Direct Firestore Cloud REST API fallback
+        if (!freshLogs || freshLogs.length === 0) {
+          try {
+            const fRes = await fetch('https://firestore.googleapis.com/v1/projects/crm-f4bf7/databases/(default)/documents/call_logs?t=' + Date.now());
+            if (fRes.ok) {
+              const fData = await fRes.json();
+              if (fData && Array.isArray(fData.documents)) {
+                freshLogs = fData.documents.map(doc => {
+                  const f = doc.fields || {};
+                  return {
+                    id: f.id?.stringValue || doc.name.split('/').pop(),
+                    lead_id: f.lead_id?.stringValue || '',
+                    caller_number: f.caller_number?.stringValue || f.phone?.stringValue || '',
+                    caller_name: f.caller_name?.stringValue || '',
+                    receiver_number: f.receiver_number?.stringValue || '',
+                    call_duration: parseInt(f.call_duration?.integerValue || 0, 10),
+                    duration: parseInt(f.call_duration?.integerValue || 0, 10),
+                    recording_url: f.recording_url?.stringValue || '',
+                    ai_summary: f.ai_summary?.stringValue || '',
+                    direction: (f.direction?.stringValue || '').toUpperCase() === 'OUTBOUND' ? 'OUTBOUND' : 'INBOUND',
+                    call_outcome: f.call_outcome?.stringValue || 'Connected',
+                    outcome: f.call_outcome?.stringValue || 'Connected',
+                    staff_name: f.staff_name?.stringValue || 'Samsung Galaxy',
+                    device_name: f.device_name?.stringValue || 'Samsung Galaxy',
+                    created_at: f.created_at?.stringValue || new Date().toISOString()
+                  };
+                });
               }
             }
           } catch(e) {}
@@ -20666,7 +20703,7 @@
         if (Array.isArray(freshLogs) && freshLogs.length > 0) {
           freshLogs = freshLogs.filter(l => {
             const num = String(l.caller_number || l.phone || '');
-            if (num.includes('9999988888') || num.includes('8000000000') || l.id === 'call-log-1793081339671-686' || l.caller_number === 'Spam / Unknown Incoming Caller') return false;
+            if (num.includes('9999988888') || num.includes('8000000000') || l.id === 'call-log-1793081339671-686') return false;
             return true;
           });
           const signature = freshLogs.map(l => (l.id || '') + ':' + (l.call_outcome || l.outcome || '') + ':' + (l.call_duration || l.duration || 0) + ':' + (l.direction || '')).join('|');
@@ -20678,7 +20715,7 @@
             freshLogs.forEach(remoteLog => {
               const dur = parseInt(remoteLog.call_duration || remoteLog.duration || 0, 10);
               const dir = (String(remoteLog.direction || '').toUpperCase() === 'OUTBOUND') ? 'OUTBOUND' : 'INBOUND';
-              const out = remoteLog.call_outcome || remoteLog.outcome || (dur > 0 ? 'Baat Hui (Connected)' : (remoteLog.is_missed ? 'Missed Call' : 'Baat Hui (Connected)'));
+              const out = remoteLog.call_outcome || remoteLog.outcome || (dur > 0 ? 'Connected' : (remoteLog.is_missed ? 'Missed Call' : 'Connected'));
               
               const exIdx = existing.findIndex(l => l.id === remoteLog.id);
               if (exIdx === -1) {
@@ -20695,8 +20732,8 @@
                   direction: dir,
                   call_outcome: out,
                   outcome: out,
-                  staff_name: remoteLog.staff_name || remoteLog.userName || 'Sri Sri Staff',
-                  device_name: remoteLog.device_name || remoteLog.deviceName || 'Staff Android',
+                  staff_name: remoteLog.staff_name || remoteLog.userName || 'Samsung Galaxy',
+                  device_name: remoteLog.device_name || remoteLog.deviceName || 'Samsung Galaxy',
                   created_at: remoteLog.created_at || remoteLog.time || new Date().toISOString()
                 });
                 hasChanges = true;
@@ -20874,7 +20911,7 @@
         setTimeout(() => {
           if (stepEl) stepEl.innerText = '🟢 Step 3: 2-Way Bridge Connected! Call is being recorded on ' + telephonyGatewayConfig.provider.toUpperCase() + '.';
           showToast('🟢 2-Way Call Connected! Automatic recording & AI summary active.', 'success');
-          selectCallOutcome('Baat Hui (Connected)');
+          selectCallOutcome('Connected');
           autoTranscribeCurrentCall();
         }, 3000);
       }, 2500);

@@ -156,8 +156,8 @@ async function syncCallLogToFirestore(callLogRecord) {
         ai_summary: { stringValue: String(callLogRecord.ai_summary || '') },
         direction: { stringValue: String(callLogRecord.direction || 'INBOUND') },
         call_outcome: { stringValue: String(callLogRecord.call_outcome || 'Connected') },
-        staff_name: { stringValue: String(callLogRecord.staff_name || 'Staff') },
-        device_name: { stringValue: String(callLogRecord.device_name || 'Android Phone') },
+        staff_name: { stringValue: String(callLogRecord.staff_name || 'Samsung Galaxy') },
+        device_name: { stringValue: String(callLogRecord.device_name || 'Samsung Galaxy') },
         created_at: { stringValue: callLogRecord.created_at }
       }
     });
@@ -207,8 +207,8 @@ async function getFirestoreCallLogs() {
               ai_summary: f.ai_summary?.stringValue || '',
               direction: f.direction?.stringValue || 'INBOUND',
               call_outcome: f.call_outcome?.stringValue || 'Connected',
-              staff_name: f.staff_name?.stringValue || 'Staff',
-              device_name: f.device_name?.stringValue || 'Android Phone',
+              staff_name: f.staff_name?.stringValue || 'Samsung Galaxy',
+              device_name: f.device_name?.stringValue || 'Samsung Galaxy',
               created_at: f.created_at?.stringValue || ''
             };
           });
@@ -221,10 +221,11 @@ async function getFirestoreCallLogs() {
 
 // ==================== MAIN WEBHOOK HANDLER ====================
 module.exports = async (req, res) => {
-  // CORS Headers
+  // CORS & No-Cache Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-webhook-token');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
   if (req.method === 'OPTIONS') {
     if (res.status && typeof res.status === 'function') {
@@ -235,9 +236,19 @@ module.exports = async (req, res) => {
     return;
   }
 
-  // 1. GET: Webhook Probe & Status / Query Endpoint
-  if (req.method === 'GET') {
-    const query = req.query || {};
+  // Parse query parameters accurately from both URL and req.query
+  const parsedUrl = url.parse(req.url, true);
+  const query = { ...(parsedUrl.query || {}), ...(req.query || {}) };
+  const isIncomingCallSync = !!(
+    query.customer_number || 
+    query.caller_number || 
+    (query.phone && query.call_duration !== undefined) || 
+    (query.call_duration !== undefined && (query.phone || query.number)) ||
+    (query.call_type && query.customer_number)
+  );
+
+  // 1. GET: Webhook Probe & Status / Query Endpoint (Only if not sending a new call sync)
+  if (req.method === 'GET' && !isIncomingCallSync) {
     const leadId = query.lead_id || query.leadId;
     const phone = cleanPhone(query.phone || query.number);
 
@@ -256,14 +267,12 @@ module.exports = async (req, res) => {
       }
     } catch(e) {}
 
-    // Strict filter: Never return test numbers, mockup calls, 27 Oct phantom test calls, or orphaned spam
+    // Strict filter: Never return test numbers, mockup calls, or phantom test IDs
     allLogs = allLogs.filter(c => {
       if (!c) return false;
       if (PHANTOM_CALL_IDS.has(c.id)) return false;
-      if (c.time && c.time.includes('27 Oct')) return false;
-      if (c.created_at && c.created_at.includes('2026-10-27')) return false;
       const num = String(c.caller_number || c.phone || '');
-      if (num.includes('9999988888') || num.includes('8000000000') || c.id === 'call-log-1793081339671-686' || c.caller_number === 'Spam / Unknown Incoming Caller') return false;
+      if (num.includes('9999988888') || num.includes('8000000000') || c.id === 'call-log-1793081339671-686') return false;
       return true;
     });
 
@@ -295,10 +304,10 @@ module.exports = async (req, res) => {
     });
   }
 
-  // 2. POST: Inbound Call Recording Webhook Handler
-  if (req.method === 'POST') {
+  // 2. POST (or GET with Call Parameters): Inbound Call Recording Webhook Handler
+  if (req.method === 'POST' || isIncomingCallSync) {
     try {
-      // 1. Collect full body buffer if not already parsed (supports direct binary and multipart uploads from Android)
+      // 1. Collect full body buffer if not already parsed (supports direct binary, urlencoded, and multipart uploads from Android)
       let rawBuffer = null;
       if (Buffer.isBuffer(req.body)) {
         rawBuffer = req.body;
@@ -319,13 +328,20 @@ module.exports = async (req, res) => {
       // If JSON or parsed object
       if (typeof req.body === 'object' && !Buffer.isBuffer(req.body) && req.body !== null) {
         body = req.body;
-      } else if (rawBuffer && rawBuffer.length > 0 && (cType.includes('application/json') || (!cType.includes('multipart') && !cType.includes('audio')))) {
-        try { body = JSON.parse(rawBuffer.toString('utf8')); } catch(e){}
+      } else if (rawBuffer && rawBuffer.length > 0) {
+        const rawStr = rawBuffer.toString('utf8').trim();
+        if (rawStr.startsWith('{') && rawStr.endsWith('}')) {
+          try { body = JSON.parse(rawStr); } catch(e){}
+        } else if (rawStr.includes('=') && !cType.includes('multipart') && !cType.includes('audio')) {
+          try {
+            const querystring = require('querystring');
+            body = querystring.parse(rawStr);
+          } catch(e){}
+        }
       }
 
-      // Merge query parameters into body/data (e.g. from MacroDroid HTTP Request URL params)
-      const query = req.query || {};
-      for (const k of ['customer_number', 'caller_number', 'call_duration', 'staff_name', 'device_name', 'call_type', 'call_outcome', 'recording_url', 'file_name', 'filename']) {
+      // Merge all query parameters into body/data (supports MacroDroid URL query parameters directly)
+      for (const k of ['customer_number', 'caller_number', 'phone', 'number', 'caller_name', 'customer_name', 'call_duration', 'duration', 'staff_name', 'device_name', 'call_type', 'call_outcome', 'recording_url', 'file_name', 'filename', 'call_time', 'timestamp', 'time']) {
         if (query[k] && !body[k]) body[k] = query[k];
       }
 
@@ -371,7 +387,7 @@ module.exports = async (req, res) => {
       let caller_number = String(data.caller_number || data.callerNumber || data.from || data.From || data.caller || '').trim();
       const receiver_number = String(data.receiver_number || data.receiverNumber || data.to || data.To || data.dialed || '').trim();
       const customer_number = String(data.customer_number || data.customer_phone || data.phone || data.phone_number || '').trim();
-      const rawCallerName = String(data.caller_name || data.callerName || data.contact_name || data.name || data.company || '').trim();
+      const rawCallerName = String(data.customer_name || data.customerName || data.caller_name || data.callerName || data.contact_name || data.name || data.company || '').trim();
       const validCallerName = (rawCallerName && rawCallerName !== '{call_name}' && rawCallerName !== 'null' && rawCallerName !== 'undefined') ? rawCallerName : '';
 
       // Determine customer phone & handle spam / unknown / unsaved numbers cleanly
@@ -402,7 +418,7 @@ module.exports = async (req, res) => {
       } else if (effectiveCustomerPhone) {
         displayCustomerPhone = effectiveCustomerPhone;
       } else {
-        displayCustomerPhone = 'Spam / Unknown Incoming Caller';
+        displayCustomerPhone = 'Unknown Incoming Caller';
       }
 
       // Extract Duration (in seconds)
@@ -464,11 +480,16 @@ module.exports = async (req, res) => {
       let phoneTimestamp = data.call_time_iso || data.created_at || data.timestamp || data.call_time || data.time || query.call_time || query.timestamp;
       let callDateObj = new Date();
       if (phoneTimestamp && phoneTimestamp !== '{system_time}' && phoneTimestamp !== '{call_date} {call_time}') {
-        if (/^\d{10,13}$/.test(String(phoneTimestamp).trim())) {
-          const epochNum = parseInt(String(phoneTimestamp).trim(), 10);
+        let tsStr = String(phoneTimestamp).trim();
+        if (/^\d{10,13}$/.test(tsStr)) {
+          const epochNum = parseInt(tsStr, 10);
           callDateObj = new Date(epochNum < 1e11 ? epochNum * 1000 : epochNum);
         } else {
-          const parsed = new Date(phoneTimestamp);
+          const curYear = new Date().getFullYear();
+          if (!tsStr.includes(String(curYear)) && !/^\d{4}/.test(tsStr)) {
+            tsStr = tsStr + ' ' + curYear;
+          }
+          const parsed = new Date(tsStr);
           if (!isNaN(parsed.getTime())) {
             callDateObj = parsed;
           }
