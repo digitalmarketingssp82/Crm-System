@@ -296,6 +296,14 @@ module.exports = async (req, res) => {
       return true;
     });
 
+    // Filter calls starting from 20 Oct 2026 onwards (User requirement: Only keep data from 20 Oct onwards)
+    const CUTOFF_DATE_API = new Date('2026-10-20T00:00:00.000Z').getTime();
+    allLogs = allLogs.filter(c => {
+      const t = new Date(c.created_at || 0).getTime();
+      if (t > 0 && t < CUTOFF_DATE_API) return false;
+      return true;
+    });
+
     allLogs.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     allLogs.forEach(l => { if (!l.time) l.time = formatCallLogTime(l.created_at); });
 

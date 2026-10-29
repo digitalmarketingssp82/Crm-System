@@ -2251,11 +2251,22 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2.5">
-            <button type="button" onclick="triggerAutoMatchRecordings()" class="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs font-bold text-emerald-300 transition flex items-center gap-2 shadow-xs cursor-pointer" title="Auto-match phone call recordings (.m4a/.mp3) from Samsung / Phone storage by customer phone number">
-              <i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>
-              <span>🎙️ Auto-Match Recordings</span>
+            <!-- Google Drive Cloud Recordings Link -->
+            <a href="https://drive.google.com/drive/folders/1OHR3g8GWBaVNAa7kB6aRdk-WYmCngWh_?usp=sharing" id="btn-google-drive-recordings" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-black text-amber-300 transition flex items-center gap-2 shadow-xs cursor-pointer" title="Open Google Drive Cloud Recordings Folder in New Tab">
+              <i data-lucide="cloud" class="w-4 h-4 text-amber-400"></i>
+              <span>☁️ Drive Recordings</span>
+            </a>
+            <!-- Edit Google Drive Link Button -->
+            <button type="button" onclick="openDriveSettingsModal()" class="px-2.5 py-2 rounded-xl bg-subtle hover:bg-card border border-main text-xs font-bold text-muted-custom hover:text-gold transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Change Google Drive Folder Link Anytime in Future">
+              <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+              <span>Edit Link</span>
             </button>
-            <input type="file" id="recording-files-input" multiple accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg,.amr" class="hidden" onchange="handleRecordingsFolderSelected(event)">
+            <button type="button" onclick="triggerAutoMatchRecordings()" class="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs font-bold text-emerald-300 transition flex items-center gap-2 shadow-xs cursor-pointer" title="Samsung Phone Recordings/Call फ़ोल्डर चुनें - सभी कॉल्स के सामने उनकी ऑडियो खुद जुड़ जाएगी">
+              <i data-lucide="folder-sync" class="w-4 h-4 text-emerald-400"></i>
+              <span>📂 Folder Sync</span>
+            </button>
+            <input type="file" id="recording-files-input" webkitdirectory directory multiple accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg,.amr" class="hidden" onchange="handleRecordingsFolderSelected(event)">
+            <input type="file" id="recording-files-fallback" multiple accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg,.amr" class="hidden" onchange="handleRecordingsFolderSelected(event)">
             <button type="button" onclick="openMultiPhoneSetupModal()" class="px-3.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-xs font-bold text-purple-300 transition flex items-center gap-2 shadow-xs cursor-pointer">
               <i data-lucide="smartphone" class="w-4 h-4 text-purple-400"></i>
               <span>📱 3-4 Phones Setup &amp; Devices</span>
@@ -2398,6 +2409,49 @@
       </section>
 
       </main>
+    </div>
+  </div>
+
+  <!-- Google Drive Recordings Settings Modal -->
+  <div id="drive-settings-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-card border border-main rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between pb-4 border-b border-main">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center font-bold">
+            <i data-lucide="cloud" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-main text-base">Google Drive Cloud Recordings</h3>
+            <p class="text-[11px] text-muted-custom">All phone call recordings sync here automatically via FolderSync.</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeDriveSettingsModal()" class="w-8 h-8 rounded-xl bg-subtle hover:bg-red-500/20 hover:text-red-400 text-muted-custom flex items-center justify-center transition cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-muted-custom mb-1.5">Google Drive Folder Link</label>
+          <input type="url" id="input-drive-folder-url" class="w-full px-3.5 py-2.5 rounded-xl bg-subtle border border-main text-xs text-main focus:outline-hidden focus:border-gold font-mono" placeholder="https://drive.google.com/drive/folders/...">
+          <p class="text-[10px] text-muted-custom mt-1">Aap is link ko future me kabhi bhi badal sakte hain. Purana call data kabhi delete nahi hoga.</p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-2.5">
+          <i data-lucide="check-circle" class="w-4 h-4 shrink-0 text-emerald-400"></i>
+          <span>Active Google Drive Folder: <b>Recording (FolderSync)</b></span>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeDriveSettingsModal()" class="px-4 py-2 rounded-xl bg-subtle hover:bg-card border border-main text-xs font-bold text-muted-custom transition cursor-pointer">
+            Cancel
+          </button>
+          <button type="button" onclick="saveDriveSettingsLink()" class="px-5 py-2 rounded-xl bg-gold text-slate-950 text-xs font-black hover:brightness-105 transition flex items-center gap-1.5 shadow-md cursor-pointer">
+            <i data-lucide="save" class="w-3.5 h-3.5"></i>
+            <span>Save Link</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -19478,6 +19532,75 @@
     }
     window.getCallOutcomeForRecord = getCallOutcomeForRecord;
 
+    
+    // ==================== GOOGLE DRIVE RECORDINGS INTEGRATION ====================
+    const DEFAULT_GOOGLE_DRIVE_RECORDINGS_URL = 'https://drive.google.com/drive/folders/1OHR3g8GWBaVNAa7kB6aRdk-WYmCngWh_?usp=sharing';
+
+    function getGoogleDriveRecordingsUrl() {
+      try {
+        const saved = localStorage.getItem('sri_drive_recordings_url');
+        if (saved && saved.startsWith('http')) return saved;
+      } catch(e) {}
+      return DEFAULT_GOOGLE_DRIVE_RECORDINGS_URL;
+    }
+
+    function extractGoogleDriveFolderId(url) {
+      const targetUrl = url || getGoogleDriveRecordingsUrl();
+      const m = targetUrl.match(/folders\/([a-zA-Z0-9_-]+)/);
+      return m ? m[1] : '';
+    }
+
+    function openDriveSettingsModal() {
+      const modal = document.getElementById('drive-settings-modal');
+      const input = document.getElementById('input-drive-folder-url');
+      if (input) input.value = getGoogleDriveRecordingsUrl();
+      if (modal) {
+        modal.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    }
+
+    function closeDriveSettingsModal() {
+      const modal = document.getElementById('drive-settings-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function saveDriveSettingsLink() {
+      const input = document.getElementById('input-drive-folder-url');
+      if (!input) return;
+      let val = (input.value || '').trim();
+      if (!val || !val.startsWith('http')) {
+        showToast('Please enter a valid Google Drive folder URL (https://drive.google.com/...)', 'warning');
+        return;
+      }
+      try {
+        localStorage.setItem('sri_drive_recordings_url', val);
+      } catch(e) {}
+
+      const btn = document.getElementById('btn-google-drive-recordings');
+      if (btn) btn.href = val;
+
+      closeDriveSettingsModal();
+      showToast('🟢 Google Drive Cloud recordings link saved successfully!', 'success');
+    }
+
+    function openCustomerRecordingInDrive(phoneNum) {
+      const folderId = extractGoogleDriveFolderId();
+      const clean = String(phoneNum || '').replace(/\D/g, '').slice(-10);
+      if (folderId) {
+        // Open Drive directly into the recordings folder
+        window.open(getGoogleDriveRecordingsUrl(), '_blank');
+      } else {
+        window.open(getGoogleDriveRecordingsUrl(), '_blank');
+      }
+    }
+
+    window.getGoogleDriveRecordingsUrl = getGoogleDriveRecordingsUrl;
+    window.openDriveSettingsModal = openDriveSettingsModal;
+    window.closeDriveSettingsModal = closeDriveSettingsModal;
+    window.saveDriveSettingsLink = saveDriveSettingsLink;
+    window.openCustomerRecordingInDrive = openCustomerRecordingInDrive;
+
     function renderTeamCallLogsTable() {
       initCallLogs();
       renderCallModuleBanner();
@@ -19602,6 +19725,14 @@
         if (typeof isGhostCallRecord === 'function' && isGhostCallRecord(c)) return false;
         const num = String(c.caller_number || c.phone || '');
         if (num.includes('9999988888') || num.includes('8000000000') || c.id === 'call-log-1793081339671-686') return false;
+        return true;
+      });
+
+      // Strictly filter calls starting from 20 Oct 2026 onwards (Clean older legacy data)
+      const CUTOFF_DATE_20OCT = new Date('2026-10-20T00:00:00.000Z').getTime();
+      filtered = filtered.filter(c => {
+        const t = new Date(c.created_at || c.timestamp || c.time || 0).getTime();
+        if (t > 0 && t < CUTOFF_DATE_20OCT) return false;
         return true;
       });
 
@@ -19764,10 +19895,14 @@
                 </div>
               ` : `
                 <div class="flex items-center gap-2">
-                  <button type="button" onclick="attachAudioFileToCall('${call.id}')" class="px-2.5 py-1.5 rounded-xl bg-gold/15 text-gold border border-gold/40 hover:bg-gold hover:text-slate-950 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs">
-                    <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-                    <span>📁 Audio Daalein</span>
+                  <button type="button" onclick="attachAudioFileToCall('${call.id}')" class="px-2 py-1 rounded-lg bg-gold/15 text-gold border border-gold/40 hover:bg-gold hover:text-slate-950 font-bold text-xs flex items-center gap-1 transition cursor-pointer shadow-xs" title="Upload local recording file">
+                    <i data-lucide="upload" class="w-3 h-3"></i>
+                    <span>📁 Audio</span>
                   </button>
+                  <a href="${getGoogleDriveRecordingsUrl()}" target="_blank" rel="noopener noreferrer" class="px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500 hover:text-slate-950 font-bold text-xs flex items-center gap-1 transition cursor-pointer shadow-xs" title="Open Recording in Google Drive folder">
+                    <i data-lucide="cloud" class="w-3 h-3 text-amber-400"></i>
+                    <span>☁️ Drive</span>
+                  </a>
                   <span class="font-mono font-bold text-gold text-xs">${formatCallDuration(call.duration || 45)}</span>
                 </div>
               `}
@@ -20122,12 +20257,16 @@
     }
 
     function triggerAutoMatchRecordings() {
-      const input = document.getElementById('recording-files-input');
-      if (input) {
-        input.value = '';
-        input.click();
+      const folderInput = document.getElementById('recording-files-input');
+      const fallbackInput = document.getElementById('recording-files-fallback');
+      if (folderInput) {
+        folderInput.value = '';
+        folderInput.click();
+      } else if (fallbackInput) {
+        fallbackInput.value = '';
+        fallbackInput.click();
       } else {
-        showToast('Recordings file selector not found.', 'error');
+        showToast('Recordings folder selector not found.', 'error');
       }
     }
 
@@ -20135,7 +20274,7 @@
       const files = event.target && event.target.files;
       if (!files || files.length === 0) return;
 
-      showToast(`🔍 Processing ${files.length} recording file(s)... Matching with phone numbers...`, 'info');
+      showToast(`🔍 Processing ${files.length} recording file(s)... Matching with customer phone numbers...`, 'info');
 
       let matchedCount = 0;
       const existingStored = (typeof getStoredClientCallLogs === 'function') ? getStoredClientCallLogs() : [];
@@ -20145,8 +20284,8 @@
         const name = file.name;
 
         // Extract 10-digit customer phone number from filename (e.g. Call with Manga Khan_9878685521_26102026.m4a or 9878685521.m4a)
-        const match = name.match(/(?:(?:\+91|91|0)?([6-9]\d{9}))/);
-        const cleanNum = match ? match[1] : '';
+        const match = name.match(/(?:(?:\+?91|0)?([6-9]\d{9}))/) || name.match(/(\d{10})/);
+        const cleanNum = match ? (match[1] || match[0]) : '';
 
         // Read audio as Data URL if smaller than 8MB for permanent offline persistence, else ObjectURL
         let audioSrc = '';
