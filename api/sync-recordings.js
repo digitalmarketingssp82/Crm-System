@@ -56,7 +56,8 @@ try {
 
 function fetchDriveFolderHTML(folderId) {
   return new Promise((resolve, reject) => {
-    const fetchUrl = `https://drive.google.com/drive/folders/${folderId}?usp=sharing`;
+    // sort=14&direction=d sorts by Last Modified date descending to always get the newest call recordings first
+    const fetchUrl = `https://drive.google.com/drive/folders/${folderId}?sort=14&direction=d`;
     https.get(fetchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -175,6 +176,26 @@ module.exports = async (req, res) => {
           }
           return true;
         });
+      }
+
+      if (!matchedCall) {
+        // Also match by saved contact name in Samsung filename (e.g. "Call recording Manga khan meta_...")
+        const cleanRecName = rec.name.toLowerCase().replace(/call recording|\.m4a|\.mp3|_\d+_\d+/gi, '').trim();
+        if (cleanRecName.length >= 3) {
+          matchedCall = calls.find(c => {
+            const nameC = (c.caller_name || c.leadName || '').toLowerCase();
+            if (!nameC || nameC === 'direct phone call' || nameC.includes('customer call') || nameC.includes('suspected spam')) return false;
+            const words = cleanRecName.split(/\s+/).filter(w => w.length > 2);
+            const matchesWord = words.some(w => nameC.includes(w));
+            if (!matchesWord) return false;
+            if (rec.timestamp && (c.created_at || c.timestamp || c.time)) {
+              const recTime = new Date(rec.timestamp).getTime();
+              const callTime = new Date(c.created_at || c.timestamp || c.time).getTime();
+              return Math.abs(recTime - callTime) < 86400000;
+            }
+            return true;
+          });
+        }
       }
 
       if (matchedCall) {
