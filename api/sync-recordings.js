@@ -1,3 +1,45 @@
+
+function isSamePhysicalCall(a, b) {
+  if (!a || !b) return false;
+  if (a.id && b.id && a.id === b.id) return true;
+  const pA = String(a.caller_number || a.phone || '').replace(/\D/g, '').slice(-10);
+  const pB = String(b.caller_number || b.phone || '').replace(/\D/g, '').slice(-10);
+  if (!pA || pA.length < 7 || pA !== pB) return false;
+  const tA = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
+  const tB = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
+  if (tA > 0 && tB > 0 && Math.abs(tA - tB) <= 300000) return true;
+  return false;
+}
+
+function deduplicateCalls(callsList) {
+  if (!Array.isArray(callsList)) return [];
+  const deduped = [];
+  const seenIds = new Set();
+  const sorted = callsList.slice().sort((a, b) => {
+    const aHas = !!(a.recording_url || a.audioUrl || a.drive_file_id);
+    const bHas = !!(b.recording_url || b.audioUrl || b.drive_file_id);
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+    return new Date(b.created_at || b.timestamp || 0).getTime() - new Date(a.created_at || a.timestamp || 0).getTime();
+  });
+  for (const c of sorted) {
+    if (!c || seenIds.has(c.id)) continue;
+    const exIdx = deduped.findIndex(ex => isSamePhysicalCall(ex, c));
+    if (exIdx !== -1) {
+      if ((c.recording_url || c.audioUrl) && !deduped[exIdx].recording_url) {
+        deduped[exIdx].recording_url = c.recording_url || c.audioUrl;
+        deduped[exIdx].audioUrl = c.recording_url || c.audioUrl;
+        deduped[exIdx].drive_file_id = c.drive_file_id || deduped[exIdx].drive_file_id;
+      }
+      seenIds.add(c.id);
+    } else {
+      seenIds.add(c.id);
+      deduped.push(c);
+    }
+  }
+  return deduped;
+}
+
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
@@ -175,7 +217,8 @@ module.exports = async (req, res) => {
 
     // Save updated call logs
     try {
-      fs.writeFileSync(CALL_LOGS_FILE, JSON.stringify(calls, null, 2));
+      calls = deduplicateCalls(calls);
+    fs.writeFileSync(CALL_LOGS_FILE, JSON.stringify(calls, null, 2));
     } catch(e) {}
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
