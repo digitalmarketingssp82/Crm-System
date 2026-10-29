@@ -269,6 +269,12 @@
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col select-text antialiased">
 
+  <!-- Hidden Credential Decoy to trap Chrome Autofill Heuristics away from search fields -->
+  <div style="position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;" aria-hidden="true">
+    <input type="text" name="chrome_decoy_user_prevent" autocomplete="username" tabindex="-1">
+    <input type="password" name="chrome_decoy_pass_prevent" autocomplete="current-password" tabindex="-1">
+  </div>
+
   <!-- ==================== LOGIN SCREEN OVERLAY ==================== -->
   <div id="login-screen" class="fixed inset-0 z-[100] bg-main flex items-center justify-center p-4">
     <div class="w-full max-w-md bg-card border border-main rounded-3xl p-8 shadow-2xl space-y-6">
@@ -1179,7 +1185,7 @@
             <!-- Search Opportunities Input (Protected against browser credential autofill) -->
             <div class="relative flex items-center">
               <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom pointer-events-none"></i>
-              <input type="search" id="opp-search-input" name="search_opp_filter_unique" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="debouncedRenderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="pl-8 pr-8 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-52 sm:w-72">
+              <input type="search" id="opp-search-input" name="search_opp_filter_unique_rnd" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" onblur="if(!this.value) this.setAttribute('readonly','readonly')" oninput="debouncedRenderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="pl-8 pr-8 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-52 sm:w-72">
               <button type="button" id="opp-search-clear-btn" onclick="clearOppSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-custom hover:text-gold text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center transition cursor-pointer" title="Clear search">✕</button>
             </div>
 
@@ -6970,6 +6976,10 @@
 
     let leads = safeStorageGet('sri_sri_leads', []);
     if (!Array.isArray(leads)) leads = [];
+    if (leads.length === 0 && typeof PRESEEDED_HISTORICAL_LEADS !== 'undefined' && Array.isArray(PRESEEDED_HISTORICAL_LEADS) && PRESEEDED_HISTORICAL_LEADS.length > 0) {
+      const deletedIds = getDeletedLeadIds();
+      leads = PRESEEDED_HISTORICAL_LEADS.filter(l => !deletedIds.has(l.id) && !isLeadDeleted(l));
+    }
     // Strict Deduplication & deletion filter on startup
     leads = deduplicateLeads(leads);
     try {
@@ -8227,6 +8237,8 @@
         const val = (el.value || '').trim().toLowerCase();
         if (!val) return;
         const isMatch = knownUserEmails.includes(val) ||
+                        val.includes('@srisriply.com') ||
+                        val.includes('@gmail.com') ||
                         (typeof loggedInUser !== 'undefined' && loggedInUser && loggedInUser.email && val === loggedInUser.email.toLowerCase()) ||
                         (Array.isArray(users) && users.some(u => u.email && u.email.toLowerCase() === val));
         if (isMatch) {
@@ -8778,7 +8790,7 @@
         const rawVal = searchInput.value.trim();
         const lowerVal = rawVal.toLowerCase();
         const knownUserEmails = ['admin@srisriply.com', 'sriplywoodsgm@gmail.com', 'salescordinator@gmail.com', 'coordinator@srisriply.com', 'admin'];
-        const isAutofilled = knownUserEmails.includes(lowerVal) || (loggedInUser && loggedInUser.email && lowerVal === loggedInUser.email.toLowerCase());
+        const isAutofilled = knownUserEmails.includes(lowerVal) || lowerVal.includes('@srisriply.com') || lowerVal.includes('@gmail.com') || (loggedInUser && loggedInUser.email && lowerVal === loggedInUser.email.toLowerCase());
         if (isAutofilled) {
           searchInput.value = '';
           q = '';
@@ -10496,7 +10508,12 @@
 
       // 1. Search Query
       const searchInput = document.getElementById('opp-search-input');
-      const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      let q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      const knownAutofills = ['admin@srisriply.com', 'sriplywoodsgm@gmail.com', 'salescordinator@gmail.com', 'coordinator@srisriply.com', 'admin'];
+      if (knownAutofills.includes(q) || q.includes('@srisriply.com') || q.includes('@gmail.com') || (typeof loggedInUser !== 'undefined' && loggedInUser && loggedInUser.email && q === loggedInUser.email.toLowerCase())) {
+        if (searchInput) searchInput.value = '';
+        q = '';
+      }
 
       // 2. Date Bounds
       let fromTime = null;
@@ -22290,7 +22307,7 @@
           }
 
           // Purge browser credential autofill cleanly without thrashing render cycles
-          [100, 600].forEach(ms => {
+          [50, 150, 300, 600, 1200, 2000].forEach(ms => {
             setTimeout(() => {
               const didPurge = purgeBrowserAutofillFromSearchInputs();
               if (didPurge) {
@@ -22330,6 +22347,14 @@
         if ((!sel || sel.options.length === 0 || !kanban || kanban.children.length === 0) && typeof renderOpportunities === 'function') {
           console.warn('[Failsafe] Pipeline select or kanban was unrendered; executing emergency renderOpportunities()');
           renderOpportunities();
+        }
+        const pbBadge = document.getElementById('phonebook-count-badge');
+        if (pbBadge && Array.isArray(leads)) {
+          pbBadge.innerText = leads.length;
+        }
+        const tasksBadge = document.getElementById('tasks-count-badge');
+        if (tasksBadge && Array.isArray(tasks)) {
+          tasksBadge.innerText = tasks.length;
         }
       } catch(e) {
         console.error('Failsafe render error:', e);
