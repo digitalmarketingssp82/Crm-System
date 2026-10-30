@@ -11069,6 +11069,32 @@
 
     const DEFAULT_BUNDLED_CALL_LOGS = [
   {
+    "id": "call-rec-1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa",
+    "lead_id": "",
+    "caller_number": "Direct Phone Call",
+    "phone": "Direct Phone Call",
+    "caller_name": "OnePlus Call",
+    "leadName": "OnePlus Call",
+    "receiver_number": "",
+    "call_duration": 20,
+    "duration": 20,
+    "recording_url": "/api/call-audio?id=1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa",
+    "audioUrl": "/api/call-audio?id=1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa",
+    "drive_file_id": "1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa",
+    "hasAudio": true,
+    "ai_summary": "",
+    "direction": "INBOUND",
+    "call_outcome": "Connected",
+    "outcome": "Connected",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
+    "created_at": "2026-10-30T11:05:00.000Z",
+    "timestamp": "2026-10-30T11:05:00.000Z",
+    "time": "30 Oct, 04:35 PM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
     "id": "call-rec-1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0",
     "lead_id": "",
     "caller_number": "Direct Phone Call",
@@ -11547,6 +11573,10 @@
         if (!parsed || !Array.isArray(parsed) || parsed.length === 0 || parsed.some(c => PHANTOM_CALL_IDS.has(c.id) || (c.time && c.time.includes('27 Oct')) || (c.recording_url && c.recording_url.includes('UklGRuRdAABX')))) {
           parsed = JSON.parse(JSON.stringify(DEFAULT_BUNDLED_CALL_LOGS));
           localStorage.setItem('sri_call_logs', JSON.stringify(parsed));
+        }
+        // Ensure OnePlus call from today 4:35 PM is present in list
+        if (!parsed.some(c => c.drive_file_id === '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa' || c.id === 'call-rec-1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa')) {
+          parsed.unshift(DEFAULT_BUNDLED_CALL_LOGS[0]);
         }
         parsed = parsed.filter(item => item && item.id && !PHANTOM_CALL_IDS.has(item.id) && !item.caller_number?.includes('9999988888') && !item.caller_number?.includes('9999999999') && !item.caller_name?.includes('Test Verification') && !item.time?.includes('27 Oct') && !item.created_at?.includes('2026-10-27') && !isGhostCallRecord(item));
         parsed.forEach(item => {
@@ -20268,6 +20298,8 @@
           const data = await res.json();
           if (data && data.success && Array.isArray(data.calls)) {
             const KNOWN_DRIVE_MAPPINGS = {
+              '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'OnePlus Call', phone: 'Direct Phone Call', dur: 20, time: '30 Oct, 04:35 PM', device: 'OnePlus' },
+
               '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: 'Direct Phone Call', dur: 74, time: '30 Oct, 03:00 PM' },
               '1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep': { name: 'Rupinder Singh', phone: '+917508648100', dur: 44 },
               '1O6fS7CAbXXrhPprP147yrfuOpW94_ryU': { name: 'Potential Fraud', phone: 'Incoming Call', dur: 20 },
@@ -20427,7 +20459,7 @@
     }
 
     
-    function editCallLogPhoneNumber(callId) {
+        function editCallLogPhoneNumber(callId) {
       if (!callLogs) return;
       const call = callLogs.find(c => c.id === callId);
       if (!call) return;
@@ -20441,9 +20473,28 @@
         safeStorageSet('sri_call_logs', callLogs);
         safeStorageSet('sri_sri_call_logs', callLogs);
         renderTeamCallLogsTable();
-        showToast('✅ Mobile number updated for ' + (call.caller_name || 'call') + '!', 'success');
+        showToast('Mobile number updated for ' + (call.caller_name || 'call') + '!', 'success');
       }
     }
+    window.editCallLogPhoneNumber = editCallLogPhoneNumber;
+
+    function editCallLogCustomerName(callId) {
+      if (!callLogs) return;
+      const call = callLogs.find(c => c.id === callId);
+      if (!call) return;
+      const currentName = call.caller_name || call.leadName || '';
+      const newName = prompt('Enter contact name for this call:', (currentName.startsWith('Direct Call') || currentName.includes('OnePlus Call')) ? '' : currentName);
+      if (newName !== null && newName.trim()) {
+        const cleanName = newName.trim();
+        call.caller_name = cleanName;
+        call.leadName = cleanName;
+        safeStorageSet('sri_call_logs', callLogs);
+        safeStorageSet('sri_sri_call_logs', callLogs);
+        renderTeamCallLogsTable();
+        showToast('Contact name updated to "' + cleanName + '"!', 'success');
+      }
+    }
+    window.editCallLogCustomerName = editCallLogCustomerName;
 
     function renderTeamCallLogsTable() {
       initCallLogs();
@@ -20729,7 +20780,10 @@
                 } else {
                   return `
                     <div class="flex items-center gap-2">
-                      <span class="font-black text-main text-sm">${escapeHtml(effectiveLeadName || 'Direct Phone Call')}</span>
+                      <span onclick="editCallLogCustomerName('${call.id}')" title="Click to edit contact name" class="font-black text-main text-sm cursor-pointer hover:text-gold transition flex items-center gap-1 group">
+    <span>${escapeHtml(effectiveLeadName || 'Direct Phone Call')}</span>
+    <i data-lucide="pencil" class="w-2.5 h-2.5 text-muted-custom opacity-50 group-hover:opacity-100 transition"></i>
+  </span>
                       <button type="button" onclick="openNewLeadModal('${escapeHtml(call.phone && call.phone.match(/\d{5,}/) ? call.phone : '')}', '${escapeHtml(call.caller_name && !call.caller_name.startsWith('Direct Call') ? call.caller_name : '')}')" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-gold/20 text-gold border border-gold/40 hover:bg-gold hover:text-slate-950 transition cursor-pointer shrink-0">
                         + Create Lead
                       </button>

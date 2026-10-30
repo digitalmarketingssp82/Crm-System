@@ -250,6 +250,23 @@ module.exports = async (req, res) => {
         }
       }
 
+      if (!matchedCall && rec.timestamp) {
+        // Match by device and timestamp (within 10 minutes)
+        // Crucial for OnePlus / ODialer filenames (e.g. 2610301635.mp3) which only contain timestamp
+        const recTime = new Date(rec.timestamp).getTime();
+        matchedCall = calls.find(c => {
+          if (c.recording_url && !c.recording_url.includes('UklGRuRdAABX')) return false; // already has recording
+          const cDev = (c.device_name || c.deviceName || c.staff_name || '').toLowerCase();
+          const rDev = (rec.deviceName || '').toLowerCase();
+          const devMatch = (cDev.includes('oneplus') && rDev.includes('oneplus')) || 
+                           (cDev.includes('samsung') && rDev.includes('samsung')) ||
+                           (!cDev || cDev === 'all');
+          if (!devMatch) return false;
+          const cTime = new Date(c.created_at || c.timestamp || c.time).getTime();
+          return !isNaN(cTime) && Math.abs(recTime - cTime) <= 600000; // within 10 minutes
+        });
+      }
+
       if (matchedCall) {
         if (!matchedCall.recording_url || matchedCall.recording_url.includes('UklGRuRdAABX')) {
           matchedCall.recording_url = rec.audioUrl;

@@ -605,6 +605,34 @@ module.exports = async (req, res) => {
         }
       }
 
+      // Auto-heal 2: If a recording from OnePlus was previously synced with dummy/missing number, and MacroDroid now sends the real call details for that exact time, MERGE THEM!
+      const pendingOneplusRecIdx = allLogs.findIndex(l => {
+        const isOneplusRec = (l.device_name === 'OnePlus' || l.deviceName === 'OnePlus') && (l.caller_number === 'Direct Phone Call' || (l.caller_name && l.caller_name.includes('OnePlus Call')));
+        if (!isOneplusRec) return false;
+        const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
+        const curTime = callDateObj.getTime();
+        return Math.abs(curTime - lTime) <= 900000; // within 15 mins
+      });
+
+      if (pendingOneplusRecIdx !== -1) {
+        allLogs[pendingOneplusRecIdx].caller_number = displayCustomerPhone || cleanCustomer;
+        allLogs[pendingOneplusRecIdx].phone = displayCustomerPhone || cleanCustomer;
+        allLogs[pendingOneplusRecIdx].caller_name = validCallerName || lead_name || cleanCustomer;
+        allLogs[pendingOneplusRecIdx].leadName = validCallerName || lead_name || cleanCustomer;
+        allLogs[pendingOneplusRecIdx].lead_id = lead_id || allLogs[pendingOneplusRecIdx].lead_id;
+        if (call_duration > 0) allLogs[pendingOneplusRecIdx].call_duration = call_duration;
+        allLogs[pendingOneplusRecIdx].call_outcome = call_outcome;
+        allLogs[pendingOneplusRecIdx].outcome = call_outcome;
+        saveStoredCallLogs(allLogs);
+        await syncCallLogToFirestore(allLogs[pendingOneplusRecIdx]);
+        console.log(`[Call-Log Auto-Heal 2]: Merged MacroDroid contact info into existing OnePlus recording for ${cleanCustomer}`);
+        return sendResponse(res, 200, {
+          success: true,
+          message: 'Merged contact info into existing OnePlus recording',
+          call_log: allLogs[pendingOneplusRecIdx]
+        });
+      }
+
       // Preserving repeat call history: Each interaction is preserved with its exact phone timestamp
 
       allLogs.unshift(callLogRecord);
