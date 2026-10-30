@@ -332,7 +332,7 @@
       <div class="hidden sm:flex items-center flex-1 max-w-md mx-6">
         <div class="relative w-full">
           <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-custom"></i>
-          <input type="search" id="global-search-input" name="search_global_crm_noautofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="handleGlobalSearch(this.value)" placeholder="Search clients, phone, orders, leads..." class="w-full pl-9 pr-12 py-1.5 md:py-2 text-xs rounded-xl bg-subtle border border-main text-main placeholder:text-muted-custom focus:outline-none focus:border-gold transition">
+          <input type="search" id="global-search-input" name="search_global_crm_noautofill" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="handleGlobalSearch(this.value)" placeholder="Search clients, phone, orders, leads..." class="w-full pl-9 pr-12 py-1.5 md:py-2 text-xs rounded-xl bg-subtle border border-main text-main placeholder:text-muted-custom focus:outline-none focus:border-gold transition">
           <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-custom bg-card px-1.5 py-0.5 rounded border border-main">⌘K</span>
         </div>
       </div>
@@ -962,7 +962,7 @@
                 <button onclick="setConvChannel('instagram')" id="btn-conv-ch-ig" class="flex-1 py-1.5 px-2 rounded-lg text-muted-custom hover:text-main">Instagram</button>
                 <button onclick="setConvChannel('other')" id="btn-conv-ch-other" class="flex-1 py-1.5 px-2 rounded-lg text-muted-custom hover:text-main">Other</button>
               </div>
-              <input type="search" id="conv-search-input" name="search_conv_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="filterConvThreads(this.value)" placeholder="Search conversations..." class="w-full p-2.5 rounded-xl border border-main bg-subtle text-xs text-main">
+              <input type="search" id="conv-search-input" name="search_conv_no_autofill" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="filterConvThreads(this.value)" placeholder="Search conversations..." class="w-full p-2.5 rounded-xl border border-main bg-subtle text-xs text-main">
               <div class="space-y-1.5 overflow-y-auto max-h-[400px] custom-scrollbar" id="conv-threads-list">
                 <!-- Thread Items -->
               </div>
@@ -1075,7 +1075,7 @@
             <!-- Search -->
             <div class="relative">
               <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom"></i>
-              <input type="search" id="pb-search-input" name="search_pb_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="debouncedRenderPhonebookTable()" placeholder="Search name or mobile..." class="w-full pl-8 pr-8 py-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold focus:outline-none">
+              <input type="search" id="pb-search-input" name="search_pb_no_autofill" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="debouncedRenderPhonebookTable()" placeholder="Search name or mobile..." class="w-full pl-8 pr-8 py-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold focus:outline-none">
               <button type="button" id="pb-search-clear-btn" onclick="clearPhonebookSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-custom hover:text-main cursor-pointer" title="Clear search">
                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
               </button>
@@ -1188,7 +1188,7 @@
             <!-- Search Opportunities Input (Protected against browser credential autofill) -->
             <div class="relative flex items-center">
               <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom pointer-events-none"></i>
-              <input type="search" id="opp-search-input" name="search_opp_filter_unique_rnd" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" onblur="if(!this.value) this.setAttribute('readonly','readonly')" oninput="debouncedRenderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="pl-8 pr-8 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-52 sm:w-72">
+              <input type="search" id="opp-search-input" name="search_opp_filter_unique_rnd" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" onblur="if(!this.value) this.setAttribute('readonly','readonly')" oninput="debouncedRenderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="pl-8 pr-8 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-52 sm:w-72">
               <button type="button" id="opp-search-clear-btn" onclick="clearOppSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-custom hover:text-gold text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center transition cursor-pointer" title="Clear search">✕</button>
             </div>
 
@@ -1625,7 +1625,7 @@
               <span class="px-3 py-1.5 rounded-xl text-muted-custom hover:text-main cursor-pointer">Unfiled</span>
             </div>
             <div class="flex items-center gap-2 w-full sm:w-auto">
-              <input type="search" id="wa-temp-search" name="search_watemp_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderWaTemplates()" placeholder="Search templates..." class="p-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold">
+              <input type="search" id="wa-temp-search" name="search_watemp_no_autofill" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderWaTemplates()" placeholder="Search templates..." class="p-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold">
               <select id="wa-temp-status-filter" onchange="renderWaTemplates()" class="p-2 text-xs rounded-xl bg-subtle border border-main text-main font-semibold">
                 <option value="ALL">All Status</option>
                 <option value="APPROVED">Approved</option>
@@ -2138,7 +2138,7 @@
                   <button onclick="filterStaffStatus('ACTIVE')" id="btn-staff-filter-active" class="px-3 py-1.5 rounded-xl bg-subtle text-muted-custom hover:text-main font-bold transition">Active (<span id="team-count-active">6</span>)</button>
                   <button onclick="filterStaffStatus('INACTIVE')" id="btn-staff-filter-inactive" class="px-3 py-1.5 rounded-xl bg-subtle text-muted-custom hover:text-main font-bold transition">Inactive (<span id="team-count-inactive">0</span>)</button>
                 </div>
-                <input type="search" id="team-search-input" name="search_team_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderStaffManager()" placeholder="Search by name, email, or role..." class="p-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold w-full sm:w-64">
+                <input type="search" id="team-search-input" name="search_team_no_autofill" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="renderStaffManager()" placeholder="Search by name, email, or role..." class="p-2 text-xs rounded-xl bg-subtle border border-main text-main focus:border-gold w-full sm:w-64">
               </div>
 
               <div class="border border-main rounded-2xl overflow-hidden">
@@ -2269,7 +2269,7 @@
               <span>☁️ Sync Drive Audio</span>
             </button>
             <!-- Drive Folder Settings Button -->
-            <button type="button" onclick="openDriveSettingsModal()" class="px-3 py-2 rounded-xl bg-card border border-main text-xs font-bold hover:border-gold hover:text-gold transition flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0" title="View or change Google Drive folder link in future">
+            <button type="button" id="crm-drive-folder-settings-btn" onclick="openDriveSettingsModal()" class="px-3 py-2 rounded-xl bg-card border border-main text-xs font-bold hover:border-gold hover:text-gold transition flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0" title="View or change Google Drive folder link in future">
               <i data-lucide="settings" class="w-3.5 h-3.5 text-muted-custom"></i>
               <span>⚙️ Drive Folder</span>
             </button>
@@ -2340,7 +2340,7 @@
             <!-- Search -->
             <div class="lg:col-span-2 relative">
               <i data-lucide="search" class="w-4 h-4 text-muted-custom absolute left-3 top-3"></i>
-              <input type="search" id="call-log-search-input" name="search_calllog_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="filterTeamCallLogs()" placeholder="Search client name, mobile, or transcript..." class="w-full pl-9 pr-3 py-2 rounded-xl border border-main bg-subtle text-main text-xs focus:ring-1 focus:ring-gold outline-hidden">
+              <input type="search" id="call-log-search-input" name="search_calllog_no_autofill" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="filterTeamCallLogs()" placeholder="Search client name, mobile, or transcript..." class="w-full pl-9 pr-3 py-2 rounded-xl border border-main bg-subtle text-main text-xs focus:ring-1 focus:ring-gold outline-hidden">
             </div>
 
             <!-- Device / Calling Phone Selector -->
@@ -4444,7 +4444,7 @@
         <!-- Search / Filter Permissions -->
         <div class="relative">
           <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom"></i>
-          <input type="search" id="mrole-search-perm" name="search_perms_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="filterRolePerms(this.value)" placeholder="Filter permissions (e.g. export, delete, chat, pipeline, reports)..." class="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-card border border-main text-main placeholder:text-muted-custom focus:outline-none focus:border-gold transition">
+          <input type="search" id="mrole-search-perm" name="search_perms_no_autofill" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="filterRolePerms(this.value)" placeholder="Filter permissions (e.g. export, delete, chat, pipeline, reports)..." class="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-card border border-main text-main placeholder:text-muted-custom focus:outline-none focus:border-gold transition">
         </div>
 
         <!-- Categorized Permissions Grid Container -->
@@ -6978,10 +6978,23 @@
     }
 
     let leads = safeStorageGet('sri_sri_leads', []);
-    if (!Array.isArray(leads)) leads = [];
-    if (leads.length === 0 && typeof PRESEEDED_HISTORICAL_LEADS !== 'undefined' && Array.isArray(PRESEEDED_HISTORICAL_LEADS) && PRESEEDED_HISTORICAL_LEADS.length > 0) {
-      const deletedIds = getDeletedLeadIds();
-      leads = PRESEEDED_HISTORICAL_LEADS.filter(l => !deletedIds.has(l.id) && !isLeadDeleted(l));
+    if (!Array.isArray(leads) || leads.length === 0) {
+      if (typeof PRESEEDED_HISTORICAL_LEADS !== 'undefined' && Array.isArray(PRESEEDED_HISTORICAL_LEADS) && PRESEEDED_HISTORICAL_LEADS.length > 0) {
+        const dIds = getDeletedLeadIds();
+        if (dIds.size >= PRESEEDED_HISTORICAL_LEADS.length * 0.8) {
+          try {
+            localStorage.removeItem('sri_sri_deleted_lead_ids');
+            localStorage.removeItem('sri_sri_deleted_lead_phones');
+          } catch(e){}
+        }
+        const activeDeletedIds = getDeletedLeadIds();
+        leads = PRESEEDED_HISTORICAL_LEADS.filter(l => !activeDeletedIds.has(l.id) && !isLeadDeleted(l));
+        if (leads.length === 0) {
+          leads = JSON.parse(JSON.stringify(PRESEEDED_HISTORICAL_LEADS));
+        }
+      } else {
+        leads = [];
+      }
     }
     // Strict Deduplication & deletion filter on startup
     leads = deduplicateLeads(leads);
@@ -7729,37 +7742,43 @@
                             nameLower.includes('coordinator') || nameLower.includes('cordinator');
       const isManager = user.role === 'Manager' || roleLower.includes('manager');
 
-      // 1. Navigation Visibility
+      // 1. Navigation Visibility - Granular permission control configured by Admin
       const navMap = [
         { id: 'nav-dashboard', allowed: true },
         { id: 'nav-conversation', allowed: isOwner || userHasPermission('conv_view_all') || userHasPermission('conv_reply') },
         { id: 'nav-phonebook', allowed: isOwner || userHasPermission('leads_view') },
         { id: 'nav-opportunities', allowed: isOwner || userHasPermission('opp_view') },
         { id: 'nav-tasks', allowed: isOwner || userHasPermission('tasks_view') },
-        { id: 'nav-call-logs', allowed: isOwner || userHasPermission('tasks_view') || isCoordinator },
-        { id: 'nav-broadcast-group', allowed: !isCoordinator && (isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage')) },
-        { id: 'nav-wa-templates', allowed: !isCoordinator && (isOwner || userHasPermission('templates_manage')) },
-        { id: 'nav-wa-flow', allowed: !isCoordinator && (isOwner || userHasPermission('flows_manage')) },
-        { id: 'nav-wa-broadcast', allowed: !isCoordinator && (isOwner || userHasPermission('broadcast_launch')) },
-        { id: 'nav-automation', allowed: !isCoordinator && (isOwner || userHasPermission('workflow_automate')) },
-        { id: 'nav-forms', allowed: !isCoordinator && (isOwner || userHasPermission('leads_create') || userHasPermission('leads_import')) },
-        { id: 'nav-media', allowed: !isCoordinator && (isOwner || userHasPermission('conv_attach_files')) },
-        { id: 'nav-reports', allowed: !isCoordinator && (isOwner || userHasPermission('reports_view') || userHasPermission('reports_staff_kpi')) },
-        { id: 'nav-apps', allowed: !isCoordinator && (isOwner || userHasPermission('settings_apps')) },
+        { id: 'nav-call-logs', allowed: isOwner || userHasPermission('calls_view') },
+        { id: 'nav-broadcast-group', allowed: isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage') },
+        { id: 'nav-wa-templates', allowed: isOwner || userHasPermission('templates_manage') },
+        { id: 'nav-wa-flow', allowed: isOwner || userHasPermission('flows_manage') },
+        { id: 'nav-wa-broadcast', allowed: isOwner || userHasPermission('broadcast_launch') },
+        { id: 'nav-automation', allowed: isOwner || userHasPermission('workflow_automate') },
+        { id: 'nav-forms', allowed: isOwner || userHasPermission('leads_create') || userHasPermission('leads_import') },
+        { id: 'nav-media', allowed: isOwner || userHasPermission('conv_attach_files') },
+        { id: 'nav-reports', allowed: isOwner || userHasPermission('reports_view') || userHasPermission('reports_staff_kpi') },
+        { id: 'nav-apps', allowed: isOwner || userHasPermission('settings_apps') },
         { id: 'nav-account', allowed: true },
-        { id: 'nav-settings', allowed: !isCoordinator && (isOwner || userHasPermission('settings_channels') || userHasPermission('settings_team') || userHasPermission('settings_roles') || userHasPermission('settings_wallet') || userHasPermission('settings_apps')) }
+        { id: 'nav-settings', allowed: isOwner || userHasPermission('settings_channels') || userHasPermission('settings_team') || userHasPermission('settings_roles') || userHasPermission('settings_wallet') || userHasPermission('settings_apps') }
       ];
+
+      // Drive Cloud Audio Sync & Drive Folder Settings: STRICTLY Super Admin Only!
+      const driveSyncBtn = document.getElementById('crm-drive-sync-btn');
+      const driveFolderBtn = document.getElementById('crm-drive-folder-settings-btn');
+      if (driveSyncBtn) driveSyncBtn.style.display = isOwner ? '' : 'none';
+      if (driveFolderBtn) driveFolderBtn.style.display = isOwner ? '' : 'none';
 
       navMap.forEach(item => {
         const el = document.getElementById(item.id);
         if (el) el.style.display = item.allowed ? '' : 'none';
       });
 
-      // 2. Sidebar Section Headers
-      const canSales = isOwner || userHasPermission('opp_view') || userHasPermission('tasks_view');
-      const canMarketing = !isCoordinator && (isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage') || userHasPermission('workflow_automate') || userHasPermission('leads_create') || userHasPermission('conv_attach_files'));
-      const canInsights = !isCoordinator && (isOwner || userHasPermission('reports_view') || userHasPermission('reports_staff_kpi'));
-      const canSystem = !isCoordinator && (isOwner || userHasPermission('settings_apps') || userHasPermission('settings_channels') || userHasPermission('settings_team') || userHasPermission('settings_roles') || userHasPermission('settings_wallet'));
+      // 2. Sidebar Section Headers - Dynamically visible only if Admin granted permissions
+      const canSales = isOwner || userHasPermission('opp_view') || userHasPermission('tasks_view') || userHasPermission('calls_view');
+      const canMarketing = isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage') || userHasPermission('workflow_automate') || userHasPermission('conv_attach_files');
+      const canInsights = isOwner || userHasPermission('reports_view') || userHasPermission('reports_staff_kpi');
+      const canSystem = isOwner || userHasPermission('settings_apps') || userHasPermission('settings_channels') || userHasPermission('settings_team') || userHasPermission('settings_roles') || userHasPermission('settings_wallet');
 
       const secSales = document.getElementById('sec-header-sales');
       if (secSales) secSales.style.display = canSales ? '' : 'none';
@@ -8267,7 +8286,7 @@
         'conversation': ['conv_view_all', 'conv_reply'],
         'phonebook': ['leads_view'],
         'opportunities': ['opp_view'],
-        'call-logs': ['leads_view', 'opp_view'],
+        'call-logs': ['calls_view'],
         'tasks': ['tasks_view'],
         'broadcast-group': ['broadcast_view', 'broadcast_launch', 'templates_manage', 'flows_manage'],
         'wa-templates': ['templates_manage'],
@@ -11020,8 +11039,8 @@
     "lead_id": "",
     "caller_number": "+917508648100",
     "phone": "+917508648100",
-    "caller_name": "Direct Phone Call",
-    "leadName": "Direct Phone Call",
+    "caller_name": "Rupinder Singh",
+    "leadName": "Rupinder Singh",
     "receiver_number": "",
     "call_duration": 44,
     "duration": 44,
@@ -11044,8 +11063,8 @@
   {
     "id": "call-rec-1O6fS7CAbXXrhPprP147yrfuOpW94_ryU",
     "lead_id": "",
-    "caller_number": "+917123127270",
-    "phone": "+917123127270",
+    "caller_number": "Incoming Call",
+    "phone": "Incoming Call",
     "caller_name": "Potential Fraud",
     "leadName": "Potential Fraud",
     "receiver_number": "",
@@ -11069,11 +11088,11 @@
   },
   {
     "id": "call-rec-1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM",
-    "lead_id": "",
-    "caller_number": "+917123127269",
-    "phone": "+917123127269",
-    "caller_name": "Direct Phone Call",
-    "leadName": "Direct Phone Call",
+    "lead_id": "lead-csv-1278",
+    "caller_number": "+917814435761",
+    "phone": "+917814435761",
+    "caller_name": "sanju test",
+    "leadName": "sanju test",
     "receiver_number": "",
     "call_duration": 25,
     "duration": 25,
@@ -11096,8 +11115,8 @@
   {
     "id": "call-rec-1ddCOcitOO4UwdCdmmKI1F5YiyiofqiZq",
     "lead_id": "",
-    "caller_number": "+917123127268",
-    "phone": "+917123127268",
+    "caller_number": "Incoming Call",
+    "phone": "Incoming Call",
     "caller_name": "Suspected Spam",
     "leadName": "Suspected Spam",
     "receiver_number": "",
@@ -11121,7 +11140,7 @@
   },
   {
     "id": "call-rec-1vS9HBD2OEZi5mhyBoJTkDedgoVonNQGr",
-    "lead_id": "",
+    "lead_id": "lead-phone-9878685521",
     "caller_number": "+919878685521",
     "phone": "+919878685521",
     "caller_name": "Manga Khan",
@@ -11147,7 +11166,7 @@
   },
   {
     "id": "call-rec-1OCBSUwITJbqJEHj0Won27gt7ocIAuOLR",
-    "lead_id": "",
+    "lead_id": "lead-csv-1065",
     "caller_number": "+918745036534",
     "phone": "+918745036534",
     "caller_name": "Rajender",
@@ -11173,7 +11192,7 @@
   },
   {
     "id": "call-rec-1i_uyCGQ9iEJJIXNA9tEnO5ruWGPmFI7p",
-    "lead_id": "",
+    "lead_id": "lead-phone-9878685521",
     "caller_number": "+919878685521",
     "phone": "+919878685521",
     "caller_name": "Manga Khan",
@@ -11199,7 +11218,7 @@
   },
   {
     "id": "call-rec-1BWn0twXbTBk5ORoaadD8JaX7EHdw4ude",
-    "lead_id": "",
+    "lead_id": "lead-csv-1064",
     "caller_number": "+919779947870",
     "phone": "+919779947870",
     "caller_name": "KAMLESH JASWAL",
@@ -11228,8 +11247,8 @@
     "lead_id": "",
     "caller_number": "+919530895341",
     "phone": "+919530895341",
-    "caller_name": "Direct Phone Call",
-    "leadName": "Direct Phone Call",
+    "caller_name": "Direct Customer Call",
+    "leadName": "Direct Customer Call",
     "receiver_number": "",
     "call_duration": 23,
     "duration": 23,
@@ -11251,11 +11270,11 @@
   },
   {
     "id": "call-rec-1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw",
-    "lead_id": "",
-    "caller_number": "+917814214801",
-    "phone": "+917814214801",
-    "caller_name": "Customer Call",
-    "leadName": "Customer Call",
+    "lead_id": "lead-csv-1278",
+    "caller_number": "+917814435761",
+    "phone": "+917814435761",
+    "caller_name": "sanju test",
+    "leadName": "sanju test",
     "receiver_number": "",
     "call_duration": 46,
     "duration": 46,
@@ -11277,11 +11296,11 @@
   },
   {
     "id": "call-rec-1gJ4DdglwBLPOM4iARsIVoC_N2UURkALg",
-    "lead_id": "",
-    "caller_number": "+917814214800",
-    "phone": "+917814214800",
-    "caller_name": "Customer Call",
-    "leadName": "Customer Call",
+    "lead_id": "lead-csv-1278",
+    "caller_number": "+917814435761",
+    "phone": "+917814435761",
+    "caller_name": "sanju test",
+    "leadName": "sanju test",
     "receiver_number": "",
     "call_duration": 45,
     "duration": 45,
@@ -11303,7 +11322,7 @@
   },
   {
     "id": "call-rec-13t35tqFyFD_xzxUL-OwY6vDK0W5z7myL",
-    "lead_id": "",
+    "lead_id": "lead-csv-1060",
     "caller_number": "+919814804390",
     "phone": "+919814804390",
     "caller_name": "Jaimal Singh",
@@ -11329,7 +11348,7 @@
   },
   {
     "id": "call-rec-1KKglqh6ymYD8dPbvL1Pxkf0F_4TO3_Jp",
-    "lead_id": "",
+    "lead_id": "lead-csv-1061",
     "caller_number": "+919814804391",
     "phone": "+919814804391",
     "caller_name": "SHWETA MALIK",
@@ -11355,7 +11374,7 @@
   },
   {
     "id": "call-rec-1HIoQoPGfks-8YEzEgnTvEeOb97hDW4j7",
-    "lead_id": "",
+    "lead_id": "lead-csv-1062",
     "caller_number": "+919814804392",
     "phone": "+919814804392",
     "caller_name": "GURPREET SINGH",
@@ -11381,7 +11400,7 @@
   },
   {
     "id": "call-rec-1nlDS6IbcQktOvyS1P9SdweLKv18aTMGe",
-    "lead_id": "",
+    "lead_id": "lead-csv-1063",
     "caller_number": "+919814804393",
     "phone": "+919814804393",
     "caller_name": "Harpreet Singh",
@@ -11408,8 +11427,8 @@
   {
     "id": "call-rec-14wUfhihCj66V_BnF37bJD6S_uVzDDLbJ",
     "lead_id": "",
-    "caller_number": "+917123127267",
-    "phone": "+917123127267",
+    "caller_number": "Incoming Call",
+    "phone": "Incoming Call",
     "caller_name": "Suspected Spam",
     "leadName": "Suspected Spam",
     "receiver_number": "",
@@ -11435,7 +11454,13 @@
 
     function getStoredClientCallLogs() {
       const PHANTOM_CALL_IDS = new Set([
-        'call-log-1793081320981-675',
+        'call-log-1793164320000-2801',
+        'call-log-1793162599329-711',
+        'call-log-1793181780000-2802',
+        'call-log-1793164320000-2801',
+            'call-log-1793162599329-711',
+            'call-log-1793181780000-2802',
+            'call-log-1793081320981-675',
         'call-log-1793081074929-41',
         'call-log-1793095511751-514',
         'call-log-1793000441279-828',
@@ -15373,6 +15398,10 @@
     }
 
     function saveRolePermissionsChanges() {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can change system roles.', 'error');
+        return;
+      }
       if (!currentEditingRoleId) return;
       const role = roles.find(r => r.id === currentEditingRoleId);
       if (!role) return;
@@ -15409,6 +15438,10 @@
     }
 
     function deleteCustomRole(roleId) {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can delete system roles.', 'error');
+        return;
+      }
       const role = roles.find(r => r.id === roleId);
       if (!role) return;
 
@@ -16005,6 +16038,10 @@
     }
 
     function saveStaffMemberChanges() {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can edit staff accounts.', 'error');
+        return;
+      }
       if (!currentEditingStaffId) return;
       const user = users.find(u => u.id === currentEditingStaffId);
       if (!user) return;
@@ -16061,6 +16098,10 @@
     }
 
     function deleteStaffMember(userId) {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can delete staff accounts.', 'error');
+        return;
+      }
       const user = users.find(u => u.id === userId);
       if (!user) return;
 
@@ -19354,19 +19395,35 @@
 
       try {
         let stored = safeStorageGet('sri_sri_call_logs', null);
-        if (!stored || !Array.isArray(stored) || stored.length === 0 || stored.some(c => PHANTOM_CALL_IDS.has(c.id) || (c.time && c.time.includes('27 Oct')) || (c.recording_url && c.recording_url.includes('UklGRuRdAABX')))) {
+        // Comprehensive check: if stored has phantom IDs, fake 7123 numbers, or corrupt Manga Khan 10:32 AM, reset to verified bundled calls
+        const hasCorruptCalls = stored && Array.isArray(stored) && stored.some(c => 
+          !c || !c.id || PHANTOM_CALL_IDS.has(c.id) ||
+          c.id === 'call-log-1793164320000-2801' || 
+          c.id === 'call-log-1793162599329-711' ||
+          c.id === 'call-log-1793181780000-2802' ||
+          (c.time && c.time.includes('28 Oct') && c.time.includes('10:32')) ||
+          (c.phone && (c.phone.includes('7123127269') || c.phone.includes('7814214801') || c.phone.includes('7814214800'))) ||
+          (c.time && c.time.includes('27 Oct')) || 
+          (c.recording_url && c.recording_url.includes('UklGRuRdAABX'))
+        );
+
+        if (!stored || !Array.isArray(stored) || stored.length === 0 || hasCorruptCalls) {
           stored = JSON.parse(JSON.stringify(DEFAULT_BUNDLED_CALL_LOGS));
           safeStorageSet('sri_sri_call_logs', stored);
         } else {
           stored = stored.filter(c => c && c.id && !PHANTOM_CALL_IDS.has(c.id) && !c.time?.includes('27 Oct') && !c.created_at?.includes('2026-10-27') && !isGhostCallRecord(c));
-        stored.forEach(c => {
-          if (c.caller_number?.includes('7123127270') || c.id === 'call-log-1793188414861-816') {
-            c.outcome = 'Connected';
-            c.callOutcome = 'Connected';
-            c.call_outcome = 'Connected';
-            if (!c.call_duration || c.call_duration === 0) { c.call_duration = 45; c.duration = 45; }
-          }
-        });
+          // Sanitize Sanju Test drive recordings
+          stored.forEach(c => {
+            if (c.drive_file_id === '1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM' || 
+                c.drive_file_id === '1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw' || 
+                c.drive_file_id === '1gJ4DdglwBLPOM4iARsIVoC_N2UURkALg') {
+              c.caller_number = '+917814435761';
+              c.phone = '+917814435761';
+              c.leadName = 'sanju test';
+              c.caller_name = 'sanju test';
+              c.leadId = 'lead-csv-1278';
+            }
+          });
         }
 
         stored.forEach(c => {
@@ -19882,6 +19939,10 @@
     }
 
     function openDriveSettingsModal() {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can view or change Drive Folder settings.', 'error');
+        return;
+      }
       const modal = document.getElementById('crm-drive-config-modal');
       const input = document.getElementById('crm-drive-folder-input');
       if (modal && input) {
@@ -19897,6 +19958,10 @@
     }
 
     function saveDriveSettings() {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can change Drive Folder link.', 'error');
+        return;
+      }
       const input = document.getElementById('crm-drive-folder-input');
       if (input && input.value.trim()) {
         localStorage.setItem('crm_drive_folder_id', input.value.trim());
@@ -19907,6 +19972,10 @@
     }
 
     async function syncRecordingsFromDrive(isSilent = false) {
+      if (!isCurrentUserSuperAdmin()) {
+        if (!isSilent) showToast('Permission Denied: Only Admin can sync Google Drive.', 'error');
+        return;
+      }
       const btn = document.getElementById('crm-drive-sync-btn');
       if (btn && !isSilent) {
         btn.disabled = true;
@@ -19930,22 +19999,22 @@
           const data = await res.json();
           if (data && data.success && Array.isArray(data.calls)) {
             const KNOWN_DRIVE_MAPPINGS = {
-              '1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep': { name: 'Direct Phone Call', phone: '+917508648100', dur: 44 },
-              '1O6fS7CAbXXrhPprP147yrfuOpW94_ryU': { name: 'Potential Fraud', phone: '+917123127270', dur: 20 },
-              '1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM': { name: 'Direct Phone Call', phone: '+917123127269', dur: 25 },
-              '1ddCOcitOO4UwdCdmmKI1F5YiyiofqiZq': { name: 'Suspected Spam', phone: '+917123127268', dur: 18 },
+              '1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep': { name: 'Rupinder Singh', phone: '+917508648100', dur: 44 },
+              '1O6fS7CAbXXrhPprP147yrfuOpW94_ryU': { name: 'Potential Fraud', phone: 'Incoming Call', dur: 20 },
+              '1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 25 },
+              '1ddCOcitOO4UwdCdmmKI1F5YiyiofqiZq': { name: 'Suspected Spam', phone: 'Incoming Call', dur: 18 },
               '1vS9HBD2OEZi5mhyBoJTkDedgoVonNQGr': { name: 'Manga Khan', phone: '+919878685521', dur: 55 },
               '1OCBSUwITJbqJEHj0Won27gt7ocIAuOLR': { name: 'Rajender', phone: '+918745036534', dur: 32 },
               '1i_uyCGQ9iEJJIXNA9tEnO5ruWGPmFI7p': { name: 'Manga Khan', phone: '+919878685521', dur: 81 },
               '1BWn0twXbTBk5ORoaadD8JaX7EHdw4ude': { name: 'KAMLESH JASWAL', phone: '+919779947870', dur: 100 },
-              '1WAtnBpjljm3tf4OgySDzOLNVZQ6h7gzF': { name: 'Direct Phone Call', phone: '+919530895341', dur: 23 },
-              '1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw': { name: 'Customer Call', phone: '+917814214801', dur: 46 },
-              '1gJ4DdglwBLPOM4iARsIVoC_N2UURkALg': { name: 'Customer Call', phone: '+917814214800', dur: 45 },
+              '1WAtnBpjljm3tf4OgySDzOLNVZQ6h7gzF': { name: 'Direct Customer Call', phone: '+919530895341', dur: 23 },
+              '1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 46 },
+              '1gJ4DdglwBLPOM4iARsIVoC_N2UURkALg': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 45 },
               '13t35tqFyFD_xzxUL-OwY6vDK0W5z7myL': { name: 'Jaimal Singh', phone: '+919814804390', dur: 15 },
               '1KKglqh6ymYD8dPbvL1Pxkf0F_4TO3_Jp': { name: 'SHWETA MALIK', phone: '+919814804391', dur: 237 },
               '1HIoQoPGfks-8YEzEgnTvEeOb97hDW4j7': { name: 'GURPREET SINGH', phone: '+919814804392', dur: 72 },
               '1nlDS6IbcQktOvyS1P9SdweLKv18aTMGe': { name: 'Harpreet Singh', phone: '+919814804393', dur: 87 },
-              '14wUfhihCj66V_BnF37bJD6S_uVzDDLbJ': { name: 'Suspected Spam', phone: '+917123127267', dur: 15 }
+              '14wUfhihCj66V_BnF37bJD6S_uVzDDLbJ': { name: 'Suspected Spam', phone: 'Incoming Call', dur: 15 }
             };
 
             // Merge with local callLogs using physical call matcher
@@ -20108,7 +20177,15 @@
         (loggedInUser && (roleStr.includes('super admin') || roleStr.includes('admin') || roleStr.includes('manager') || roleStr.includes('cordinator') || roleStr.includes('coordinator')));
 
       const isSuperAdmin = isCurrentUserSuperAdmin();
-      const canListenRecordings = isSuperAdmin || userHasPermission('calls_listen_recording') || !loggedInUser || isOwnerOrManager;
+
+      // Drive Cloud Audio Sync & Drive Folder Settings: STRICTLY Admin Only!
+      const driveSyncBtn = document.getElementById('crm-drive-sync-btn');
+      const driveFolderBtn = document.getElementById('crm-drive-folder-settings-btn');
+      if (driveSyncBtn) driveSyncBtn.style.display = isSuperAdmin ? '' : 'none';
+      if (driveFolderBtn) driveFolderBtn.style.display = isSuperAdmin ? '' : 'none';
+
+      // Sales Coordinator or regular staff can ONLY listen to recordings if Admin grants 'calls_listen_recording' permission!
+      const canListenRecordings = isSuperAdmin || userHasPermission('calls_listen_recording');
 
       const roleBanner = document.getElementById('call-logs-role-banner');
       if (roleBanner) {
@@ -20778,6 +20855,12 @@
     window.closeFloatingAudioBar = closeFloatingAudioBar;
 
     function playInlineCallAudio(callId) {
+      const isSuperAdmin = isCurrentUserSuperAdmin();
+      const canListen = isSuperAdmin || userHasPermission('calls_listen_recording');
+      if (!canListen) {
+        showToast('Permission Denied: Recording audio playback is restricted by Admin.', 'error');
+        return;
+      }
       const call = callLogs.find(c => c.id === callId);
       if (!call) return;
 
@@ -22250,6 +22333,10 @@
     }
 
     function saveCustomPhoneConfig(phoneNum) {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can change phone configurations.', 'error');
+        return;
+      }
       phoneNum = parseInt(phoneNum, 10) || 1;
       const configs = getMultiPhoneConfigs();
       const current = configs[phoneNum] || { num: phoneNum };
