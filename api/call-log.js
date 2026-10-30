@@ -277,7 +277,11 @@ module.exports = async (req, res) => {
       const cNum = String(c.caller_number || c.phone || '').trim();
       const cName = String(c.caller_name || '').toLowerCase();
       const cDigits = cNum.replace(/\D/g, '');
-      if (cNum.toLowerCase().includes('unknown') || cName.includes('unknown incoming') || cDigits.length < 5) return false;
+      if (c.drive_file_id || c.recording_url) {
+        // Real call with verified recording on Google Drive - ALWAYS KEEP!
+      } else if (cNum.toLowerCase().includes('unknown') || cName.includes('unknown incoming') || (cDigits.length > 0 && cDigits.length < 5)) {
+        return false;
+      }
       if (c.id === 'call-log-1793170323765-551' || c.id === 'call-log-1793162593463-412') return false;
       if (c.id === 'call-log-1793188414861-816' || cNum.includes('7123127270')) {
         c.call_outcome = 'Connected';

@@ -101,17 +101,36 @@ function parseDriveRecordings(html) {
         if (!isNaN(d.getTime())) isoTimestamp = d.toISOString();
       }
 
-      // Phone number extraction
+      // Phone number and contact name extraction
       let phoneDigits = '';
       const phoneMatch = name.match(/(\+?91)?(\d{10})/);
       if (phoneMatch) {
         phoneDigits = phoneMatch[2];
       }
 
+      let contactName = '';
+      const nameMatch = name.match(/^Call recording\s+(.+?)_(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\.(m4a|mp3)$/i);
+      if (nameMatch) {
+        contactName = nameMatch[1].trim();
+      }
+
+      let formattedTime = '';
+      if (dateMatch) {
+        const [_, yy, mm, dd, hh, min, ss] = dateMatch;
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const mIdx = parseInt(mm, 10) - 1;
+        const hInt = parseInt(hh, 10);
+        const ampm = hInt >= 12 ? 'PM' : 'AM';
+        const h12 = hInt % 12 || 12;
+        formattedTime = `${parseInt(dd, 10)} ${months[mIdx]}, ${h12 < 10 ? '0' + h12 : h12}:${min} ${ampm}`;
+      }
+
       recordings.push({
         id,
         name,
         size,
+        contactName,
+        formattedTime,
         phone: phoneDigits ? `+91${phoneDigits}` : '',
         phoneDigits,
         timestamp: isoTimestamp,
@@ -212,23 +231,31 @@ module.exports = async (req, res) => {
         // If it's a new call from >= 20 Oct 2026, add to call logs
         const recTime = new Date(rec.timestamp).getTime();
         if (recTime >= CUTOFF_DATE) {
+          const cName = (rec.id === '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0' || rec.contactName === 'Shiv Charan')
+            ? 'Shiv Charan'
+            : (rec.contactName || (rec.phoneDigits ? ('Direct Phone Call') : 'Direct Customer Call'));
+          const cNum = rec.phone || (rec.contactName ? (rec.contactName + ' (Direct Call)') : 'Direct Phone Call');
           const newCall = {
             id: `call-rec-${rec.id}`,
-            caller_number: rec.phone || '+91' + rec.phoneDigits,
-            phone: rec.phone || '+91' + rec.phoneDigits,
-            caller_name: `Customer Call (${rec.phone || rec.phoneDigits})`,
-            leadName: `Customer Call`,
+            caller_number: cNum,
+            phone: cNum,
+            caller_name: cName,
+            leadName: cName,
             call_type: 'INCOMING',
+            direction: 'INBOUND',
             outcome: 'Connected',
+            call_outcome: 'Connected',
             callOutcome: 'Connected',
             duration: rec.approxDuration,
+            call_duration: rec.approxDuration,
             created_at: rec.timestamp,
             timestamp: rec.timestamp,
-            time: rec.timestamp,
+            time: rec.formattedTime || rec.timestamp,
             recording_url: rec.audioUrl,
             audioUrl: rec.audioUrl,
             drive_file_id: rec.id,
-            deviceName: 'Samsung Galaxy'
+            deviceName: 'Samsung Galaxy',
+            staff_name: 'Samsung Galaxy'
           };
           calls.unshift(newCall);
           attachedCount++;
