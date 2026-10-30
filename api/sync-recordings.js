@@ -85,44 +85,74 @@ function parseDriveRecordings(html) {
       const id = it[0];
       const name = it[2] || '';
       const size = it[13] || 0;
-      if (!name.endsWith('.m4a') && !name.endsWith('.mp3')) return;
+      if (!name.endsWith('.m4a') && !name.endsWith('.mp3') && !name.endsWith('.wav') && !name.endsWith('.aac')) return;
 
-      // Extract phone number and timestamp from Samsung call recording format
-      // Example: "Call recording +917508648100_261029_142818.m4a"
-      // Or: "Call recording Manga khan meta_261026_130000.m4a"
-      const dateMatch = name.match(/_(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\.m4a$/i);
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       let isoTimestamp = null;
       let yymmdd = '';
-      if (dateMatch) {
-        const [_, yy, mm, dd, hh, min, ss] = dateMatch;
+      let formattedTime = '';
+      let phoneDigits = '';
+      let contactName = '';
+      let isOnePlus = false;
+
+      // Pattern 1: Samsung Galaxy call recording format
+      // Examples: "Call recording +917508648100_261029_142818.m4a", "Call recording Shiv Charan_261030_150035.m4a"
+      const samsungMatch = name.match(/_(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\.(m4a|mp3)$/i);
+
+      // Pattern 2: OnePlus / ODialer call recording format
+      // Examples: "2610301635.mp3" (YYMMDDHHMM), "Kamla Devi_2610301635.mp3", "9814400123_2610301635.mp3"
+      const oneplusMatch = name.match(/^(?:(.+?)[_-])?(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})?\.(mp3|m4a|wav|aac)$/i);
+
+      if (samsungMatch) {
+        const [_, yy, mm, dd, hh, min, ss] = samsungMatch;
         yymmdd = `20${yy}-${mm}-${dd}`;
-        // Approximate IST timestamp (UTC+5:30)
         const d = new Date(`20${yy}-${mm}-${dd}T${hh}:${min}:${ss}+05:30`);
         if (!isNaN(d.getTime())) isoTimestamp = d.toISOString();
-      }
-
-      // Phone number and contact name extraction
-      let phoneDigits = '';
-      const phoneMatch = name.match(/(\+?91)?(\d{10})/);
-      if (phoneMatch) {
-        phoneDigits = phoneMatch[2];
-      }
-
-      let contactName = '';
-      const nameMatch = name.match(/^Call recording\s+(.+?)_(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\.(m4a|mp3)$/i);
-      if (nameMatch) {
-        contactName = nameMatch[1].trim();
-      }
-
-      let formattedTime = '';
-      if (dateMatch) {
-        const [_, yy, mm, dd, hh, min, ss] = dateMatch;
-        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         const mIdx = parseInt(mm, 10) - 1;
         const hInt = parseInt(hh, 10);
         const ampm = hInt >= 12 ? 'PM' : 'AM';
         const h12 = hInt % 12 || 12;
         formattedTime = `${parseInt(dd, 10)} ${months[mIdx]}, ${h12 < 10 ? '0' + h12 : h12}:${min} ${ampm}`;
+        isOnePlus = false;
+
+        const nameMatch = name.match(/^Call recording\s+(.+?)_(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\.(m4a|mp3)$/i);
+        if (nameMatch) {
+          contactName = nameMatch[1].trim();
+        }
+      } else if (oneplusMatch) {
+        const [_, prefix, yy, mm, dd, hh, min, ss] = oneplusMatch;
+        yymmdd = `20${yy}-${mm}-${dd}`;
+        const sec = ss || '00';
+        const d = new Date(`20${yy}-${mm}-${dd}T${hh}:${min}:${sec}+05:30`);
+        if (!isNaN(d.getTime())) isoTimestamp = d.toISOString();
+        const mIdx = parseInt(mm, 10) - 1;
+        const hInt = parseInt(hh, 10);
+        const ampm = hInt >= 12 ? 'PM' : 'AM';
+        const h12 = hInt % 12 || 12;
+        formattedTime = `${parseInt(dd, 10)} ${months[mIdx]}, ${h12 < 10 ? '0' + h12 : h12}:${min} ${ampm}`;
+        isOnePlus = true;
+
+        if (prefix) {
+          const pMatch = prefix.match(/(?:\+?91)?([6-9]\d{9})/);
+          if (pMatch) {
+            phoneDigits = pMatch[1];
+          } else {
+            contactName = prefix.replace(/^Call recording\s+/i, '').trim();
+          }
+        }
+      }
+
+      // Extract valid 10-digit mobile number if not extracted yet
+      if (!phoneDigits) {
+        const phoneMatch = name.match(/(?:\+?91)?([6-9]\d{9})/);
+        if (phoneMatch) {
+          phoneDigits = phoneMatch[1];
+        }
+      }
+
+      // If file ends with .mp3 and not identified as Samsung, it is OnePlus
+      if (name.endsWith('.mp3') || name.toLowerCase().includes('oneplus')) {
+        isOnePlus = true;
       }
 
       recordings.push({
@@ -136,7 +166,10 @@ function parseDriveRecordings(html) {
         timestamp: isoTimestamp,
         yymmdd,
         audioUrl: `/api/call-audio?id=${id}`,
-        approxDuration: Math.max(10, Math.round(size / 13000))
+        approxDuration: Math.max(10, Math.round(size / 13000)),
+        deviceName: isOnePlus ? 'OnePlus' : 'Samsung Galaxy',
+        device_name: isOnePlus ? 'OnePlus' : 'Samsung Galaxy',
+        staff_name: isOnePlus ? 'OnePlus' : 'Samsung Galaxy'
       });
     });
   } catch(e) {
@@ -225,16 +258,23 @@ module.exports = async (req, res) => {
           if (!matchedCall.duration || matchedCall.duration === 0) {
             matchedCall.duration = rec.approxDuration;
           }
+          if (rec.deviceName) {
+            matchedCall.deviceName = rec.deviceName;
+            matchedCall.device_name = rec.deviceName;
+            matchedCall.staff_name = rec.deviceName;
+          }
           attachedCount++;
         }
       } else if (rec.timestamp) {
         // If it's a new call from >= 20 Oct 2026, add to call logs
         const recTime = new Date(rec.timestamp).getTime();
         if (recTime >= CUTOFF_DATE) {
+          const isOnePlus = rec.deviceName === 'OnePlus';
           const cName = (rec.id === '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0' || rec.contactName === 'Shiv Charan')
             ? 'Shiv Charan'
-            : (rec.contactName || (rec.phoneDigits ? ('Direct Phone Call') : 'Direct Customer Call'));
+            : (rec.contactName || (rec.phoneDigits ? ('Direct Phone Call') : (isOnePlus ? 'OnePlus Call (' + (rec.formattedTime || 'Recent') + ')' : 'Direct Customer Call')));
           const cNum = rec.phone || (rec.contactName ? (rec.contactName + ' (Direct Call)') : 'Direct Phone Call');
+          const devName = rec.deviceName || (isOnePlus ? 'OnePlus' : 'Samsung Galaxy');
           const newCall = {
             id: `call-rec-${rec.id}`,
             caller_number: cNum,
@@ -254,8 +294,9 @@ module.exports = async (req, res) => {
             recording_url: rec.audioUrl,
             audioUrl: rec.audioUrl,
             drive_file_id: rec.id,
-            deviceName: 'Samsung Galaxy',
-            staff_name: 'Samsung Galaxy'
+            deviceName: devName,
+            device_name: devName,
+            staff_name: devName
           };
           calls.unshift(newCall);
           attachedCount++;

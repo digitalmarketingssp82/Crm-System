@@ -501,9 +501,19 @@ module.exports = async (req, res) => {
         call_outcome = 'Missed Call';
       }
 
-      // Multi-Phone Staff & Device Identification (Supports 3-4 phones)
-      const staff_name = 'Samsung Galaxy';
-      const device_name = 'Samsung Galaxy';
+      // Multi-Phone Staff & Device Identification (Supports Samsung, OnePlus, etc.)
+      let staff_name = data.staff_name || data.staff || data.device_name || query.staff_name || query.device_name || query.device || '';
+      let device_name = data.device_name || data.device || data.staff_name || query.device_name || query.device || '';
+      if (!device_name) {
+        if (String(extractedFileName).toLowerCase().includes('.mp3') || String(data.caller_name || '').toLowerCase().includes('oneplus') || String(data.device || '').toLowerCase().includes('oneplus')) {
+          device_name = 'OnePlus';
+          staff_name = 'OnePlus';
+        } else {
+          device_name = 'Samsung Galaxy';
+          staff_name = 'Samsung Galaxy';
+        }
+      }
+      if (!staff_name) staff_name = device_name;
 
       // Check if lead_id was explicitly supplied in payload
       let lead_id = data.lead_id || data.leadId || '';
