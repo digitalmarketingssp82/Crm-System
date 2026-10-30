@@ -15010,7 +15010,7 @@
       openModal('bulk-delete-confirm-modal');
     }
 
-    function openNewLeadModal(prefillPhone) {
+    function openNewLeadModal(prefillPhone, prefillName) {
       if (!isCurrentUserSuperAdmin() && !userHasPermission('leads_create')) { showToast('Permission Denied: You do not have permission to create leads.', 'error'); return; }
       const pipSelect = document.getElementById('nl-pipeline');
       pipSelect.innerHTML = '';
@@ -15026,8 +15026,10 @@
         populateLeadAssigneeSelect();
       }
 
-      document.getElementById('nl-name').value = '';
-      document.getElementById('nl-phone').value = (typeof prefillPhone === 'string' ? prefillPhone : '');
+      const validName = (typeof prefillName === 'string' && prefillName && !prefillName.includes('Direct Phone') && !prefillName.includes('Customer Call')) ? prefillName : '';
+      const validPhone = (typeof prefillPhone === 'string' && prefillPhone.match(/\d{5,}/)) ? prefillPhone : '';
+      document.getElementById('nl-name').value = validName;
+      document.getElementById('nl-phone').value = validPhone;
       document.getElementById('nl-deal-value').value = '';
       document.getElementById('nl-followup').value = '';
       document.getElementById('nl-address').value = '';
@@ -15181,32 +15183,41 @@
           safeStorageSet('sri_sri_tasks', tasks);
         }
 
-        // 4. Update Call Logs matching this phone number immediately
-        if (cleanPhone && cleanPhone.length === 10) {
-          if (Array.isArray(callLogs)) {
-            callLogs.forEach(c => {
-              const cp = (c.phone || c.caller_number || '').replace(/\D/g, '').slice(-10);
-              if (cp === cleanPhone) {
-                c.leadId = targetLead.id;
-                c.leadName = targetLead.name;
-                c.caller_name = targetLead.name;
-              }
-            });
-            callLogs = deduplicateCallRecords(callLogs);
-            safeStorageSet('sri_sri_call_logs', callLogs);
+        // 4. Update Call Logs matching this phone number OR caller name immediately
+        const updateMatchingCallRecord = (c) => {
+          if (!c) return;
+          let isMatch = false;
+          if (cleanPhone && cleanPhone.length === 10) {
+            const cp = (c.phone || c.caller_number || '').replace(/\D/g, '').slice(-10);
+            if (cp === cleanPhone) isMatch = true;
           }
-          const storedClientLogs = getStoredClientCallLogs();
-          if (Array.isArray(storedClientLogs)) {
-            storedClientLogs.forEach(c => {
-              const cp = (c.phone || c.caller_number || '').replace(/\D/g, '').slice(-10);
-              if (cp === cleanPhone) {
-                c.leadId = targetLead.id;
-                c.leadName = targetLead.name;
-                c.caller_name = targetLead.name;
-              }
-            });
-            safeStorageSet('sri_call_logs', storedClientLogs);
+          if (!isMatch && targetLead.name && c.caller_name) {
+            const cName = c.caller_name.trim().toLowerCase();
+            const lName = targetLead.name.trim().toLowerCase();
+            if (cName && cName !== 'direct phone call' && !cName.includes('customer call') && (cName === lName || cName.includes(lName) || lName.includes(cName))) {
+              isMatch = true;
+            }
           }
+          if (isMatch) {
+            c.leadId = targetLead.id;
+            c.leadName = targetLead.name;
+            c.caller_name = targetLead.name;
+            if (targetLead.phone) {
+              c.phone = targetLead.phone;
+              c.caller_number = targetLead.phone;
+            }
+          }
+        };
+
+        if (Array.isArray(callLogs)) {
+          callLogs.forEach(updateMatchingCallRecord);
+          callLogs = deduplicateCallRecords(callLogs);
+          safeStorageSet('sri_sri_call_logs', callLogs);
+        }
+        const storedClientLogs = getStoredClientCallLogs();
+        if (Array.isArray(storedClientLogs)) {
+          storedClientLogs.forEach(updateMatchingCallRecord);
+          safeStorageSet('sri_call_logs', storedClientLogs);
         }
 
         // 5. Save to local storage & cloud
@@ -20215,6 +20226,25 @@
       return deduped;
     }
 
+    
+    function editCallLogPhoneNumber(callId) {
+      if (!callLogs) return;
+      const call = callLogs.find(c => c.id === callId);
+      if (!call) return;
+      const currentNum = (call.phone || call.caller_number || '').replace(/\D/g, '').slice(-10);
+      const newNum = prompt('Enter 10-digit mobile number for "' + (call.caller_name || 'Customer') + '":', currentNum || '');
+      if (newNum !== null && newNum.trim()) {
+        const cleanDigits = newNum.replace(/\D/g, '').slice(-10);
+        const formatted = cleanDigits.length === 10 ? ('+91' + cleanDigits) : newNum.trim();
+        call.phone = formatted;
+        call.caller_number = formatted;
+        safeStorageSet('sri_call_logs', callLogs);
+        safeStorageSet('sri_sri_call_logs', callLogs);
+        renderTeamCallLogsTable();
+        showToast('✅ Mobile number updated for ' + (call.caller_name || 'call') + '!', 'success');
+      }
+    }
+
     function renderTeamCallLogsTable() {
       initCallLogs();
       renderCallModuleBanner();
@@ -20463,8 +20493,22 @@
                 if (!linkedLead && callPhoneClean && callPhoneClean.length === 10 && Array.isArray(leads)) {
                   linkedLead = leads.find(l => l && !isLeadDeleted(l) && (l.phone || '').replace(/\D/g, '').slice(-10) === callPhoneClean);
                 }
+                if (!linkedLead && call.caller_name && Array.isArray(leads)) {
+                  const cNameClean = call.caller_name.trim().toLowerCase();
+                  if (cNameClean && cNameClean !== 'direct phone call' && !cNameClean.includes('customer call') && !cNameClean.includes('unknown')) {
+                    linkedLead = leads.find(l => l && !isLeadDeleted(l) && l.name && (l.name.trim().toLowerCase() === cNameClean || l.name.trim().toLowerCase().includes(cNameClean) || cNameClean.includes(l.name.trim().toLowerCase())));
+                  }
+                }
+                if (linkedLead && linkedLead.phone && (!call.phone || !call.phone.match(/\d{5,}/))) {
+                  call.phone = linkedLead.phone;
+                  call.caller_number = linkedLead.phone;
+                  call.leadId = linkedLead.id;
+                  call.leadName = linkedLead.name;
+                }
+
                 const effectiveLeadId = linkedLead ? linkedLead.id : (call.leadId || '');
                 const effectiveLeadName = linkedLead ? linkedLead.name : (call.leadName && !call.leadName.startsWith('Direct Call') ? call.leadName : (call.caller_name && !call.caller_name.startsWith('Direct Call') ? call.caller_name : ''));
+                const effectivePhone = (linkedLead && linkedLead.phone) ? linkedLead.phone : (call.phone || call.caller_number || '—');
 
                 if (effectiveLeadId && effectiveLeadName) {
                   return `
@@ -20477,7 +20521,7 @@
                   return `
                     <div class="flex items-center gap-2">
                       <span class="font-black text-main text-sm">${escapeHtml(effectiveLeadName || 'Direct Phone Call')}</span>
-                      <button type="button" onclick="openNewLeadModal('${escapeHtml(call.phone || call.caller_number || '')}')" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-gold/20 text-gold border border-gold/40 hover:bg-gold hover:text-slate-950 transition cursor-pointer shrink-0">
+                      <button type="button" onclick="openNewLeadModal('${escapeHtml(call.phone && call.phone.match(/\d{5,}/) ? call.phone : '')}', '${escapeHtml(call.caller_name && !call.caller_name.startsWith('Direct Call') ? call.caller_name : '')}')" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-gold/20 text-gold border border-gold/40 hover:bg-gold hover:text-slate-950 transition cursor-pointer shrink-0">
                         + Create Lead
                       </button>
                     </div>
@@ -20485,7 +20529,26 @@
                 }
               })()}
               <div class="flex items-center gap-2 mt-1">
-                <span class="font-mono text-xs text-amber-600 dark:text-amber-400 font-extrabold select-text cursor-text">${escapeHtml(call.phone || call.caller_number || '—')}</span>
+                <span onclick="editCallLogPhoneNumber('${call.id}')" title="Click to edit phone number" class="font-mono text-xs text-amber-600 dark:text-amber-400 font-extrabold select-text cursor-pointer hover:underline flex items-center gap-1 group">
+                  <span>${escapeHtml((() => {
+                    const callPhoneClean = (call.phone || call.caller_number || '').replace(/\D/g, '').slice(-10);
+                    let linkedLead = null;
+                    if (call.leadId && Array.isArray(leads)) {
+                      linkedLead = leads.find(l => l && l.id === call.leadId && !isLeadDeleted(l));
+                    }
+                    if (!linkedLead && callPhoneClean && callPhoneClean.length === 10 && Array.isArray(leads)) {
+                      linkedLead = leads.find(l => l && !isLeadDeleted(l) && (l.phone || '').replace(/\D/g, '').slice(-10) === callPhoneClean);
+                    }
+                    if (!linkedLead && call.caller_name && Array.isArray(leads)) {
+                      const cNameClean = call.caller_name.trim().toLowerCase();
+                      if (cNameClean && cNameClean !== 'direct phone call' && !cNameClean.includes('customer call') && !cNameClean.includes('unknown')) {
+                        linkedLead = leads.find(l => l && !isLeadDeleted(l) && l.name && (l.name.trim().toLowerCase() === cNameClean || l.name.trim().toLowerCase().includes(cNameClean) || cNameClean.includes(l.name.trim().toLowerCase())));
+                      }
+                    }
+                    return (linkedLead && linkedLead.phone) ? linkedLead.phone : (call.phone || call.caller_number || '—');
+                  })())}</span>
+                  <i data-lucide="pencil" class="w-2.5 h-2.5 text-muted-custom opacity-50 group-hover:opacity-100 transition"></i>
+                </span>
               </div>
             </td>
             <td class="p-3.5 whitespace-nowrap w-36">
