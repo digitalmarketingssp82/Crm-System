@@ -384,7 +384,7 @@
 
         <!-- User Profile Dropdown -->
         <div class="relative flex items-center gap-2 pl-2 border-l border-main">
-          <div onclick="switchTab('account')" class="w-8 h-8 rounded-full bg-amber-500/20 text-gold flex items-center justify-center font-bold text-xs border border-gold/40 cursor-pointer hover:scale-105 transition hover:border-gold" id="header-user-avatar" title="View / Edit Profile & WhatsApp Number">
+          <div onclick="switchTab('account', true)" class="w-8 h-8 rounded-full bg-amber-500/20 text-gold flex items-center justify-center font-bold text-xs border border-gold/40 cursor-pointer hover:scale-105 transition hover:border-gold" id="header-user-avatar" title="View / Edit Profile & WhatsApp Number">
             SA
           </div>
           <button onclick="handleLogout()" class="p-1.5 rounded-xl text-muted-custom hover:text-rose-500 hover:bg-subtle transition" title="Logout">
@@ -422,12 +422,12 @@
           <div class="p-3 space-y-1">
             
             <!-- MAIN SECTION -->
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('dashboard', true)" id="nav-dashboard" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
               <span>Dashboard</span>
             </button>
 
-            <button onclick="switchTab('conversation')" id="nav-conversation" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('conversation', true)" id="nav-conversation" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <div class="flex items-center gap-3">
                 <i data-lucide="message-square" class="w-4 h-4"></i>
                 <span>Conversation</span>
@@ -435,7 +435,7 @@
               <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">WhatsApp</span>
             </button>
 
-            <button onclick="switchTab('phonebook')" id="nav-phonebook" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('phonebook', true)" id="nav-phonebook" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <div class="flex items-center gap-3">
                 <i data-lucide="book-user" class="w-4 h-4"></i>
                 <span>Phonebook</span>
@@ -448,7 +448,7 @@
               <span class="text-[10px] font-bold uppercase tracking-widest text-muted-custom opacity-70">Sales</span>
             </div>
 
-            <button onclick="switchTab('opportunities')" id="nav-opportunities" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition bg-gold text-slate-950 shadow-md">
+            <button onclick="switchTab('opportunities', true)" id="nav-opportunities" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition bg-gold text-slate-950 shadow-md">
               <div class="flex items-center gap-3">
                 <i data-lucide="git-branch" class="w-4 h-4"></i>
                 <span>Opportunities</span>
@@ -456,7 +456,7 @@
               <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-subtle text-muted-custom">Pipelines</span>
             </button>
 
-            <button onclick="switchTab('tasks')" id="nav-tasks" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('tasks', true)" id="nav-tasks" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <div class="flex items-center gap-3">
                 <i data-lucide="check-square" class="w-4 h-4"></i>
                 <span>Tasks & Follow-ups</span>
@@ -464,7 +464,7 @@
               <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-gold" id="tasks-count-badge">0</span>
             </button>
 
-            <button onclick="switchTab('call-logs')" id="nav-call-logs" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('call-logs', true)" id="nav-call-logs" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <div class="flex items-center gap-3">
                 <i data-lucide="phone-call" class="w-4 h-4 text-blue-400"></i>
                 <span>Call Logs & AI</span>
@@ -489,32 +489,32 @@
               
               <!-- Sub-items under Broadcast (From Screenshot 2) -->
               <div id="broadcast-submenu" class="pl-7 space-y-1">
-                <button onclick="switchTab('wa-templates')" id="nav-wa-templates" class="nav-item-btn w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium text-muted-custom hover:bg-subtle hover:text-main transition">
+                <button onclick="switchTab('wa-templates', true)" id="nav-wa-templates" class="nav-item-btn w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium text-muted-custom hover:bg-subtle hover:text-main transition">
                   <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                   <span>WA Templates</span>
                 </button>
-                <button onclick="switchTab('wa-flow')" id="nav-wa-flow" class="nav-item-btn w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium text-muted-custom hover:bg-subtle hover:text-main transition">
+                <button onclick="switchTab('wa-flow', true)" id="nav-wa-flow" class="nav-item-btn w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium text-muted-custom hover:bg-subtle hover:text-main transition">
                   <i data-lucide="workflow" class="w-3.5 h-3.5"></i>
                   <span>WA Form/Flow</span>
                 </button>
-                <button onclick="switchTab('wa-broadcast')" id="nav-wa-broadcast" class="nav-item-btn w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium text-muted-custom hover:bg-subtle hover:text-main transition">
+                <button onclick="switchTab('wa-broadcast', true)" id="nav-wa-broadcast" class="nav-item-btn w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium text-muted-custom hover:bg-subtle hover:text-main transition">
                   <i data-lucide="send" class="w-3.5 h-3.5"></i>
                   <span>WA Broadcast</span>
                 </button>
               </div>
             </div>
 
-            <button onclick="switchTab('automation')" id="nav-automation" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('automation', true)" id="nav-automation" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <i data-lucide="zap" class="w-4 h-4"></i>
               <span>Automation</span>
             </button>
 
-            <button onclick="switchTab('forms')" id="nav-forms" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('forms', true)" id="nav-forms" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <i data-lucide="file-input" class="w-4 h-4"></i>
               <span>Forms</span>
             </button>
 
-            <button onclick="switchTab('media')" id="nav-media" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('media', true)" id="nav-media" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <i data-lucide="folder" class="w-4 h-4"></i>
               <span>Media Storage</span>
             </button>
@@ -524,7 +524,7 @@
               <span class="text-[10px] font-bold uppercase tracking-widest text-muted-custom opacity-70">Insights</span>
             </div>
 
-            <button onclick="switchTab('reports')" id="nav-reports" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('reports', true)" id="nav-reports" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
               <span>Reports</span>
             </button>
@@ -534,17 +534,17 @@
               <span class="text-[10px] font-bold uppercase tracking-widest text-muted-custom opacity-70">System</span>
             </div>
 
-            <button onclick="switchTab('apps')" id="nav-apps" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('apps', true)" id="nav-apps" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <i data-lucide="grid" class="w-4 h-4"></i>
               <span>Apps</span>
             </button>
 
-            <button onclick="switchTab('account')" id="nav-account" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('account', true)" id="nav-account" class="nav-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <i data-lucide="user-check" class="w-4 h-4"></i>
               <span>Account</span>
             </button>
 
-            <button onclick="switchTab('settings')" id="nav-settings" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
+            <button onclick="switchTab('settings', true)" id="nav-settings" class="nav-item-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-muted-custom hover:bg-subtle hover:text-main transition">
               <div class="flex items-center gap-3">
                 <i data-lucide="settings" class="w-4 h-4"></i>
                 <span>Settings</span>
@@ -558,7 +558,7 @@
         <!-- SIDEBAR FOOTER -->
         <div class="p-3 border-t border-main bg-subtle space-y-2">
           <div class="flex items-center justify-between px-1">
-            <div onclick="switchTab('account')" class="flex items-center gap-2 truncate cursor-pointer hover:opacity-80 transition" title="My Profile & WhatsApp Number">
+            <div onclick="switchTab('account', true)" class="flex items-center gap-2 truncate cursor-pointer hover:opacity-80 transition" title="My Profile & WhatsApp Number">
               <div class="w-7 h-7 rounded-full bg-amber-500/20 text-gold flex items-center justify-center font-bold text-xs shrink-0" id="user-avatar-badge">
                 SA
               </div>
@@ -595,7 +595,7 @@
             <div id="dash-member-badge" class="hidden mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/30"></div>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="switchTab('phonebook')" id="dash-btn-open-phonebook" class="px-3.5 py-2 rounded-xl bg-card border border-main text-xs font-bold text-main hover:border-gold transition flex items-center gap-1.5">
+            <button onclick="switchTab('phonebook', true)" id="dash-btn-open-phonebook" class="px-3.5 py-2 rounded-xl bg-card border border-main text-xs font-bold text-main hover:border-gold transition flex items-center gap-1.5">
               <i data-lucide="book-user" class="w-4 h-4 text-gold"></i>
               <span>Open Phonebook</span>
             </button>
@@ -7676,12 +7676,32 @@
       populateRoleSelect();
       populateLeadAssigneeSelect();
 
-      // Restore last active tab on login (default: opportunities)
+      // Restore last active tab on login silently (without any permission error popups)
       try {
         const lastTab = localStorage.getItem('sri_sri_last_tab') || 'opportunities';
-        switchTab(lastTab);
+        const isOwner = isCurrentUserSuperAdmin();
+        const tabPermMap = {
+          'conversation': ['conv_view_all', 'conv_reply'],
+          'phonebook': ['leads_view'],
+          'opportunities': ['opp_view'],
+          'call-logs': ['calls_view'],
+          'tasks': ['tasks_view'],
+          'broadcast-group': ['broadcast_view'],
+          'reports': ['reports_view'],
+          'settings': ['settings_channels', 'settings_team']
+        };
+        let targetTab = lastTab;
+        if (!isOwner && tabPermMap[targetTab]) {
+          const hasAccess = tabPermMap[targetTab].some(p => userHasPermission(p));
+          if (!hasAccess) {
+            const candidateTabs = ['opportunities', 'phonebook', 'call-logs', 'tasks', 'conversation', 'dashboard'];
+            const allowed = candidateTabs.find(t => t === 'dashboard' || !tabPermMap[t] || tabPermMap[t].some(p => userHasPermission(p)));
+            targetTab = allowed || 'dashboard';
+          }
+        }
+        switchTab(targetTab, false);
       } catch(e){
-        switchTab('opportunities');
+        switchTab('dashboard', false);
       }
 
       showToast('Welcome back, ' + user.name + '!', 'success');
@@ -8272,13 +8292,17 @@
     }
 
     // ==================== NAVIGATION TABS ====================
-    function switchTab(tabId) {
+    function switchTab(tabId, isUserInitiated) {
       if (!loggedInUser) {
         checkSession();
         return;
       }
       if (tabId === 'conversations') tabId = 'conversation';
       purgeBrowserAutofillFromSearchInputs();
+
+      if (typeof isUserInitiated !== 'boolean') {
+        isUserInitiated = !!(window.event && (window.event.type === 'click' || window.event.type === 'keydown'));
+      }
 
       // Permission Guard: Strict rejection if user lacks required permission
       const isOwner = isCurrentUserSuperAdmin();
@@ -8303,9 +8327,11 @@
       if (!isOwner && tabPermMap[tabId]) {
         const hasAccess = tabPermMap[tabId].some(p => userHasPermission(p));
         if (!hasAccess) {
-          showToast('Access Restricted: You do not have permission to view the "' + tabId + '" module.', 'error');
+          if (isUserInitiated) {
+            showToast('Access Restricted: You do not have permission to view the "' + tabId + '" module.', 'warning');
+          }
           if (currentActiveTab !== 'dashboard') {
-            switchTab('dashboard');
+            switchTab('dashboard', false);
           }
           return;
         }
@@ -8398,7 +8424,10 @@
       }
     }
 
-    function switchSettingsSubTab(subTabId) {
+    function switchSettingsSubTab(subTabId, isUserInitiated) {
+      if (typeof isUserInitiated !== 'boolean') {
+        isUserInitiated = !!(window.event && (window.event.type === 'click' || window.event.type === 'keydown'));
+      }
       if (subTabId === 'channels') subTabId = 'whatsapp-channel';
       if (subTabId === 'staff') subTabId = 'team';
 
@@ -8417,7 +8446,9 @@
       if (!isOwner && setPermMap[subTabId]) {
         const hasAccess = setPermMap[subTabId].some(p => userHasPermission(p));
         if (!hasAccess) {
-          showToast('Access Restricted: You do not have permission to manage this section.', 'error');
+          if (isUserInitiated) {
+            showToast('Access Restricted: You do not have permission to manage this section.', 'warning');
+          }
           return;
         }
       }
@@ -11035,6 +11066,32 @@
 
     const DEFAULT_BUNDLED_CALL_LOGS = [
   {
+    "id": "call-rec-1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0",
+    "lead_id": "",
+    "caller_number": "Direct Phone Call",
+    "phone": "Direct Phone Call",
+    "caller_name": "Shiv Charan",
+    "leadName": "Shiv Charan",
+    "receiver_number": "",
+    "call_duration": 74,
+    "duration": 74,
+    "recording_url": "/api/call-audio?id=1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0",
+    "audioUrl": "/api/call-audio?id=1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0",
+    "drive_file_id": "1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0",
+    "hasAudio": true,
+    "ai_summary": "",
+    "direction": "INBOUND",
+    "call_outcome": "Connected",
+    "outcome": "Connected",
+    "staff_name": "Samsung Galaxy",
+    "device_name": "Samsung Galaxy",
+    "created_at": "2026-10-30T09:30:35.000Z",
+    "timestamp": "2026-10-30T09:30:35.000Z",
+    "time": "30 Oct, 03:00 PM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
     "id": "call-rec-1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep",
     "lead_id": "",
     "caller_number": "+917508648100",
@@ -11488,7 +11545,7 @@
           parsed = JSON.parse(JSON.stringify(DEFAULT_BUNDLED_CALL_LOGS));
           localStorage.setItem('sri_call_logs', JSON.stringify(parsed));
         }
-        parsed = parsed.filter(item => item && item.id && !PHANTOM_CALL_IDS.has(item.id) && !item.caller_number?.includes('9999988888') && !item.time?.includes('27 Oct') && !item.created_at?.includes('2026-10-27') && !isGhostCallRecord(item));
+        parsed = parsed.filter(item => item && item.id && !PHANTOM_CALL_IDS.has(item.id) && !item.caller_number?.includes('9999988888') && !item.caller_number?.includes('9999999999') && !item.caller_name?.includes('Test Verification') && !item.time?.includes('27 Oct') && !item.created_at?.includes('2026-10-27') && !isGhostCallRecord(item));
         parsed.forEach(item => {
           if (item.caller_number?.includes('7123127270') || item.id === 'call-log-1793188414861-816') {
             item.call_outcome = 'Connected';
@@ -19827,6 +19884,7 @@
     
   function isGhostCallRecord(c) {
     if (!c) return true;
+    if (c.drive_file_id || c.recording_url) return false; // Genuine verified recording on Google Drive!
     const num = String(c.caller_number || c.phone || '').trim();
     const name = String(c.caller_name || c.leadName || '').toLowerCase();
     const digits = num.replace(/\D/g, '');
@@ -19999,6 +20057,7 @@
           const data = await res.json();
           if (data && data.success && Array.isArray(data.calls)) {
             const KNOWN_DRIVE_MAPPINGS = {
+              '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: 'Direct Phone Call', dur: 74, time: '30 Oct, 03:00 PM' },
               '1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep': { name: 'Rupinder Singh', phone: '+917508648100', dur: 44 },
               '1O6fS7CAbXXrhPprP147yrfuOpW94_ryU': { name: 'Potential Fraud', phone: 'Incoming Call', dur: 20 },
               '1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 25 },
@@ -21511,6 +21570,63 @@
           }
         } catch(e) {}
 
+        // Source 3: Google Drive Audio Recordings (Automatically sync all calls uploaded by FolderSync)
+        try {
+          const folderId = getDriveFolderId();
+          const folderParam = folderId.includes('?') ? folderId : (folderId + '?sort=14&direction=d');
+          let syncUrl = '/api/sync-recordings?folderId=' + encodeURIComponent(folderParam);
+          if (window.location.protocol === 'file:' || !window.location.host || window.location.hostname.includes('localhost') || !window.location.hostname.includes('vercel.app')) {
+            syncUrl = 'https://crm-system-chi-amber.vercel.app/api/sync-recordings?folderId=' + encodeURIComponent(folderParam);
+          }
+          const dRes = await fetch(syncUrl + '&t=' + Date.now(), { cache: 'no-store' }).catch(() => null);
+          if (dRes && dRes.ok) {
+            const dData = await dRes.json();
+            if (dData && dData.success && Array.isArray(dData.calls)) {
+              const KNOWN_DRIVE_MAP = {
+                '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: 'Direct Phone Call', dur: 74, time: '30 Oct, 03:00 PM' },
+                '1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep': { name: 'Rupinder Singh', phone: '+917508648100', dur: 44, time: '29 Oct, 02:28 PM' },
+                '1O6fS7CAbXXrhPprP147yrfuOpW94_ryU': { name: 'Potential Fraud', phone: 'Incoming Call', dur: 20, time: '28 Oct, 05:23 PM' },
+                '1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 25, time: '28 Oct, 12:22 PM' },
+                '1ddCOcitOO4UwdCdmmKI1F5YiyiofqiZq': { name: 'Suspected Spam', phone: 'Incoming Call', dur: 18, time: '28 Oct, 10:13 AM' },
+                '1vS9HBD2OEZi5mhyBoJTkDedgoVonNQGr': { name: 'Manga Khan', phone: '+919878685521', dur: 55, time: '26 Oct, 01:01 PM' },
+                '1OCBSUwITJbqJEHj0Won27gt7ocIAuOLR': { name: 'Rajender', phone: '+918745036534', dur: 32, time: '26 Oct, 12:22 PM' },
+                '1i_uyCGQ9iEJJIXNA9tEnO5ruWGPmFI7p': { name: 'Manga Khan', phone: '+919878685521', dur: 81, time: '26 Oct, 12:07 PM' },
+                '1BWn0twXbTBk5ORoaadD8JaX7EHdw4ude': { name: 'KAMLESH JASWAL', phone: '+919779947870', dur: 100, time: '24 Oct, 12:28 PM' },
+                '1WAtnBpjljm3tf4OgySDzOLNVZQ6h7gzF': { name: 'Direct Customer Call', phone: '+919530895341', dur: 23, time: '24 Oct, 11:57 AM' },
+                '1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 46, time: '23 Oct, 05:57 PM' },
+                '1gJ4DdglwBLPOM4iARsIVoC_N2UURkALg': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 45, time: '23 Oct, 04:37 PM' },
+                '13t35tqFyFD_xzxUL-OwY6vDK0W5z7myL': { name: 'Jaimal Singh', phone: '+919814804390', dur: 15, time: '22 Oct, 05:00 PM' },
+                '1KKglqh6ymYD8dPbvL1Pxkf0F_4TO3_Jp': { name: 'SHWETA MALIK', phone: '+919814804391', dur: 237, time: '22 Oct, 02:35 PM' },
+                '1HIoQoPGfks-8YEzEgnTvEeOb97hDW4j7': { name: 'GURPREET SINGH', phone: '+919814804392', dur: 72, time: '22 Oct, 11:51 AM' },
+                '1nlDS6IbcQktOvyS1P9SdweLKv18aTMGe': { name: 'Harpreet Singh', phone: '+919814804393', dur: 87, time: '22 Oct, 10:30 AM' },
+                '14wUfhihCj66V_BnF37bJD6S_uVzDDLbJ': { name: 'Suspected Spam', phone: 'Incoming Call', dur: 15, time: '22 Oct, 09:15 AM' }
+              };
+              dData.calls.forEach(dc => {
+                if (dc.drive_file_id && KNOWN_DRIVE_MAP[dc.drive_file_id]) {
+                  const km = KNOWN_DRIVE_MAP[dc.drive_file_id];
+                  dc.caller_name = km.name;
+                  dc.leadName = km.name;
+                  dc.caller_number = km.phone;
+                  dc.phone = km.phone;
+                  dc.duration = km.dur;
+                  if (km.time) dc.time = km.time;
+                }
+                const exIdx = remoteCalls.findIndex(r => isSamePhysicalCall(r, dc));
+                if (exIdx === -1) {
+                  remoteCalls.unshift(dc);
+                } else {
+                  if (dc.recording_url) {
+                    remoteCalls[exIdx].recording_url = dc.recording_url;
+                    remoteCalls[exIdx].audioUrl = dc.recording_url;
+                    remoteCalls[exIdx].duration = dc.duration || remoteCalls[exIdx].duration;
+                    remoteCalls[exIdx].drive_file_id = dc.drive_file_id || remoteCalls[exIdx].drive_file_id;
+                  }
+                }
+              });
+            }
+          }
+        } catch(e) {}
+
         if (Array.isArray(remoteCalls) && remoteCalls.length > 0) {
           const PHANTOM_IDS_SYNC = new Set([
             'call-log-1793081320981-675',
@@ -22475,7 +22591,7 @@
           // Instant Startup: Lazy load only the active tab (default: opportunities)
           try {
             const targetTab = localStorage.getItem('sri_sri_last_tab') || 'opportunities';
-            switchTab(targetTab);
+            switchTab(targetTab, false);
 
             let targetLeadId = null;
             if (window.location.hash && window.location.hash.includes('lead=')) {
