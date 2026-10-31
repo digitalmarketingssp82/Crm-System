@@ -2,9 +2,9 @@ const KNOWN_DRIVE_MAPPINGS = {
   '18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 52, time: '31 Oct, 11:08 AM', device: 'OnePlus' },
   '1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u': { name: 'PARMINDER SINGH', phone: '+918558055750', leadId: 'lead-phone-8558055750', dur: 10, time: '31 Oct, 11:01 AM', device: 'OnePlus' },
   '1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 37, time: '31 Oct, 11:00 AM', device: 'OnePlus' },
-  '1126LoXtRStX_9ufSI706211rPfl4ExvI': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 45, time: '30 Oct, 06:18 PM', device: 'OnePlus' },
-  '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 10, time: '30 Oct, 04:35 PM', device: 'OnePlus' },
-  '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: '+917508648100', dur: 74, time: '30 Oct, 03:00 PM', device: 'Samsung Galaxy' },
+  '1126LoXtRStX_9ufSI706211rPfl4ExvI': { name: 'Sachin (Digital Marketing Interview)', phone: 'Sachin Digital Marketing Interview', dur: 10, time: '30 Oct, 06:18 PM', device: 'OnePlus' },
+  '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'OnePlus Direct Call', phone: 'Direct Phone Call', dur: 10, time: '30 Oct, 04:35 PM', device: 'OnePlus' },
+  '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: 'Shiv Charan (Direct Call)', dur: 74, time: '30 Oct, 03:00 PM', device: 'Samsung Galaxy' },
   '1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep': { name: 'Rupinder Singh', phone: '+917508648100', dur: 44, time: '29 Oct, 02:28 PM', device: 'Samsung Galaxy' },
   '1O6fS7CAbXXrhPprP147yrfuOpW94_ryU': { name: 'Potential Fraud', phone: 'Incoming Call', dur: 20, time: '28 Oct, 05:23 PM', device: 'Samsung Galaxy' },
   '1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 25, time: '28 Oct, 12:22 PM', device: 'Samsung Galaxy' },
@@ -319,9 +319,8 @@ module.exports = async (req, res) => {
           matchedCall = calls.find(c => {
             const nameC = (c.caller_name || c.leadName || '').toLowerCase();
             if (!nameC || nameC === 'direct phone call' || nameC.includes('customer call') || nameC.includes('suspected spam')) return false;
-            const words = cleanRecName.split(/\s+/).filter(w => w.length > 2);
-            const matchesWord = words.some(w => nameC.includes(w));
-            if (!matchesWord) return false;
+            // STRICT MATCH: Never match on single surname words like "singh"!
+            if (cleanRecName !== nameC && !cleanRecName.startsWith(nameC + ' ') && !nameC.startsWith(cleanRecName + ' ')) return false;
             if (rec.timestamp && (c.created_at || c.timestamp || c.time)) {
               const recTime = new Date(rec.timestamp).getTime();
               const callTime = new Date(c.created_at || c.timestamp || c.time).getTime();
