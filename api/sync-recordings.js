@@ -1,4 +1,11 @@
 const KNOWN_DRIVE_MAPPINGS = {
+  '1J7_7BU5-ewVgJrQGHzO9mXtwC244r8A1': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 108, time: '31 Oct, 12:43 PM', device: 'OnePlus' },
+  '1hUDwEjnlUR9ec1fx-HYfWsCfxNmFKQiA': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 45, time: '31 Oct, 12:39 PM', device: 'OnePlus' },
+  '1hQpbXDVl-PxfgOGaGbCw0hyozaMkro5l': { name: 'Direct Phone Call', phone: '+919213555070', dur: 30, time: '31 Oct, 12:17 PM', device: 'OnePlus' },
+  '1bCRhrQ8GGoYemuzLSBShGxdN4GDufPfc': { name: 'Direct Phone Call', phone: '+917888398327', dur: 13, time: '31 Oct, 12:05 PM', device: 'OnePlus' },
+  '1PwfwmTss9VN8KAY57cNcvc9utZ0VqNI_': { name: '+919211445291', phone: '+919211445291', dur: 28, time: '31 Oct, 11:29 AM', device: 'OnePlus' },
+  '12FHbK8cYo3Vq68TXmiz_-T-ZQE7fDGFE': { name: 'Parag Ravish', phone: '+919877808859', dur: 29, time: '31 Oct, 11:20 AM', device: 'OnePlus' },
+  '1uQ4AQG9O_TRpNP3_21FcxwF68Mdo1ay7': { name: 'PARMJIT SINGH', phone: 'PARMJIT SINGH', dur: 77, time: '31 Oct, 11:18 AM', device: 'OnePlus' },
   '18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 52, time: '31 Oct, 11:08 AM', device: 'OnePlus' },
   '1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u': { name: 'PARMINDER SINGH', phone: '+918558055750', leadId: 'lead-phone-8558055750', dur: 10, time: '31 Oct, 11:01 AM', device: 'OnePlus' },
   '1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 37, time: '31 Oct, 11:00 AM', device: 'OnePlus' },
