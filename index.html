@@ -11078,34 +11078,6 @@
 
     const DEFAULT_BUNDLED_CALL_LOGS = [
   {
-    "id": "call-log-1793442618941-958",
-    "lead_id": "",
-    "leadId": "",
-    "caller_number": "+917015920657",
-    "phone": "+917015920657",
-    "caller_name": "Direct Phone Call",
-    "leadName": "Direct Phone Call",
-    "receiver_number": "",
-    "call_duration": 0,
-    "duration": 0,
-    "recording_url": "",
-    "audioUrl": "",
-    "hasAudio": false,
-    "direction": "INBOUND",
-    "call_outcome": "Missed Call",
-    "outcome": "Missed Call",
-    "callOutcome": "Missed Call",
-    "staff_name": "Samsung Galaxy",
-    "device_name": "Samsung Galaxy",
-    "deviceName": "Samsung Galaxy",
-    "created_at": "2026-10-31T10:30:18.941Z",
-    "timestamp": "2026-10-31T10:30:18.941Z",
-    "time": "31 Oct, 04:00 PM",
-    "formattedDuration": "0s (Missed)",
-    "aiSummary": "",
-    "transcript": ""
-  },
-  {
     "id": "call-log-1793442567690-578",
     "lead_id": "",
     "leadId": "",
@@ -11133,34 +11105,6 @@
     "time": "31 Oct, 03:59 PM",
     "formattedDuration": "45s",
     "aiSummary": "Call connected on OnePlus with Satpal Singh. Voice recording synced from Google Drive.",
-    "transcript": ""
-  },
-  {
-    "id": "call-log-1793442320008-376",
-    "lead_id": "",
-    "leadId": "",
-    "caller_number": "+917015274682",
-    "phone": "+917015274682",
-    "caller_name": "Direct Phone Call",
-    "leadName": "Direct Phone Call",
-    "receiver_number": "",
-    "call_duration": 0,
-    "duration": 0,
-    "recording_url": "",
-    "audioUrl": "",
-    "hasAudio": false,
-    "direction": "INBOUND",
-    "call_outcome": "Missed Call",
-    "outcome": "Missed Call",
-    "callOutcome": "Missed Call",
-    "staff_name": "Samsung Galaxy",
-    "device_name": "Samsung Galaxy",
-    "deviceName": "Samsung Galaxy",
-    "created_at": "2026-10-31T10:25:20.008Z",
-    "timestamp": "2026-10-31T10:25:20.008Z",
-    "time": "31 Oct, 03:55 PM",
-    "formattedDuration": "0s (Missed)",
-    "aiSummary": "",
     "transcript": ""
   },
   {
@@ -11283,7 +11227,6 @@
     "aiSummary": "Call connected on OnePlus with Megha Kumari. Voice recording synced from Google Drive.",
     "transcript": ""
   },
-
   {
     "id": "call-log-1793434732030-41",
     "lead_id": "lead-phone-7503238194",
@@ -11596,33 +11539,6 @@
     "transcript": ""
   },
   {
-    "id": "call-log-1793425221000-779",
-    "lead_id": "",
-    "leadId": "",
-    "caller_number": "+910335337217",
-    "phone": "+910335337217",
-    "caller_name": "Mohan BNI ID 17",
-    "leadName": "Mohan BNI ID 17",
-    "receiver_number": "",
-    "call_duration": 0,
-    "duration": 0,
-    "recording_url": "",
-    "audioUrl": "",
-    "hasAudio": false,
-    "direction": "INBOUND",
-    "call_outcome": "Missed Call",
-    "outcome": "Missed Call",
-    "callOutcome": "Missed Call",
-    "staff_name": "Samsung Galaxy",
-    "device_name": "Samsung Galaxy",
-    "deviceName": "Samsung Galaxy",
-    "created_at": "2026-10-31T05:40:21.000Z",
-    "timestamp": "2026-10-31T05:40:21.000Z",
-    "time": "31 Oct, 11:10 AM",
-    "aiSummary": "",
-    "transcript": ""
-  },
-  {
     "id": "call-log-1793425101000-778",
     "lead_id": "",
     "leadId": "",
@@ -11648,33 +11564,6 @@
     "created_at": "2026-10-31T05:38:39.000Z",
     "timestamp": "2026-10-31T05:38:39.000Z",
     "time": "31 Oct, 11:08 AM",
-    "aiSummary": "",
-    "transcript": ""
-  },
-  {
-    "id": "call-log-1793424900000-777",
-    "lead_id": "",
-    "leadId": "",
-    "caller_number": "+918558055750",
-    "phone": "+918558055750",
-    "caller_name": "PARMINDER SINGH",
-    "leadName": "PARMINDER SINGH",
-    "receiver_number": "",
-    "call_duration": 0,
-    "duration": 0,
-    "recording_url": "",
-    "audioUrl": "",
-    "hasAudio": false,
-    "direction": "INBOUND",
-    "call_outcome": "Missed Call",
-    "outcome": "Missed Call",
-    "callOutcome": "Missed Call",
-    "staff_name": "Samsung Galaxy",
-    "device_name": "Samsung Galaxy",
-    "deviceName": "Samsung Galaxy",
-    "created_at": "2026-10-31T05:35:00.000Z",
-    "timestamp": "2026-10-31T05:35:00.000Z",
-    "time": "31 Oct, 11:05 AM",
     "aiSummary": "",
     "transcript": ""
   },
@@ -12296,7 +12185,14 @@
           safeStorageSet('sri_sri_call_logs', parsed);
           localStorage.setItem('sri_call_logs', JSON.stringify(parsed));
         } else {
-          parsed = parsed.filter(c => c && c.id && !PHANTOM_CALL_IDS.has(c.id) && !c.time?.includes('27 Oct') && !c.created_at?.includes('2026-10-27') && !c.recording_url?.includes('UklGRuRdAABX'));
+          parsed = parsed.filter(c => {
+            if (!c || !c.id || PHANTOM_CALL_IDS.has(c.id)) return false;
+            const is31Oct = (c.time && c.time.includes('31 Oct')) || (c.created_at && c.created_at.includes('2026-10-31'));
+            const isSamsung = String(c.staff_name || c.device_name || c.deviceName || '').toLowerCase().includes('samsung');
+            if (is31Oct && isSamsung) return false;
+            if (c.id === 'call-log-1793442618941-958' || c.id === 'call-log-1793442320008-376' || c.id === 'call-log-1793425221000-779' || c.id === 'call-log-1793424900000-777') return false;
+            return !c.time?.includes('27 Oct') && !c.created_at?.includes('2026-10-27') && !c.recording_url?.includes('UklGRuRdAABX');
+          });
           // Merge any bundled calls not in parsed
           if (Array.isArray(DEFAULT_BUNDLED_CALL_LOGS)) {
             DEFAULT_BUNDLED_CALL_LOGS.forEach(b => {
@@ -20390,6 +20286,12 @@
     let callLogs = [];
     function initCallLogs() {
       const PHANTOM_CALL_IDS = new Set([
+        'call-log-1793442618941-958',
+        'call-log-1793442320008-376',
+        'call-log-1793425221000-779',
+        'call-log-1793424900000-777',
+        'call-log-1793425221523-680',
+        'call-log-1793424919510-15',
         'call-log-1793424672137-919',
   'call-log-1793364624739-593',
         'call-log-1793364530991-30',
@@ -20438,8 +20340,14 @@
           safeStorageSet('sri_sri_call_logs', stored);
         } else {
           // Safely filter phantom or corrupt calls without wiping new live webhook calls
-          stored = stored.filter(c => 
-            c && c.id && !PHANTOM_CALL_IDS.has(c.id) &&
+          stored = stored.filter(c => {
+            if (!c || !c.id || PHANTOM_CALL_IDS.has(c.id)) return false;
+            // STRICT FILTER: Zero calls arrived on Samsung Galaxy on 31 Oct!
+            const is31Oct = (c.time && c.time.includes('31 Oct')) || (c.created_at && c.created_at.includes('2026-10-31'));
+            const isSamsung = String(c.staff_name || c.device_name || c.deviceName || '').toLowerCase().includes('samsung');
+            if (is31Oct && isSamsung) return false;
+            if (c.id === 'call-log-1793442618941-958' || c.id === 'call-log-1793442320008-376' || c.id === 'call-log-1793425221000-779' || c.id === 'call-log-1793424900000-777') return false;
+            return (
             c.id !== 'call-log-1793164320000-2801' &&
             c.id !== 'call-log-1793162599329-711' &&
             c.id !== 'call-log-1793181780000-2802' &&
@@ -20449,7 +20357,8 @@
             !(c.time && c.time.includes('27 Oct')) &&
             !(c.created_at && c.created_at.includes('2026-10-27')) &&
             !(c.recording_url && c.recording_url.includes('UklGRuRdAABX'))
-          );
+            );
+          });
           // Merge any bundled calls that are missing from stored
           if (Array.isArray(DEFAULT_BUNDLED_CALL_LOGS)) {
             DEFAULT_BUNDLED_CALL_LOGS.forEach(b => {
@@ -21307,6 +21216,14 @@
 
     function deduplicateCallRecords(callsList) {
       if (!Array.isArray(callsList)) return [];
+      callsList = callsList.filter(c => {
+        if (!c) return false;
+        const is31Oct = (c.time && c.time.includes('31 Oct')) || (c.created_at && c.created_at.includes('2026-10-31'));
+        const isSamsung = String(c.staff_name || c.device_name || c.deviceName || '').toLowerCase().includes('samsung');
+        if (is31Oct && isSamsung) return false;
+        if (c.id === 'call-log-1793442618941-958' || c.id === 'call-log-1793442320008-376' || c.id === 'call-log-1793425221000-779' || c.id === 'call-log-1793424900000-777') return false;
+        return true;
+      });
       const deduped = [];
       const seenIds = new Set();
 
@@ -23107,6 +23024,11 @@
         if (Array.isArray(freshLogs) && freshLogs.length > 0) {
           freshLogs = freshLogs.filter(l => {
             if (typeof isGhostCallRecord === 'function' && isGhostCallRecord(l)) return false;
+            // STRICT FILTER: Zero calls arrived on Samsung Galaxy on 31 Oct!
+            const is31Oct = (l.time && l.time.includes('31 Oct')) || (l.created_at && l.created_at.includes('2026-10-31'));
+            const isSamsung = String(l.staff_name || l.device_name || l.deviceName || '').toLowerCase().includes('samsung');
+            if (is31Oct && isSamsung) return false;
+            if (l.id === 'call-log-1793442618941-958' || l.id === 'call-log-1793442320008-376' || l.id === 'call-log-1793425221000-779' || l.id === 'call-log-1793424900000-777') return false;
             const num = String(l.caller_number || l.phone || '');
             if (num.includes('9999988888') || num.includes('8000000000') || l.id === 'call-log-1793081339671-686') return false;
             if (num.includes('7814435761') || l.id === 'call-log-1793170337104-403') {
