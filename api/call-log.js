@@ -1,4 +1,6 @@
 const PHANTOM_CALL_IDS = new Set([
+  'call-log-1793424919647-902', // duplicate 11:05 AM missed call
+  'call-log-1793424672137-919',
   'call-log-1793364624739-593',
   'call-log-1793364530991-30',
   'call-log-1793081320981-675',

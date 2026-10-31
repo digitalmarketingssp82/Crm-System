@@ -7009,6 +7009,77 @@
     try {
       localStorage.setItem('sri_sri_historical_leads_v2_loaded', 'permanently_disabled');
     } catch(e){}
+
+    // Auto-create active leads for Mohan BNI ID 17, PARMINDER SINGH, and 9877808859 if absent
+    try {
+      if (Array.isArray(leads)) {
+        let leadsUpdated = false;
+        if (!leads.some(l => l && l.phone && l.phone.includes('9803353372'))) {
+          leads.unshift({
+            id: 'lead-phone-9803353372',
+            name: 'Mohan BNI ID 17',
+            company: 'BNI ID 17',
+            phone: '+919803353372',
+            status: 'ACTIVE',
+            stage: 'In Discussion',
+            stageId: 'stg-2',
+            pipelineId: 'p-fb',
+            priority: 'High',
+            dealValue: '₹ 85,000',
+            notes: 'Inbound client from BNI network. Connected calls on OnePlus & missed calls on Samsung.',
+            createdAt: '2026-10-31T05:30:00.000Z',
+            lastActivityAt: '2026-10-31T05:40:21.000Z',
+            lastActivityText: 'Phone call connected (OnePlus & Samsung sync)',
+            lastActivityUser: 'OnePlus / Admin'
+          });
+          leadsUpdated = true;
+        }
+        if (!leads.some(l => l && l.phone && l.phone.includes('8558055750'))) {
+          leads.unshift({
+            id: 'lead-phone-8558055750',
+            name: 'PARMINDER SINGH',
+            company: 'Parminder Singh',
+            phone: '+918558055750',
+            status: 'ACTIVE',
+            stage: 'New Lead',
+            stageId: 'stg-1',
+            pipelineId: 'p-fb',
+            priority: 'Medium',
+            dealValue: '₹ 45,000',
+            notes: 'Connected call on OnePlus and Missed call on Samsung.',
+            createdAt: '2026-10-31T05:31:00.000Z',
+            lastActivityAt: '2026-10-31T05:35:19.000Z',
+            lastActivityText: 'Phone call connected (OnePlus & Samsung sync)',
+            lastActivityUser: 'OnePlus / Admin'
+          });
+          leadsUpdated = true;
+        }
+        if (!leads.some(l => l && l.phone && l.phone.includes('9877808859'))) {
+          leads.unshift({
+            id: 'lead-phone-9877808859',
+            name: 'New Inquiry 9877808859',
+            company: 'Direct Caller',
+            phone: '+919877808859',
+            status: 'ACTIVE',
+            stage: 'New Lead',
+            stageId: 'stg-1',
+            pipelineId: 'p-fb',
+            priority: 'Medium',
+            dealValue: '₹ 25,000',
+            notes: 'Inbound call on OnePlus device.',
+            createdAt: '2026-10-31T05:49:28.000Z',
+            lastActivityAt: '2026-10-31T05:50:43.000Z',
+            lastActivityText: 'Connected Call (OnePlus)',
+            lastActivityUser: 'OnePlus / Admin'
+          });
+          leadsUpdated = true;
+        }
+        if (leadsUpdated) {
+          try { localStorage.setItem('sri_sri_leads', JSON.stringify(leads)); } catch(e){}
+        }
+      }
+    } catch(e) {}
+    
     try {
       let leadsMigrated = false;
       leads.forEach(l => {
@@ -11069,6 +11140,225 @@
 
     const DEFAULT_BUNDLED_CALL_LOGS = [
   {
+    "id": "call-log-1793425843356-928",
+    "lead_id": "lead-phone-9877808859",
+    "leadId": "lead-phone-9877808859",
+    "caller_number": "+919877808859",
+    "phone": "+919877808859",
+    "caller_name": "+919877808859",
+    "leadName": "+919877808859",
+    "receiver_number": "",
+    "call_duration": 45,
+    "duration": 45,
+    "recording_url": "",
+    "audioUrl": "",
+    "hasAudio": false,
+    "direction": "INBOUND",
+    "call_outcome": "Connected",
+    "outcome": "Connected",
+    "callOutcome": "Connected",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
+    "deviceName": "OnePlus",
+    "created_at": "2026-10-31T05:50:43.000Z",
+    "timestamp": "2026-10-31T05:50:43.000Z",
+    "time": "31 Oct, 11:20 AM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-log-1793425778243-311",
+    "lead_id": "lead-phone-9877808859",
+    "leadId": "lead-phone-9877808859",
+    "caller_number": "+919877808859",
+    "phone": "+919877808859",
+    "caller_name": "+919877808859",
+    "leadName": "+919877808859",
+    "receiver_number": "",
+    "call_duration": 45,
+    "duration": 45,
+    "recording_url": "",
+    "audioUrl": "",
+    "hasAudio": false,
+    "direction": "INBOUND",
+    "call_outcome": "Connected",
+    "outcome": "Connected",
+    "callOutcome": "Connected",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
+    "deviceName": "OnePlus",
+    "created_at": "2026-10-31T05:49:38.000Z",
+    "timestamp": "2026-10-31T05:49:38.000Z",
+    "time": "31 Oct, 11:19 AM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-log-1793425768122-680",
+    "lead_id": "lead-phone-9877808859",
+    "leadId": "lead-phone-9877808859",
+    "caller_number": "+919877808859",
+    "phone": "+919877808859",
+    "caller_name": "+919877808859",
+    "leadName": "+919877808859",
+    "receiver_number": "",
+    "call_duration": 0,
+    "duration": 0,
+    "recording_url": "",
+    "audioUrl": "",
+    "hasAudio": false,
+    "direction": "INBOUND",
+    "call_outcome": "Missed Call",
+    "outcome": "Missed Call",
+    "callOutcome": "Missed Call",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
+    "deviceName": "OnePlus",
+    "created_at": "2026-10-31T05:49:28.000Z",
+    "timestamp": "2026-10-31T05:49:28.000Z",
+    "time": "31 Oct, 11:19 AM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-log-1793425221523-680",
+    "lead_id": "lead-phone-9803353372",
+    "leadId": "lead-phone-9803353372",
+    "caller_number": "+919803353372",
+    "phone": "+919803353372",
+    "caller_name": "Mohan BNI ID 17",
+    "leadName": "Mohan BNI ID 17",
+    "receiver_number": "",
+    "call_duration": 0,
+    "duration": 0,
+    "recording_url": "",
+    "audioUrl": "",
+    "hasAudio": false,
+    "direction": "INBOUND",
+    "call_outcome": "Missed Call",
+    "outcome": "Missed Call",
+    "callOutcome": "Missed Call",
+    "staff_name": "Samsung Galaxy",
+    "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
+    "created_at": "2026-10-31T05:40:21.000Z",
+    "timestamp": "2026-10-31T05:40:21.000Z",
+    "time": "31 Oct, 11:10 AM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-rec-18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT",
+    "lead_id": "lead-phone-9803353372",
+    "leadId": "lead-phone-9803353372",
+    "caller_number": "+919803353372",
+    "phone": "+919803353372",
+    "caller_name": "Mohan BNI ID 17",
+    "leadName": "Mohan BNI ID 17",
+    "receiver_number": "",
+    "call_duration": 52,
+    "duration": 52,
+    "recording_url": "/api/call-audio?id=18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT",
+    "audioUrl": "/api/call-audio?id=18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT",
+    "drive_file_id": "18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT",
+    "hasAudio": true,
+    "direction": "INBOUND",
+    "call_outcome": "Connected",
+    "outcome": "Connected",
+    "callOutcome": "Connected",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
+    "deviceName": "OnePlus",
+    "created_at": "2026-10-31T05:38:39.000Z",
+    "timestamp": "2026-10-31T05:38:39.000Z",
+    "time": "31 Oct, 11:08 AM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-log-1793424919510-15",
+    "lead_id": "lead-phone-8558055750",
+    "leadId": "lead-phone-8558055750",
+    "caller_number": "+918558055750",
+    "phone": "+918558055750",
+    "caller_name": "PARMINDER SINGH",
+    "leadName": "PARMINDER SINGH",
+    "receiver_number": "",
+    "call_duration": 0,
+    "duration": 0,
+    "recording_url": "",
+    "audioUrl": "",
+    "hasAudio": false,
+    "direction": "INBOUND",
+    "call_outcome": "Missed Call",
+    "outcome": "Missed Call",
+    "callOutcome": "Missed Call",
+    "staff_name": "Samsung Galaxy",
+    "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
+    "created_at": "2026-10-31T05:35:19.000Z",
+    "timestamp": "2026-10-31T05:35:19.000Z",
+    "time": "31 Oct, 11:05 AM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-rec-1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u",
+    "lead_id": "lead-phone-8558055750",
+    "leadId": "lead-phone-8558055750",
+    "caller_number": "+918558055750",
+    "phone": "+918558055750",
+    "caller_name": "PARMINDER SINGH",
+    "leadName": "PARMINDER SINGH",
+    "receiver_number": "",
+    "call_duration": 10,
+    "duration": 10,
+    "recording_url": "/api/call-audio?id=1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u",
+    "audioUrl": "/api/call-audio?id=1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u",
+    "drive_file_id": "1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u",
+    "hasAudio": true,
+    "direction": "INBOUND",
+    "call_outcome": "Connected",
+    "outcome": "Connected",
+    "callOutcome": "Connected",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
+    "deviceName": "OnePlus",
+    "created_at": "2026-10-31T05:31:42.000Z",
+    "timestamp": "2026-10-31T05:31:42.000Z",
+    "time": "31 Oct, 11:01 AM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-rec-1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx",
+    "lead_id": "lead-phone-9803353372",
+    "leadId": "lead-phone-9803353372",
+    "caller_number": "+919803353372",
+    "phone": "+919803353372",
+    "caller_name": "Mohan BNI ID 17",
+    "leadName": "Mohan BNI ID 17",
+    "receiver_number": "",
+    "call_duration": 37,
+    "duration": 37,
+    "recording_url": "/api/call-audio?id=1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx",
+    "audioUrl": "/api/call-audio?id=1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx",
+    "drive_file_id": "1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx",
+    "hasAudio": true,
+    "direction": "INBOUND",
+    "call_outcome": "Connected",
+    "outcome": "Connected",
+    "callOutcome": "Connected",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
+    "deviceName": "OnePlus",
+    "created_at": "2026-10-31T05:30:00.000Z",
+    "timestamp": "2026-10-31T05:30:00.000Z",
+    "time": "31 Oct, 11:00 AM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
     "id": "call-rec-1126LoXtRStX_9ufSI706211rPfl4ExvI",
     "lead_id": "lead-csv-1278",
     "leadId": "lead-csv-1278",
@@ -11105,8 +11395,8 @@
     "caller_name": "sanju test",
     "leadName": "sanju test",
     "receiver_number": "",
-    "call_duration": 20,
-    "duration": 20,
+    "call_duration": 10,
+    "duration": 10,
     "recording_url": "/api/call-audio?id=1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa",
     "audioUrl": "/api/call-audio?id=1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa",
     "drive_file_id": "1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa",
@@ -11117,6 +11407,7 @@
     "outcome": "Connected",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
+    "deviceName": "OnePlus",
     "created_at": "2026-10-30T11:05:00.000Z",
     "timestamp": "2026-10-30T11:05:00.000Z",
     "time": "30 Oct, 04:35 PM",
@@ -11143,6 +11434,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-30T09:30:35.000Z",
     "timestamp": "2026-10-30T09:30:35.000Z",
     "time": "30 Oct, 03:00 PM",
@@ -11169,6 +11461,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-29T08:58:18.000Z",
     "timestamp": "2026-10-29T08:58:18.000Z",
     "time": "29 Oct, 02:28 PM",
@@ -11195,6 +11488,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-28T11:53:27.000Z",
     "timestamp": "2026-10-28T11:53:27.000Z",
     "time": "28 Oct, 05:23 PM",
@@ -11204,6 +11498,7 @@
   {
     "id": "call-rec-1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM",
     "lead_id": "lead-csv-1278",
+    "leadId": "lead-csv-1278",
     "caller_number": "+917814435761",
     "phone": "+917814435761",
     "caller_name": "sanju test",
@@ -11221,6 +11516,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-28T06:52:01.000Z",
     "timestamp": "2026-10-28T06:52:01.000Z",
     "time": "28 Oct, 12:22 PM",
@@ -11247,6 +11543,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-28T04:43:11.000Z",
     "timestamp": "2026-10-28T04:43:11.000Z",
     "time": "28 Oct, 10:13 AM",
@@ -11273,15 +11570,16 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
-    "created_at": "2026-10-26T07:31:15.000Z",
-    "timestamp": "2026-10-26T07:31:15.000Z",
+    "deviceName": "Samsung Galaxy",
+    "created_at": "2026-10-26T07:31:18.000Z",
+    "timestamp": "2026-10-26T07:31:18.000Z",
     "time": "26 Oct, 01:01 PM",
     "aiSummary": "",
     "transcript": ""
   },
   {
     "id": "call-rec-1OCBSUwITJbqJEHj0Won27gt7ocIAuOLR",
-    "lead_id": "lead-csv-1065",
+    "lead_id": "",
     "caller_number": "+918745036534",
     "phone": "+918745036534",
     "caller_name": "Rajender",
@@ -11299,8 +11597,9 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
-    "created_at": "2026-10-26T06:52:04.000Z",
-    "timestamp": "2026-10-26T06:52:04.000Z",
+    "deviceName": "Samsung Galaxy",
+    "created_at": "2026-10-26T06:52:43.000Z",
+    "timestamp": "2026-10-26T06:52:43.000Z",
     "time": "26 Oct, 12:22 PM",
     "aiSummary": "",
     "transcript": ""
@@ -11325,15 +11624,16 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
-    "created_at": "2026-10-26T06:37:47.000Z",
-    "timestamp": "2026-10-26T06:37:47.000Z",
+    "deviceName": "Samsung Galaxy",
+    "created_at": "2026-10-26T06:37:12.000Z",
+    "timestamp": "2026-10-26T06:37:12.000Z",
     "time": "26 Oct, 12:07 PM",
     "aiSummary": "",
     "transcript": ""
   },
   {
     "id": "call-rec-1BWn0twXbTBk5ORoaadD8JaX7EHdw4ude",
-    "lead_id": "lead-csv-1064",
+    "lead_id": "",
     "caller_number": "+919779947870",
     "phone": "+919779947870",
     "caller_name": "KAMLESH JASWAL",
@@ -11351,8 +11651,9 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
-    "created_at": "2026-10-24T06:58:36.000Z",
-    "timestamp": "2026-10-24T06:58:36.000Z",
+    "deviceName": "Samsung Galaxy",
+    "created_at": "2026-10-24T06:58:22.000Z",
+    "timestamp": "2026-10-24T06:58:22.000Z",
     "time": "24 Oct, 12:28 PM",
     "aiSummary": "",
     "transcript": ""
@@ -11377,8 +11678,9 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
-    "created_at": "2026-10-24T06:27:26.000Z",
-    "timestamp": "2026-10-24T06:27:26.000Z",
+    "deviceName": "Samsung Galaxy",
+    "created_at": "2026-10-24T06:27:14.000Z",
+    "timestamp": "2026-10-24T06:27:14.000Z",
     "time": "24 Oct, 11:57 AM",
     "aiSummary": "",
     "transcript": ""
@@ -11386,6 +11688,7 @@
   {
     "id": "call-rec-1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw",
     "lead_id": "lead-csv-1278",
+    "leadId": "lead-csv-1278",
     "caller_number": "+917814435761",
     "phone": "+917814435761",
     "caller_name": "sanju test",
@@ -11403,6 +11706,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-23T12:27:50.000Z",
     "timestamp": "2026-10-23T12:27:50.000Z",
     "time": "23 Oct, 05:57 PM",
@@ -11412,6 +11716,7 @@
   {
     "id": "call-rec-1gJ4DdglwBLPOM4iARsIVoC_N2UURkALg",
     "lead_id": "lead-csv-1278",
+    "leadId": "lead-csv-1278",
     "caller_number": "+917814435761",
     "phone": "+917814435761",
     "caller_name": "sanju test",
@@ -11429,6 +11734,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-23T11:07:17.000Z",
     "timestamp": "2026-10-23T11:07:17.000Z",
     "time": "23 Oct, 04:37 PM",
@@ -11455,6 +11761,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-22T11:30:12.000Z",
     "timestamp": "2026-10-22T11:30:12.000Z",
     "time": "22 Oct, 05:00 PM",
@@ -11481,6 +11788,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-22T09:05:21.000Z",
     "timestamp": "2026-10-22T09:05:21.000Z",
     "time": "22 Oct, 02:35 PM",
@@ -11507,6 +11815,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-22T06:21:31.000Z",
     "timestamp": "2026-10-22T06:21:31.000Z",
     "time": "22 Oct, 11:51 AM",
@@ -11533,6 +11842,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-21T08:53:43.000Z",
     "timestamp": "2026-10-21T08:53:43.000Z",
     "time": "21 Oct, 02:23 PM",
@@ -11559,6 +11869,7 @@
     "outcome": "Connected",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
+    "deviceName": "Samsung Galaxy",
     "created_at": "2026-10-20T07:04:59.000Z",
     "timestamp": "2026-10-20T07:04:59.000Z",
     "time": "20 Oct, 12:34 PM",
@@ -19682,7 +19993,8 @@
     let callLogs = [];
     function initCallLogs() {
       const PHANTOM_CALL_IDS = new Set([
-        'call-log-1793364624739-593',
+        'call-log-1793424672137-919',
+  'call-log-1793364624739-593',
         'call-log-1793364530991-30',
         'call-log-1793081320981-675',
         'call-log-1793081074929-41',
@@ -20337,6 +20649,9 @@
           const data = await res.json();
           if (data && data.success && Array.isArray(data.calls)) {
             const KNOWN_DRIVE_MAPPINGS = {
+              '18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 52, time: '31 Oct, 11:08 AM', device: 'OnePlus' },
+              '1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u': { name: 'PARMINDER SINGH', phone: '+918558055750', leadId: 'lead-phone-8558055750', dur: 10, time: '31 Oct, 11:01 AM', device: 'OnePlus' },
+              '1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 37, time: '31 Oct, 11:00 AM', device: 'OnePlus' },
               '1126LoXtRStX_9ufSI706211rPfl4ExvI': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 45, time: '30 Oct, 06:18 PM', device: 'OnePlus' },
               '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 10, time: '30 Oct, 04:35 PM', device: 'OnePlus' },
 
@@ -20434,23 +20749,44 @@
       if (a.id && b.id && a.id === b.id) return true;
       if (a.drive_file_id && b.drive_file_id && a.drive_file_id === b.drive_file_id) return true;
       
+      // Extract device names
+      const devA = String(a.deviceName || a.device_name || a.staff_name || '').toLowerCase();
+      const devB = String(b.deviceName || b.device_name || b.staff_name || '').toLowerCase();
+      const isDevAOnePlus = devA.includes('oneplus') || devA.includes('one plus');
+      const isDevBOnePlus = devB.includes('oneplus') || devB.includes('one plus');
+      
+      // If calls are from different physical devices (e.g. OnePlus vs Samsung Galaxy),
+      // they are strictly DIFFERENT calls on different phones! NEVER MERGE ACROSS DEVICES!
+      if (isDevAOnePlus !== isDevBOnePlus) {
+        return false;
+      }
+
+      // If one is Missed Call (0s duration) and the other is Connected (dur > 0 or has audio),
+      // they are strictly DIFFERENT calls! NEVER MERGE MISSED CALL WITH CONNECTED CALL!
+      const outA = String(a.call_outcome || a.outcome || a.callOutcome || '').toLowerCase();
+      const outB = String(b.call_outcome || b.outcome || b.callOutcome || '').toLowerCase();
+      const isMissedA = outA.includes('missed') || ((a.duration === 0 || a.call_duration === 0) && !a.recording_url && !a.audioUrl);
+      const isMissedB = outB.includes('missed') || ((b.duration === 0 || b.call_duration === 0) && !b.recording_url && !b.audioUrl);
+      if (isMissedA !== isMissedB) {
+        return false;
+      }
+
       const phoneA = String(a.caller_number || a.phone || '').replace(/\D/g, '').slice(-10);
       const phoneB = String(b.caller_number || b.phone || '').replace(/\D/g, '').slice(-10);
       
       const timeA = getCallEpochMs(a);
       const timeB = getCallEpochMs(b);
 
-      // Rule 1: Same 10-digit phone number within 15 minutes -> SAME CALL
+      // On the SAME device, if duplicate webhook fired for same phone within 2 minutes:
       if (phoneA && phoneB && phoneA.length >= 7 && phoneA === phoneB) {
-        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 900000) return true;
-        if (!timeA || !timeB) return true;
+        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 120000) return true;
       }
 
-      // Rule 2: Proximity matching when one has audio and one is pending sync without audio (within 7 minutes)
+      // On the SAME device, merge audio recording with pending MacroDroid call record within 3 minutes
       const aHasAudio = !!(a.recording_url || a.audioUrl || a.drive_file_id);
       const bHasAudio = !!(b.recording_url || b.audioUrl || b.drive_file_id);
-      if (aHasAudio !== bHasAudio && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 420000) {
-        return true;
+      if (aHasAudio !== bHasAudio && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 180000) {
+        if (!phoneA || !phoneB || phoneA === phoneB) return true;
       }
 
       return false;
@@ -21981,6 +22317,9 @@
             const dData = await dRes.json();
             if (dData && dData.success && Array.isArray(dData.calls)) {
               const KNOWN_DRIVE_MAP = {
+                '18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 52, time: '31 Oct, 11:08 AM', device: 'OnePlus' },
+                '1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u': { name: 'PARMINDER SINGH', phone: '+918558055750', leadId: 'lead-phone-8558055750', dur: 10, time: '31 Oct, 11:01 AM', device: 'OnePlus' },
+                '1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 37, time: '31 Oct, 11:00 AM', device: 'OnePlus' },
                 '1126LoXtRStX_9ufSI706211rPfl4ExvI': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 45, time: '30 Oct, 06:18 PM', device: 'OnePlus' },
                 '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 10, time: '30 Oct, 04:35 PM', device: 'OnePlus' },
                 '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: '+917508648100', dur: 74, time: '30 Oct, 03:00 PM' },

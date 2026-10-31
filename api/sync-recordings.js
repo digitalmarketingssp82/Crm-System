@@ -1,4 +1,7 @@
 const KNOWN_DRIVE_MAPPINGS = {
+  '18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 52, time: '31 Oct, 11:08 AM', device: 'OnePlus' },
+  '1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u': { name: 'PARMINDER SINGH', phone: '+918558055750', leadId: 'lead-phone-8558055750', dur: 10, time: '31 Oct, 11:01 AM', device: 'OnePlus' },
+  '1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx': { name: 'Mohan BNI ID 17', phone: '+919803353372', leadId: 'lead-phone-9803353372', dur: 37, time: '31 Oct, 11:00 AM', device: 'OnePlus' },
   '1126LoXtRStX_9ufSI706211rPfl4ExvI': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 45, time: '30 Oct, 06:18 PM', device: 'OnePlus' },
   '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 10, time: '30 Oct, 04:35 PM', device: 'OnePlus' },
   '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: '+917508648100', dur: 74, time: '30 Oct, 03:00 PM', device: 'Samsung Galaxy' },
@@ -25,23 +28,44 @@ function isSamePhysicalCall(a, b) {
   if (a.id && b.id && a.id === b.id) return true;
   if (a.drive_file_id && b.drive_file_id && a.drive_file_id === b.drive_file_id) return true;
 
-  const tA = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
-  const tB = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
-  const isTimeClose = (tA > 0 && tB > 0 && Math.abs(tA - tB) <= 420000); // within 7 minutes
+  // Extract device names
+  const devA = String(a.deviceName || a.device_name || a.staff_name || '').toLowerCase();
+  const devB = String(b.deviceName || b.device_name || b.staff_name || '').toLowerCase();
+  const isDevAOnePlus = devA.includes('oneplus') || devA.includes('one plus');
+  const isDevBOnePlus = devB.includes('oneplus') || devB.includes('one plus');
+  
+  // If calls are from different physical devices (e.g. OnePlus vs Samsung Galaxy),
+  // they are strictly DIFFERENT calls on different phones! NEVER MERGE ACROSS DEVICES!
+  if (isDevAOnePlus !== isDevBOnePlus) {
+    return false;
+  }
+
+  // If one is Missed Call (0s duration) and the other is Connected (dur > 0 or has audio),
+  // they are strictly DIFFERENT calls! NEVER MERGE MISSED CALL WITH CONNECTED CALL!
+  const outA = String(a.call_outcome || a.outcome || a.callOutcome || '').toLowerCase();
+  const outB = String(b.call_outcome || b.outcome || b.callOutcome || '').toLowerCase();
+  const isMissedA = outA.includes('missed') || ((a.duration === 0 || a.call_duration === 0) && !a.recording_url && !a.audioUrl);
+  const isMissedB = outB.includes('missed') || ((b.duration === 0 || b.call_duration === 0) && !b.recording_url && !b.audioUrl);
+  if (isMissedA !== isMissedB) {
+    return false;
+  }
 
   const pA = String(a.caller_number || a.phone || '').replace(/\D/g, '').slice(-10);
   const pB = String(b.caller_number || b.phone || '').replace(/\D/g, '').slice(-10);
 
+  const tA = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
+  const tB = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
+
+  // On the SAME device, if duplicate webhook fired for same phone within 2 minutes:
   if (pA && pB && pA.length >= 7 && pA === pB) {
-    if (tA > 0 && tB > 0 && Math.abs(tA - tB) <= 900000) return true;
-    if (!tA || !tB) return true;
+    if (tA > 0 && tB > 0 && Math.abs(tA - tB) <= 120000) return true;
   }
 
-  // Merge audio recording with pending MacroDroid call record from same device/time
+  // On the SAME device, merge audio recording with pending MacroDroid call record within 3 minutes
   const aHasAudio = !!(a.recording_url || a.audioUrl || a.drive_file_id);
   const bHasAudio = !!(b.recording_url || b.audioUrl || b.drive_file_id);
-  if (aHasAudio !== bHasAudio && isTimeClose) {
-    return true;
+  if (aHasAudio !== bHasAudio && tA > 0 && tB > 0 && Math.abs(tA - tB) <= 180000) {
+    if (!pA || !pB || pA === pB) return true;
   }
 
   return false;
