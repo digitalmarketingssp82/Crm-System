@@ -1,4 +1,6 @@
 const PHANTOM_CALL_IDS = new Set([
+  'call-log-1793364624739-593',
+  'call-log-1793364530991-30',
   'call-log-1793081320981-675',
   'call-log-1793081074929-41',
   'call-log-1793095511751-514',

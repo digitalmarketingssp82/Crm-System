@@ -6760,7 +6760,7 @@
       role: 'Sales cordinator',
       status: 'Active',
       password: '123',
-      permissions: ['leads_view', 'leads_view_all', 'leads_create', 'leads_edit', 'leads_import', 'leads_export', 'leads_transfer', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'opp_configure', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete', 'reports_view', 'calls_view', 'calls_edit_notes']
+      permissions: ['leads_view', 'leads_view_all', 'leads_create', 'leads_edit', 'leads_import', 'leads_export', 'leads_transfer', 'opp_view', 'opp_move_stage', 'opp_mark_won_lost', 'opp_configure', 'conv_view_all', 'conv_reply', 'conv_attach_files', 'tasks_view', 'tasks_create', 'tasks_complete', 'reports_view', 'calls_view', 'calls_edit_notes', 'calls_listen_recording']
     };
 
     let users = [];
@@ -11069,12 +11069,41 @@
 
     const DEFAULT_BUNDLED_CALL_LOGS = [
   {
+    "id": "call-rec-1126LoXtRStX_9ufSI706211rPfl4ExvI",
+    "lead_id": "lead-csv-1278",
+    "leadId": "lead-csv-1278",
+    "caller_number": "+917814435761",
+    "phone": "+917814435761",
+    "caller_name": "sanju test",
+    "leadName": "sanju test",
+    "receiver_number": "",
+    "call_duration": 45,
+    "duration": 45,
+    "recording_url": "/api/call-audio?id=1126LoXtRStX_9ufSI706211rPfl4ExvI",
+    "audioUrl": "/api/call-audio?id=1126LoXtRStX_9ufSI706211rPfl4ExvI",
+    "drive_file_id": "1126LoXtRStX_9ufSI706211rPfl4ExvI",
+    "hasAudio": true,
+    "ai_summary": "",
+    "direction": "INBOUND",
+    "call_outcome": "Connected",
+    "outcome": "Connected",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
+    "deviceName": "OnePlus",
+    "created_at": "2026-10-30T12:48:50.000Z",
+    "timestamp": "2026-10-30T12:48:50.000Z",
+    "time": "30 Oct, 06:18 PM",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
     "id": "call-rec-1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa",
-    "lead_id": "",
-    "caller_number": "Direct Phone Call",
-    "phone": "Direct Phone Call",
-    "caller_name": "OnePlus Call",
-    "leadName": "OnePlus Call",
+    "lead_id": "lead-csv-1278",
+    "leadId": "lead-csv-1278",
+    "caller_number": "+917814435761",
+    "phone": "+917814435761",
+    "caller_name": "sanju test",
+    "leadName": "sanju test",
     "receiver_number": "",
     "call_duration": 20,
     "duration": 20,
@@ -11097,8 +11126,8 @@
   {
     "id": "call-rec-1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0",
     "lead_id": "",
-    "caller_number": "Direct Phone Call",
-    "phone": "Direct Phone Call",
+    "caller_number": "+917508648100",
+    "phone": "+917508648100",
     "caller_name": "Shiv Charan",
     "leadName": "Shiv Charan",
     "receiver_number": "",
@@ -13946,6 +13975,11 @@
       }
 
       // 7. Persist to localStorage & cloud
+      try {
+        if (db && newCallRecord.id) {
+          db.collection('call_logs').doc(newCallRecord.id).set(newCallRecord, { merge: true }).catch(() => {});
+        }
+      } catch(e) {}
       localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
       syncLeadToCloud(lead);
 
@@ -19648,6 +19682,8 @@
     let callLogs = [];
     function initCallLogs() {
       const PHANTOM_CALL_IDS = new Set([
+        'call-log-1793364624739-593',
+        'call-log-1793364530991-30',
         'call-log-1793081320981-675',
         'call-log-1793081074929-41',
         'call-log-1793095511751-514',
@@ -20271,8 +20307,11 @@
     }
 
     async function syncRecordingsFromDrive(isSilent = false) {
-      if (!isCurrentUserSuperAdmin()) {
-        if (!isSilent) showToast('Permission Denied: Only Admin can sync Google Drive.', 'error');
+      const roleStr = String((loggedInUser && loggedInUser.role) || '').toLowerCase();
+      const emailStr = String((loggedInUser && loggedInUser.email) || '').toLowerCase();
+      const isCoord = roleStr.includes('cordinator') || roleStr.includes('coordinator') || roleStr.includes('calling') || emailStr.includes('coord');
+      if (!isCurrentUserSuperAdmin() && !isCoord && !userHasPermission('calls_view')) {
+        if (!isSilent) showToast('Permission Denied: Only Admin & Coordinator can sync Google Drive.', 'error');
         return;
       }
       const btn = document.getElementById('crm-drive-sync-btn');
@@ -20298,9 +20337,10 @@
           const data = await res.json();
           if (data && data.success && Array.isArray(data.calls)) {
             const KNOWN_DRIVE_MAPPINGS = {
-              '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'OnePlus Call', phone: 'Direct Phone Call', dur: 20, time: '30 Oct, 04:35 PM', device: 'OnePlus' },
+              '1126LoXtRStX_9ufSI706211rPfl4ExvI': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 45, time: '30 Oct, 06:18 PM', device: 'OnePlus' },
+              '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 10, time: '30 Oct, 04:35 PM', device: 'OnePlus' },
 
-              '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: 'Direct Phone Call', dur: 74, time: '30 Oct, 03:00 PM' },
+              '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: '+917508648100', dur: 74, time: '30 Oct, 03:00 PM' },
               '1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep': { name: 'Rupinder Singh', phone: '+917508648100', dur: 44 },
               '1O6fS7CAbXXrhPprP147yrfuOpW94_ryU': { name: 'Potential Fraud', phone: 'Incoming Call', dur: 20 },
               '1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 25 },
@@ -20396,15 +20436,23 @@
       
       const phoneA = String(a.caller_number || a.phone || '').replace(/\D/g, '').slice(-10);
       const phoneB = String(b.caller_number || b.phone || '').replace(/\D/g, '').slice(-10);
-      if (!phoneA || phoneA.length < 7 || phoneA !== phoneB) return false;
-
+      
       const timeA = getCallEpochMs(a);
       const timeB = getCallEpochMs(b);
-      
-      // If time difference is within 15 minutes (900,000 ms)
-      if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 900000) {
+
+      // Rule 1: Same 10-digit phone number within 15 minutes -> SAME CALL
+      if (phoneA && phoneB && phoneA.length >= 7 && phoneA === phoneB) {
+        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 900000) return true;
+        if (!timeA || !timeB) return true;
+      }
+
+      // Rule 2: Proximity matching when one has audio and one is pending sync without audio (within 7 minutes)
+      const aHasAudio = !!(a.recording_url || a.audioUrl || a.drive_file_id);
+      const bHasAudio = !!(b.recording_url || b.audioUrl || b.drive_file_id);
+      if (aHasAudio !== bHasAudio && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 420000) {
         return true;
       }
+
       return false;
     }
 
@@ -20437,10 +20485,27 @@
             existing.drive_file_id = call.drive_file_id || existing.drive_file_id;
             existing.duration = call.duration || existing.duration || 45;
           }
+          // The real physical recording device wins! If either record is OnePlus, the merged call is OnePlus!
+          const callDev = String(call.deviceName || call.device_name || call.staff_name || '').toLowerCase();
+          const exDev = String(existing.deviceName || existing.device_name || existing.staff_name || '').toLowerCase();
+          if (callDev.includes('oneplus') || exDev.includes('oneplus')) {
+            existing.deviceName = 'OnePlus';
+            existing.device_name = 'OnePlus';
+            existing.staff_name = 'OnePlus';
+          }
+          // Merge real phone number from whichever has it
+          const callPhone = String(call.phone || call.caller_number || '').replace(/\D/g, '').slice(-10);
+          const exPhone = String(existing.phone || existing.caller_number || '').replace(/\D/g, '').slice(-10);
+          if (callPhone && callPhone.length === 10 && (!exPhone || exPhone.length < 10)) {
+            existing.phone = call.phone || call.caller_number;
+            existing.caller_number = call.caller_number || call.phone;
+          }
           if (call.leadName && !call.leadName.startsWith('Direct') && (!existing.leadName || existing.leadName.startsWith('Direct'))) {
             existing.leadName = call.leadName;
             existing.caller_name = call.leadName;
           }
+          if (call.leadId && !existing.leadId) existing.leadId = call.leadId;
+          if (call.lead_id && !existing.lead_id) existing.lead_id = call.lead_id;
           seenIds.add(call.id);
         } else {
           seenIds.add(call.id);
@@ -20521,11 +20586,11 @@
       // Drive Cloud Audio Sync & Drive Folder Settings: STRICTLY Admin Only!
       const driveSyncBtn = document.getElementById('crm-drive-sync-btn');
       const driveFolderBtn = document.getElementById('crm-drive-folder-settings-btn');
-      if (driveSyncBtn) driveSyncBtn.style.display = isSuperAdmin ? '' : 'none';
+      if (driveSyncBtn) driveSyncBtn.style.display = (isSuperAdmin || isCoordinatorUser) ? '' : 'none';
       if (driveFolderBtn) driveFolderBtn.style.display = isSuperAdmin ? '' : 'none';
 
       // Sales Coordinator or regular staff can ONLY listen to recordings if Admin grants 'calls_listen_recording' permission!
-      const canListenRecordings = isSuperAdmin || userHasPermission('calls_listen_recording');
+      const canListenRecordings = isSuperAdmin || isCoordinatorUser || userHasPermission('calls_listen_recording');
 
       const roleBanner = document.getElementById('call-logs-role-banner');
       if (roleBanner) {
@@ -21916,7 +21981,9 @@
             const dData = await dRes.json();
             if (dData && dData.success && Array.isArray(dData.calls)) {
               const KNOWN_DRIVE_MAP = {
-                '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: 'Direct Phone Call', dur: 74, time: '30 Oct, 03:00 PM' },
+                '1126LoXtRStX_9ufSI706211rPfl4ExvI': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 45, time: '30 Oct, 06:18 PM', device: 'OnePlus' },
+                '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 10, time: '30 Oct, 04:35 PM', device: 'OnePlus' },
+                '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: '+917508648100', dur: 74, time: '30 Oct, 03:00 PM' },
                 '1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep': { name: 'Rupinder Singh', phone: '+917508648100', dur: 44, time: '29 Oct, 02:28 PM' },
                 '1O6fS7CAbXXrhPprP147yrfuOpW94_ryU': { name: 'Potential Fraud', phone: 'Incoming Call', dur: 20, time: '28 Oct, 05:23 PM' },
                 '1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 25, time: '28 Oct, 12:22 PM' },
@@ -21943,6 +22010,7 @@
                   dc.phone = km.phone;
                   dc.duration = km.dur;
                   if (km.time) dc.time = km.time;
+                  if (km.device) { dc.deviceName = km.device; dc.device_name = km.device; dc.staff_name = km.device; }
                 }
                 const exIdx = remoteCalls.findIndex(r => isSamePhysicalCall(r, dc));
                 if (exIdx === -1) {
@@ -21962,6 +22030,8 @@
 
         if (Array.isArray(remoteCalls) && remoteCalls.length > 0) {
           const PHANTOM_IDS_SYNC = new Set([
+            'call-log-1793364624739-593',
+            'call-log-1793364530991-30',
             'call-log-1793081320981-675',
             'call-log-1793081074929-41',
             'call-log-1793095511751-514',

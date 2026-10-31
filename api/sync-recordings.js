@@ -1,13 +1,49 @@
+const KNOWN_DRIVE_MAPPINGS = {
+  '1126LoXtRStX_9ufSI706211rPfl4ExvI': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 45, time: '30 Oct, 06:18 PM', device: 'OnePlus' },
+  '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 10, time: '30 Oct, 04:35 PM', device: 'OnePlus' },
+  '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: '+917508648100', dur: 74, time: '30 Oct, 03:00 PM', device: 'Samsung Galaxy' },
+  '1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep': { name: 'Rupinder Singh', phone: '+917508648100', dur: 44, time: '29 Oct, 02:28 PM', device: 'Samsung Galaxy' },
+  '1O6fS7CAbXXrhPprP147yrfuOpW94_ryU': { name: 'Potential Fraud', phone: 'Incoming Call', dur: 20, time: '28 Oct, 05:23 PM', device: 'Samsung Galaxy' },
+  '1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 25, time: '28 Oct, 12:22 PM', device: 'Samsung Galaxy' },
+  '1ddCOcitOO4UwdCdmmKI1F5YiyiofqiZq': { name: 'Suspected Spam', phone: 'Incoming Call', dur: 18, time: '28 Oct, 10:13 AM', device: 'Samsung Galaxy' },
+  '1vS9HBD2OEZi5mhyBoJTkDedgoVonNQGr': { name: 'Manga Khan', phone: '+919878685521', dur: 55, time: '26 Oct, 01:01 PM', device: 'Samsung Galaxy' },
+  '1OCBSUwITJbqJEHj0Won27gt7ocIAuOLR': { name: 'Rajender', phone: '+918745036534', dur: 32, time: '26 Oct, 12:22 PM', device: 'Samsung Galaxy' },
+  '1i_uyCGQ9iEJJIXNA9tEnO5ruWGPmFI7p': { name: 'Manga Khan', phone: '+919878685521', dur: 81, time: '26 Oct, 12:07 PM', device: 'Samsung Galaxy' },
+  '1BWn0twXbTBk5ORoaadD8JaX7EHdw4ude': { name: 'KAMLESH JASWAL', phone: '+919779947870', dur: 100, time: '24 Oct, 12:28 PM', device: 'Samsung Galaxy' },
+  '1WAtnBpjljm3tf4OgySDzOLNVZQ6h7gzF': { name: 'Direct Customer Call', phone: '+919530895341', dur: 23, time: '24 Oct, 11:57 AM', device: 'Samsung Galaxy' },
+  '1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 46, time: '23 Oct, 05:57 PM', device: 'Samsung Galaxy' },
+  '1gJ4DdglwBLPOM4iARsIVoC_N2UURkALg': { name: 'sanju test', phone: '+917814435761', leadId: 'lead-csv-1278', dur: 45, time: '23 Oct, 04:37 PM', device: 'Samsung Galaxy' },
+  '13t35tqFyFD_xzxUL-OwY6vDK0W5z7myL': { name: 'Jaimal Singh', phone: '+919814804390', dur: 15, time: '22 Oct, 05:00 PM', device: 'Samsung Galaxy' },
+  '1KKglqh6ymYD8dPbvL1Pxkf0F_4TO3_Jp': { name: 'SHWETA MALIK', phone: '+919814804391', dur: 237, time: '22 Oct, 02:35 PM', device: 'Samsung Galaxy' },
+  '1HIoQoPGfks-8YEzEgnTvEeOb97hDW4j7': { name: 'GURPREET SINGH', phone: '+919814804392', dur: 72, time: '22 Oct, 11:51 AM', device: 'Samsung Galaxy' },
+  '1nlDS6IbcQktOvyS1P9SdweLKv18aTMGe': { name: 'Harpreet Singh', phone: '+919814804393', dur: 87, time: '22 Oct, 10:30 AM', device: 'Samsung Galaxy' },
+  '14wUfhihCj66V_BnF37bJD6S_uVzDDLbJ': { name: 'Suspected Spam', phone: 'Incoming Call', dur: 15, time: '20 Oct, 12:34 PM', device: 'Samsung Galaxy' }
+};
 
 function isSamePhysicalCall(a, b) {
   if (!a || !b) return false;
   if (a.id && b.id && a.id === b.id) return true;
-  const pA = String(a.caller_number || a.phone || '').replace(/\D/g, '').slice(-10);
-  const pB = String(b.caller_number || b.phone || '').replace(/\D/g, '').slice(-10);
-  if (!pA || pA.length < 7 || pA !== pB) return false;
+  if (a.drive_file_id && b.drive_file_id && a.drive_file_id === b.drive_file_id) return true;
+
   const tA = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
   const tB = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
-  if (tA > 0 && tB > 0 && Math.abs(tA - tB) <= 300000) return true;
+  const isTimeClose = (tA > 0 && tB > 0 && Math.abs(tA - tB) <= 420000); // within 7 minutes
+
+  const pA = String(a.caller_number || a.phone || '').replace(/\D/g, '').slice(-10);
+  const pB = String(b.caller_number || b.phone || '').replace(/\D/g, '').slice(-10);
+
+  if (pA && pB && pA.length >= 7 && pA === pB) {
+    if (tA > 0 && tB > 0 && Math.abs(tA - tB) <= 900000) return true;
+    if (!tA || !tB) return true;
+  }
+
+  // Merge audio recording with pending MacroDroid call record from same device/time
+  const aHasAudio = !!(a.recording_url || a.audioUrl || a.drive_file_id);
+  const bHasAudio = !!(b.recording_url || b.audioUrl || b.drive_file_id);
+  if (aHasAudio !== bHasAudio && isTimeClose) {
+    return true;
+  }
+
   return false;
 }
 
@@ -31,6 +67,21 @@ function deduplicateCalls(callsList) {
         deduped[exIdx].audioUrl = c.recording_url || c.audioUrl;
         deduped[exIdx].drive_file_id = c.drive_file_id || deduped[exIdx].drive_file_id;
       }
+      // Merge real customer number & name from c if deduped[exIdx] lacks it
+      const cNum = String(c.caller_number || c.phone || '').replace(/\D/g, '').slice(-10);
+      const exNum = String(deduped[exIdx].caller_number || deduped[exIdx].phone || '').replace(/\D/g, '').slice(-10);
+      if (cNum && cNum.length === 10 && (!exNum || exNum.length < 10)) {
+        deduped[exIdx].caller_number = c.caller_number || c.phone;
+        deduped[exIdx].phone = c.phone || c.caller_number;
+        if (c.caller_name && !c.caller_name.includes('Direct Call') && !c.caller_name.includes('Interview-')) {
+          deduped[exIdx].caller_name = c.caller_name;
+          deduped[exIdx].leadName = c.leadName || c.caller_name;
+        }
+      }
+      if (c.lead_id && !deduped[exIdx].lead_id) deduped[exIdx].lead_id = c.lead_id;
+      if (c.leadId && !deduped[exIdx].leadId) deduped[exIdx].leadId = c.leadId;
+      if (c.deviceName && !deduped[exIdx].deviceName) deduped[exIdx].deviceName = c.deviceName;
+      if (c.device_name && !deduped[exIdx].device_name) deduped[exIdx].device_name = c.device_name;
       seenIds.add(c.id);
     } else {
       seenIds.add(c.id);
@@ -150,46 +201,53 @@ function parseDriveRecordings(html) {
         }
       }
 
-      // If file ends with .mp3 and not identified as Samsung, it is OnePlus
-      if (name.endsWith('.mp3') || name.toLowerCase().includes('oneplus')) {
-        isOnePlus = true;
+      // If known mapping exists, use it!
+      if (KNOWN_DRIVE_MAPPINGS[id]) {
+        const km = KNOWN_DRIVE_MAPPINGS[id];
+        contactName = km.name;
+        phoneDigits = km.phone.replace(/\D/g, '').slice(-10);
+        if (km.time) formattedTime = km.time;
+        if (km.device) isOnePlus = (km.device === 'OnePlus');
       }
+
+      // Approximate duration based on audio file size (typically ~16-24 KB per second for m4a/mp3)
+      const approxDuration = Math.max(10, Math.min(600, Math.round(size / 18000)));
 
       recordings.push({
         id,
         name,
         size,
-        contactName,
+        dateStr: yymmdd,
         formattedTime,
-        phone: phoneDigits ? `+91${phoneDigits}` : '',
+        phone: phoneDigits ? ('+91' + phoneDigits) : (contactName || 'Direct Phone Call'),
         phoneDigits,
+        contactName: contactName || (phoneDigits ? ('+91' + phoneDigits) : ''),
         timestamp: isoTimestamp,
-        yymmdd,
         audioUrl: `/api/call-audio?id=${id}`,
-        approxDuration: Math.max(10, Math.round(size / 13000)),
-        deviceName: isOnePlus ? 'OnePlus' : 'Samsung Galaxy',
-        device_name: isOnePlus ? 'OnePlus' : 'Samsung Galaxy',
-        staff_name: isOnePlus ? 'OnePlus' : 'Samsung Galaxy'
+        approxDuration,
+        deviceName: isOnePlus ? 'OnePlus' : 'Samsung Galaxy'
       });
     });
   } catch(e) {
-    console.error('Error parsing _DRIVE_ivd:', e);
+    console.error('Error parsing drive HTML:', e);
   }
+
   return recordings;
 }
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(200);
-    return res.end();
+    res.end();
+    return;
   }
 
   const parsedUrl = url.parse(req.url, true);
-  let folderId = parsedUrl.query.folderId || parsedUrl.query.folder_id || (req.body && req.body.folderId) || DEFAULT_FOLDER_ID;
+  let folderId = parsedUrl.query.folderId || DEFAULT_FOLDER_ID;
 
   // Clean folder ID if full drive URL was passed
   const folderMatch = folderId.match(/folders\/([A-Za-z0-9_-]{20,})/);
@@ -324,7 +382,7 @@ module.exports = async (req, res) => {
     // Save updated call logs
     try {
       calls = deduplicateCalls(calls);
-    fs.writeFileSync(CALL_LOGS_FILE, JSON.stringify(calls, null, 2));
+      fs.writeFileSync(CALL_LOGS_FILE, JSON.stringify(calls, null, 2));
     } catch(e) {}
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
