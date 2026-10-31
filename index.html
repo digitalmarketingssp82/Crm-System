@@ -7006,76 +7006,14 @@
     } catch(e) {}
 
     // Auto-seeding permanently disabled - deleted leads will NEVER come back!
-    try {
-      localStorage.setItem('sri_sri_historical_leads_v2_loaded', 'permanently_disabled');
-    } catch(e){}
-
-    // Auto-create active leads for Mohan BNI ID 17, PARMINDER SINGH, and 9877808859 if absent
+    // Purge fake auto-created phone leads permanently
     try {
       if (Array.isArray(leads)) {
-        let leadsUpdated = false;
-        if (!leads.some(l => l && l.phone && l.phone.includes('9803353372'))) {
-          leads.unshift({
-            id: 'lead-phone-9803353372',
-            name: 'Mohan BNI ID 17',
-            company: 'BNI ID 17',
-            phone: '+919803353372',
-            status: 'ACTIVE',
-            stage: 'In Discussion',
-            stageId: 'stg-2',
-            pipelineId: 'p-fb',
-            priority: 'High',
-            dealValue: '₹ 85,000',
-            notes: 'Inbound client from BNI network. Connected calls on OnePlus & missed calls on Samsung.',
-            createdAt: '2026-10-31T05:30:00.000Z',
-            lastActivityAt: '2026-10-31T05:40:21.000Z',
-            lastActivityText: 'Phone call connected (OnePlus & Samsung sync)',
-            lastActivityUser: 'OnePlus / Admin'
-          });
-          leadsUpdated = true;
-        }
-        if (!leads.some(l => l && l.phone && l.phone.includes('8558055750'))) {
-          leads.unshift({
-            id: 'lead-phone-8558055750',
-            name: 'PARMINDER SINGH',
-            company: 'Parminder Singh',
-            phone: '+918558055750',
-            status: 'ACTIVE',
-            stage: 'New Lead',
-            stageId: 'stg-1',
-            pipelineId: 'p-fb',
-            priority: 'Medium',
-            dealValue: '₹ 45,000',
-            notes: 'Connected call on OnePlus and Missed call on Samsung.',
-            createdAt: '2026-10-31T05:31:00.000Z',
-            lastActivityAt: '2026-10-31T05:35:19.000Z',
-            lastActivityText: 'Phone call connected (OnePlus & Samsung sync)',
-            lastActivityUser: 'OnePlus / Admin'
-          });
-          leadsUpdated = true;
-        }
-        if (!leads.some(l => l && l.phone && l.phone.includes('9877808859'))) {
-          leads.unshift({
-            id: 'lead-phone-9877808859',
-            name: 'New Inquiry 9877808859',
-            company: 'Direct Caller',
-            phone: '+919877808859',
-            status: 'ACTIVE',
-            stage: 'New Lead',
-            stageId: 'stg-1',
-            pipelineId: 'p-fb',
-            priority: 'Medium',
-            dealValue: '₹ 25,000',
-            notes: 'Inbound call on OnePlus device.',
-            createdAt: '2026-10-31T05:49:28.000Z',
-            lastActivityAt: '2026-10-31T05:50:43.000Z',
-            lastActivityText: 'Connected Call (OnePlus)',
-            lastActivityUser: 'OnePlus / Admin'
-          });
-          leadsUpdated = true;
-        }
-        if (leadsUpdated) {
-          try { localStorage.setItem('sri_sri_leads', JSON.stringify(leads)); } catch(e){}
+        const FAKE_AUTO_LEAD_IDS = new Set(['lead-phone-9803353372', 'lead-phone-8558055750', 'lead-phone-9877808859']);
+        const origLen = leads.length;
+        leads = leads.filter(l => l && !FAKE_AUTO_LEAD_IDS.has(l.id));
+        if (leads.length !== origLen) {
+          localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
         }
       }
     } catch(e) {}
@@ -11168,8 +11106,8 @@
   },
   {
     "id": "call-log-1793430804136-121",
-    "lead_id": "lead-phone-9803353372",
-    "leadId": "lead-phone-9803353372",
+    "lead_id": "",
+    "leadId": "",
     "caller_number": "+919803353372",
     "phone": "+919803353372",
     "caller_name": "Mohan BNI ID 17",
@@ -11197,8 +11135,8 @@
   },
   {
     "id": "call-log-1793430583933-828",
-    "lead_id": "lead-phone-9803353372",
-    "leadId": "lead-phone-9803353372",
+    "lead_id": "",
+    "leadId": "",
     "caller_number": "+919803353372",
     "phone": "+919803353372",
     "caller_name": "Mohan BNI ID 17",
@@ -11367,8 +11305,8 @@
   },
   {
     "id": "call-log-1793425843000-881",
-    "lead_id": "lead-phone-9877808859",
-    "leadId": "lead-phone-9877808859",
+    "lead_id": "",
+    "leadId": "",
     "caller_number": "+919877808859",
     "phone": "+919877808859",
     "caller_name": "Parag Ravish",
@@ -11396,8 +11334,8 @@
   },
   {
     "id": "call-log-1793425768000-880",
-    "lead_id": "lead-phone-9877808859",
-    "leadId": "lead-phone-9877808859",
+    "lead_id": "",
+    "leadId": "",
     "caller_number": "+919877808859",
     "phone": "+919877808859",
     "caller_name": "Direct Phone Call",
@@ -11452,8 +11390,8 @@
   },
   {
     "id": "call-log-1793425221000-779",
-    "lead_id": "lead-phone-9803353372",
-    "leadId": "lead-phone-9803353372",
+    "lead_id": "",
+    "leadId": "",
     "caller_number": "+910335337217",
     "phone": "+910335337217",
     "caller_name": "Mohan BNI ID 17",
@@ -11479,8 +11417,8 @@
   },
   {
     "id": "call-log-1793425101000-778",
-    "lead_id": "lead-phone-9803353372",
-    "leadId": "lead-phone-9803353372",
+    "lead_id": "",
+    "leadId": "",
     "caller_number": "+919803353372",
     "phone": "+919803353372",
     "caller_name": "Mohan BNI ID 17",
@@ -11508,8 +11446,8 @@
   },
   {
     "id": "call-log-1793424900000-777",
-    "lead_id": "lead-phone-8558055750",
-    "leadId": "lead-phone-8558055750",
+    "lead_id": "",
+    "leadId": "",
     "caller_number": "+918558055750",
     "phone": "+918558055750",
     "caller_name": "PARMINDER SINGH",
@@ -11535,8 +11473,8 @@
   },
   {
     "id": "call-log-1793424660000-776",
-    "lead_id": "lead-phone-8558055750",
-    "leadId": "lead-phone-8558055750",
+    "lead_id": "",
+    "leadId": "",
     "caller_number": "+918558055750",
     "phone": "+918558055750",
     "caller_name": "PARMINDER SINGH",
@@ -11564,8 +11502,8 @@
   },
   {
     "id": "call-log-1793424600000-775",
-    "lead_id": "lead-phone-9803353372",
-    "leadId": "lead-phone-9803353372",
+    "lead_id": "",
+    "leadId": "",
     "caller_number": "+919803353372",
     "phone": "+919803353372",
     "caller_name": "Mohan BNI ID 17",
@@ -12783,9 +12721,9 @@
           type: 'LEAD_CREATED',
           title: 'Lead Inquired & Captured in System',
           notes: (lead.source ? `Source: ${lead.source}. ` : '') + (lead.campaignName ? `Campaign: ${lead.campaignName}. ` : '') + (lead.notes ? `Inquiry Details: ${lead.notes.substring(0, 100)}` : 'Initial inquiry recorded'),
-          userName: lead.assignedToName || 'Sri Sri Admin',
-          userEmail: 'sales.ssply@gmail.com',
-          userRole: 'Super Admin',
+          userName: lead.createdByName || lead.assignedToName || (loggedInUser ? loggedInUser.name : 'Sales Coordinator'),
+          userEmail: lead.createdByEmail || (loggedInUser ? loggedInUser.email : 'salescordinator.ssply@gmail.com'),
+          userRole: lead.createdByRole || (loggedInUser ? loggedInUser.role : 'Sales Coordinator'),
           device: lead.lastActivityDevice || 'Facebook Lead Ads / Old CRM Import',
           ip: lead.lastActivityIp || 'Direct Public IP',
           time: formatFollowupDate(lead.createdAt || new Date()),
@@ -15947,9 +15885,13 @@
           logLeadActivity(targetLead, 'ENTRY', 'Client details manually updated: ' + name + ' (' + pip.name + ')');
         } else {
           // Create new lead record
+          const cUser = loggedInUser || { name: 'Sales Coordinator', role: 'Sales Coordinator', email: 'salescordinator.ssply@gmail.com' };
           targetLead = {
             id: 'lead-' + Date.now(),
             name,
+            createdByName: cUser.name,
+            createdByRole: cUser.role,
+            createdByEmail: cUser.email,
             company,
             closeDate,
             materialType,
@@ -21466,37 +21408,55 @@
         const exactOutcome = getCallOutcomeForRecord(call);
         call.outcome = exactOutcome;
         call.callOutcome = exactOutcome;
-        const isMissed = (exactOutcome === 'Missed Call');
+        const isMissed = (exactOutcome === "Missed Call");
         const isPlayingThis = (currentActiveCallAudioId === call.id);
 
-        const recAudio = (call.recording_url && !call.recording_url.includes('UklGRuRdAABX') && call.recording_url.trim()) 
-          ? call.recording_url 
-          : ((call.audioUrl && !call.audioUrl.includes('UklGRuRdAABX') && call.audioUrl.trim()) 
-            ? call.audioUrl 
-            : (call.drive_file_id ? ('/api/call-audio?id=' + call.drive_file_id) : ''));
+        const recAudio = (call.recording_url && !call.recording_url.includes("UklGRuRdAABX") && call.recording_url.trim())
+          ? call.recording_url
+          : ((call.audioUrl && !call.audioUrl.includes("UklGRuRdAABX") && call.audioUrl.trim())
+            ? call.audioUrl
+            : (call.drive_file_id ? ("/api/call-audio?id=" + call.drive_file_id) : ""));
+
+        // Link to lead ONLY if caller already exists in the real leads database
+        const callPhoneClean = (call.phone || call.caller_number || "").replace(/\D/g, "").slice(-10);
+        let linkedLead = null;
+        if (call.leadId && Array.isArray(leads)) {
+          linkedLead = leads.find(l => l && l.id === call.leadId && !isLeadDeleted(l));
+        }
+        if (!linkedLead && callPhoneClean && callPhoneClean.length === 10 && Array.isArray(leads)) {
+          linkedLead = leads.find(l => l && !isLeadDeleted(l) && (l.phone || "").replace(/\D/g, "").slice(-10) === callPhoneClean);
+        }
+        if (!linkedLead && call.caller_name && Array.isArray(leads)) {
+          const cNameClean = call.caller_name.trim().toLowerCase();
+          if (cNameClean && cNameClean !== "direct phone call" && !cNameClean.includes("customer call") && !cNameClean.includes("unknown")) {
+            linkedLead = leads.find(l => l && !isLeadDeleted(l) && l.name && l.name.trim().toLowerCase() === cNameClean);
+          }
+        }
+        const effectiveLeadName = linkedLead ? linkedLead.name : (call.caller_name && !call.caller_name.startsWith("Direct Call") ? call.caller_name : (call.leadName && !call.leadName.startsWith("Direct Call") ? call.leadName : ""));
+        const effectivePhone = (linkedLead && linkedLead.phone) ? linkedLead.phone : (call.phone || call.caller_number || "—");
 
         return `
           <tr class="hover:bg-subtle/50 transition border-b border-main/60">
             <td class="p-3.5 whitespace-nowrap w-40">
               <span class="font-extrabold text-main block font-mono text-xs">${escapeHtml(formatCallLogTime(call))}</span>
               ${(() => {
-                const rawDir = String(call.direction || call.call_type || 'INBOUND').toUpperCase();
-                const isOut = rawDir.includes('OUT') || rawDir.includes('DIALED');
-                let dirLabel = '';
-                let dirIcon = '';
-                let dirClass = '';
+                const rawDir = String(call.direction || call.call_type || "INBOUND").toUpperCase();
+                const isOut = rawDir.includes("OUT") || rawDir.includes("DIALED");
+                let dirLabel = "";
+                let dirIcon = "";
+                let dirClass = "";
                 if (isMissed) {
-                  dirLabel = isOut ? 'Outbound Unanswered' : 'Inbound Missed';
-                  dirIcon = isOut ? 'phone-outgoing' : 'phone-missed';
-                  dirClass = 'text-rose-600 dark:text-rose-400 font-extrabold';
+                  dirLabel = isOut ? "Outbound Unanswered" : "Inbound Missed";
+                  dirIcon = isOut ? "phone-outgoing" : "phone-missed";
+                  dirClass = "text-rose-600 dark:text-rose-400 font-extrabold";
                 } else if (isOut) {
-                  dirLabel = 'Outbound Connected';
-                  dirIcon = 'phone-outgoing';
-                  dirClass = 'text-blue-600 dark:text-blue-400 font-extrabold';
+                  dirLabel = "Outbound Connected";
+                  dirIcon = "phone-outgoing";
+                  dirClass = "text-blue-600 dark:text-blue-400 font-extrabold";
                 } else {
-                  dirLabel = 'Inbound Connected';
-                  dirIcon = 'phone-incoming';
-                  dirClass = 'text-emerald-600 dark:text-emerald-400 font-extrabold';
+                  dirLabel = "Inbound Connected";
+                  dirIcon = "phone-incoming";
+                  dirClass = "text-emerald-600 dark:text-emerald-400 font-extrabold";
                 }
                 return `
                   <button type="button" onclick="toggleCallDirection('${call.id}')" title="Click to toggle Inbound / Outbound" class="text-[10px] ${dirClass} flex items-center gap-1 mt-0.5 hover:underline cursor-pointer text-left">
@@ -21508,72 +21468,25 @@
               })()}
             </td>
             <td class="p-3.5 min-w-[200px]">
-              ${(() => {
-                const callPhoneClean = (call.phone || call.caller_number || '').replace(/\D/g, '').slice(-10);
-                let linkedLead = null;
-                if (call.leadId && Array.isArray(leads)) {
-                  linkedLead = leads.find(l => l && l.id === call.leadId && !isLeadDeleted(l));
-                }
-                if (!linkedLead && callPhoneClean && callPhoneClean.length === 10 && Array.isArray(leads)) {
-                  linkedLead = leads.find(l => l && !isLeadDeleted(l) && (l.phone || '').replace(/\D/g, '').slice(-10) === callPhoneClean);
-                }
-                if (!linkedLead && call.caller_name && Array.isArray(leads)) {
-                  const cNameClean = call.caller_name.trim().toLowerCase();
-                  if (cNameClean && cNameClean !== 'direct phone call' && !cNameClean.includes('customer call') && !cNameClean.includes('unknown')) {
-                    linkedLead = leads.find(l => l && !isLeadDeleted(l) && l.name && l.name.trim().toLowerCase() === cNameClean);
-                  }
-                }
-                if (linkedLead && linkedLead.phone && (!call.phone || !call.phone.match(/\d{5,}/))) {
-                  call.phone = linkedLead.phone;
-                  call.caller_number = linkedLead.phone;
-                  call.leadId = linkedLead.id;
-                  call.leadName = linkedLead.name;
-                }
-
-                const effectiveLeadId = linkedLead ? linkedLead.id : (call.leadId || '');
-                const effectiveLeadName = linkedLead ? linkedLead.name : (call.leadName && !call.leadName.startsWith('Direct Call') ? call.leadName : (call.caller_name && !call.caller_name.startsWith('Direct Call') ? call.caller_name : ''));
-                const effectivePhone = (linkedLead && linkedLead.phone) ? linkedLead.phone : (call.phone || call.caller_number || '—');
-
-                if (effectiveLeadId && effectiveLeadName) {
-                  return `
-                    <div class="font-black text-main text-sm cursor-pointer hover:text-gold transition flex items-center gap-1.5" onclick="openLeadModal('${escapeHtml(effectiveLeadId)}')">
-                      <span>${escapeHtml(effectiveLeadName)}</span>
-                      <i data-lucide="external-link" class="w-3.5 h-3.5 text-muted-custom"></i>
-                    </div>
-                  `;
-                } else {
-                  return `
-                    <div class="flex items-center gap-2">
-                      <span onclick="editCallLogCustomerName('${call.id}')" title="Click to edit contact name" class="font-black text-main text-sm cursor-pointer hover:text-gold transition flex items-center gap-1 group">
-    <span>${escapeHtml(effectiveLeadName || 'Direct Phone Call')}</span>
-    <i data-lucide="pencil" class="w-2.5 h-2.5 text-muted-custom opacity-50 group-hover:opacity-100 transition"></i>
-  </span>
-                      <button type="button" onclick="openNewLeadModal('${escapeHtml(call.phone && call.phone.match(/\d{5,}/) ? call.phone : '')}', '${escapeHtml(call.caller_name && !call.caller_name.startsWith('Direct Call') ? call.caller_name : '')}')" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-gold/20 text-gold border border-gold/40 hover:bg-gold hover:text-slate-950 transition cursor-pointer shrink-0">
-                        + Create Lead
-                      </button>
-                    </div>
-                  `;
-                }
-              })()}
+              ${linkedLead ? `
+                <div class="font-black text-main text-sm cursor-pointer hover:text-gold transition flex items-center gap-1.5" onclick="openLeadModal('${escapeHtml(linkedLead.id)}')">
+                  <span>${escapeHtml(linkedLead.name || effectiveLeadName)}</span>
+                  <i data-lucide="external-link" class="w-3.5 h-3.5 text-muted-custom"></i>
+                </div>
+              ` : `
+                <div class="flex items-center gap-2">
+                  <span onclick="editCallLogCustomerName('${call.id}')" title="Click to edit contact name" class="font-black text-main text-sm cursor-pointer hover:text-gold transition flex items-center gap-1 group">
+                    <span>${escapeHtml(effectiveLeadName || "Direct Phone Call")}</span>
+                    <i data-lucide="pencil" class="w-2.5 h-2.5 text-muted-custom opacity-50 group-hover:opacity-100 transition"></i>
+                  </span>
+                  <button type="button" onclick="openNewLeadModal('${escapeHtml(call.phone && call.phone.match(/\d{5,}/) ? call.phone : "")}', '${escapeHtml(call.caller_name && !call.caller_name.startsWith("Direct Call") ? call.caller_name : "")}')" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-gold/20 text-gold border border-gold/40 hover:bg-gold hover:text-slate-950 transition cursor-pointer shrink-0" title="Convert Call to Lead">
+                    + Create Lead
+                  </button>
+                </div>
+              `}
               <div class="flex items-center gap-2 mt-1">
                 <span onclick="editCallLogPhoneNumber('${call.id}')" title="Click to edit phone number" class="font-mono text-xs text-amber-600 dark:text-amber-400 font-extrabold select-text cursor-pointer hover:underline flex items-center gap-1 group">
-                  <span>${escapeHtml((() => {
-                    const callPhoneClean = (call.phone || call.caller_number || '').replace(/\D/g, '').slice(-10);
-                    let linkedLead = null;
-                    if (call.leadId && Array.isArray(leads)) {
-                      linkedLead = leads.find(l => l && l.id === call.leadId && !isLeadDeleted(l));
-                    }
-                    if (!linkedLead && callPhoneClean && callPhoneClean.length === 10 && Array.isArray(leads)) {
-                      linkedLead = leads.find(l => l && !isLeadDeleted(l) && (l.phone || '').replace(/\D/g, '').slice(-10) === callPhoneClean);
-                    }
-                    if (!linkedLead && call.caller_name && Array.isArray(leads)) {
-                      const cNameClean = call.caller_name.trim().toLowerCase();
-                      if (cNameClean && cNameClean !== 'direct phone call' && !cNameClean.includes('customer call') && !cNameClean.includes('unknown')) {
-                        linkedLead = leads.find(l => l && !isLeadDeleted(l) && l.name && (l.name.trim().toLowerCase() === cNameClean || l.name.trim().toLowerCase().includes(cNameClean) || cNameClean.includes(l.name.trim().toLowerCase())));
-                      }
-                    }
-                    return (linkedLead && linkedLead.phone) ? linkedLead.phone : (call.phone || call.caller_number || '—');
-                  })())}</span>
+                  <span>${escapeHtml(effectivePhone)}</span>
                   <i data-lucide="pencil" class="w-2.5 h-2.5 text-muted-custom opacity-50 group-hover:opacity-100 transition"></i>
                 </span>
               </div>
@@ -21630,8 +21543,8 @@
             </td>
             <td class="p-3.5 text-right whitespace-nowrap w-24">
               <div class="flex items-center justify-end gap-1.5">
-                ${call.leadId ? `
-                  <button type="button" onclick="openLeadModal('${escapeHtml(call.leadId)}')" class="px-2.5 py-1 rounded-lg bg-subtle hover:bg-card border border-main text-xs font-extrabold text-main transition cursor-pointer shadow-2xs">
+                ${linkedLead ? `
+                  <button type="button" onclick="openLeadModal('${escapeHtml(linkedLead.id)}')" class="px-2.5 py-1 rounded-lg bg-subtle hover:bg-card border border-main text-xs font-extrabold text-main transition cursor-pointer shadow-2xs" title="Open Lead Profile">
                     View Lead
                   </button>
                 ` : ''}
@@ -22821,11 +22734,19 @@
               // Update details if cloud has newer info
               existing[exIdx].call_outcome = remoteLog.call_outcome || existing[exIdx].call_outcome;
               existing[exIdx].ai_summary = remoteLog.ai_summary || existing[exIdx].ai_summary;
-              existing[exIdx].recording_url = remoteLog.recording_url || existing[exIdx].recording_url;
+              if (remoteLog.recording_url) {
+                existing[exIdx].recording_url = remoteLog.recording_url;
+                existing[exIdx].audioUrl = remoteLog.recording_url;
+                existing[exIdx].hasAudio = true;
+              }
+              if (remoteLog.drive_file_id) {
+                existing[exIdx].drive_file_id = remoteLog.drive_file_id;
+              }
               existing[exIdx].direction = remoteLog.direction || existing[exIdx].direction || 'INBOUND';
               existing[exIdx].staff_name = remoteLog.staff_name || existing[exIdx].staff_name;
               existing[exIdx].device_name = remoteLog.device_name || existing[exIdx].device_name;
               existing[exIdx].call_duration = remoteLog.call_duration || existing[exIdx].call_duration || 0;
+              if (remoteLog.duration) existing[exIdx].duration = remoteLog.duration;
               if (phoneCallRecordings[existing[exIdx].id]) {
                 existing[exIdx].recording_url = phoneCallRecordings[existing[exIdx].id].recording_url;
                 existing[exIdx].audioUrl = phoneCallRecordings[existing[exIdx].id].recording_url;
