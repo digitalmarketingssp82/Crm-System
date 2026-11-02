@@ -23004,41 +23004,33 @@
         }
       }
 
-      // Deduplicate Samsung burst calls (multiple identical missed calls within 15 seconds)
-      if (devKeyA === 'samsung' && devKeyB === 'samsung' && isMissedA && isMissedB) {
-        if (phoneA && phoneB && phoneA === phoneB && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 15000) {
-          return true;
-        }
-      }
-
       // If calls are from DIFFERENT physical devices (e.g. OnePlus vs Samsung vs IQ Device): NEVER MERGE!
       if (devKeyA !== devKeyB) {
         return false;
       }
 
-      // If one is Missed Call and other is Connected on same device:
-      if (isMissedA !== isMissedB) {
-        return false;
-      }
-
-      // On the SAME device, if same phone number:
+      // On the SAME device:
+      // 1. Same phone number within 3 minutes (180,000 ms): ALWAYS MERGE!
+      // This absorbs duplicate missed call triggers when a call was connected, or duplicate burst missed calls!
       if (phoneA && phoneB && phoneA.length >= 7 && phoneA === phoneB) {
-        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 900000) return true;
+        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 180000) {
+          return true;
+        }
       }
 
-      // On the SAME device, if same contact name:
+      // 2. On the SAME device, if same contact name within 15 minutes:
       if (nameA && nameB && nameA === nameB && nameA !== 'direct phone call' && !nameA.includes('spam') && nameA.length > 2) {
         if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 900000) return true;
       }
 
-      // Fuzzy contact name matching on same device (e.g. "Anwarul Sir Plywood" includes "Anwarul")
+      // 3. Fuzzy contact name matching on same device
       if (nameA && nameB && nameA !== 'direct phone call' && nameB !== 'direct phone call' && !nameA.includes('spam') && !nameB.includes('spam') && nameA.length > 3 && nameB.length > 3) {
         if ((nameA.includes(nameB) || nameB.includes(nameA)) && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 900000) {
           return true;
         }
       }
 
-      // On the SAME device, merge audio recording with pending MacroDroid call record (when one has no phone number or one has no audio)
+      // 4. On the SAME device, merge audio recording with pending MacroDroid call record
       const aHasAudio = !!(a.recording_url || a.audioUrl || a.drive_file_id);
       const bHasAudio = !!(b.recording_url || b.audioUrl || b.drive_file_id);
       if (aHasAudio !== bHasAudio && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 900000) {
@@ -23107,6 +23099,14 @@
             existing.caller_name = call.leadName;
           }
           if (call.leadId && !existing.leadId) existing.leadId = call.leadId;
+          const isCallConnected = (call.call_outcome === 'Connected' || call.outcome === 'Connected' || (call.duration && call.duration > 0) || call.hasAudio || call.recording_url);
+          const isExConnected = (existing.call_outcome === 'Connected' || existing.outcome === 'Connected' || (existing.duration && existing.duration > 0) || existing.hasAudio || existing.recording_url);
+          if (isCallConnected || isExConnected) {
+            existing.call_outcome = 'Connected';
+            existing.outcome = 'Connected';
+            existing.callOutcome = 'Connected';
+            if ((call.duration || 0) > (existing.duration || 0)) existing.duration = call.duration;
+          }
           if (call.lead_id && !existing.lead_id) existing.lead_id = call.lead_id;
           seenIds.add(call.id);
         } else {

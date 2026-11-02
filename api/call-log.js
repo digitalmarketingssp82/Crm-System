@@ -657,6 +657,53 @@ module.exports = async (req, res) => {
         });
       }
 
+      // Auto-heal 3: Check for duplicate call event on the same device within 3 minutes
+      if (cleanCustomer && cleanCustomer.length >= 7) {
+        const recentSamePhoneIdx = allLogs.findIndex(l => {
+          const lNum = cleanPhone(l.caller_number || l.phone);
+          if (lNum !== cleanCustomer) return false;
+          const lDev = String(l.device_name || l.deviceName || '').toLowerCase();
+          const curDev = String(device_name || '').toLowerCase();
+          if (lDev && curDev && lDev !== curDev) return false; // Different device
+          const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
+          const curTime = callDateObj.getTime();
+          return Math.abs(curTime - lTime) <= 180000; // within 3 minutes
+        });
+
+        if (recentSamePhoneIdx !== -1) {
+          const ex = allLogs[recentSamePhoneIdx];
+          const isNewConnected = (call_outcome === 'Connected' || call_duration > 0 || recording_url);
+          const isExConnected = (ex.call_outcome === 'Connected' || ex.outcome === 'Connected' || (ex.call_duration && ex.call_duration > 0) || ex.recording_url);
+
+          // If either is connected, the merged call is Connected
+          if (isNewConnected || isExConnected) {
+            ex.call_outcome = 'Connected';
+            ex.outcome = 'Connected';
+            ex.callOutcome = 'Connected';
+            if (call_duration > (ex.call_duration || 0)) {
+              ex.call_duration = call_duration;
+              ex.duration = call_duration;
+            }
+          }
+          if (validCallerName && !validCallerName.startsWith('Direct') && (!ex.caller_name || ex.caller_name.startsWith('Direct'))) {
+            ex.caller_name = validCallerName;
+            ex.leadName = validCallerName;
+          }
+          if (recording_url && !ex.recording_url) {
+            ex.recording_url = recording_url;
+            ex.audioUrl = recording_url;
+          }
+          saveStoredCallLogs(allLogs);
+          await syncCallLogToFirestore(ex);
+          console.log(`[Call-Log Auto-Heal 3]: Merged duplicate call for ${cleanCustomer} on ${device_name} within 3 minutes`);
+          return sendResponse(res, 200, {
+            success: true,
+            message: 'Merged duplicate call event within 3 minutes',
+            call_log: ex
+          });
+        }
+      }
+
       // Preserving repeat call history: Each interaction is preserved with its exact phone timestamp
 
       allLogs.unshift(callLogRecord);
