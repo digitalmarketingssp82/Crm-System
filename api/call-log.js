@@ -1,4 +1,10 @@
 const PHANTOM_CALL_IDS = new Set([
+  'call-log-1793442618941-958', // 31 Oct fake Samsung duplicate
+  'call-log-1793442320008-376', // 31 Oct fake Samsung duplicate
+  'call-log-1793425221000-779', // 31 Oct fake Samsung duplicate
+  'call-log-1793424900000-777', // 31 Oct fake Samsung duplicate
+  'call-log-1793425221523-680', // 31 Oct fake Samsung duplicate
+  'call-log-1793424919510-15',  // 31 Oct fake Samsung duplicate
   'call-log-1793424919647-902', // duplicate 11:05 AM missed call
   'call-log-1793424672137-919',
   'call-log-1793364624739-593',

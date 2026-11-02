@@ -1785,6 +1785,9 @@
               <button type="button" id="rep-pill-all" onclick="setReportPeriod('ALL')" class="px-3 py-1.5 rounded-xl bg-gold text-slate-950 font-black text-xs shadow-xs">
                 🌐 All Time
               </button>
+              <button type="button" id="rep-pill-custom" onclick="setReportPeriod('CUSTOM')" class="px-3 py-1.5 rounded-xl text-muted-custom hover:text-main font-bold text-xs transition">
+                📅 Custom Range
+              </button>
             </div>
 
             <!-- Fallback Select Dropdown for direct form triggers -->
@@ -1793,7 +1796,22 @@
               <option value="TODAY">📅 Daily (Today - 2 Nov)</option>
               <option value="WEEKLY">🗓️ Weekly (Last 7 Days)</option>
               <option value="MONTHLY">📆 Monthly (This Month)</option>
+              <option value="CUSTOM">📅 Custom Date Range...</option>
             </select>
+
+            <!-- Custom Date Range Inputs Container -->
+            <div id="rep-custom-date-container" class="hidden items-center gap-2 p-1.5 rounded-2xl bg-subtle border border-gold/40 text-xs shadow-xs">
+              <span class="text-xs font-bold text-muted-custom pl-1 flex items-center gap-1">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-gold"></i>
+                <span>From:</span>
+              </span>
+              <input type="date" id="rep-custom-start" value="2026-10-24" onchange="renderReports('CUSTOM')" class="px-2 py-1 rounded-xl bg-card border border-main text-xs font-bold text-main outline-hidden cursor-pointer">
+              <span class="text-xs font-bold text-muted-custom">To:</span>
+              <input type="date" id="rep-custom-end" value="2026-11-02" onchange="renderReports('CUSTOM')" class="px-2 py-1 rounded-xl bg-card border border-main text-xs font-bold text-main outline-hidden cursor-pointer">
+              <button type="button" onclick="renderReports('CUSTOM')" class="px-3 py-1 rounded-xl bg-gold text-slate-950 font-black text-xs hover:bg-amber-400 transition cursor-pointer shadow-2xs">
+                Apply
+              </button>
+            </div>
 
             <!-- Export Report -->
             <button type="button" onclick="exportLeadsCSV()" class="px-3.5 py-2 rounded-xl bg-gold text-slate-950 font-black text-xs hover:bg-amber-400 transition flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0">
@@ -2497,9 +2515,9 @@
           <!-- Populated dynamically based on user role -->
         </div>
 
-        <!-- Filter Controls Bar (Search, Direction, Device, Staff, Outcome) -->
+        <!-- Filter Controls Bar (Search, Direction, Device, Outcome) -->
         <div class="p-4 rounded-2xl bg-card border border-main space-y-3 shadow-xs">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <!-- Search -->
             <div class="relative">
               <i data-lucide="search" class="w-4 h-4 text-muted-custom absolute left-3 top-3"></i>
@@ -2522,13 +2540,7 @@
                 <option value="ALL">📱 All Phones / Devices</option>
                 <option value="OnePlus">📱 OnePlus</option>
                 <option value="Samsung Galaxy">📱 Samsung Galaxy</option>
-              </select>
-            </div>
-
-            <!-- Staff Selector -->
-            <div>
-              <select id="call-log-filter-staff" onchange="filterTeamCallLogs()" class="w-full p-2 rounded-xl border border-main bg-subtle text-main text-xs font-semibold focus:ring-1 focus:ring-gold outline-hidden">
-                <option value="ALL">All Team Members</option>
+                <option value="iQOO">📱 iQOO (IQ Device)</option>
               </select>
             </div>
 
@@ -5305,6 +5317,24 @@
           <div class="text-right">
             <span class="text-[10px] uppercase font-bold text-muted-custom block">Mobile Number</span>
             <span id="call-log-client-phone" class="font-mono text-xs text-gold font-bold">+91 98765 43210</span>
+          </div>
+        </div>
+
+        <!-- Quick 1-Click Outbound Dial Log Action -->
+        <div class="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 text-xs font-bold text-amber-500">
+            <i data-lucide="phone-outgoing" class="w-4 h-4"></i>
+            <span>Quick Outbound Log:</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="quickLogOutboundAttempt('Call Not Picked / User Busy')" class="px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition flex items-center gap-1.5 cursor-pointer shadow-xs" title="1-Tap: Record that Call was Dialed but Customer did not answer / busy">
+              <i data-lucide="phone-off" class="w-3.5 h-3.5"></i>
+              <span>📞 Dialed: Not Picked</span>
+            </button>
+            <button type="button" onclick="quickLogOutboundAttempt('Baat Hui (Connected)')" class="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition flex items-center gap-1.5 cursor-pointer shadow-xs" title="1-Tap: Record that Call Connected and Discussion took place">
+              <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+              <span>🟢 Connected (Baat Hui)</span>
+            </button>
           </div>
         </div>
 
@@ -13453,12 +13483,38 @@
       }
 
       const cardsHtml = calls.map(log => {
-        const outStr = String(log.call_outcome || log.outcome || '');
-        const isMissed = outStr.toLowerCase().includes('missed');
-        const outcomeBadgeClass = isMissed
-          ? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
-          : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400';
-        const outcomeBadgeText = isMissed ? 'Missed Call' : 'Connected';
+        const rawDir = String(log.direction || log.call_type || 'INBOUND').toUpperCase();
+        const isOut = rawDir.includes('OUT') || rawDir.includes('DIAL');
+        const outStr = String(log.call_outcome || log.outcome || '').toLowerCase();
+        const isNotPicked = outStr.includes('not pick') || outStr.includes('busy') || (isOut && outStr.includes('missed')) || (log.duration === 0 && isOut);
+        const isMissed = outStr.includes('missed') || isNotPicked;
+
+        let outcomeBadgeClass = '';
+        let outcomeBadgeText = '';
+        let directionBadgeText = '';
+        let dirIcon = '';
+
+        if (isOut && isNotPicked) {
+          outcomeBadgeClass = 'bg-amber-500/15 border-amber-500/30 text-amber-500 dark:text-amber-400';
+          outcomeBadgeText = 'Dialed: Not Picked / Busy';
+          directionBadgeText = '📞 Outbound Dialed';
+          dirIcon = 'phone-outgoing';
+        } else if (isOut) {
+          outcomeBadgeClass = 'bg-sky-500/15 border-sky-500/30 text-sky-500 dark:text-sky-400';
+          outcomeBadgeText = 'Baat Hui (Connected)';
+          directionBadgeText = '📞 Outbound Dialed';
+          dirIcon = 'phone-outgoing';
+        } else if (isMissed) {
+          outcomeBadgeClass = 'bg-rose-500/15 border-rose-500/30 text-rose-500 dark:text-rose-400';
+          outcomeBadgeText = 'Missed Call';
+          directionBadgeText = '📲 Inbound Received';
+          dirIcon = 'phone-missed';
+        } else {
+          outcomeBadgeClass = 'bg-emerald-500/15 border-emerald-500/30 text-emerald-500 dark:text-emerald-400';
+          outcomeBadgeText = 'Connected';
+          directionBadgeText = '📲 Inbound Received';
+          dirIcon = 'phone-incoming';
+        }
 
         const audioPlayerHtml = log.recording_url ? `
           <div class="space-y-1.5 pt-1">
@@ -13475,19 +13531,21 @@
           </div>
         ` : '';
 
-        const formattedTimeStr = formatCallLogTime(log.created_at || log.timestamp || log.time);
+        const formattedTimeStr = (typeof formatCallLogTime === 'function') ? formatCallLogTime(log) : (log.time || log.created_at || '');
+        const durationLabel = isNotPicked ? '0s (Unanswered)' : (log.call_duration > 0 ? formatCallDuration(log.call_duration) : (log.formattedDuration || 'Connected'));
 
         return `
           <div class="p-4 rounded-2xl bg-card border border-main space-y-3 shadow-xs hover:border-blue-500/40 transition">
             <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-main/50">
               <div class="flex items-center gap-2">
-                <span class="w-8 h-8 rounded-full ${isMissed ? 'bg-rose-500/15 text-rose-400 border border-rose-500/25' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'} flex items-center justify-center shrink-0">
-                  <i data-lucide="${isMissed ? 'phone-missed' : 'phone-call'}" class="w-4 h-4"></i>
+                <span class="w-8 h-8 rounded-full ${isMissed ? (isOut ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/25') : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'} flex items-center justify-center shrink-0">
+                  <i data-lucide="${dirIcon}" class="w-4 h-4"></i>
                 </span>
                 <div>
                   <div class="text-xs font-bold text-main flex flex-wrap items-center gap-1.5">
                     <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${outcomeBadgeClass}">${outcomeBadgeText}</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-subtle border border-main text-gold">${log.call_duration > 0 ? formatCallDuration(log.call_duration) : (isMissed ? '0s (Missed)' : 'Connected')}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-subtle border border-main text-gold">${durationLabel}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-subtle/80 text-muted-custom border border-main">${directionBadgeText}</span>
                     ${(() => {
                       const dName = String(log.device_name || log.deviceName || log.staff_name || '').trim();
                       const dLower = dName.toLowerCase();
@@ -13514,7 +13572,7 @@
             </div>
 
             ${audioPlayerHtml}
-            ${formatAiSummaryHtml(log.ai_summary)}
+            ${formatAiSummaryHtml(log.ai_summary || (isNotPicked ? 'Outbound call dial hui thi (Customer did not answer / busy)' : ''))}
           </div>
         `;
       }).join('');
@@ -14454,6 +14512,24 @@
         if (leadInList) leadInList.wonAt = wonTime;
       }
 
+      // If moving to "Call Not Pick/User Busy", record an outbound dialed attempt
+      if (targetStage.name && (targetStage.name.toLowerCase().includes('not pick') || targetStage.name.toLowerCase().includes('busy'))) {
+        const now = new Date();
+        const timeStr = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const userN = (loggedInUser && loggedInUser.name) ? loggedInUser.name : 'OnePlus / Admin';
+        const outboundAttempt = {
+          type: 'CALL',
+          direction: 'OUTBOUND',
+          outcome: '📞 Outbound Dialed (Not Picked)',
+          note: 'Outbound call dial hui thi (Customer did not answer / busy)',
+          time: now.toISOString(),
+          formattedTime: timeStr,
+          user: userN
+        };
+        currentSelectedLead.lastContactAttempt = outboundAttempt;
+        if (leadInList) leadInList.lastContactAttempt = outboundAttempt;
+      }
+
       // Audit logging with user, role, device, and IP
       logLeadActivity(currentSelectedLead, 'STAGE_CHANGE', 'Lead moved to stage: ' + targetStage.name + (targetStage.isLost ? ' (Reason: ' + (currentSelectedLead.lossReason || 'None') + ')' : ''));
 
@@ -14461,6 +14537,7 @@
       syncLeadToCloud(currentSelectedLead);
       renderLeadStagesBar(currentSelectedLead, pipeline);
       renderLeadTimeline(currentSelectedLead);
+      updateModalLastAttemptCard(currentSelectedLead);
       updateLeadModalActivityBadge(currentSelectedLead);
       if (currentLeadModalTab === 'activity') {
         renderLeadActivityAudit(currentSelectedLead, currentAuditFilter);
@@ -14940,9 +15017,74 @@
       const badge = document.getElementById('modal-last-attempt-badge');
       const textEl = document.getElementById('modal-last-attempt-text');
       const timeEl = document.getElementById('modal-last-attempt-time');
-      if (!container || !badge || !textEl || !timeEl) return;
+      if (!container || !badge || !textEl || !timeEl || !lead) return;
 
       let attempt = lead.lastContactAttempt;
+
+      // 1. If no lastContactAttempt, check getCallLogsForLead(lead)
+      if (!attempt && typeof getCallLogsForLead === 'function') {
+        const leadCalls = getCallLogsForLead(lead);
+        if (leadCalls && leadCalls.length > 0) {
+          const sortedCalls = leadCalls.slice().sort((a, b) => {
+            const tA = (typeof getCallEpochMs === 'function') ? getCallEpochMs(a) : new Date(a.created_at || a.timestamp || 0).getTime();
+            const tB = (typeof getCallEpochMs === 'function') ? getCallEpochMs(b) : new Date(b.created_at || b.timestamp || 0).getTime();
+            return tB - tA;
+          });
+          const latestCall = sortedCalls[0];
+          const rawDir = String(latestCall.direction || latestCall.call_type || 'INBOUND').toUpperCase();
+          const isOut = rawDir.includes('OUT') || rawDir.includes('DIAL');
+          const outStr = String(latestCall.call_outcome || latestCall.outcome || '').toLowerCase();
+          const isNotPicked = outStr.includes('not pick') || outStr.includes('busy') || (isOut && outStr.includes('missed')) || (latestCall.duration === 0 && isOut);
+
+          const timeVal = latestCall.created_at || latestCall.timestamp || latestCall.time;
+          const formattedTime = (typeof formatCallLogTime === 'function') ? formatCallLogTime(latestCall) : (latestCall.time || timeVal);
+          const staffDev = latestCall.staff_name || latestCall.device_name || latestCall.deviceName || 'OnePlus';
+
+          if (isOut && isNotPicked) {
+            attempt = {
+              type: 'CALL',
+              direction: 'OUTBOUND',
+              outcome: '📞 Outbound Dialed (Not Picked)',
+              note: 'Outbound call dial hui thi (Customer did not answer / busy)',
+              time: timeVal,
+              formattedTime: formattedTime,
+              user: staffDev
+            };
+          } else if (isOut) {
+            attempt = {
+              type: 'CALL',
+              direction: 'OUTBOUND',
+              outcome: '📞 Outbound Connected (Baat Hui)',
+              note: 'Outbound call connected with client (' + (latestCall.formattedDuration || (latestCall.duration ? latestCall.duration + 's' : 'Connected')) + ')',
+              time: timeVal,
+              formattedTime: formattedTime,
+              user: staffDev
+            };
+          } else if (outStr.includes('missed')) {
+            attempt = {
+              type: 'CALL',
+              direction: 'INBOUND',
+              outcome: '📲 Inbound Missed Call',
+              note: 'Customer missed call received',
+              time: timeVal,
+              formattedTime: formattedTime,
+              user: staffDev
+            };
+          } else {
+            attempt = {
+              type: 'CALL',
+              direction: 'INBOUND',
+              outcome: '📲 Inbound Connected',
+              note: 'Inbound call connected with customer (' + (latestCall.formattedDuration || (latestCall.duration ? latestCall.duration + 's' : 'Connected')) + ')',
+              time: timeVal,
+              formattedTime: formattedTime,
+              user: staffDev
+            };
+          }
+        }
+      }
+
+      // 2. Fallback to activities if still no attempt
       if (!attempt && lead.activities && lead.activities.length > 0) {
         const act = lead.activities.find(a => a.type === 'CALL_LOG' || a.type === 'WHATSAPP_SENT' || a.callOutcome || a.messageText);
         if (act) {
@@ -14955,10 +15097,12 @@
               user: act.userName || 'Sri Sri Admin'
             };
           } else {
+            const isNotPicked = String(act.callOutcome || act.notes || '').toLowerCase().includes('not pick') || String(act.callOutcome || act.notes || '').toLowerCase().includes('busy');
             attempt = {
               type: 'CALL',
-              outcome: act.callOutcome || 'Call Record',
-              note: act.notes || act.text,
+              direction: act.direction || (isNotPicked ? 'OUTBOUND' : 'INBOUND'),
+              outcome: isNotPicked ? '📞 Outbound Dialed (Not Picked)' : (act.callOutcome || 'Call Record'),
+              note: act.notes || act.text || (isNotPicked ? 'Outbound call dial hui thi (Customer did not answer / busy)' : 'Call completed'),
               time: act.timestamp || act.time,
               formattedTime: act.time,
               user: act.userName || 'Sri Sri Admin'
@@ -14967,37 +15111,51 @@
         }
       }
 
+      // 3. Fallback to stage: If lead stage is "Call Not Pick/User Busy", it was an outbound dialed attempt!
+      if (!attempt && lead.stage && (lead.stage.toLowerCase().includes('not pick') || lead.stage.toLowerCase().includes('busy'))) {
+        const timeVal = lead.lastActivityAt || lead.createdAt || new Date().toISOString();
+        attempt = {
+          type: 'CALL',
+          direction: 'OUTBOUND',
+          outcome: '📞 Outbound Dialed (Not Picked)',
+          note: 'Outbound call dial hui thi (Customer did not answer / busy)',
+          time: timeVal,
+          formattedTime: (typeof formatFollowupDate === 'function') ? formatFollowupDate(timeVal) : timeVal,
+          user: lead.lastActivityUser || 'OnePlus / Admin'
+        };
+      }
+
       if (attempt) {
         if (attempt.type === 'CALL') {
           const out = attempt.outcome || lead.lastCallOutcome || 'Call Logged';
           badge.innerText = out;
-          if (out.includes('Baat Hui')) {
-            badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+          if (out.includes('Baat Hui') || (out.includes('Connected') && !out.includes('Not Pick'))) {
+            badge.className = 'px-2 py-0.5 rounded text-[9px] font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
           } else if (out.includes('Call Nahi Lag Rahi') || out.includes('Switched Off')) {
-            badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30';
-          } else if (out.includes('Not Picked')) {
-            badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30';
+            badge.className = 'px-2 py-0.5 rounded text-[9px] font-black bg-rose-500/15 text-rose-400 border border-rose-500/30';
+          } else if (out.includes('Not Picked') || out.includes('Busy') || out.includes('Dialed')) {
+            badge.className = 'px-2 py-0.5 rounded text-[9px] font-black bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30';
           } else {
-            badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30';
+            badge.className = 'px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/15 text-blue-400 border border-blue-500/30';
           }
           let noteText = attempt.note || attempt.text || 'Call completed';
           if (typeof noteText === 'string' && (noteText.includes('35 sheets') || noteText.includes('flush doors') || noteText.includes('residential interior site'))) {
             noteText = 'Phone call connected. (Discussion notes pending / Attach audio recording)';
           }
           textEl.innerText = noteText;
-          const timeFormatted = attempt.formattedTime || formatFollowupDate(attempt.time || lead.lastContactedAt);
+          const timeFormatted = attempt.formattedTime || ((typeof formatFollowupDate === 'function') ? formatFollowupDate(attempt.time || lead.lastContactedAt) : attempt.time);
           timeEl.innerHTML = `<span class="text-gold font-bold">${timeFormatted}</span> · by <strong class="text-main">${attempt.user || 'Sri Sri Admin'}</strong>`;
         } else if (attempt.type === 'WHATSAPP') {
           badge.innerText = 'WhatsApp Message Sent';
           badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
           textEl.innerText = '💬 "' + (attempt.messageText || attempt.note || attempt.text || '').substring(0, 80) + '..."';
-          const timeFormatted = attempt.formattedTime || formatFollowupDate(attempt.time || lead.lastContactedAt);
+          const timeFormatted = attempt.formattedTime || ((typeof formatFollowupDate === 'function') ? formatFollowupDate(attempt.time || lead.lastContactedAt) : attempt.time);
           timeEl.innerHTML = `<span class="text-emerald-400 font-bold">${timeFormatted}</span> · by <strong class="text-main">${attempt.user || 'Sri Sri Admin'}</strong>`;
         } else {
           badge.innerText = attempt.outcome || 'Attempt Logged';
           badge.className = 'px-2 py-0.5 rounded text-[9px] font-bold bg-gold/15 text-gold border border-gold/30';
           textEl.innerText = attempt.note || attempt.text || 'Contact activity recorded';
-          const timeFormatted = attempt.formattedTime || formatFollowupDate(attempt.time || lead.lastContactedAt);
+          const timeFormatted = attempt.formattedTime || ((typeof formatFollowupDate === 'function') ? formatFollowupDate(attempt.time || lead.lastContactedAt) : attempt.time);
           timeEl.innerHTML = `<span class="text-gold font-bold">${timeFormatted}</span> · by <strong class="text-main">${attempt.user || 'Sri Sri Admin'}</strong>`;
         }
       } else {
@@ -15399,6 +15557,124 @@
       // DO NOT overwrite user notes on outcome click!
     }
 
+    function quickLogOutboundAttempt(outcome, targetLeadId) {
+      const leadId = targetLeadId || currentActiveLogLeadId || (currentSelectedLead ? currentSelectedLead.id : null);
+      const lead = (Array.isArray(leads) && leads.find(l => l.id === leadId)) || currentSelectedLead;
+      if (!lead) {
+        showToast('No active lead selected to log outbound call.', 'warning');
+        return;
+      }
+
+      const isNotPicked = outcome.toLowerCase().includes('not pick') || outcome.toLowerCase().includes('busy');
+      const now = new Date();
+      const timeStr = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const userName = (loggedInUser && loggedInUser.name) ? loggedInUser.name : 'OnePlus / Admin';
+      const userEmail = (loggedInUser && loggedInUser.email) ? loggedInUser.email : 'sales.ssply@gmail.com';
+
+      // 1. Update lead lastContactAttempt
+      lead.lastContactAttempt = {
+        type: 'CALL',
+        direction: 'OUTBOUND',
+        outcome: isNotPicked ? '📞 Outbound Dialed (Not Picked)' : '📞 Outbound Connected (Baat Hui)',
+        note: isNotPicked ? 'Outbound call dial hui thi (Customer did not answer / busy)' : 'Outbound call connected with client',
+        time: now.toISOString(),
+        formattedTime: timeStr,
+        user: userName
+      };
+      lead.lastCallOutcome = isNotPicked ? 'Call Not Picked / User Busy' : 'Baat Hui (Connected)';
+      lead.lastContactMethod = 'Phone Call';
+      lead.lastContactedAt = now.toISOString();
+      lead.lastActivityAt = now.toISOString();
+      lead.lastActivityText = isNotPicked ? '📞 Outbound Call Dialed (Not Picked)' : '📞 Outbound Call Connected (Baat Hui)';
+      lead.lastActivityUser = userName;
+
+      // 2. Add activity entry to lead
+      if (!lead.activities) lead.activities = [];
+      lead.activities.unshift({
+        id: 'act-outbound-' + Date.now(),
+        type: 'CALL_LOG',
+        direction: 'OUTBOUND',
+        callOutcome: isNotPicked ? 'Call Not Picked / User Busy' : 'Baat Hui (Connected)',
+        userName: userName,
+        userEmail: userEmail,
+        notes: isNotPicked ? 'Outbound call dial hui thi (Customer did not answer / busy)' : 'Outbound call connected with client',
+        text: isNotPicked ? '📞 Outbound Call Dialed · Call Not Picked / User Busy' : '📞 Outbound Call Dialed · Baat Hui (Connected)',
+        time: timeStr,
+        timestamp: now.toISOString(),
+        device: 'OnePlus'
+      });
+
+      // 3. If Not Picked, update stage to "Call Not Pick/User Busy"
+      if (isNotPicked) {
+        const busyStage = (Array.isArray(pipelines) && pipelines[0] && pipelines[0].stages && pipelines[0].stages.find(s => s.name.toLowerCase().includes('not pick') || s.name.toLowerCase().includes('busy'))) || { id: 'stg-3', name: 'Call Not Pick/User Busy' };
+        if (busyStage) {
+          lead.stageId = busyStage.id;
+          lead.stage = busyStage.name;
+        }
+      }
+
+      // 4. Create Call Log Record in callLogs
+      const newCallRecord = {
+        id: 'call-outbound-' + Date.now(),
+        leadId: lead.id,
+        lead_id: lead.id,
+        leadName: lead.name,
+        caller_name: lead.name,
+        phone: lead.phone || '',
+        caller_number: lead.phone || '',
+        receiver_number: '',
+        userName: userName,
+        staff_name: 'OnePlus',
+        deviceName: 'OnePlus',
+        device_name: 'OnePlus',
+        direction: 'OUTBOUND',
+        call_type: 'OUTBOUND',
+        duration: isNotPicked ? 0 : 120,
+        call_duration: isNotPicked ? 0 : 120,
+        formattedDuration: isNotPicked ? '0s' : '2m 00s',
+        outcome: isNotPicked ? 'Call Not Picked / User Busy' : 'Baat Hui (Connected)',
+        call_outcome: isNotPicked ? 'Call Not Picked / User Busy' : 'Baat Hui (Connected)',
+        callOutcome: isNotPicked ? 'Call Not Picked / User Busy' : 'Baat Hui (Connected)',
+        time: timeStr,
+        timestamp: now.toISOString(),
+        created_at: now.toISOString(),
+        hasAudio: false,
+        aiSummary: isNotPicked ? ('Outbound call dial hui thi to ' + lead.name + ' (Customer did not answer / busy)') : ('Outbound call connected with ' + lead.name)
+      };
+
+      if (typeof callLogs !== 'undefined' && Array.isArray(callLogs)) {
+        callLogs.unshift(newCallRecord);
+        try {
+          localStorage.setItem('sri_sri_call_logs', JSON.stringify(callLogs));
+        } catch(e) {}
+      }
+
+      try {
+        localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
+      } catch(e) {}
+
+      if (typeof syncLeadToCloud === 'function') syncLeadToCloud(lead);
+
+      closeModal('call-log-modal');
+      if (currentSelectedLead && currentSelectedLead.id === lead.id) {
+        currentSelectedLead = lead;
+        updateModalLastAttemptCard(lead);
+        renderLeadCallHistory(lead);
+        renderLeadTimeline(lead);
+        if (typeof renderLeadStagesBar === 'function') {
+          const p = pipelines.find(x => x.id === lead.pipelineId) || pipelines[0];
+          renderLeadStagesBar(lead, p);
+        }
+      }
+      if (typeof renderOpportunities === 'function') renderOpportunities();
+      if (typeof renderTeamCallLogsTable === 'function') renderTeamCallLogsTable();
+      if (typeof renderReports === 'function') renderReports();
+
+      showToast(isNotPicked ? '✓ Outbound call (Not Picked) logged to lead history!' : '✓ Outbound call (Connected) logged to lead history!', 'success');
+      if (window.lucide) lucide.createIcons();
+    }
+    window.quickLogOutboundAttempt = quickLogOutboundAttempt;
+
     function saveCallLogEntry() {
       const leadId = currentActiveLogLeadId || (currentSelectedLead ? currentSelectedLead.id : null);
       const lead = leads.find(l => l.id === leadId);
@@ -15417,10 +15693,11 @@
       const fuDate = (document.getElementById('call-log-next-followup') ? document.getElementById('call-log-next-followup').value : '');
       const newStageId = (document.getElementById('call-log-update-stage') ? document.getElementById('call-log-update-stage').value : '');
 
+      const isNotPicked = outcome.toLowerCase().includes('not pick') || outcome.toLowerCase().includes('busy') || outcome.toLowerCase().includes('nahi lag') || outcome.toLowerCase().includes('switched off');
       const notes = rawNotes || (outcome + ' logged via phone dialer');
       const now = new Date();
       const timeStr = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const userName = loggedInUser ? loggedInUser.name : 'Sri Sri Admin';
+      const userName = loggedInUser ? loggedInUser.name : 'OnePlus / Admin';
       const userEmail = loggedInUser ? loggedInUser.email : 'sales.ssply@gmail.com';
 
       // 1. Add activity entry
@@ -15428,21 +15705,24 @@
       const newActivity = {
         id: 'act-call-' + Date.now(),
         type: 'CALL_LOG',
+        direction: 'OUTBOUND',
         callOutcome: outcome,
         userName: userName,
         userEmail: userEmail,
         notes: notes,
-        text: outcome + ': ' + notes,
+        text: '📞 Outbound Call: ' + outcome + (notes ? ' · ' + notes : ''),
         time: timeStr,
-        timestamp: now.toISOString()
+        timestamp: now.toISOString(),
+        device: 'OnePlus'
       };
       lead.activities.unshift(newActivity);
 
       // 2. Set last contact attempt attributes on lead
       lead.lastContactAttempt = {
         type: 'CALL',
-        outcome: outcome,
-        note: notes,
+        direction: 'OUTBOUND',
+        outcome: isNotPicked ? '📞 Outbound Dialed (Not Picked)' : '📞 Outbound Connected (Baat Hui)',
+        note: isNotPicked ? 'Outbound call dial hui thi (Customer did not answer / busy)' : notes,
         text: outcome + ': ' + notes,
         time: now.toISOString(),
         formattedTime: timeStr,
@@ -15491,11 +15771,10 @@
         localStorage.setItem('sri_sri_tasks', JSON.stringify(tasks));
       }
 
-      // 5. Save AI Call Summary directly into Customer CRM Notes (User specification)
+      // 5. Save AI Call Summary directly into Customer CRM Notes
       const shouldFileNotes = document.getElementById('call-log-auto-file-crm-notes') ? document.getElementById('call-log-auto-file-crm-notes').checked : (callModuleConfig.autoFileNotes !== false);
       
       if (shouldFileNotes) {
-        // Call summaries are preserved in Call History and Activity tab, leaving lead.notes clean for customer requirements
         if (!lead.noteEntries) lead.noteEntries = [];
         lead.noteEntries.unshift({
           id: 'note-ai-' + Date.now(),
@@ -15510,29 +15789,41 @@
         });
       }
 
-      // 6. Save Complete Call Log Record for Team Directory & Role Isolation
+      // 6. Save Complete Call Log Record for Team Directory
       const transcriptText = (document.getElementById('call-modal-transcript-text') && document.getElementById('call-modal-transcript-text').innerText) || generateSampleTranscriptForLead(lead);
       const newCallRecord = {
         id: 'call-' + Date.now(),
         leadId: lead.id,
+        lead_id: lead.id,
         leadName: lead.name,
+        caller_name: lead.name,
+        caller_number: lead.phone || '',
         phone: lead.phone || '',
+        receiver_number: '',
         userName: userName,
         userEmail: userEmail,
         userRole: loggedInUser ? loggedInUser.role : 'Super Admin',
         userId: loggedInUser ? loggedInUser.id : 'user-admin',
         sim: simSlotUsed,
         direction: 'OUTBOUND',
-        duration: 135,
-        formattedDuration: '2m 15s',
+        call_type: 'OUTBOUND',
+        duration: isNotPicked ? 0 : 135,
+        call_duration: isNotPicked ? 0 : 135,
+        formattedDuration: isNotPicked ? '0s' : '2m 15s',
         outcome: outcome,
+        call_outcome: outcome,
+        callOutcome: outcome,
         time: timeStr,
         timestamp: now.toISOString(),
-        hasAudio: true,
-        audioFileName: 'rec_' + (lead.phone ? lead.phone.replace(/[^0-9]/g, '') : 'business') + '_' + Date.now() + '.mp3',
+        created_at: now.toISOString(),
+        hasAudio: !isNotPicked,
+        audioFileName: isNotPicked ? '' : ('rec_' + (lead.phone ? lead.phone.replace(/[^0-9]/g, '') : 'business') + '_' + Date.now() + '.mp3'),
         transcript: transcriptText,
         aiSummary: notes,
-        filedInCrmNotes: shouldFileNotes
+        filedInCrmNotes: shouldFileNotes,
+        staff_name: 'OnePlus',
+        deviceName: 'OnePlus',
+        device_name: 'OnePlus'
       };
       
       callLogs.unshift(newCallRecord);
@@ -15542,7 +15833,6 @@
         console.error('Error saving callLogs:', e);
       }
 
-      // 7. Persist to localStorage & cloud
       try {
         if (db && newCallRecord.id) {
           db.collection('call_logs').doc(newCallRecord.id).set(newCallRecord, { merge: true }).catch(() => {});
@@ -15551,7 +15841,6 @@
       localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
       syncLeadToCloud(lead);
 
-      // 8. Close Modal & update UI
       closeModal('call-log-modal');
       if (currentSelectedLead && currentSelectedLead.id === lead.id) {
         currentSelectedLead = lead;
@@ -15576,273 +15865,6 @@
       initDashboard();
 
       showToast('Call logged: ' + outcome + ' & AI summary filed into customer notes!', 'success');
-    }
-
-    function openWhatsAppComposerModal(leadId) {
-      let lead = leads.find(l => l.id === leadId);
-      if (!lead && currentSelectedLead && (!leadId || currentSelectedLead.id === leadId)) {
-        lead = currentSelectedLead;
-      }
-      if (!lead) {
-        showToast('Lead record not found.', 'error');
-        return;
-      }
-      currentActiveLogLeadId = lead.id;
-
-      const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
-      const nameEl = document.getElementById('wa-composer-client-name');
-      const phoneEl = document.getElementById('wa-composer-client-phone');
-      if (nameEl) nameEl.innerText = lead.name;
-      if (phoneEl) phoneEl.innerText = lead.phone ? (cleanPhone.length === 10 ? '+91 ' + cleanPhone : lead.phone) : 'No phone provided';
-
-      // Default message
-      const ta = document.getElementById('wa-composer-text');
-      if (ta) {
-        ta.value = 'Namaste ' + lead.name + ' ji, Sri Sri Ply & Hardware se connect kar rahe hain. Aapki inquiry ke baare mein baat karni thi. Kya abhi baat karne ka sahi samay hai?';
-      }
-
-      openModal('whatsapp-composer-modal');
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function applyWhatsAppTemplatePreset(type) {
-      const leadId = currentActiveLogLeadId || (currentSelectedLead ? currentSelectedLead.id : null);
-      const lead = leads.find(l => l.id === leadId) || currentSelectedLead || { name: 'Sir/Madam' };
-      const ta = document.getElementById('wa-composer-text');
-      if (!ta) return;
-
-      if (type === 'catalog') {
-        ta.value = 'Namaste ' + lead.name + ' ji, Sri Sri Ply & Hardware se humara latest product catalog & rate list share kar rahe hain: Plywood (Gurjan BWR/BWP), Decorative Laminates, Hardware fittings & PVC Boards. Kripya apni requirement batayein.';
-      } else if (type === 'quotation') {
-        ta.value = 'Namaste ' + lead.name + ' ji, aapki requirement ka best wholesale quotation Sri Sri Ply & Hardware se taiyar hai. Kripya rate verify karein aur order confirm karne ke liye reply karein.';
-      } else if (type === 'site_visit') {
-        ta.value = 'Namaste ' + lead.name + ' ji, aapki site par measurement lene aur wood sample dikhane ke liye humari team taiyar hai. Kripya convenient time aur address confirm karein.';
-      } else if (type === 'payment') {
-        ta.value = 'Namaste ' + lead.name + ' ji, Sri Sri Ply & Hardware se aapka order dispatch ke liye taiyar hai. Kripya invoice amount check karke payment details confirm karein.';
-      }
-    }
-
-    function sendAndLogWhatsAppMessage() {
-      const leadId = currentActiveLogLeadId || (currentSelectedLead ? currentSelectedLead.id : null);
-      const lead = leads.find(l => l.id === leadId);
-      if (!lead) {
-        showToast('No active lead found for WhatsApp message.', 'error');
-        return;
-      }
-
-      const ta = document.getElementById('wa-composer-text');
-      const msgText = ta ? ta.value.trim() : '';
-      if (!msgText) {
-        showToast('Kripya WhatsApp message likhein ya template select karein.', 'error');
-        return;
-      }
-
-      const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
-      if (!cleanPhone) {
-        showToast('Client ka valid phone number maujood nahi hai.', 'error');
-        return;
-      }
-
-      // 1. Open WhatsApp in new tab
-      const waUrl = 'https://wa.me/91' + cleanPhone + '?text=' + encodeURIComponent(msgText);
-      try {
-        window.open(waUrl, '_blank');
-      } catch (e) {
-        console.warn('Could not launch WhatsApp window:', e);
-      }
-
-      const now = new Date();
-      const timeStr = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const userName = loggedInUser ? loggedInUser.name : 'Sri Sri Admin';
-      const userEmail = loggedInUser ? loggedInUser.email : 'sales.ssply@gmail.com';
-
-      // 2. Add activity entry with exact message text
-      if (!lead.activities) lead.activities = [];
-      const newActivity = {
-        id: 'act-wa-' + Date.now(),
-        type: 'WHATSAPP_SENT',
-        messageText: msgText,
-        userName: userName,
-        userEmail: userEmail,
-        notes: msgText,
-        text: msgText,
-        time: timeStr,
-        timestamp: now.toISOString()
-      };
-      lead.activities.unshift(newActivity);
-
-      // 3. Update lead last contact attempt
-      lead.lastContactAttempt = {
-        type: 'WHATSAPP',
-        messageText: msgText,
-        note: msgText,
-        text: msgText,
-        time: now.toISOString(),
-        formattedTime: timeStr,
-        user: userName
-      };
-      lead.lastContactMethod = 'WhatsApp Message';
-      lead.lastMessageSent = msgText;
-      lead.lastContactedAt = now.toISOString();
-
-      lead.lastActivityAt = now.toISOString();
-      lead.lastActivityText = 'WhatsApp Sent: ' + msgText.substring(0, 35) + '...';
-      lead.lastActivityUser = userName;
-
-      // 4. Save and sync
-      localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
-      syncLeadToCloud(lead);
-
-      // 5. Close modal & refresh UI
-      closeModal('whatsapp-composer-modal');
-      if (currentSelectedLead && currentSelectedLead.id === lead.id) {
-        currentSelectedLead = lead;
-        updateModalLastAttemptCard(lead);
-        renderLeadTimeline(lead);
-      }
-      renderOpportunities();
-      renderPhonebookTable();
-      initDashboard();
-
-      showToast('WhatsApp message sent & logged in lead timeline!', 'success');
-    }
-
-
-    // ==================== WORK PENDING, OVERDUE & 30-MIN REMINDER ENGINE ====================
-    let currentPendingFilter = 'ALL';
-    let lastNotified30mLeadId = null;
-    let reminderWatcherInterval = null;
-
-    function playReminderSound() {
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.36);
-      } catch (e) {
-        console.warn('Audio chime notice:', e);
-      }
-    }
-
-    function dismissGlobal30mBanner() {
-      const b = document.getElementById('global-30m-reminder-banner');
-      if (b) b.classList.add('hidden');
-    }
-
-    function filterDashboardPendingView(filterType) {
-      currentPendingFilter = (currentPendingFilter === filterType) ? 'ALL' : filterType;
-      updatePendingWorkDashboard();
-    }
-
-    function checkAndTrigger30MinReminders(manualScan = false) {
-      const userLeads = getAccessibleLeads();
-      const now = new Date();
-      let urgentLead = null;
-      let minDiff = 999999;
-
-      userLeads.forEach(lead => {
-        if (!lead.nextFollowUp) return;
-        const p = pipelines.find(x => x.id === lead.pipelineId);
-        const stg = p ? p.stages.find(s => s.id === lead.stageId) : null;
-        if (stg && (stg.isWon || stg.isLost)) return;
-
-        const due = new Date(lead.nextFollowUp);
-        if (isNaN(due.getTime())) return;
-
-        const diffMins = Math.round((due - now) / 60000);
-        // Window: within next 30 minutes (1 to 30 mins remaining)
-        if (diffMins > 0 && diffMins <= 30) {
-          if (diffMins < minDiff) {
-            minDiff = diffMins;
-            urgentLead = lead;
-          }
-        }
-      });
-
-      const dashAlert = document.getElementById('dash-30m-alert-box');
-      const globalBanner = document.getElementById('global-30m-reminder-banner');
-
-      if (urgentLead) {
-        const timeText = 'Due in ' + minDiff + ' mins (' + formatFollowupDate(urgentLead.nextFollowUp) + ')';
-
-        // 1. Update Dashboard 30m Alert Box
-        if (dashAlert) {
-          dashAlert.classList.remove('hidden');
-          const pill = document.getElementById('dash-30m-timer-pill');
-          if (pill) pill.innerText = timeText;
-          const nameEl = document.getElementById('dash-30m-lead-name');
-          if (nameEl) nameEl.innerText = urgentLead.name;
-          const detailsEl = document.getElementById('dash-30m-lead-details');
-          if (detailsEl) {
-            detailsEl.innerText = 'Phone: ' + (urgentLead.phone || 'No phone') + ' • Assigned: ' + (urgentLead.assignedToName || 'Sri Sri Admin') + ' • Note: ' + (urgentLead.nextFollowUpNote || urgentLead.notes || 'Scheduled follow-up discussion');
-          }
-
-          const btnCall = document.getElementById('dash-30m-btn-call');
-          if (btnCall) btnCall.onclick = () => initiateCallWithLogging(urgentLead.id);
-          const btnWaClient = document.getElementById('dash-30m-btn-wa-client');
-          if (btnWaClient) btnWaClient.onclick = () => openWhatsAppComposerModal(urgentLead.id);
-          const isOwner = isCurrentUserSuperAdmin();
-          const roleLower = (loggedInUser && loggedInUser.role || '').toLowerCase();
-          const isCoordinator = roleLower.includes('cordinator') || roleLower.includes('coordinator') || roleLower.includes('calling');
-          const isManager = loggedInUser && (loggedInUser.role === 'Manager' || roleLower.includes('manager'));
-          const canAlertStaff = (isOwner || isManager) && !isCoordinator;
-
-          const btnWaStaff = document.getElementById('dash-30m-btn-wa-staff');
-          if (btnWaStaff) {
-            btnWaStaff.style.display = canAlertStaff ? '' : 'none';
-            btnWaStaff.onclick = () => openCallingTeamWaModal(null, urgentLead.id);
-          }
-        }
-
-        // 2. Update Global Floating Banner
-        if (globalBanner) {
-          globalBanner.classList.remove('hidden');
-          const gPill = document.getElementById('global-30m-time-pill');
-          if (gPill) gPill.innerText = timeText;
-          const gName = document.getElementById('global-30m-lead-name');
-          if (gName) gName.innerText = urgentLead.name;
-          const gNote = document.getElementById('global-30m-note');
-          if (gNote) gNote.innerText = 'Due in ' + minDiff + 'm: ' + (urgentLead.nextFollowUpNote || urgentLead.notes || 'Important follow-up action due');
-
-          const gCall = document.getElementById('global-30m-btn-call');
-          if (gCall) gCall.onclick = () => { dismissGlobal30mBanner(); initiateCallWithLogging(urgentLead.id); };
-          const gWa = document.getElementById('global-30m-btn-wa');
-          if (gWa) gWa.onclick = () => { dismissGlobal30mBanner(); openWhatsAppComposerModal(urgentLead.id); };
-          const gStaff = document.getElementById('global-30m-btn-wa-staff');
-          if (gStaff) {
-            gStaff.style.display = canAlertStaff ? '' : 'none';
-            gStaff.onclick = () => { dismissGlobal30mBanner(); openCallingTeamWaModal(null, urgentLead.id); };
-          }
-        }
-
-        // Audio chime and notification if new
-        if (lastNotified30mLeadId !== urgentLead.id) {
-          lastNotified30mLeadId = urgentLead.id;
-          playReminderSound();
-          showToast('⏰ Upcoming Follow-up: ' + urgentLead.name + ' (' + urgentLead.phone + ') is due in ' + minDiff + ' minutes!', 'warning');
-        }
-
-        if (manualScan) {
-          showToast('Found urgent reminder for ' + urgentLead.name + ' (' + minDiff + ' mins left)', 'info');
-        }
-      } else {
-        if (dashAlert) dashAlert.classList.add('hidden');
-        if (globalBanner) globalBanner.classList.add('hidden');
-        if (manualScan) {
-          showToast('All follow-ups scanned. No urgent 30-minute reminders right now.', 'info');
-        }
-      }
-      if (window.lucide) lucide.createIcons();
     }
 
     function updatePendingWorkDashboard() {
@@ -20773,11 +20795,11 @@
     function renderReports(targetPeriod) {
       if (typeof initCallLogs === "function") initCallLogs();
       const dateSelect = document.getElementById('rep-date-filter');
-      const period = targetPeriod || (dateSelect ? dateSelect.value : 'ALL');
+      const period = (targetPeriod || (dateSelect ? dateSelect.value : 'ALL')).toUpperCase();
       if (dateSelect && dateSelect.value !== period) dateSelect.value = period;
 
       // 1. Update pill button active states
-      ['today', 'weekly', 'monthly', 'all'].forEach(pKey => {
+      ['today', 'weekly', 'monthly', 'all', 'custom'].forEach(pKey => {
         const btn = document.getElementById('rep-pill-' + pKey);
         if (btn) {
           if (pKey.toUpperCase() === period) {
@@ -20787,6 +20809,34 @@
           }
         }
       });
+
+      // Toggle Custom Date Range Container
+      const customContainer = document.getElementById('rep-custom-date-container');
+      let customStartMs = 0;
+      let customEndMs = Infinity;
+
+      if (customContainer) {
+        if (period === 'CUSTOM') {
+          customContainer.classList.remove('hidden');
+          customContainer.classList.add('flex');
+
+          const startInput = document.getElementById('rep-custom-start');
+          const endInput = document.getElementById('rep-custom-end');
+
+          if (startInput && !startInput.value) startInput.value = '2026-10-24';
+          if (endInput && !endInput.value) endInput.value = '2026-11-02';
+
+          if (startInput && startInput.value) {
+            customStartMs = new Date(startInput.value + 'T00:00:00.000').getTime();
+          }
+          if (endInput && endInput.value) {
+            customEndMs = new Date(endInput.value + 'T23:59:59.999').getTime();
+          }
+        } else {
+          customContainer.classList.add('hidden');
+          customContainer.classList.remove('flex');
+        }
+      }
 
       const allLeads = (typeof leads !== 'undefined' && Array.isArray(leads)) ? leads : [];
       const allCalls = (typeof callLogs !== 'undefined' && Array.isArray(callLogs)) ? callLogs : [];
@@ -20800,8 +20850,28 @@
         if (period === 'ALL') return true;
         const tStr = String(c.created_at || c.timestamp || '');
         const timeText = String(c.time || '');
+
+        if (period === 'CUSTOM') {
+          let callEpoch = 0;
+          if (typeof getCallEpochMs === 'function') {
+            callEpoch = getCallEpochMs(c);
+          } else if (tStr) {
+            callEpoch = new Date(tStr).getTime();
+          }
+          if (!callEpoch || isNaN(callEpoch)) {
+            // Fallback parse timeText
+            const m = timeText.match(/(\d{1,2})\s+([A-Za-z]+)/);
+            if (m) {
+              const day = m[1].padStart(2, '0');
+              const mon = m[2].toLowerCase().startsWith('oct') ? '10' : (m[2].toLowerCase().startsWith('nov') ? '11' : '10');
+              callEpoch = new Date('2026-' + mon + '-' + day + 'T12:00:00').getTime();
+            }
+          }
+          return callEpoch >= customStartMs && callEpoch <= customEndMs;
+        }
+
         if (period === 'TODAY') {
-          return tStr.startsWith(todayDateStr) || timeText.includes('2 Nov');
+          return tStr.startsWith(todayDateStr) || timeText.includes('2 Nov') || timeText.includes('02 Nov');
         }
         const epoch = new Date(tStr).getTime();
         if (period === 'WEEKLY') {
@@ -20830,8 +20900,11 @@
         const actTimes = Array.isArray(l.activities) ? l.activities.map(a => a.timestamp || a.time || '') : [];
         const allDates = [createdStr, l.lastActivityAt, l.wonAt, ...actTimes].filter(Boolean);
 
-        if (period === 'TODAY') {
-          if (allDates.some(d => d.includes(todayDateStr) || d.includes('2 Nov'))) return true;
+        if (period === 'CUSTOM') {
+          const leadEpochs = allDates.map(d => new Date(d).getTime()).filter(ep => !isNaN(ep) && ep > 0);
+          if (leadEpochs.some(ep => ep >= customStartMs && ep <= customEndMs)) return true;
+        } else if (period === 'TODAY') {
+          if (allDates.some(d => d.includes(todayDateStr) || d.includes('2 Nov') || d.includes('02 Nov'))) return true;
         } else if (period === 'WEEKLY') {
           const epoch = new Date(createdStr).getTime();
           if ((!isNaN(epoch) && (now - epoch) <= 7 * 86400000) || allDates.some(d => d.includes('2026-10-31') || d.includes('2026-11-02'))) return true;
@@ -20889,162 +20962,129 @@
       const durS = totalSecs % 60;
       const durStr = (durH > 0 ? durH + 'h ' : '') + durM + 'm ' + durS + 's';
 
-      // Update DOM Elements
-      const elWonDeals = document.getElementById('rep-won-deals');
-      const elWinRate = document.getElementById('rep-win-rate');
-      const elTotalVal = document.getElementById('rep-total-val');
-      const elTotalLeads = document.getElementById('rep-total-leads');
-      const elWalkinCount = document.getElementById('rep-walkin-count');
-      const elWalkinRate = document.getElementById('rep-walkin-rate');
-      const elCallTotal = document.getElementById('rep-calling-total');
-      const elCallIn = document.getElementById('rep-calling-inbound');
-      const elCallOut = document.getElementById('rep-calling-outbound');
-      const elCallConn = document.getElementById('rep-calling-connected');
-      const elCallDur = document.getElementById('rep-calling-duration');
+      // Update KPI Cards in DOM matching part3.html IDs
+      const repWonCount = document.getElementById('rep-won-deals');
+      const repWonRevenue = document.getElementById('rep-total-val');
+      const repWinRate = document.getElementById('rep-win-rate');
+      const repNewLeads = document.getElementById('rep-total-leads');
+      const repWalkinCount = document.getElementById('rep-walkin-count');
+      const repWalkinRate = document.getElementById('rep-walkin-rate');
+      const repCallingTotal = document.getElementById('rep-calling-total');
+      const repCallingDuration = document.getElementById('rep-calling-duration');
+      const repCallingInbound = document.getElementById('rep-calling-inbound');
+      const repCallingOutbound = document.getElementById('rep-calling-outbound');
+      const repCallingConnected = document.getElementById('rep-calling-connected');
 
-      if (elWonDeals) elWonDeals.innerText = wonCount;
-      if (elWinRate) elWinRate.innerText = winRate + '% Conv.';
-      if (elTotalVal) elTotalVal.innerText = totalWonRevenue > 0 ? '₹ ' + totalWonRevenue.toLocaleString('en-IN') : '₹ 0';
-      if (elTotalLeads) elTotalLeads.innerText = totalLeadsCount;
-      if (elWalkinCount) elWalkinCount.innerText = walkinLeads.length;
-      if (elWalkinRate) elWalkinRate.innerText = walkinRate + '% Won';
-      if (elCallTotal) elCallTotal.innerText = totalCalls;
-      if (elCallIn) elCallIn.innerText = '📲 ' + inboundCalls + ' In';
-      if (elCallOut) elCallOut.innerText = '📞 ' + outboundCalls + ' Out';
-      if (elCallConn) elCallConn.innerText = '🟢 ' + connectedCalls + ' Conn';
-      if (elCallDur) elCallDur.innerText = durStr;
+      if (repWonCount) repWonCount.innerText = wonCount;
+      if (repWonRevenue) repWonRevenue.innerText = '₹ ' + totalWonRevenue.toLocaleString('en-IN');
+      if (repWinRate) repWinRate.innerText = winRate + '% Conv.';
+      if (repNewLeads) repNewLeads.innerText = totalLeadsCount;
+      if (repWalkinCount) repWalkinCount.innerText = walkinLeads.length;
+      if (repWalkinRate) repWalkinRate.innerText = walkinRate + '% Won';
+      if (repCallingTotal) repCallingTotal.innerText = totalCalls;
+      if (repCallingDuration) repCallingDuration.innerText = durStr;
+      if (repCallingInbound) repCallingInbound.innerText = '📲 ' + inboundCalls + ' In';
+      if (repCallingOutbound) repCallingOutbound.innerText = '📞 ' + outboundCalls + ' Out';
+      if (repCallingConnected) repCallingConnected.innerText = '🟢 ' + connectedCalls + ' Conn';
 
-      // 2. Render Channel / Lead Sources Performance Table
-      const sourceTableBody = document.getElementById('rep-source-table-body');
-      if (sourceTableBody) {
-        const CHANNELS = [
-          { key: 'fb', name: 'Meta / Facebook Ads', icon: 'share-2', color: 'text-blue-500' },
-          { key: 'walkin', name: 'Walk-in / Direct Showroom', icon: 'footprints', color: 'text-purple-500' },
-          { key: 'phone', name: 'Direct Phone Call', icon: 'phone', color: 'text-emerald-500' },
-          { key: 'google', name: 'Google / Search / GMB', icon: 'search', color: 'text-amber-500' },
-          { key: 'whatsapp', name: 'WhatsApp Inquiries', icon: 'message-circle', color: 'text-emerald-400' },
-          { key: 'manual', name: 'Old CRM / Direct Entry', icon: 'database', color: 'text-slate-400' },
-          { key: 'bni', name: 'BNI / Referral', icon: 'users', color: 'text-indigo-400' }
-        ];
+      // 2. Channel & Source Breakdown Matrix
+      const sourceMap = {};
+      filteredLeads.forEach(l => {
+        let src = (l.source || 'Other').trim();
+        const pId = String(l.pipelineId || '');
+        if (pId === 'p-fb' || src.toLowerCase().includes('fb') || src.toLowerCase().includes('facebook')) src = 'Facebook / Meta Ads';
+        else if (src.toLowerCase().includes('walk') || pId.includes('walk')) src = 'Walk-in (Showroom)';
+        else if (src.toLowerCase().includes('call') || pId === 'p-calls') src = 'Direct Phone Calls';
+        else if (src.toLowerCase().includes('whats') || pId === 'p-whatsapp') src = 'WhatsApp Inquiries';
+        else if (src.toLowerCase().includes('google')) src = 'Google Ads / Search';
+        else if (src.toLowerCase().includes('bni') || src.toLowerCase().includes('referral')) src = 'BNI / Referrals';
+        else if (src.toLowerCase().includes('import') || src.toLowerCase().includes('csv')) src = 'Old CRM Import';
+        else if (!src || src === 'Other') src = 'Direct Inquiries';
 
-        sourceTableBody.innerHTML = CHANNELS.map(ch => {
-          const chLeads = filteredLeads.filter(l => {
-            const s = String(l.source || '').toLowerCase();
-            const p = String(l.pipelineId || '').toLowerCase();
-            if (ch.key === 'fb') return s.includes('fb') || s.includes('facebook') || p === 'p-fb';
-            if (ch.key === 'walkin') return s.includes('walk') || p === 'p-walkin' || s.includes('showroom');
-            if (ch.key === 'phone') return s.includes('phone') || s.includes('call') || s.includes('cold');
-            if (ch.key === 'google') return s.includes('google') || s.includes('gmb') || s.includes('search') || p === 'p-google';
-            if (ch.key === 'whatsapp') return s.includes('whatsapp') || p === 'p-whatsapp';
-            if (ch.key === 'manual') return s.includes('manual') || s.includes('excel') || s.includes('old crm');
-            if (ch.key === 'bni') return s.includes('bni') || s.includes('ref') || s.includes('someone');
-            return false;
-          });
+        if (!sourceMap[src]) sourceMap[src] = { total: 0, won: 0, revenue: 0 };
+        sourceMap[src].total++;
+        const isWon = l.stageId === 'stg-8' || (pipelines && pipelines.some(p => {
+          const stg = p.stages ? p.stages.find(s => s.id === l.stageId) : null;
+          return stg && stg.isWon;
+        }));
+        if (isWon) {
+          sourceMap[src].won++;
+          const valNum = parseInt(String(l.dealValue || l.budget || '0').replace(/[^0-9]/g, ''), 10) || 0;
+          sourceMap[src].revenue += valNum;
+        }
+      });
 
-          const inq = chLeads.length;
-          const walkin = chLeads.filter(l => String(l.source || '').toLowerCase().includes('walk') || String(l.pipelineId || '').toLowerCase().includes('walk')).length;
-          const won = chLeads.filter(l => l.stageId === 'stg-8').length;
-          let rev = 0;
-          chLeads.filter(l => l.stageId === 'stg-8').forEach(l => {
-            rev += (parseInt(String(l.dealValue || l.budget || '0').replace(/\D/g, ''), 10) || 0);
-          });
-          const conv = inq > 0 ? Math.round((won / inq) * 100) : 0;
-          const statusBadge = inq > 0 
-            ? (won > 0 ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Active (High Won)</span>' : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">Active Inquiries</span>')
-            : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-subtle text-muted-custom border border-main/40">Ready</span>';
-
-          return `
-            <tr class="hover:bg-subtle/50 transition">
-              <td class="p-3 font-bold text-main flex items-center gap-2">
-                <i data-lucide="${ch.icon}" class="w-4 h-4 ${ch.color}"></i>
-                <span>${ch.name}</span>
-              </td>
-              <td class="p-3 text-center font-extrabold text-main">${inq}</td>
-              <td class="p-3 text-center font-bold text-purple-400">${walkin}</td>
-              <td class="p-3 text-center font-black text-emerald-500">${won}</td>
-              <td class="p-3 text-right font-mono font-black text-emerald-400">${rev > 0 ? '₹ ' + rev.toLocaleString('en-IN') : '₹ 0'}</td>
-              <td class="p-3 text-right font-bold ${conv > 0 ? 'text-gold' : 'text-muted-custom'}">${conv}%</td>
-              <td class="p-3 text-center">${statusBadge}</td>
-            </tr>
-          `;
-        }).join('');
+      const channelTbody = document.getElementById('rep-channel-breakdown-tbody');
+      if (channelTbody) {
+        const rows = Object.entries(sourceMap).sort((a,b) => b[1].total - a[1].total);
+        if (rows.length === 0) {
+          channelTbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-xs text-muted-custom">No channel lead data found for this period.</td></tr>';
+        } else {
+          channelTbody.innerHTML = rows.map(([name, data]) => {
+            const convRate = data.total > 0 ? Math.round((data.won / data.total) * 100) : 0;
+            return `
+              <tr class="hover:bg-subtle/50 transition border-b border-main/50">
+                <td class="p-3.5 font-bold text-main flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-gold shrink-0"></span>
+                  <span>${escapeHtml(name)}</span>
+                </td>
+                <td class="p-3.5 font-bold text-main font-mono text-center">${data.total}</td>
+                <td class="p-3.5 font-bold text-emerald-400 font-mono text-center">${data.won}</td>
+                <td class="p-3.5 font-bold text-main font-mono text-center">${convRate}%</td>
+                <td class="p-3.5 font-extrabold text-gold font-mono text-right">₹ ${data.revenue.toLocaleString('en-IN')}</td>
+              </tr>
+            `;
+          }).join('');
+        }
       }
 
-      // 3. Render Handset Devices Operations Table (OnePlus & Samsung Galaxy)
-      const deviceTableBody = document.getElementById('rep-device-table-body');
-      if (deviceTableBody) {
-        const DEVICES = ['OnePlus', 'Samsung Galaxy'];
-        deviceTableBody.innerHTML = DEVICES.map(devName => {
-          const devCalls = filteredCalls.filter(c => {
-            const d = String(c.device_name || c.deviceName || c.staff_name || '').toLowerCase();
-            if (devName === 'OnePlus') return d.includes('oneplus') || d.includes('one plus');
-            return d.includes('samsung');
-          });
+      // 3. Calling Operations Breakdown (OnePlus & Samsung Galaxy)
+      const callingTbody = document.getElementById('rep-calling-breakdown-tbody');
+      if (callingTbody) {
+        const deviceMap = {
+          'OnePlus': { total: 0, outbound: 0, inbound: 0, connected: 0, missed: 0, duration: 0 },
+          'Samsung Galaxy': { total: 0, outbound: 0, inbound: 0, connected: 0, missed: 0, duration: 0 },
+          'iQOO (IQ Device)': { total: 0, outbound: 0, inbound: 0, connected: 0, missed: 0, duration: 0 }
+        };
 
-          const dTotal = devCalls.length;
-          const dIn = devCalls.filter(c => !(c.direction || c.call_type || 'INBOUND').toUpperCase().includes('OUT')).length;
-          const dOut = devCalls.filter(c => (c.direction || c.call_type || 'INBOUND').toUpperCase().includes('OUT')).length;
-          const dConn = devCalls.filter(c => {
-            const out = getCallOutcomeForRecord(c);
-            return out.includes('Connected') || out.includes('Baat Hui') || (c.duration && c.duration > 0);
-          }).length;
-          const dSec = devCalls.reduce((s, c) => s + (c.duration || 0), 0);
-          const dH = Math.floor(dSec / 3600);
-          const dM = Math.floor((dSec % 3600) / 60);
-          const dS = dSec % 60;
-          const dDurText = (dH > 0 ? dH + 'h ' : '') + dM + 'm ' + dS + 's';
-          const dRate = dTotal > 0 ? Math.round((dConn / dTotal) * 100) : 0;
+        filteredCalls.forEach(c => {
+          const dev = String(c.deviceName || c.device_name || c.staff_name || '').toLowerCase();
+          let targetKey = 'OnePlus';
+          if (dev.includes('oneplus') || dev.includes('one plus')) targetKey = 'OnePlus';
+          else if (dev.includes('iq') || dev.includes('vivo')) targetKey = 'iQOO (IQ Device)';
+          else if (dev.includes('samsung')) targetKey = 'Samsung Galaxy';
+          const rec = deviceMap[targetKey];
+          if (!rec) return;
 
+          rec.total++;
+          const rawDir = String(c.direction || c.call_type || 'INBOUND').toUpperCase();
+          const isOut = rawDir.includes('OUT') || rawDir.includes('DIAL');
+          if (isOut) rec.outbound++; else rec.inbound++;
+
+          const out = getCallOutcomeForRecord(c);
+          if (out.includes('Connected') || out.includes('Baat Hui') || (c.duration && c.duration > 0)) {
+            rec.connected++;
+          } else {
+            rec.missed++;
+          }
+          rec.duration += (c.duration || 0);
+        });
+
+        callingTbody.innerHTML = Object.entries(deviceMap).map(([devName, data]) => {
+          const dMins = Math.floor(data.duration / 60);
+          const dSecs = data.duration % 60;
+          const connPct = data.total > 0 ? Math.round((data.connected / data.total) * 100) : 0;
           return `
-            <tr class="hover:bg-subtle/50 transition">
-              <td class="p-3 font-extrabold text-main flex items-center gap-2">
-                <i data-lucide="smartphone" class="w-4 h-4 text-sky-400"></i>
-                <span>${devName}</span>
+            <tr class="hover:bg-subtle/50 transition border-b border-main/50">
+              <td class="p-3.5 font-bold text-main flex items-center gap-2">
+                <i data-lucide="smartphone" class="w-4 h-4 ${devName.includes('OnePlus') ? 'text-sky-400' : 'text-emerald-400'}"></i>
+                <span>${escapeHtml(devName)}</span>
               </td>
-              <td class="p-3 text-center font-extrabold text-main">${dTotal}</td>
-              <td class="p-3 text-center font-bold text-emerald-400">📲 ${dIn}</td>
-              <td class="p-3 text-center font-bold text-sky-400">📞 ${dOut}</td>
-              <td class="p-3 text-center font-black text-emerald-500">🟢 ${dConn}</td>
-              <td class="p-3 text-right font-black text-gold">${dRate}%</td>
-              <td class="p-3 text-right font-mono font-extrabold text-amber-400">${dDurText}</td>
-            </tr>
-          `;
-        }).join('');
-      }
-
-      // 4. Render Staff Performance Table (rep-staff-table-body)
-      const staffTableBody = document.getElementById('rep-staff-table-body');
-      if (staffTableBody) {
-        const staffList = (typeof users !== 'undefined' && Array.isArray(users)) ? users : [
-          { name: 'Sri Sri Admin', email: 'sales.ssply@gmail.com', role: 'Super Admin' },
-          { name: 'Sales Coordinator', email: 'coordinator@srisriply.com', role: 'Sales Coordinator' }
-        ];
-
-        staffTableBody.innerHTML = staffList.map(u => {
-          const assigned = filteredLeads.filter(l => l.assignedToEmail === u.email || l.assignedToName === u.name).length;
-          const won = filteredLeads.filter(l => (l.assignedToEmail === u.email || l.assignedToName === u.name) && l.stageId === 'stg-8').length;
-          let val = 0;
-          filteredLeads.filter(l => (l.assignedToEmail === u.email || l.assignedToName === u.name) && l.stageId === 'stg-8').forEach(l => {
-            val += (parseInt(String(l.dealValue || l.budget || '0').replace(/\D/g, ''), 10) || 0);
-          });
-          const conv = assigned > 0 ? Math.round((won / assigned) * 100) : 0;
-
-          return `
-            <tr class="hover:bg-subtle/50 transition">
-              <td class="p-3 font-bold text-main flex items-center gap-2">
-                <div class="w-6 h-6 rounded-lg bg-gold/20 text-gold flex items-center justify-center text-[10px] font-black uppercase">
-                  ${u.name.slice(0, 2)}
-                </div>
-                <div>
-                  <span class="block font-black text-main">${escapeHtml(u.name)}</span>
-                  <span class="block text-[10px] text-muted-custom">${escapeHtml(u.email || u.role)}</span>
-                </div>
-              </td>
-              <td class="p-3 text-center font-extrabold text-main">${assigned}</td>
-              <td class="p-3 text-center font-bold text-emerald-400">Active</td>
-              <td class="p-3 text-center font-black text-emerald-500">${won}</td>
-              <td class="p-3 text-right font-mono font-black text-emerald-400">${val > 0 ? '₹ ' + val.toLocaleString('en-IN') : '₹ 0'}</td>
-              <td class="p-3 text-right font-black text-gold">${conv}%</td>
+              <td class="p-3.5 font-bold text-main font-mono text-center">${data.total}</td>
+              <td class="p-3.5 font-bold text-blue-400 font-mono text-center">${data.outbound}</td>
+              <td class="p-3.5 font-bold text-emerald-400 font-mono text-center">${data.inbound}</td>
+              <td class="p-3.5 font-bold text-main font-mono text-center">${data.connected} (${connPct}%)</td>
+              <td class="p-3.5 font-bold text-gold font-mono text-right">${dMins}m ${dSecs}s</td>
             </tr>
           `;
         }).join('');
@@ -22752,6 +22792,7 @@
           <option value="ALL">📱 All Phones / Devices</option>
           <option value="OnePlus">📱 OnePlus</option>
           <option value="Samsung Galaxy">📱 Samsung Galaxy</option>
+          <option value="iQOO">📱 iQOO (IQ Device)</option>
         `;
         deviceSelect.value = curDevVal;
       }
@@ -22798,14 +22839,7 @@
       // Strictly sort descending by phone clock timestamp (newest to oldest)
       filtered = deduplicateCallRecords(filtered);
 
-      // Strictly filter out phantom Samsung Galaxy calls on 31 Oct and 02 Nov (as verified by user: zero calls on Samsung)
-      filtered = filtered.filter(c => {
-        const isSamsung = String(c.staff_name || c.device_name || c.deviceName || '').toLowerCase().includes('samsung');
-        const is31Oct = (c.time && c.time.includes('31 Oct')) || (c.created_at && c.created_at.includes('2026-10-31'));
-        const is02Nov = (c.time && (c.time.includes('02 Nov') || c.time.includes('2 Nov'))) || (c.created_at && c.created_at.includes('2026-11-02'));
-        if (isSamsung && (is31Oct || is02Nov)) return false;
-        return true;
-      });
+      // Samsung real calls allowed (phantom duplicates handled by deduplicateCallRecords)
 
       filtered.sort((a, b) => {
         const tA = getCallEpochMs(a);
@@ -22835,6 +22869,7 @@
           const target = filterDevice.toLowerCase();
           if (target.includes('oneplus')) return d.includes('oneplus') || d.includes('one plus');
           if (target.includes('samsung')) return d.includes('samsung');
+          if (target.includes('iq') || target.includes('vivo')) return d.includes('iq') || d.includes('vivo');
           return true;
         });
       }
@@ -22903,6 +22938,8 @@
       if (emptyState) emptyState.classList.add('hidden');
 
       tbody.innerHTML = filtered.map(call => {
+        const rawDir = String(call.direction || call.call_type || "INBOUND").toUpperCase();
+        const isOut = rawDir.includes("OUT") || rawDir.includes("DIAL");
         const exactOutcome = getCallOutcomeForRecord(call);
         call.outcome = exactOutcome;
         call.callOutcome = exactOutcome;
@@ -22944,9 +22981,9 @@
                 let dirIcon = "";
                 let dirClass = "";
                 if (isMissed) {
-                  dirLabel = isOut ? "Outbound Unanswered" : "Inbound Missed";
+                  dirLabel = isOut ? "📞 Outbound Dialed (Not Picked)" : "📲 Inbound Missed";
                   dirIcon = isOut ? "phone-outgoing" : "phone-missed";
-                  dirClass = "text-rose-600 dark:text-rose-400 font-extrabold";
+                  dirClass = isOut ? "text-amber-500 dark:text-amber-400 font-black" : "text-rose-600 dark:text-rose-400 font-extrabold";
                 } else if (isOut) {
                   dirLabel = "Outbound Connected";
                   dirIcon = "phone-outgoing";
@@ -23018,9 +23055,9 @@
             </td>
             <td class="p-3.5 whitespace-nowrap w-32">
               ${isMissed ? `
-                <span class="px-3 py-1 rounded-full text-xs font-black bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center gap-1.5 w-max">
-                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                  <span>Missed Call</span>
+                <span class="px-3 py-1 rounded-full text-xs font-black ${isOut ? 'bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'} flex items-center gap-1.5 w-max">
+                  <span class="w-1.5 h-1.5 rounded-full ${isOut ? 'bg-amber-500' : 'bg-rose-500'}"></span>
+                  <span>${isOut ? 'Dialed: Not Picked' : 'Missed Call'}</span>
                 </span>
               ` : `
                 <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 w-max">
