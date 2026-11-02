@@ -1,68 +1,544 @@
 const KNOWN_DRIVE_MAPPINGS = {
-  // 02 Nov 2026 Afternoon Calls
-  '1dmwFIgXn7T5bSKZMLPVEfjQDmVZs-64o': { name: 'Nikhil Mishra', phone: '+919151610556', dur: 126, time: '2 Nov, 02:08 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1SjGPApSYRsTezVfA6PfM26R9Is0xZYIA': { name: '( Spam Alert From Jio) Tushar Sharma', phone: '+919501653648', dur: 10, time: '2 Nov, 01:22 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1so-pNF1ro0lgyNAAcBvuLeYXBx6cryD4': { name: 'Monu Kitchen Np', phone: '+916280251494', dur: 18, time: '2 Nov, 01:11 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1lKilBeKNdiLNRf3SKcGHiS__0ryKgAO5': { name: 'Anwarul Sir Plywood', phone: '+919463446101', dur: 37, time: '2 Nov, 01:06 PM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1vi29vVzTwFe4rgu9V3tIEVjfO8zmznRr': { name: 'Anwarul Sir Plywood', phone: '+917357441912', dur: 18, time: '2 Nov, 01:04 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1Ke-P02cvo9ClDNOa1tfnUaaM1eWGZEtH': { name: 'SURESH CHAND', phone: '+919876754841', dur: 137, time: '2 Nov, 12:19 PM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1RHY2u2oT5xQdtrWxYxGe2dhXXVRcEI15': { name: 'SURESH CHAND', phone: '+919876754841', dur: 216, time: '2 Nov, 12:15 PM', device: 'OnePlus', dir: 'INBOUND' },
-
-  // 02 Nov 2026 Morning Calls
-  '1jXfXU7EtKMURImgh0mJhntTOX4nJ5Y2G': { name: 'Direct Phone Call', phone: '+917508325292', dur: 61, time: '2 Nov, 11:42 AM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1fDFKseUVHa_JQC1k9Qp-hCI6SUHzNZoL': { name: 'Direct Phone Call', phone: '+919464481892', dur: 71, time: '2 Nov, 11:40 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1avg6ghn4uMWpv0GTK_EuzJKSfx5PeL5x': { name: 'Direct Phone Call', phone: '+917528951999', dur: 69, time: '2 Nov, 11:07 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1yK2Wn01IQpiZfSD6cgqUiIvJW0gJNv8j': { name: 'Direct Phone Call', phone: '+919876345045', dur: 10, time: '2 Nov, 11:05 AM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1DUw3_AnbOIeDk7vyQEgy6NbdbtWzPl1r': { name: 'Direct Phone Call', phone: '+919370490007', dur: 32, time: '2 Nov, 11:04 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1pj42TO_SDNbG20TqG-z7zgqYS81BKPEz': { name: 'Direct Phone Call', phone: '+917009271810', dur: 44, time: '2 Nov, 11:03 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1hV_GviKrWF7YCO-MlZn5vz81bW_5h9eY': { name: 'Direct Phone Call', phone: '+918279423299', dur: 42, time: '2 Nov, 11:01 AM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1XWVBKxBcZoS9N6tuFuxdBaDo4Smn6x-c': { name: 'Direct Phone Call', phone: '+918427555333', dur: 10, time: '2 Nov, 11:00 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1kwEv6qhzhQsVbqqM27ZHXRt_BdgAAQLl': { name: 'Direct Phone Call', phone: '+918968337146', dur: 55, time: '2 Nov, 10:58 AM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1r64PUn1UkQi0bkBqCxOY_i4YSYrfjiq8': { name: 'Direct Phone Call', phone: '+919878285052', dur: 60, time: '2 Nov, 10:56 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1BDCeF8mfoC20ddCrQXChYXoTd7-G989r': { name: 'Direct Phone Call', phone: '+917508325292', dur: 160, time: '2 Nov, 10:53 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1_OhfPHF-tT2HfBlmnHZ9PX4LkGt0PwBk': { name: 'Rajni Rani Singla', phone: '+919877865282', dur: 26, time: '2 Nov, 10:51 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1_O8N13m35Q59GYh5zXSLDV2Aj2ISLNuz': { name: 'Direct Phone Call', phone: '+919779458368', dur: 97, time: '2 Nov, 10:48 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1q3NLQMxc1sFV5XnI9-y8I_AHE_ClEuVX': { name: 'Direct Phone Call', phone: '+917837380268', dur: 23, time: '2 Nov, 10:46 AM', device: 'OnePlus', dir: 'INBOUND' },
-
-  // Late 31 Oct Calls
-  '1RQX70d1qrtP0-UlkxHoKEbdqGRe4aPLk': { name: 'Vikram Jeet Singh', phone: '+918437816715', dur: 190, time: '31 Oct, 06:12 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1ZSXc5UMniO9gvkDKTn-EYCptKTl62bFT': { name: 'Direct Customer Call', phone: '+918035067063', dur: 18, time: '31 Oct, 05:30 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1_Qly-WJWuUAq10YL9GfOW2l0jg6yOX_v': { name: 'Flipkart Customer Service', phone: '18002029898', dur: 21, time: '31 Oct, 05:28 PM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1dBNbJw7SqLNrRHCaRw3qYqrYyaK-PlQ0': { name: 'Sukhwinder Singh', phone: '+917814304573', dur: 51, time: '31 Oct, 04:59 PM', device: 'OnePlus', dir: 'INBOUND' },
-
-  // 31 Oct Earlier Calls
-  '1ooym57tN6TCRbOoPuwCgstMGJUdVFDX6': { name: 'Asam Ali', phone: '+916284538873', dur: 38, time: '31 Oct, 04:49 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1cM9bHOFAqAENomgS67u91zFPBUVPTP7z': { name: 'Shr', phone: '+917015274682', dur: 20, time: '31 Oct, 04:31 PM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1otPBnoHO3S4HiRCFDRT1mIZ_ifq0NkqK': { name: 'Satpal Singh', phone: '+917015920657', dur: 18, time: '31 Oct, 03:59 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1sYj7II19LV4YaeLAW1pOcOKprMmCaFjS': { name: 'Shr', phone: '+917015274682', dur: 123, time: '31 Oct, 03:54 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1C3K-Qg04jdsKH5NhuHK5jOLPrRDC3Mnd': { name: 'Direct Phone Call', phone: '+919888123522', dur: 45, time: '31 Oct, 02:44 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '14f540CWr7cW3WDRQYHK8V59YiP5gmrBV': { name: 'Mohan BNI ID 17', phone: '+919803353372', dur: 68, time: '31 Oct, 02:22 PM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1tYP3PngjyLFNpSssUYe9Fxm3vmMtsMdo': { name: 'Megha Kumari', phone: '+917503238194', dur: 173, time: '31 Oct, 01:46 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1J7_7BU5-ewVgJrQGHzO9mXtwC244r8A1': { name: 'Mohan BNI ID 17', phone: '+919803353372', dur: 108, time: '31 Oct, 12:43 PM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1hUDwEjnlUR9ec1fx-HYfWsCfxNmFKQiA': { name: 'Mohan BNI ID 17', phone: '+919803353372', dur: 45, time: '31 Oct, 12:39 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1hQpbXDVl-PxfgOGaGbCw0hyozaMkro5l': { name: 'Direct Phone Call', phone: '+919213555070', dur: 30, time: '31 Oct, 12:17 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1bCRhrQ8GGoYemuzLSBShGxdN4GDufPfc': { name: 'Direct Phone Call', phone: '+917888398327', dur: 13, time: '31 Oct, 12:05 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1PwfwmTss9VN8KAY57cNcvc9utZ0VqNI_': { name: '+919211445291', phone: '+919211445291', dur: 28, time: '31 Oct, 11:29 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '12FHbK8cYo3Vq68TXmiz_-T-ZQE7fDGFE': { name: 'Parag Ravish', phone: '+919877808859', dur: 29, time: '31 Oct, 11:20 AM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1uQ4AQG9O_TRpNP3_21FcxwF68Mdo1ay7': { name: 'PARMJIT SINGH', phone: '+919876111118', dur: 77, time: '31 Oct, 11:18 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT': { name: 'Mohan BNI ID 17', phone: '+919803353372', dur: 52, time: '31 Oct, 11:08 AM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u': { name: 'PARMINDER SINGH', phone: '+918558055750', dur: 10, time: '31 Oct, 11:01 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx': { name: 'Mohan BNI ID 17', phone: '+919803353372', dur: 37, time: '31 Oct, 11:00 AM', device: 'OnePlus', dir: 'INBOUND' },
-  '1126LoXtRStX_9ufSI706211rPfl4ExvI': { name: 'Sachin (Digital Marketing Interview)', phone: '+919876543210', dur: 10, time: '30 Oct, 06:18 PM', device: 'OnePlus', dir: 'OUTBOUND' },
-  '1cAxD72uVBTt5N8MmZ4ut07C8nIY7C6Aa': { name: 'OnePlus Direct Call', phone: 'Direct Phone Call', dur: 10, time: '30 Oct, 04:35 PM', device: 'OnePlus', dir: 'INBOUND' },
-  '1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0': { name: 'Shiv Charan', phone: '+919814015003', dur: 74, time: '30 Oct, 03:00 PM', device: 'Samsung Galaxy', dir: 'INBOUND' },
-  '1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep': { name: 'Rupinder Singh', phone: '+917508648100', dur: 44, time: '29 Oct, 02:28 PM', device: 'Samsung Galaxy', dir: 'INBOUND' },
-  '1O6fS7CAbXXrhPprP147yrfuOpW94_ryU': { name: 'Potential Fraud', phone: 'Incoming Call', dur: 20, time: '28 Oct, 05:23 PM', device: 'Samsung Galaxy', dir: 'INBOUND' },
-  '1UFFzLBXEki9Nm4HZFJoyrB1ib26PxzaM': { name: 'sanju test', phone: '+917814435761', dur: 25, time: '28 Oct, 12:22 PM', device: 'Samsung Galaxy', dir: 'INBOUND' },
-  '1ddCOcitOO4UwdCdmmKI1F5YiyiofqiZq': { name: 'Suspected Spam', phone: 'Incoming Call', dur: 18, time: '28 Oct, 10:13 AM', device: 'Samsung Galaxy', dir: 'INBOUND' },
-  '1vS9HBD2OEZi5mhyBoJTkDedgoVonNQGr': { name: 'Manga Khan', phone: '+919878685521', dur: 55, time: '26 Oct, 01:01 PM', device: 'Samsung Galaxy', dir: 'OUTBOUND' },
-  '1OCBSUwITJbqJEHj0Won27gt7ocIAuOLR': { name: 'Rajender', phone: '+918745036534', dur: 32, time: '26 Oct, 12:22 PM', device: 'Samsung Galaxy', dir: 'INBOUND' },
-  '1i_uyCGQ9iEJJIXNA9tEnO5ruWGPmFI7p': { name: 'Manga Khan', phone: '+919878685521', dur: 81, time: '26 Oct, 12:07 PM', device: 'Samsung Galaxy', dir: 'INBOUND' },
-  '1BWn0twXbTBk5ORoaadD8JaX7EHdw4ude': { name: 'KAMLESH JASWAL', phone: '+919779947870', dur: 100, time: '24 Oct, 12:28 PM', device: 'Samsung Galaxy', dir: 'INBOUND' },
-  '1WAtnBpjljm3tf4OgySDzOLNVZQ6h7gzF': { name: 'Direct Customer Call', phone: '+919530895341', dur: 23, time: '24 Oct, 11:57 AM', device: 'Samsung Galaxy', dir: 'INBOUND' },
-  '1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw': { name: 'sanju test', phone: '+917814435761', dur: 46, time: '23 Oct, 05:57 PM', device: 'Samsung Galaxy', dir: 'OUTBOUND' },
-  '1gJ4DdglwBLPOM4iARsIVoC_N2UURkALg': { name: 'sanju test', phone: '+917814435761', dur: 45, time: '23 Oct, 04:37 PM', device: 'Samsung Galaxy', dir: 'INBOUND' },
-  '13t35tqFyFD_xzxUL-OwY6vDK0W5z7myL': { name: 'Jaimal Singh', phone: '+919814017001', dur: 15, time: '22 Oct, 05:00 PM', device: 'Samsung Galaxy', dir: 'OUTBOUND' }
+  "1jHNtG1sSzcYxrgEZMwu-rXRCFr0LwOB_": {
+    "name": "PARMINDER SINGH",
+    "phone": "+918558055750",
+    "dur": 22,
+    "time": "2 Nov, 05:12 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "PARMINDER SINGH-2611021712.mp3"
+  },
+  "1yXaNUei3OjuxgELlqKxydp85J0veX5nO": {
+    "name": "Sushil Kumar",
+    "phone": "+919815045731",
+    "dur": 57,
+    "time": "2 Nov, 04:50 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Sushil Kumar-2611021650.mp3"
+  },
+  "1Mq7sdU7WhnfjEPS13ieba0bNYdIw__in": {
+    "name": "Shr",
+    "phone": "+917015274682",
+    "dur": 25,
+    "time": "2 Nov, 04:46 PM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "Shr-2611021646.mp3"
+  },
+  "14Mtf-tYCHFfCcSN9SSTTVKh60npPD-Gu": {
+    "name": "Shr",
+    "phone": "+917015274682",
+    "dur": 24,
+    "time": "2 Nov, 04:43 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Shr-2611021643.mp3"
+  },
+  "11r-fl-KaW2-7Kw6bYazhlv4aAeYePPO7": {
+    "name": "Direct Customer Call",
+    "phone": "+919872599749",
+    "dur": 48,
+    "time": "2 Nov, 04:36 PM",
+    "device": "Samsung Galaxy",
+    "dir": "INBOUND",
+    "file": "Call recording +919872599749_261102_163648.m4a"
+  },
+  "1-HwgXZZfyUZLxa8-l8zAOjPhq5K_I54N": {
+    "name": "Shr",
+    "phone": "+917015274682",
+    "dur": 52,
+    "time": "2 Nov, 04:31 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Shr-2611021631.mp3"
+  },
+  "1EYd3qBduSU_NP9JXxeo8MlETmQHv94I6": {
+    "name": "Dinesh Highland Hn No 9",
+    "phone": "+917988695768",
+    "dur": 67,
+    "time": "2 Nov, 04:23 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Dinesh Highland Hn No 9-2611021623.mp3"
+  },
+  "1caf1BOZ9TO9Kc4WzpTyoZGFH_HzozeLP": {
+    "name": "Monu Kitchen Np",
+    "phone": "+916280251494",
+    "dur": 72,
+    "time": "2 Nov, 02:30 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Monu Kitchen Np-2611021430.mp3"
+  },
+  "1WWzFE2Uhgl_FeFKpNbWIEjVnBBlg1Ag4": {
+    "name": "Shr",
+    "phone": "+917015274682",
+    "dur": 122,
+    "time": "2 Nov, 02:27 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Shr-2611021427.mp3"
+  },
+  "1L3svOsmB3Z2NDKry47XlrtqLr9kJPH92": {
+    "name": "Jagjeevan Gmb Mohali",
+    "phone": "+919815045732",
+    "dur": 55,
+    "time": "2 Nov, 02:19 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Jagjeevan Gmb Mohali-2611021419.mp3"
+  },
+  "1dmwFIgXn7T5bSKZMLPVEfjQDmVZs-64o": {
+    "name": "Nikhil Mishra",
+    "phone": "+919151610556",
+    "dur": 126,
+    "time": "2 Nov, 02:08 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Nikhil Mishra-2611021408.mp3"
+  },
+  "1SjGPApSYRsTezVfA6PfM26R9Is0xZYIA": {
+    "name": "Tushar Sharma",
+    "phone": "+919501653648",
+    "dur": 10,
+    "time": "2 Nov, 01:22 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "( Spam Alert From Jio) Tushar Sharma-2611021322.mp3"
+  },
+  "1so-pNF1ro0lgyNAAcBvuLeYXBx6cryD4": {
+    "name": "Monu Kitchen Np",
+    "phone": "+916280251494",
+    "dur": 18,
+    "time": "2 Nov, 01:11 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Monu Kitchen Np-2611021311.mp3"
+  },
+  "1lKilBeKNdiLNRf3SKcGHiS__0ryKgAO5": {
+    "name": "Anwarul Sir Plywood",
+    "phone": "+919463446101",
+    "dur": 37,
+    "time": "2 Nov, 01:06 PM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "Anwarul Sir Plywood-2611021306.mp3"
+  },
+  "1vi29vVzTwFe4rgu9V3tIEVjfO8zmznRr": {
+    "name": "Anwarul Sir Plywood",
+    "phone": "+917357441912",
+    "dur": 18,
+    "time": "2 Nov, 01:04 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Anwarul Sir Plywood-2611021304.mp3"
+  },
+  "1Ke-P02cvo9ClDNOa1tfnUaaM1eWGZEtH": {
+    "name": "SURESH CHAND",
+    "phone": "+919876754841",
+    "dur": 137,
+    "time": "2 Nov, 12:19 PM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "SURESH CHAND-2611021219.mp3"
+  },
+  "1RHY2u2oT5xQdtrWxYxGe2dhXXVRcEI15": {
+    "name": "SURESH CHAND",
+    "phone": "+919876754841",
+    "dur": 216,
+    "time": "2 Nov, 12:15 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "SURESH CHAND-2611021215.mp3"
+  },
+  "1jXfXU7EtKMURImgh0mJhntTOX4nJ5Y2G": {
+    "name": "Direct Phone Call",
+    "phone": "+917508325292",
+    "dur": 61,
+    "time": "2 Nov, 11:42 AM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "+917508325292-2611021142.mp3"
+  },
+  "1fDFKseUVHa_JQC1k9Qp-hCI6SUHzNZoL": {
+    "name": "Direct Phone Call",
+    "phone": "+919464481892",
+    "dur": 71,
+    "time": "2 Nov, 11:40 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+919464481892-2611021140.mp3"
+  },
+  "1avg6ghn4uMWpv0GTK_EuzJKSfx5PeL5x": {
+    "name": "Direct Phone Call",
+    "phone": "+917528951999",
+    "dur": 69,
+    "time": "2 Nov, 11:07 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+917528951999-2611021107.mp3"
+  },
+  "1yK2Wn01IQpiZfSD6cgqUiIvJW0gJNv8j": {
+    "name": "Direct Phone Call",
+    "phone": "+919876345045",
+    "dur": 10,
+    "time": "2 Nov, 11:05 AM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "+919876345045-2611021105.mp3"
+  },
+  "1DUw3_AnbOIeDk7vyQEgy6NbdbtWzPl1r": {
+    "name": "Direct Phone Call",
+    "phone": "+919370490007",
+    "dur": 32,
+    "time": "2 Nov, 11:04 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+919370490007-2611021104.mp3"
+  },
+  "1pj42TO_SDNbG20TqG-z7zgqYS81BKPEz": {
+    "name": "Direct Phone Call",
+    "phone": "+917009271810",
+    "dur": 44,
+    "time": "2 Nov, 11:03 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+917009271810-2611021103.mp3"
+  },
+  "1hV_GviKrWF7YCO-MlZn5vz81bW_5h9eY": {
+    "name": "Direct Phone Call",
+    "phone": "+918279423299",
+    "dur": 42,
+    "time": "2 Nov, 11:01 AM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "+918279423299-2611021101.mp3"
+  },
+  "1XWVBKxBcZoS9N6tuFuxdBaDo4Smn6x-c": {
+    "name": "Direct Phone Call",
+    "phone": "+918427555333",
+    "dur": 10,
+    "time": "2 Nov, 11:00 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+918427555333-2611021100.mp3"
+  },
+  "1kwEv6qhzhQsVbqqM27ZHXRt_BdgAAQLl": {
+    "name": "Direct Phone Call",
+    "phone": "+918968337146",
+    "dur": 55,
+    "time": "2 Nov, 10:58 AM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "+918968337146-2611021058.mp3"
+  },
+  "1r64PUn1UkQi0bkBqCxOY_i4YSYrfjiq8": {
+    "name": "Direct Phone Call",
+    "phone": "+919878285052",
+    "dur": 60,
+    "time": "2 Nov, 10:56 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+919878285052-2611021056.mp3"
+  },
+  "1BDCeF8mfoC20ddCrQXChYXoTd7-G989r": {
+    "name": "Direct Phone Call",
+    "phone": "+917508325292",
+    "dur": 160,
+    "time": "2 Nov, 10:53 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+917508325292-2611021053.mp3"
+  },
+  "1_OhfPHF-tT2HfBlmnHZ9PX4LkGt0PwBk": {
+    "name": "Rajni Rani Singla",
+    "phone": "+919877865282",
+    "dur": 26,
+    "time": "2 Nov, 10:51 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Rajni Rani Singla-2611021051.mp3"
+  },
+  "1_O8N13m35Q59GYh5zXSLDV2Aj2ISLNuz": {
+    "name": "Direct Phone Call",
+    "phone": "+919779458368",
+    "dur": 97,
+    "time": "2 Nov, 10:48 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+919779458368-2611021048.mp3"
+  },
+  "1q3NLQMxc1sFV5XnI9-y8I_AHE_ClEuVX": {
+    "name": "Direct Phone Call",
+    "phone": "+917837380268",
+    "dur": 23,
+    "time": "2 Nov, 10:46 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+917837380268-2611021046.mp3"
+  },
+  "1RQX70d1qrtP0-UlkxHoKEbdqGRe4aPLk": {
+    "name": "Vikram Jeet Singh",
+    "phone": "+918437816715",
+    "dur": 190,
+    "time": "31 Oct, 06:12 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Vikram Jeet Singh-2610311812.mp3"
+  },
+  "1ZSXc5UMniO9gvkDKTn-EYCptKTl62bFT": {
+    "name": "Direct Customer Call",
+    "phone": "+918035067063",
+    "dur": 18,
+    "time": "31 Oct, 05:30 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+918035067063-2610311730.mp3"
+  },
+  "1_Qly-WJWuUAq10YL9GfOW2l0jg6yOX_v": {
+    "name": "Flipkart Customer Service",
+    "phone": "18002029898",
+    "dur": 21,
+    "time": "31 Oct, 05:28 PM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "Flipkart Customer Service-2610311728.mp3"
+  },
+  "1dBNbJw7SqLNrRHCaRw3qYqrYyaK-PlQ0": {
+    "name": "Sukhwinder Singh",
+    "phone": "+917814304573",
+    "dur": 51,
+    "time": "31 Oct, 04:59 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Sukhwinder Singh-2610311657.mp3"
+  },
+  "1ooym57tN6TCRbOoPuwCgstMGJUdVFDX6": {
+    "name": "Asam Ali",
+    "phone": "+916284538873",
+    "dur": 38,
+    "time": "31 Oct, 04:49 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Asam Ali-2610311649.mp3"
+  },
+  "1cM9bHOFAqAENomgS67u91zFPBUVPTP7z": {
+    "name": "Shr",
+    "phone": "+917015274682",
+    "dur": 20,
+    "time": "31 Oct, 04:31 PM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "Shr-2610311631.mp3"
+  },
+  "1otPBnoHO3S4HiRCFDRT1mIZ_ifq0NkqK": {
+    "name": "Satpal Singh",
+    "phone": "+917015920657",
+    "dur": 18,
+    "time": "31 Oct, 03:59 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Satpal Singh-2610311559.mp3"
+  },
+  "1sYj7II19LV4YaeLAW1pOcOKprMmCaFjS": {
+    "name": "Shr",
+    "phone": "+917015274682",
+    "dur": 123,
+    "time": "31 Oct, 03:54 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Shr-2610311552.mp3"
+  },
+  "1C3K-Qg04jdsKH5NhuHK5jOLPrRDC3Mnd": {
+    "name": "Direct Phone Call",
+    "phone": "+919888123522",
+    "dur": 45,
+    "time": "31 Oct, 02:44 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "9888123522-2610311444.mp3"
+  },
+  "14f540CWr7cW3WDRQYHK8V59YiP5gmrBV": {
+    "name": "Mohan BNI ID 17",
+    "phone": "+919803353372",
+    "dur": 68,
+    "time": "31 Oct, 02:22 PM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "Mohan BNI ID 17-2610311422.mp3"
+  },
+  "1tYP3PngjyLFNpSssUYe9Fxm3vmMtsMdo": {
+    "name": "Megha Kumari",
+    "phone": "+917503238194",
+    "dur": 173,
+    "time": "31 Oct, 01:46 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Megha Kumari-2610311346.mp3"
+  },
+  "1J7_7BU5-ewVgJrQGHzO9mXtwC244r8A1": {
+    "name": "Mohan BNI ID 17",
+    "phone": "+919803353372",
+    "dur": 108,
+    "time": "31 Oct, 12:43 PM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "Mohan BNI ID 17-2610311241.mp3"
+  },
+  "1hUDwEjnlUR9ec1fx-HYfWsCfxNmFKQiA": {
+    "name": "Mohan BNI ID 17",
+    "phone": "+919803353372",
+    "dur": 45,
+    "time": "31 Oct, 12:39 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Mohan BNI ID 17-2610311239.mp3"
+  },
+  "1hQpbXDVl-PxfgOGaGbCw0hyozaMkro5l": {
+    "name": "Direct Phone Call",
+    "phone": "+919213555070",
+    "dur": 30,
+    "time": "31 Oct, 12:17 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "( Spam Alert From Jio) Hitinkumar Kantilal Udharej-2610311217.mp3"
+  },
+  "1bCRhrQ8GGoYemuzLSBShGxdN4GDufPfc": {
+    "name": "Direct Phone Call",
+    "phone": "+917888398327",
+    "dur": 13,
+    "time": "31 Oct, 12:05 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Ranjeet Kaur-2610311205.mp3"
+  },
+  "1PwfwmTss9VN8KAY57cNcvc9utZ0VqNI_": {
+    "name": "+919211445291",
+    "phone": "+919211445291",
+    "dur": 28,
+    "time": "31 Oct, 11:29 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "+919211445291-2610311129.mp3"
+  },
+  "12FHbK8cYo3Vq68TXmiz_-T-ZQE7fDGFE": {
+    "name": "Parag Ravish",
+    "phone": "+919877808859",
+    "dur": 29,
+    "time": "31 Oct, 11:20 AM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "Parag Ravish-2610311120.mp3"
+  },
+  "1uQ4AQG9O_TRpNP3_21FcxwF68Mdo1ay7": {
+    "name": "PARMJIT SINGH",
+    "phone": "+919876111118",
+    "dur": 77,
+    "time": "31 Oct, 11:18 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "PARMJIT SINGH-2610311118.mp3"
+  },
+  "18b2Go-z_qanzXkPWAHpeKNbbMKQCHZLT": {
+    "name": "Mohan BNI ID 17",
+    "phone": "+919803353372",
+    "dur": 52,
+    "time": "31 Oct, 11:08 AM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "Mohan BNI ID 17-2610311107.mp3"
+  },
+  "1pHrefV3hsT18KiCr7yQEUFNMciTzlM4u": {
+    "name": "PARMINDER SINGH",
+    "phone": "+918558055750",
+    "dur": 10,
+    "time": "31 Oct, 11:01 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "PARMINDER SINGH-2610311101.mp3"
+  },
+  "1PRKLkiAhqwHzPnSOXeVPvd7diZvZD-bx": {
+    "name": "Mohan BNI ID 17",
+    "phone": "+919803353372",
+    "dur": 37,
+    "time": "31 Oct, 11:00 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Mohan BNI ID 17-2610311100.mp3"
+  },
+  "1GRtR0L6KNxrMdnXKFSdLg45wBHUzkGb0": {
+    "name": "Shiv Charan",
+    "phone": "+919814015003",
+    "dur": 74,
+    "time": "30 Oct, 03:00 PM",
+    "device": "Samsung Galaxy",
+    "dir": "INBOUND",
+    "file": "Call recording Shiv Charan_261030_150035.m4a"
+  },
+  "1L5vY7owRBqycDyDAG4EX0ZY6MfNdc6Ep": {
+    "name": "Rupinder Singh",
+    "phone": "+917508648100",
+    "dur": 44,
+    "time": "29 Oct, 02:28 PM",
+    "device": "Samsung Galaxy",
+    "dir": "INBOUND",
+    "file": "Call recording +917508648100_261029_142818.m4a"
+  },
+  "1vS9HBD2OEZi5mhyBoJTkDedgoVonNQGr": {
+    "name": "Manga Khan",
+    "phone": "+919878685521",
+    "dur": 55,
+    "time": "26 Oct, 01:01 PM",
+    "device": "Samsung Galaxy",
+    "dir": "OUTBOUND",
+    "file": "Call recording Manga Khan_261026_130115.m4a"
+  },
+  "1OCBSUwITJbqJEHj0Won27gt7ocIAuOLR": {
+    "name": "Rajender",
+    "phone": "+918745036534",
+    "dur": 32,
+    "time": "26 Oct, 12:22 PM",
+    "device": "Samsung Galaxy",
+    "dir": "INBOUND",
+    "file": "Call recording Rajender_261026_122204.m4a"
+  },
+  "1i_uyCGQ9iEJJIXNA9tEnO5ruWGPmFI7p": {
+    "name": "Manga Khan",
+    "phone": "+919878685521",
+    "dur": 81,
+    "time": "26 Oct, 12:07 PM",
+    "device": "Samsung Galaxy",
+    "dir": "INBOUND",
+    "file": "Call recording Manga Khan_261026_120747.m4a"
+  },
+  "1BWn0twXbTBk5ORoaadD8JaX7EHdw4ude": {
+    "name": "KAMLESH JASWAL",
+    "phone": "+919779947870",
+    "dur": 100,
+    "time": "24 Oct, 12:28 PM",
+    "device": "Samsung Galaxy",
+    "dir": "INBOUND",
+    "file": "Call recording KAMLESH JASWAL_261024_122836.m4a"
+  },
+  "1WAtnBpjljm3tf4OgySDzOLNVZQ6h7gzF": {
+    "name": "Direct Customer Call",
+    "phone": "+919530895341",
+    "dur": 23,
+    "time": "24 Oct, 11:57 AM",
+    "device": "Samsung Galaxy",
+    "dir": "INBOUND",
+    "file": "Call recording +919530895341_261024_115726.m4a"
+  },
+  "13t35tqFyFD_xzxUL-OwY6vDK0W5z7myL": {
+    "name": "Jaimal Singh",
+    "phone": "+919814017001",
+    "dur": 15,
+    "time": "22 Oct, 05:00 PM",
+    "device": "Samsung Galaxy",
+    "dir": "OUTBOUND",
+    "file": "Call recording Jaimal Singh_261022_170012.m4a"
+  }
 };
 
 function isSamePhysicalCall(a, b) {
@@ -318,7 +794,7 @@ function parseDriveRecordings(html) {
         size,
         dateStr: yymmdd,
         formattedTime,
-        phone: phoneDigits ? ('+91' + phoneDigits) : (contactName || 'Direct Phone Call'),
+        phone: phoneDigits ? ('+91' + phoneDigits) : '—',
         phoneDigits,
         contactName: contactName || (phoneDigits ? ('+91' + phoneDigits) : ''),
         timestamp: isoTimestamp,
