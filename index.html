@@ -25783,6 +25783,13 @@
     window.enableCallModuleDirectly = enableCallModuleDirectly;
     window.renderTeamCallLogsTable = renderTeamCallLogsTable;
     window.filterTeamCallLogs = filterTeamCallLogs;
+    window.refreshTeamCallLogs = function() {
+      if (typeof syncRecordingsFromDrive === 'function') {
+        syncRecordingsFromDrive(false);
+      } else if (typeof renderTeamCallLogsTable === 'function') {
+        renderTeamCallLogsTable();
+      }
+    };
     window.autoTranscribeCurrentCall = autoTranscribeCurrentCall;
     window.hideCallModalTranscript = hideCallModalTranscript;
     window.generateAiSummaryForCallLog = generateAiSummaryForCallLog;
