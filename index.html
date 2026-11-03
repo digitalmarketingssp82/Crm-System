@@ -1308,7 +1308,7 @@
                 <i data-lucide="table" class="w-4 h-4"></i>
               </button>
               <button onclick="setOpportunityViewMode('kanban')" id="btn-opp-view-kanban" class="p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-card text-gold shadow-xs" title="Kanban Board">
-                <i data-lucide="trello" class="w-4 h-4"></i>
+                <i data-lucide="kanban" class="w-4 h-4"></i>
               </button>
             </div>
 
@@ -2200,7 +2200,7 @@
               </button>
               <button onclick="switchSettingsSubTab('instagram-channel')" id="set-sub-instagram-channel" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-muted-custom hover:bg-subtle transition">
                 <div class="flex items-center gap-2.5">
-                  <i data-lucide="instagram" class="w-4 h-4 text-pink-500"></i>
+                  <i data-lucide="camera" class="w-4 h-4 text-pink-500"></i>
                   <span>Instagram</span>
                 </div>
                 <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold" id="badge-sub-ig">Not Connected</span>
@@ -2374,7 +2374,7 @@
               <div class="p-5 rounded-3xl bg-card border border-main flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 class="text-lg font-bold text-main flex items-center gap-2">
-                    <i data-lucide="instagram" class="w-5 h-5 text-pink-500"></i>
+                    <i data-lucide="camera" class="w-5 h-5 text-pink-500"></i>
                     <span>Instagram DM Settings</span>
                   </h3>
                   <p class="text-xs text-muted-custom">Connect Instagram Business Page to receive and reply to Direct Messages.</p>
@@ -8615,7 +8615,7 @@
       if (tabId === 'conversation') updateConversationViewState();
       if (tabId === 'phonebook') renderPhonebookTable();
       if (tabId === 'opportunities') renderOpportunities();
-      if (tabId === 'call-logs') renderTeamCallLogsTable();
+      if (tabId === 'call-logs') { renderTeamCallLogsTable(); isCallLogsTabDirty = false; }
       if (tabId === 'tasks') renderTasksList('PENDING');
       if (tabId === 'wa-templates') renderWaTemplates();
       if (tabId === 'wa-flow') renderFlowsList();
@@ -21562,7 +21562,12 @@
     }
 
     let callLogs = [];
+    let isCallLogsInitialized = false;
     function initCallLogs() {
+      if (isCallLogsInitialized && Array.isArray(callLogs) && callLogs.length > 0) {
+        return;
+      }
+      isCallLogsInitialized = true;
       const PHANTOM_CALL_IDS = new Set([
         'call-log-1793442618941-958',
         'call-log-1793442320008-376',
@@ -23669,7 +23674,7 @@
         `;
       }).join('');;
 
-      if (window.lucide) lucide.createIcons();
+      if (window.lucide && tbody) lucide.createIcons({ root: tbody });
     }
 
     function filterTeamCallLogs() {
@@ -24611,7 +24616,10 @@
     }
 
     // Android Companion App Sync (Multi-Source: Local, Vercel Webhook, and Firestore Cloud)
+    let isSyncingAndroidCalls = false;
     async function syncAndroidCalls(isManual = false) {
+      if (isSyncingAndroidCalls) return;
+      isSyncingAndroidCalls = true;
       const spinIcon = document.getElementById('sync-calls-spin-icon');
       if (spinIcon && isManual) spinIcon.classList.add('animate-spin');
 
@@ -25394,6 +25402,7 @@
       }
 
       setTimeout(() => {
+        isSyncingAndroidCalls = false;
         if (spinIcon) spinIcon.classList.remove('animate-spin');
         callModuleConfig.lastSyncTime = new Date().toISOString();
         try {
@@ -25407,16 +25416,24 @@
       }, 700);
     }
 
-    // ==================== REAL-TIME BACKGROUND CALL LOGS SYNC WORKER ====================
+        // ==================== REAL-TIME BACKGROUND CALL LOGS SYNC WORKER ====================
     let lastCallLogsSyncSignature = '';
+    let isSyncingCallLogs = false;
+    let lastDriveSyncTimeMs = 0;
+    let isCallLogsTabDirty = false;
+
     async function syncLiveCallLogsBackground() {
+      if (isSyncingCallLogs) return; // Prevent overlapping requests & freezing
+      isSyncingCallLogs = true;
+
       try {
         let freshLogs = null;
         let driveLogs = null;
+        const nowMs = Date.now();
 
-        // Source 1: Local / relative webhook endpoint
+        // Source 1: Local / relative webhook endpoint (Fast real-time check)
         try {
-          const res = await fetch('/api/webhook/call-log?t=' + Date.now(), { cache: 'no-store' });
+          const res = await fetch('/api/webhook/call-log?t=' + nowMs, { cache: 'no-store' });
           if (res.ok) {
             const data = await res.json();
             if (data && Array.isArray(data.call_logs) && data.call_logs.length > 0) {
@@ -25428,7 +25445,7 @@
         // Source 2: Vercel Cloud endpoint fallback
         if (!freshLogs || freshLogs.length === 0) {
           try {
-            const vRes = await fetch('https://crm-system-chi-amber.vercel.app/api/webhook/call-log?t=' + Date.now(), { cache: 'no-store' });
+            const vRes = await fetch('https://crm-system-chi-amber.vercel.app/api/webhook/call-log?t=' + nowMs, { cache: 'no-store' });
             if (vRes.ok) {
               const vData = await vRes.json();
               if (vData && Array.isArray(vData.call_logs) && vData.call_logs.length > 0) {
@@ -25438,20 +25455,24 @@
           } catch(e) {}
         }
 
-        // Source 3: Real-Time Instant Google Drive Recordings Sync ("Hatho-Haath")
-        try {
-          const folderId = (typeof getDriveFolderId === 'function') ? getDriveFolderId() : '1OHR3g8GWBaVNAa7kB6aRdk-WYmCngWh_';
-          const recUrl = (window.location.protocol === 'file:' || !window.location.host || window.location.hostname.includes('localhost') || !window.location.hostname.includes('vercel.app'))
-            ? 'https://crm-system-chi-amber.vercel.app/api/sync-recordings?folderId=' + encodeURIComponent(folderId) + '&t=' + Date.now()
-            : '/api/sync-recordings?folderId=' + encodeURIComponent(folderId) + '&t=' + Date.now();
-          const rRes = await fetch(recUrl, { cache: 'no-store' });
-          if (rRes.ok) {
-            const rData = await rRes.json();
-            if (rData && rData.success && Array.isArray(rData.calls)) {
-              driveLogs = rData.calls;
+        // Source 3: Google Drive Recordings Sync (Smart-throttled to 60s interval to prevent lag & quota exhaustion)
+        const shouldCheckDrive = (nowMs - lastDriveSyncTimeMs) > 55000;
+        if (shouldCheckDrive) {
+          lastDriveSyncTimeMs = nowMs;
+          try {
+            const folderId = (typeof getDriveFolderId === 'function') ? getDriveFolderId() : '1OHR3g8GWBaVNAa7kB6aRdk-WYmCngWh_';
+            const recUrl = (window.location.protocol === 'file:' || !window.location.host || window.location.hostname.includes('localhost') || !window.location.hostname.includes('vercel.app'))
+              ? 'https://crm-system-chi-amber.vercel.app/api/sync-recordings?folderId=' + encodeURIComponent(folderId) + '&t=' + nowMs
+              : '/api/sync-recordings?folderId=' + encodeURIComponent(folderId) + '&t=' + nowMs;
+            const rRes = await fetch(recUrl, { cache: 'no-store' });
+            if (rRes.ok) {
+              const rData = await rRes.json();
+              if (rData && rData.success && Array.isArray(rData.calls)) {
+                driveLogs = rData.calls;
+              }
             }
-          }
-        } catch(e) {}
+          } catch(e) {}
+        }
 
         // Hash the entire list so ANY recording arriving or updating triggers immediate refresh
         const webSig = (freshLogs || []).map(l => (l.id || '') + ':' + (l.call_duration || l.duration || 0) + ':' + (l.recording_url ? 1 : 0)).join('|');
@@ -25652,7 +25673,13 @@
               localStorage.setItem('sri_call_logs', JSON.stringify(existing));
             } catch(e) {}
 
-            renderTeamCallLogsTable();
+            const callLogsTab = document.getElementById('tab-content-call-logs');
+            if (callLogsTab && !callLogsTab.classList.contains('hidden')) {
+              renderTeamCallLogsTable();
+              isCallLogsTabDirty = false;
+            } else {
+              isCallLogsTabDirty = true;
+            }
             if (typeof currentSelectedLead !== 'undefined' && currentSelectedLead) {
               renderLeadCallHistory(currentSelectedLead);
             }
@@ -25660,9 +25687,12 @@
         }
       } catch (err) {
         // quiet background sync
+      } finally {
+        isSyncingCallLogs = false;
       }
     }
-    setInterval(syncLiveCallLogsBackground, 4000);
+    // High-Performance Smooth Polling: Webhook every 15s (Drive sync every 60s)
+    setInterval(syncLiveCallLogsBackground, 15000);
 
     function showAndroidQrPairModal() {
       showToast('Scan QR code with Sri Sri Plywoods Companion App from Google Play / APK to pair your phone.', 'info');
@@ -26031,6 +26061,35 @@
       }
     }
 
+    function removePhoneFromSetup(phoneNum) {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can remove devices.', 'error');
+        return;
+      }
+      phoneNum = parseInt(phoneNum, 10) || 1;
+      const configs = getMultiPhoneConfigs();
+      const keys = Object.keys(configs).map(k => parseInt(k, 10)).filter(n => !isNaN(n));
+      if (keys.length <= 1) {
+        showToast('Kam se kam 1 phone configuration hona zaroori hai. Aap aakhiri phone delete nahi kar sakte.', 'warning');
+        return;
+      }
+      const cur = configs[phoneNum] || { title: 'Phone ' + phoneNum };
+      const ok = confirm('Kya aap sach me device "' + cur.title + '" ko setup se REMOVE / DELETE karna chahte hain?');
+      if (!ok) return;
+
+      delete configs[phoneNum];
+      safeStorageSet('sri_sri_phone_configs', configs);
+
+      const remaining = Object.keys(configs).map(k => parseInt(k, 10)).filter(n => !isNaN(n)).sort((a,b) => a - b);
+      const nextActive = remaining[0] || 1;
+
+      renderPhoneSetupTabs(nextActive);
+      switchPhoneSetupTab(nextActive);
+      showToast('✓ Device "' + cur.title + '" ko successfully remove kar diya gaya hai.', 'success');
+      if (typeof renderTeamCallLogsTable === 'function') renderTeamCallLogsTable();
+    }
+    window.removePhoneFromSetup = removePhoneFromSetup;
+
     function switchPhoneSetupTab(phoneNum) {
       phoneNum = parseInt(phoneNum, 10) || 1;
       const configs = getMultiPhoneConfigs();
@@ -26067,82 +26126,89 @@
 
       container.innerHTML = `
         <!-- Header & Device Tag -->
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-main">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-main">
           <div>
-            <h4 class="text-xs font-black text-main flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block animate-pulse"></span>
+            <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block"></span>
               <span>${escapeHtml(config.title)}</span>
             </h4>
-            <p class="text-[11px] text-muted-custom mt-0.5">${escapeHtml(config.desc)}</p>
+            <p class="text-xs text-slate-700 dark:text-slate-300 font-normal mt-0.5">${escapeHtml(config.desc)}</p>
           </div>
-          <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1.5 shadow-2xs">
-            <i data-lucide="smartphone" class="w-3.5 h-3.5 text-purple-400"></i>
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-900 dark:bg-purple-500/20 dark:text-purple-300 border border-purple-300 dark:border-purple-500/30 flex items-center gap-1.5 shadow-2xs">
+            <i data-lucide="smartphone" class="w-3.5 h-3.5 text-purple-700 dark:text-purple-400"></i>
             <span>Device Tag: <strong>${escapeHtml(config.deviceName)}</strong></span>
           </span>
         </div>
 
-        <!-- Customizable Phone & Staff Details Card (Fully Editable) -->
-        <div class="p-4 rounded-2xl bg-card border border-purple-500/30 space-y-3 shadow-xs">
-          <div class="flex items-center justify-between pb-1 border-b border-main/50">
+        <!-- Customizable Phone & Staff Details Card (Fully Editable & Deletable) -->
+        <div class="p-4 rounded-2xl bg-white dark:bg-card border border-slate-300 dark:border-purple-500/30 space-y-3 shadow-xs">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-200 dark:border-main/50">
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded-lg bg-gold/20 text-gold flex items-center justify-center font-bold text-xs">
+              <div class="w-6 h-6 rounded-lg bg-gold/20 text-slate-950 dark:text-gold flex items-center justify-center font-bold text-xs">
                 <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
               </div>
-              <span class="text-xs font-bold text-main">Phone &amp; Staff Name Settings (Aap Apne Hisab Se Set Karein)</span>
+              <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Phone &amp; Staff Details (Edit Karein Ya Delete Karein):</span>
             </div>
-            <span class="text-[10px] text-gold font-semibold">Live CRM &amp; Webhook Update</span>
+            <span class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold">✓ Live Update</span>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <div>
-              <label class="block text-[10px] font-bold uppercase tracking-wider text-muted-custom mb-1">Phone Custom Name:</label>
-              <input type="text" id="phone-config-name" value="${escapeHtml(config.title)}" placeholder="e.g. Samsung Galaxy (Mera Phone)" class="w-full px-3 py-2 rounded-xl border border-main bg-subtle text-main font-semibold text-xs focus:ring-1 focus:ring-gold outline-hidden">
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200 mb-1">Phone Custom Name:</label>
+              <input type="text" id="phone-config-name" value="${escapeHtml(config.title)}" placeholder="e.g. Samsung Galaxy (Mera Phone)" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-main bg-slate-50 dark:bg-subtle text-slate-950 dark:text-main font-semibold text-xs focus:ring-2 focus:ring-gold outline-hidden">
             </div>
             <div>
-              <label class="block text-[10px] font-bold uppercase tracking-wider text-muted-custom mb-1">Assigned Staff / Person Name:</label>
-              <input type="text" id="phone-config-staff" value="${escapeHtml(config.staffName)}" placeholder="e.g. Admin / Owner ya Rohit" class="w-full px-3 py-2 rounded-xl border border-main bg-subtle text-main font-semibold text-xs focus:ring-1 focus:ring-gold outline-hidden">
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200 mb-1">Assigned Staff / Person Name:</label>
+              <input type="text" id="phone-config-staff" value="${escapeHtml(config.staffName)}" placeholder="e.g. Admin / Owner ya Rohit" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-main bg-slate-50 dark:bg-subtle text-slate-950 dark:text-main font-semibold text-xs focus:ring-2 focus:ring-gold outline-hidden">
             </div>
             <div>
-              <label class="block text-[10px] font-bold uppercase tracking-wider text-muted-custom mb-1">Device Label / Tag in CRM:</label>
-              <input type="text" id="phone-config-device" value="${escapeHtml(config.deviceName)}" placeholder="e.g. Samsung M31 ya Phone 2 (Sales 1)" class="w-full px-3 py-2 rounded-xl border border-main bg-subtle text-main font-semibold text-xs focus:ring-1 focus:ring-gold outline-hidden">
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200 mb-1">Device Tag in CRM:</label>
+              <input type="text" id="phone-config-device" value="${escapeHtml(config.deviceName)}" placeholder="e.g. Samsung Galaxy ya Phone 2" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-main bg-slate-50 dark:bg-subtle text-slate-950 dark:text-main font-semibold text-xs focus:ring-2 focus:ring-gold outline-hidden">
             </div>
             <div>
-              <label class="block text-[10px] font-bold uppercase tracking-wider text-muted-custom mb-1">Phone SIM Number (Optional):</label>
-              <input type="text" id="phone-config-phone" value="${escapeHtml(config.staffPhone || '')}" placeholder="e.g. +91 98786 85521" class="w-full px-3 py-2 rounded-xl border border-main bg-subtle text-main font-semibold text-xs focus:ring-1 focus:ring-gold outline-hidden">
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200 mb-1">Phone SIM Number (Optional):</label>
+              <input type="text" id="phone-config-phone" value="${escapeHtml(config.staffPhone || '')}" placeholder="e.g. +91 98786 85521" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-main bg-slate-50 dark:bg-subtle text-slate-950 dark:text-main font-semibold text-xs focus:ring-2 focus:ring-gold outline-hidden">
             </div>
           </div>
 
-          <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-main/40">
-            <span class="text-[10px] text-muted-custom">Yahan name save karte hi niche MacroDroid ka JSON code automatically naye name se update ho jayega.</span>
-            <button type="button" onclick="saveCustomPhoneConfig(${phoneNum})" class="px-5 py-2 rounded-xl bg-gold hover:brightness-105 text-slate-950 font-extrabold text-xs transition flex items-center gap-1.5 shadow-md cursor-pointer">
-              <i data-lucide="check" class="w-3.5 h-3.5"></i>
-              <span>💾 Save Phone Details</span>
+          <!-- Action Buttons: Save & Remove Device -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-main/40">
+            <button type="button" onclick="removePhoneFromSetup(${phoneNum})" class="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs" title="Is device ko setup list se remove / delete karein">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i>
+              <span>🗑️ Remove / Delete Device</span>
             </button>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-700 dark:text-slate-300 font-normal">Details badal kar save karein:</span>
+              <button type="button" onclick="saveCustomPhoneConfig(${phoneNum})" class="px-5 py-2 rounded-xl bg-gold hover:brightness-105 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow-md cursor-pointer">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                <span>💾 Save Device Changes</span>
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- 4-STEP VISUAL CONNECTION GUIDE -->
         <div class="space-y-3 pt-2">
-          <div class="flex items-center justify-between pb-1 border-b border-main/50">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-200 dark:border-main/50">
             <div class="flex items-center gap-2">
-              <span class="w-6 h-6 rounded-lg bg-gold/20 text-gold flex items-center justify-center font-bold text-xs">
+              <span class="w-6 h-6 rounded-lg bg-gold/20 text-slate-950 dark:text-gold flex items-center justify-center font-bold text-xs">
                 <i data-lucide="list-ordered" class="w-3.5 h-3.5"></i>
               </span>
-              <h4 class="text-xs font-bold text-main uppercase tracking-wider">Step-by-Step Connection Instructions for ${escapeHtml(config.title)}</h4>
+              <h4 class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Step-by-Step Instructions for ${escapeHtml(config.title)}</h4>
             </div>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/15 text-blue-400 border border-blue-500/30">1-Time 3 Minute Setup</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-900 dark:bg-blue-500/15 dark:text-blue-300 border border-blue-300 dark:border-blue-500/30">1-Time 3 Minute Setup</span>
           </div>
 
           <!-- BRAND-SPECIFIC RECORDING & HARDWARE SETUP SELECTOR -->
-          <div class="p-4 rounded-2xl bg-card border border-purple-500/30 space-y-3 shadow-xs">
-            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-main/50">
+          <div class="p-4 rounded-2xl bg-white dark:bg-card border border-slate-300 dark:border-purple-500/30 space-y-3 shadow-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-main/50">
               <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs">
+                <div class="w-6 h-6 rounded-lg bg-purple-100 text-purple-900 dark:bg-purple-500/20 dark:text-purple-400 flex items-center justify-center font-bold text-xs">
                   <i data-lucide="layers" class="w-3.5 h-3.5"></i>
                 </div>
-                <span class="text-xs font-bold text-main">Apne Phone Ka Brand Chunein (Hardware Auto-Recording &amp; Settings):</span>
+                <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Apne Phone Ka Brand Chunein (Hardware Auto-Recording Settings):</span>
               </div>
-              <span class="text-[10px] text-purple-400 font-semibold">1-Click Brand Guides</span>
+              <span class="text-[11px] text-purple-800 dark:text-purple-300 font-bold">1-Click Brand Guides</span>
             </div>
 
             <!-- Brand Selection Buttons -->
@@ -26151,354 +26217,370 @@
                 <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
                 <span>📱 Samsung Galaxy</span>
               </button>
-              <button type="button" onclick="switchBrandGuide('vivo')" id="brand-btn-vivo" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-subtle border border-main text-muted-custom hover:text-main transition cursor-pointer flex items-center gap-1.5">
-                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+              <button type="button" onclick="switchBrandGuide('vivo')" id="brand-btn-vivo" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-subtle border border-slate-300 dark:border-main text-slate-900 dark:text-slate-100 hover:text-black transition cursor-pointer flex items-center gap-1.5">
+                <i data-lucide="zap" class="w-3.5 h-3.5 text-purple-600"></i>
                 <span>⚡ Vivo / iQOO (Zaroori)</span>
               </button>
-              <button type="button" onclick="switchBrandGuide('oneplus')" id="brand-btn-oneplus" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-subtle border border-main text-muted-custom hover:text-main transition cursor-pointer flex items-center gap-1.5">
-                <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+              <button type="button" onclick="switchBrandGuide('oneplus')" id="brand-btn-oneplus" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-subtle border border-slate-300 dark:border-main text-slate-900 dark:text-slate-100 hover:text-black transition cursor-pointer flex items-center gap-1.5">
+                <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-600"></i>
                 <span>🔥 OnePlus / Oppo / Realme</span>
               </button>
-              <button type="button" onclick="switchBrandGuide('xiaomi')" id="brand-btn-xiaomi" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-subtle border border-main text-muted-custom hover:text-main transition cursor-pointer flex items-center gap-1.5">
-                <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+              <button type="button" onclick="switchBrandGuide('xiaomi')" id="brand-btn-xiaomi" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-subtle border border-slate-300 dark:border-main text-slate-900 dark:text-slate-100 hover:text-black transition cursor-pointer flex items-center gap-1.5">
+                <i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-600"></i>
                 <span>📲 Xiaomi / Redmi / POCO</span>
               </button>
-              <button type="button" onclick="switchBrandGuide('foldersync')" id="brand-btn-foldersync" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 transition cursor-pointer flex items-center gap-1.5">
-                <i data-lucide="cloud" class="w-3.5 h-3.5"></i>
+              <button type="button" onclick="switchBrandGuide('foldersync')" id="brand-btn-foldersync" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 dark:bg-emerald-500/15 border border-emerald-300 dark:border-emerald-500/30 text-emerald-950 dark:text-emerald-300 transition cursor-pointer flex items-center gap-1.5">
+                <i data-lucide="cloud" class="w-3.5 h-3.5 text-emerald-700"></i>
                 <span>☁️ FolderSync (Auto Drive Upload)</span>
               </button>
             </div>
 
             <!-- Brand 1: Samsung Galaxy Guide -->
-            <div id="brand-guide-samsung" class="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/30 space-y-2.5">
+            <div id="brand-guide-samsung" class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 space-y-2.5">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <div class="flex items-center gap-2 font-bold text-emerald-400 text-xs">
-                  <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-xs flex items-center justify-center border border-emerald-500/30 shrink-0">1</span>
+                <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 text-xs">
+                  <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-900 font-black text-xs flex items-center justify-center border border-emerald-300 shrink-0">1</span>
                   <span>Samsung Galaxy: Built-in Hardware Auto Call Recording</span>
                 </div>
-                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">100% Automatic · No Warning</span>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-950 font-bold border border-emerald-300">100% Automatic · No Warning</span>
               </div>
-              <p class="text-[11px] text-main leading-relaxed">
-                Samsung Galaxy me native recording hoti hai jo dono taraf ki voice crystal-clear record karti hai bina kisi announcement ke:
+              <p class="text-xs text-slate-800 dark:text-slate-200 font-normal leading-relaxed">
+                Samsung Galaxy phones me built-in hardware <b>Auto Call Recording</b> hoti hai jo dono taraf ki voice crystal-clear record karti hai bina kisi app ya warning ke:
               </p>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                    <i data-lucide="phone" class="w-3.5 h-3.5"></i>
-                    <span>1. Dialer Settings</span>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span>1. Dialer Settings Kholein</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Samsung Phone dialer kholein ➔ <b>3 dots (⋮)</b> dabayein ➔ <b>Settings</b> par tap karein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Apne Samsung phone ka dialer kholein, upar right me <b>3 dots (⋮)</b> dabayein ➔ <b>Settings</b> par click karein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                    <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                    <span>2. Record Calls On</span>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="mic" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span>2. Record Calls Chunein</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]"><b>"Record calls"</b> me jayein ➔ <b>"Auto record calls"</b> ko <b>ON</b> karein aur <b>"All calls"</b> chunein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal"><b>"Record calls"</b> me jayein ➔ <b>"Auto record calls"</b> ko <b>ON</b> karein aur <b>"All calls"</b> select karein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                    <i data-lucide="battery-charging" class="w-3.5 h-3.5"></i>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="battery-charging" class="w-3.5 h-3.5 text-emerald-600"></i>
                     <span>3. Battery Unrestricted</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Settings ➔ Apps ➔ MacroDroid &amp; FolderSync ➔ Battery ➔ <b>"Unrestricted"</b> select karein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Phone settings ➔ Apps ➔ MacroDroid &amp; FolderSync ➔ Battery ➔ <b>"Unrestricted"</b> select karein.</p>
                 </div>
               </div>
-              <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 flex items-center gap-1.5">
-                <i data-lucide="folder" class="w-3.5 h-3.5 shrink-0"></i>
-                <span>Samsung Recording Folder: <b>/Internal storage/Recordings/Call/</b> (.m4a files)</span>
+              <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700/50 text-xs text-slate-900 dark:text-slate-100 font-normal flex items-center gap-1.5">
+                <i data-lucide="folder" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+                <span>Samsung Phone recordings folder: <b class="font-mono text-emerald-900 dark:text-emerald-300 font-bold">/Internal storage/Recordings/Call/</b> (.m4a files)</span>
               </div>
             </div>
 
             <!-- Brand 2: Vivo / iQOO Guide (CRITICAL) -->
-            <div id="brand-guide-vivo" class="p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-amber-500/10 border border-purple-500/30 space-y-2.5 hidden">
+            <div id="brand-guide-vivo" class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 space-y-2.5 hidden">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <div class="flex items-center gap-2 font-bold text-purple-400 text-xs">
-                  <span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 font-extrabold text-xs flex items-center justify-center border border-purple-500/30 shrink-0">2</span>
+                <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 text-xs">
+                  <span class="w-6 h-6 rounded-full bg-purple-100 text-purple-900 font-black text-xs flex items-center justify-center border border-purple-300 shrink-0">2</span>
                   <span>Vivo / iQOO: Secret Dialer Code &amp; iManager Setup (Zaroori)</span>
                 </div>
-                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold">Must Follow for iQOO/Vivo</span>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-purple-100 text-purple-950 font-bold border border-purple-300">Must Follow for iQOO/Vivo</span>
               </div>
-              <div class="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-[11px] text-rose-300 space-y-1">
-                <div class="font-bold flex items-center gap-1.5 text-rose-400">
-                  <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+              <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-700 text-xs text-slate-900 dark:text-slate-100 space-y-1 font-normal">
+                <div class="font-bold flex items-center gap-1.5 text-rose-800 dark:text-rose-300">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600"></i>
                   <span>Kyu Zaroori Hai? (Why Default Vivo Fails):</span>
                 </div>
-                <p>Vivo/iQOO me default <i>Google Dialer</i> call recordings ko locked system me chupata hai. FolderSync unhe tabhi upload kar sakta hai jab aap Vivo ka native dialer ON karein:</p>
+                <p>Vivo/iQOO me default <i>Google Dialer</i> call recordings ko locked system me chupata hai jahan FolderSync ko access nahi milta. Niche diye gaye code se Vivo ka native dialer ON karein:</p>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-purple-400 flex items-center gap-1.5">
-                    <i data-lucide="hash" class="w-3.5 h-3.5"></i>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="hash" class="w-3.5 h-3.5 text-purple-600"></i>
                     <span>1. Dialer Secret Code</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Keypad me dial karein: <code class="text-gold font-bold font-mono text-xs">*#*#556611#*#*</code> ➔ <b>"Enable Alternate Phone and Contacts"</b> ko <b>ON</b> karein aur Default Phone banayein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Keypad me dial karein: <span class="px-1.5 py-0.5 bg-amber-100 text-slate-950 font-mono font-bold border border-amber-300 rounded text-xs">*#*#556611#*#*</span> ➔ <b>"Enable Alternate Phone and Contacts"</b> ko <b>ON</b> karein aur Default Phone banayein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-purple-400 flex items-center gap-1.5">
-                    <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="settings" class="w-3.5 h-3.5 text-purple-600"></i>
                     <span>2. Auto Call Record ON</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Naye Vivo dialer me <b>3 dots (⋮)</b> ➔ Call Settings ➔ <b>Record settings</b> ➔ <b>"Record all calls automatically"</b> chunein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Naye Vivo dialer me <b>3 dots (⋮)</b> ➔ Call Settings ➔ <b>Record settings</b> ➔ <b>"Record all calls automatically"</b> select karein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-purple-400 flex items-center gap-1.5">
-                    <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-purple-600"></i>
                     <span>3. iManager Autostart</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Phone me <b>iManager</b> app kholein ➔ App management ➔ <b>Autostart</b> ➔ MacroDroid &amp; FolderSync dono ko <b>ON</b> karein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Phone me <b>iManager</b> app kholein ➔ App management ➔ <b>Autostart</b> ➔ MacroDroid &amp; FolderSync dono ko <b>ON</b> karein.</p>
                 </div>
               </div>
-              <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-[10px] text-purple-300 space-y-1">
-                <div class="font-bold flex items-center gap-1.5">
-                  <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+              <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-300 dark:border-purple-700 text-xs text-slate-900 dark:text-slate-100 font-normal space-y-1">
+                <div class="font-bold flex items-center gap-1.5 text-purple-900 dark:text-purple-300">
+                  <i data-lucide="zap" class="w-3.5 h-3.5 text-purple-600"></i>
                   <span>Background Power Management (Kill Hone Se Bachayein):</span>
                 </div>
                 <p>Settings ➔ Battery ➔ <b>Background power consumption management</b> ➔ MacroDroid aur FolderSync par tap karein ➔ <b>"High background power usage"</b> select karein. Phir Recent Apps screen me swipe down karke 🔒 Lock icon dabayein.</p>
               </div>
-              <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 flex items-center gap-1.5">
-                <i data-lucide="folder" class="w-3.5 h-3.5 shrink-0"></i>
-                <span>Vivo/iQOO Recording Folder: <b>/Recordings/Call recordings/</b> (.mp3 ya .wav)</span>
+              <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700/50 text-xs text-slate-900 dark:text-slate-100 font-normal flex items-center gap-1.5">
+                <i data-lucide="folder" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+                <span>Vivo/iQOO Recording Folder: <b class="font-mono text-emerald-900 dark:text-emerald-300 font-bold">/Recordings/Call recordings/</b> (.mp3 ya .wav)</span>
               </div>
             </div>
 
             <!-- Brand 3: OnePlus / Oppo / Realme Guide -->
-            <div id="brand-guide-oneplus" class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border border-amber-500/30 space-y-2.5 hidden">
+            <div id="brand-guide-oneplus" class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 space-y-2.5 hidden">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <div class="flex items-center gap-2 font-bold text-amber-400 text-xs">
-                  <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-extrabold text-xs flex items-center justify-center border border-amber-500/30 shrink-0">3</span>
+                <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 text-xs">
+                  <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-900 font-black text-xs flex items-center justify-center border border-amber-300 shrink-0">3</span>
                   <span>OnePlus / Oppo / Realme: OxygenOS / ColorOS Call Recording Setup</span>
                 </div>
-                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">OxygenOS &amp; ColorOS</span>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-950 font-bold border border-amber-300">OxygenOS &amp; ColorOS</span>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-amber-400 flex items-center gap-1.5">
-                    <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-amber-600"></i>
                     <span>1. Auto Record All Calls</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">OnePlus Phone app kholein ➔ <b>3 dots (⋮)</b> ➔ Settings ➔ <b>Call recording</b> ➔ <b>"Record all calls"</b> ko <b>ON</b> karein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">OnePlus Phone app kholein ➔ <b>3 dots (⋮)</b> ➔ Settings ➔ <b>Call recording</b> ➔ <b>"Record all calls"</b> ko <b>ON</b> karein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-amber-400 flex items-center gap-1.5">
-                    <i data-lucide="battery" class="w-3.5 h-3.5"></i>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="battery" class="w-3.5 h-3.5 text-amber-600"></i>
                     <span>2. App Battery Activity</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Settings ➔ Battery ➔ More settings ➔ <b>App battery management</b> ➔ MacroDroid aur FolderSync me <b>"Allow background activity"</b> aur <b>"Allow auto-launch"</b> ON karein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Settings ➔ Battery ➔ More settings ➔ <b>App battery management</b> ➔ MacroDroid aur FolderSync me <b>"Allow background activity"</b> aur <b>"Allow auto-launch"</b> ON karein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-amber-400 flex items-center gap-1.5">
-                    <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-600"></i>
                     <span>3. Lock in Recent Tasks</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Recent apps screen kholein, MacroDroid aur FolderSync ke upar <b>3 dots</b> dabayein ➔ <b>Lock</b> chunein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Recent apps screen kholein, MacroDroid aur FolderSync ke upar <b>3 dots</b> dabayein ➔ <b>Lock</b> chunein.</p>
                 </div>
               </div>
-              <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 flex items-center gap-1.5">
-                <i data-lucide="folder" class="w-3.5 h-3.5 shrink-0"></i>
-                <span>OnePlus Recording Folder: <b>/Recordings/Call Recordings/</b> ya <b>/Music/Recordings/Call Recordings/</b> (.mp3)</span>
+              <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700/50 text-xs text-slate-900 dark:text-slate-100 font-normal flex items-center gap-1.5">
+                <i data-lucide="folder" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+                <span>OnePlus Recording Folder: <b class="font-mono text-emerald-900 dark:text-emerald-300 font-bold">/Recordings/Call Recordings/</b> (.mp3)</span>
               </div>
             </div>
 
             <!-- Brand 4: Xiaomi / Redmi / POCO Guide -->
-            <div id="brand-guide-xiaomi" class="p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-indigo-500/10 border border-blue-500/30 space-y-2.5 hidden">
+            <div id="brand-guide-xiaomi" class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 space-y-2.5 hidden">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <div class="flex items-center gap-2 font-bold text-blue-400 text-xs">
-                  <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 font-extrabold text-xs flex items-center justify-center border border-blue-500/30 shrink-0">4</span>
+                <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 text-xs">
+                  <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-900 font-black text-xs flex items-center justify-center border border-blue-300 shrink-0">4</span>
                   <span>Xiaomi / Redmi / POCO: MIUI &amp; HyperOS Settings</span>
                 </div>
-                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/40 font-bold">MIUI &amp; HyperOS</span>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-blue-100 text-blue-950 font-bold border border-blue-300">MIUI &amp; HyperOS</span>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-blue-400 flex items-center gap-1.5">
-                    <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-blue-600"></i>
                     <span>1. Call Recording</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Phone app ➔ Settings ➔ Call recording ➔ <b>"Record calls automatically"</b> ko <b>ON</b> karein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Phone app ➔ Settings ➔ Call recording ➔ <b>"Record calls automatically"</b> ko <b>ON</b> karein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-blue-400 flex items-center gap-1.5">
-                    <i data-lucide="power" class="w-3.5 h-3.5"></i>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="power" class="w-3.5 h-3.5 text-blue-600"></i>
                     <span>2. Autostart Permission</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Settings ➔ Apps ➔ Permissions ➔ <b>Autostart</b> me MacroDroid aur FolderSync dono ko ON karein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Settings ➔ Apps ➔ Permissions ➔ <b>Autostart</b> me MacroDroid aur FolderSync dono ko ON karein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-blue-400 flex items-center gap-1.5">
-                    <i data-lucide="battery" class="w-3.5 h-3.5"></i>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="battery" class="w-3.5 h-3.5 text-blue-600"></i>
                     <span>3. Battery Saver Off</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Settings ➔ Battery ➔ App battery saver ➔ MacroDroid aur FolderSync dono me <b>"No restrictions"</b> chunein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Settings ➔ Battery ➔ App battery saver ➔ MacroDroid aur FolderSync dono me <b>"No restrictions"</b> chunein.</p>
                 </div>
               </div>
             </div>
 
             <!-- Brand 5: FolderSync Setup Guide (Automatic Cloud Voice Sync) -->
-            <div id="brand-guide-foldersync" class="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/30 space-y-2.5 hidden">
+            <div id="brand-guide-foldersync" class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 space-y-2.5 hidden">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <div class="flex items-center gap-2 font-bold text-emerald-400 text-xs">
-                  <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-xs flex items-center justify-center border border-emerald-500/30 shrink-0">☁️</span>
+                <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 text-xs">
+                  <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-900 font-black text-xs flex items-center justify-center border border-emerald-300 shrink-0">☁️</span>
                   <span>FolderSync: Google Drive Auto-Sync Setup (Har Phone Ke Liye)</span>
                 </div>
-                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">5-Minute Auto Sync</span>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-950 font-bold border border-emerald-300">5-Minute Auto Sync</span>
               </div>
-              <p class="text-[11px] text-main leading-relaxed">
+              <p class="text-xs text-slate-800 dark:text-slate-200 font-normal leading-relaxed">
                 FolderSync app phone me bani audio call recordings ko bina kisi manual kaam ke seedha Google Drive folder me auto-upload kar deti hai:
               </p>
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                    <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-600"></i>
                     <span>1. Accounts (+)</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">FolderSync app kholein ➔ <b>Accounts</b> me jayein ➔ <b>Google Drive</b> connect karein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">FolderSync app kholein ➔ <b>Accounts</b> me jayein ➔ <b>Google Drive</b> connect karein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                    <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="folder-plus" class="w-3.5 h-3.5 text-emerald-600"></i>
                     <span>2. Folderpair Banayein</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]"><b>Folderpairs</b> (+) dabayein ➔ Account me <b>Google Drive</b> select karein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal"><b>Folderpairs</b> (+) dabayein ➔ Account me <b>Google Drive</b> select karein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-emerald-600"></i>
                     <span>3. Sync Direction</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Sync type: <b class="text-gold">"To right folder"</b> (Phone ➔ Drive). Left folder me phone ka Call folder aur Right me Drive folder select karein.</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Sync type: <b class="text-emerald-700 dark:text-gold font-bold">"To right folder"</b> (Phone ➔ Drive). Left me phone ka Call folder aur Right me Drive folder chunein.</p>
                 </div>
-                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 space-y-1">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-600"></i>
                     <span>4. Scheduling</span>
                   </div>
-                  <p class="text-muted-custom text-[10px]">Scheduling me <b>"Every 5 minutes"</b> lagayein aur <b>"Sync on file changes"</b> ON karein. Bas ho gaya!</p>
+                  <p class="text-slate-800 dark:text-slate-200 text-xs font-normal">Scheduling me <b>"Every 5 minutes"</b> lagayein aur <b>"Sync on file changes"</b> ON karein. Bas ho gaya!</p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Step 1: Install MacroDroid & Permissions -->
-          <div class="p-4 rounded-2xl bg-card border border-main space-y-2.5 shadow-xs">
+          <div class="p-4 rounded-2xl bg-white dark:bg-card border border-slate-300 dark:border-main space-y-2.5 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2 font-bold text-main text-xs">
-                <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 font-extrabold text-xs flex items-center justify-center border border-blue-500/30 shrink-0">1</span>
+              <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100 text-xs">
+                <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-900 font-black text-xs flex items-center justify-center border border-blue-300 shrink-0">1</span>
                 <span>Phone Me "MacroDroid" App Install Karein &amp; Permissions Dein</span>
               </div>
-              <a href="https://play.google.com/store/apps/details?id=com.arlosoft.macrodroid" target="_blank" class="px-3 py-1 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-[10px] font-bold text-blue-300 transition flex items-center gap-1 cursor-pointer">
-                <i data-lucide="download" class="w-3 h-3"></i>
+              <a href="https://play.google.com/store/apps/details?id=com.arlosoft.macrodroid" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-blue-100 hover:bg-blue-200 dark:bg-blue-500/15 border border-blue-300 dark:border-blue-500/30 text-xs font-bold text-blue-900 dark:text-blue-300 transition flex items-center gap-1 cursor-pointer">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
                 <span>Google Play Store Link</span>
               </a>
             </div>
-            <p class="text-[11px] text-muted-custom leading-relaxed">
-              Jis Android phone ki call logs aapko CRM me chahiye (jaise aapka <b>Samsung phone</b> ya koi aur sales phone), usme Play Store se free app <b>"MacroDroid - Device Automation"</b> download karein.
+            <p class="text-xs text-slate-800 dark:text-slate-200 font-normal leading-relaxed">
+              Jis Android phone ki call logs aapko CRM me chahiye (jaise aapka <b>Samsung phone</b>, <b>OnePlus</b> ya <b>iQOO phone</b>), usme Play Store se free app <b>"MacroDroid - Device Automation"</b> download karein.
             </p>
-            <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-300 flex items-start gap-2">
-              <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+            <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 text-xs text-slate-900 dark:text-slate-100 font-normal flex items-start gap-2">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
               <span><b>Zaroori Setting:</b> Phone ki <b>Settings -> Apps -> MacroDroid -> Battery Optimization</b> me jaake <b>"Unrestricted" / "Don't Optimize"</b> select karein taaki MacroDroid background me hamesha active rahe.</span>
             </div>
           </div>
 
-          <!-- Step: Macro - Outbound Dialed Calls (Phone Se Call Lagai) -->
-          <div class="p-4 rounded-2xl bg-card border border-amber-500/30 space-y-3 shadow-xs">
+          <!-- Step 2: Macro - Outbound Dialed Calls (Phone Se Call Lagai) -->
+          <div class="p-4 rounded-2xl bg-white dark:bg-card border border-amber-300 dark:border-amber-500/30 space-y-3 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2 font-bold text-amber-400 text-xs">
-                <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-extrabold text-xs flex items-center justify-center border border-amber-500/30 shrink-0">📞</span>
+              <div class="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-400 text-xs">
+                <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-900 font-black text-xs flex items-center justify-center border border-amber-300 shrink-0">📞</span>
                 <span>Outbound Calls Macro: Phone Se Dial Ki Gayi Calls (Connected &amp; Not Picked)</span>
               </div>
-              <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30 font-bold">100% Outbound Tracking</span>
+              <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-950 font-bold border border-amber-300">100% Outbound Tracking</span>
             </div>
-            <div class="space-y-1.5 text-[11px] text-main">
+            <div class="space-y-1.5 text-xs text-slate-800 dark:text-slate-200 font-normal">
               <p>1. MacroDroid me <b>"Add Macro" (+)</b> dabayein.</p>
               <p>2. <b>Triggers (+)</b> ➔ <b>Call / SMS</b> ➔ <b>Call Ended</b> ➔ <b>Outgoing Call</b> ➔ <b>Any Number</b> select karein.</p>
               <p>3. <b>Actions (+)</b> ➔ <b>Connectivity / Web</b> ➔ <b>HTTP Request</b> select karein:</p>
-              <div class="pl-4 py-2 space-y-1 text-muted-custom font-mono text-[10px] bg-subtle rounded-xl border border-main/40">
-                <div>• Request Method: <strong class="text-amber-400 font-bold">POST</strong> ya <strong class="text-amber-400 font-bold">GET</strong></div>
-                <div>• Webhook URL: <code class="text-purple-300 font-bold">${webhookUrl}?staff_name=${encodeURIComponent(config.staffName)}&device_name=${encodeURIComponent(config.deviceName)}&customer_number={call_number}&customer_name={call_name}&call_duration={call_duration}&direction=OUTBOUND&call_type=OUTBOUND</code></div>
+              
+              <!-- High-Contrast Clean Code / URL Box -->
+              <div class="p-3.5 space-y-2 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-slate-900 dark:text-slate-100">• Request Method:</span>
+                  <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-950 font-bold text-xs border border-amber-300">POST</span>
+                  <span class="text-slate-600 dark:text-slate-400 font-normal">ya</span>
+                  <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-950 font-bold text-xs border border-amber-300">GET</span>
+                </div>
+                <div>
+                  <span class="font-bold text-slate-900 dark:text-slate-100 block mb-1">• Webhook URL (Copy Karke Paste Karein):</span>
+                  <div class="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-300 dark:border-slate-800 font-mono text-[11px] text-slate-950 dark:text-slate-50 select-all break-all leading-relaxed shadow-2xs">${webhookUrl}?staff_name=${encodeURIComponent(config.staffName)}&device_name=${encodeURIComponent(config.deviceName)}&customer_number={call_number}&customer_name={call_name}&call_duration={call_duration}&direction=OUTBOUND&call_type=OUTBOUND</div>
+                </div>
               </div>
-              <p class="text-[10px] text-amber-400 font-semibold pt-0.5">⚡ Phone se lagayi gayi har call (chahe baat hui ho ya saamne wale ne na uthai ho) turant CRM me Outbound track hogi!</p>
+              <p class="text-xs text-slate-800 dark:text-slate-200 font-normal pt-1">⚡ Phone se lagayi gayi har call (chahe baat hui ho ya saamne wale ne na uthai ho) turant CRM me <b>Outbound</b> track hogi!</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 pt-1">
-              <button type="button" onclick="navigator.clipboard.writeText('${webhookUrl}?staff_name=' + encodeURIComponent('${config.staffName}') + '&device_name=' + encodeURIComponent('${config.deviceName}') + '&customer_number={call_number}&customer_name={call_name}&call_duration={call_duration}&direction=OUTBOUND&call_type=OUTBOUND'); showToast('✓ Outbound Dialed Webhook URL copied!', 'success');" class="px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-bold text-[11px] flex items-center gap-1 cursor-pointer">
+              <button type="button" onclick="navigator.clipboard.writeText('${webhookUrl}?staff_name=' + encodeURIComponent('${config.staffName}') + '&device_name=' + encodeURIComponent('${config.deviceName}') + '&customer_number={call_number}&customer_name={call_name}&call_duration={call_duration}&direction=OUTBOUND&call_type=OUTBOUND'); showToast('✓ Outbound Dialed Webhook URL copied!', 'success');" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm cursor-pointer">
                 <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                 <span>📋 Copy Outbound Webhook URL</span>
               </button>
             </div>
           </div>
 
-          <!-- Step 2: Macro 1 - Connected Calls + Auto Voice Recording Sync (Call Ended) -->
-          <div class="p-4 rounded-2xl bg-card border border-main space-y-3 shadow-xs">
+          <!-- Step 3: Macro 1 - Connected Calls + Auto Voice Recording Sync (Call Ended) -->
+          <div class="p-4 rounded-2xl bg-white dark:bg-card border border-slate-300 dark:border-main space-y-3 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2 font-bold text-emerald-400 text-xs">
-                <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-xs flex items-center justify-center border border-emerald-500/30 shrink-0">2</span>
+              <div class="flex items-center gap-2 font-bold text-emerald-900 dark:text-emerald-400 text-xs">
+                <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-900 font-black text-xs flex items-center justify-center border border-emerald-300 shrink-0">2</span>
                 <span>Macro 1 Banayein: Connected Calls + Automatic Voice Recording Upload</span>
               </div>
-              <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold">100% Automatic · Zero Manual Upload</span>
+              <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-950 font-bold border border-emerald-300">100% Automatic · Zero Manual Upload</span>
             </div>
-            <div class="space-y-1.5 text-[11px] text-main">
+            <div class="space-y-1.5 text-xs text-slate-800 dark:text-slate-200 font-normal">
               <p>1. MacroDroid app open karke <b>"Add Macro" (+)</b> dabayein.</p>
               <p>2. <b>Triggers (+)</b> par click karein ➔ <b>Call / SMS</b> ➔ <b>Call Ended</b> ➔ <b>Any Number</b> select karein.</p>
-              <p>3. <b>Actions (+)</b> ➔ <b>MacroDroid Specific</b> ➔ <b>Wait before next action</b> ➔ <b>3 Seconds</b> dalein (taaki Samsung dialer recording file complete likh le).</p>
+              <p>3. <b>Actions (+)</b> ➔ <b>MacroDroid Specific</b> ➔ <b>Wait before next action</b> ➔ <b>3 Seconds</b> dalein (taaki phone dialer recording file complete likh le).</p>
               <p>4. <b>Actions (+)</b> ➔ <b>Connectivity / Web</b> ➔ <b>HTTP Request</b> select karein:</p>
-              <div class="pl-4 py-2 space-y-1 text-muted-custom font-mono text-[10px] bg-subtle rounded-xl border border-main/40">
-                <div>• Request Method: <strong class="text-emerald-400 font-bold">POST</strong></div>
-                <div>• Webhook URL: <code class="text-purple-300 font-bold">${webhookUrl}?staff_name=${encodeURIComponent(config.staffName)}&device_name=${encodeURIComponent(config.deviceName)}&customer_number={call_number}&call_duration={call_duration}&call_type={call_type}</code></div>
-                <div>• Content-Type: <strong class="text-blue-300">multipart/form-data</strong> (ya application/json)</div>
-                <div>• File to Attach / Send: <strong class="text-emerald-400">/Recordings/Call/</strong> (Latest .m4a file)</div>
+              
+              <!-- High-Contrast Clean Code / URL Box -->
+              <div class="p-3.5 space-y-2 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-slate-900 dark:text-slate-100">• Request Method:</span>
+                  <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-950 font-bold text-xs border border-emerald-300">POST</span>
+                </div>
+                <div>
+                  <span class="font-bold text-slate-900 dark:text-slate-100 block mb-1">• Webhook URL (Copy Karein):</span>
+                  <div class="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-300 dark:border-slate-800 font-mono text-[11px] text-slate-950 dark:text-slate-50 select-all break-all leading-relaxed shadow-2xs">${webhookUrl}?staff_name=${encodeURIComponent(config.staffName)}&device_name=${encodeURIComponent(config.deviceName)}&customer_number={call_number}&call_duration={call_duration}&call_type={call_type}</div>
+                </div>
               </div>
-              <p class="text-[10px] text-emerald-400 font-semibold pt-0.5">⚡ Is setting ke baad call end hote hi phone recording automatically CRM me pahunch jayegi, aapko manually upload karne ki zaroorat nahi padegi!</p>
+              <p class="text-xs text-slate-800 dark:text-slate-200 font-normal pt-1">⚡ Is setting ke baad call end hote hi phone recording automatically CRM me pahunch jayegi, aapko manually upload karne ki zaroorat nahi padegi!</p>
             </div>
 
             <!-- 1-Click Copy Buttons -->
             <div class="flex flex-wrap items-center gap-2 pt-1">
-              <button type="button" onclick="navigator.clipboard.writeText('${webhookUrl}?staff_name=' + encodeURIComponent('${config.staffName}') + '&device_name=' + encodeURIComponent('${config.deviceName}') + '&customer_number={call_number}&call_duration={call_duration}&call_type={call_type}'); showToast('✓ Auto-Upload Webhook URL copied!', 'success');" class="px-3.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-bold text-[11px] flex items-center gap-1 cursor-pointer">
+              <button type="button" onclick="navigator.clipboard.writeText('${webhookUrl}?staff_name=' + encodeURIComponent('${config.staffName}') + '&device_name=' + encodeURIComponent('${config.deviceName}') + '&customer_number={call_number}&call_duration={call_duration}&call_type={call_type}'); showToast('✓ Auto-Upload Webhook URL copied!', 'success');" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer shadow-sm">
                 <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                 <span>📋 Copy Auto-Upload URL</span>
               </button>
-              <button type="button" onclick="copyMultiPhoneMacroJson('ENDED', ${phoneNum})" class="px-3.5 py-1.5 rounded-xl bg-gold text-slate-950 hover:brightness-105 font-bold text-[11px] flex items-center gap-1.5 shadow-sm cursor-pointer">
+              <button type="button" onclick="copyMultiPhoneMacroJson('ENDED', ${phoneNum})" class="px-4 py-2 rounded-xl bg-gold text-slate-950 hover:brightness-105 font-black text-xs flex items-center gap-1.5 shadow-sm cursor-pointer">
                 <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i>
                 <span>📋 Copy JSON Body</span>
               </button>
             </div>
-            <pre class="p-2.5 rounded-xl bg-subtle font-mono text-[10px] text-main overflow-x-auto border border-main/50 max-h-24 custom-scrollbar select-all">${escapeHtml(macro1Json)}</pre>
+            <pre class="p-3 rounded-xl bg-white dark:bg-slate-950 font-mono text-xs text-slate-950 dark:text-slate-50 overflow-x-auto border border-slate-300 dark:border-slate-800 max-h-28 custom-scrollbar select-all leading-relaxed">${escapeHtml(macro1Json)}</pre>
           </div>
 
-          <!-- Step 3: Macro 2 - Inbound Missed Calls -->
-          <div class="p-4 rounded-2xl bg-card border border-main space-y-3 shadow-xs">
+          <!-- Step 4: Macro 2 - Inbound Missed Calls -->
+          <div class="p-4 rounded-2xl bg-white dark:bg-card border border-slate-300 dark:border-main space-y-3 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2 font-bold text-rose-400 text-xs">
-                <span class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 font-extrabold text-xs flex items-center justify-center border border-rose-500/30 shrink-0">3</span>
+              <div class="flex items-center gap-2 font-bold text-rose-900 dark:text-rose-400 text-xs">
+                <span class="w-6 h-6 rounded-full bg-rose-100 text-rose-900 font-black text-xs flex items-center justify-center border border-rose-300 shrink-0">3</span>
                 <span>Macro 2 Banayein: Customer Inbound Missed Call</span>
               </div>
-              <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-rose-500/15 text-rose-400 border border-rose-500/30 font-bold">🔴 Red Missed Alert Badge</span>
+              <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-rose-100 text-rose-950 font-bold border border-rose-300">🔴 Red Missed Alert Badge</span>
             </div>
-            <div class="space-y-1 text-[11px] text-main">
-              <p>1. MacroDroid me dusra macro banayein: <b>"Add Macro" (+)</b>.</p>
+            <div class="space-y-1 text-xs text-slate-800 dark:text-slate-200 font-normal">
+              <p>1. MacroDroid me naya macro banayein: <b>"Add Macro" (+)</b>.</p>
               <p>2. <b>Triggers (+)</b> ➔ <b>Call / SMS</b> ➔ <b>Call Missed</b> ➔ <b>Any Number</b>.</p>
               <p>3. <b>Actions (+)</b> ➔ <b>HTTP Request (POST)</b> ➔ Webhook URL paste karein aur Request Body me niche diya gaya JSON paste karein.</p>
             </div>
 
             <!-- 1-Click Copy Buttons -->
             <div class="flex flex-wrap items-center gap-2 pt-1">
-              <button type="button" onclick="copyMultiPhoneMacroJson('MISSED', ${phoneNum})" class="px-3.5 py-1.5 rounded-xl bg-rose-600 text-white hover:bg-rose-500 font-bold text-[11px] flex items-center gap-1.5 shadow-sm cursor-pointer">
+              <button type="button" onclick="copyMultiPhoneMacroJson('MISSED', ${phoneNum})" class="px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700 font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer">
                 <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i>
                 <span>📋 Copy Missed Call JSON Body</span>
               </button>
             </div>
-            <pre class="p-2.5 rounded-xl bg-subtle font-mono text-[10px] text-main overflow-x-auto border border-main/50 max-h-24 custom-scrollbar select-all">${escapeHtml(macro2Json)}</pre>
+            <pre class="p-3 rounded-xl bg-white dark:bg-slate-950 font-mono text-xs text-slate-950 dark:text-slate-50 overflow-x-auto border border-slate-300 dark:border-slate-800 max-h-28 custom-scrollbar select-all leading-relaxed">${escapeHtml(macro2Json)}</pre>
           </div>
 
-          <!-- Step 4: ⚡ Instant Live Test Ping -->
-          <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-blue-500/10 to-amber-500/15 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <!-- Step 5: ⚡ Instant Live Test Ping -->
+          <div class="p-4 rounded-2xl bg-white dark:bg-card border border-purple-300 dark:border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
             <div class="space-y-1">
               <div class="flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-gold/20 text-gold font-extrabold text-xs flex items-center justify-center border border-gold/30 shrink-0">4</span>
-                <span class="text-xs font-extrabold text-main">Abhi Live Test Ping Karke Check Karein</span>
+                <span class="w-6 h-6 rounded-full bg-gold/20 text-slate-950 dark:text-gold font-black text-xs flex items-center justify-center border border-gold/30 shrink-0">4</span>
+                <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Abhi Live Test Ping Karke Check Karein</span>
               </div>
-              <p class="text-[11px] text-muted-custom">Button dabate hi CRM me <b>"${escapeHtml(config.deviceName)}"</b> ke tag ke sath ek test call record show ho jayegi.</p>
+              <p class="text-xs text-slate-800 dark:text-slate-200 font-normal">Button dabate hi CRM me <b>"${escapeHtml(config.deviceName)}"</b> ke tag ke sath ek test call record show ho jayegi.</p>
             </div>
-            <button type="button" onclick="sendTestDevicePing(${phoneNum})" class="px-4 py-2 rounded-xl bg-gold hover:brightness-105 text-slate-950 font-extrabold text-xs transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer shrink-0">
+            <button type="button" onclick="sendTestDevicePing(${phoneNum})" class="px-4 py-2 rounded-xl bg-gold hover:brightness-105 text-slate-950 font-black text-xs transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer shrink-0">
               <i data-lucide="zap" class="w-4 h-4 text-slate-950"></i>
               <span>⚡ Send Live Test Ping</span>
             </button>
@@ -26723,7 +26805,7 @@
           if (typeof syncAndroidCalls === 'function') {
             syncAndroidCalls(false);
           }
-        }, 20000);
+        }, 45000);
       } catch(e) {}
 
       try {
@@ -26758,7 +26840,7 @@
           }
 
           // Purge browser credential autofill cleanly without thrashing render cycles
-          [50, 150, 300, 600, 1200, 2000].forEach(ms => {
+          [150, 800].forEach(ms => {
             setTimeout(() => {
               const didPurge = purgeBrowserAutofillFromSearchInputs();
               if (didPurge) {
