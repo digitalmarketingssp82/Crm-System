@@ -525,19 +525,23 @@ module.exports = async (req, res) => {
         call_outcome = 'Missed Call';
       }
 
-      // Multi-Phone Staff & Device Identification (Supports Samsung, OnePlus, etc.)
+      // Multi-Phone Staff & Device Identification (Supports OnePlus, Samsung, iQOO)
       let staff_name = data.staff_name || data.staff || data.device_name || query.staff_name || query.device_name || query.device || '';
       let device_name = data.device_name || data.device || data.staff_name || query.device_name || query.device || '';
-      if (!device_name) {
-        if (String(extractedFileName).toLowerCase().includes('.mp3') || String(data.caller_name || '').toLowerCase().includes('oneplus') || String(data.device || '').toLowerCase().includes('oneplus')) {
-          device_name = 'OnePlus';
-          staff_name = 'OnePlus';
-        } else {
-          device_name = 'Samsung Galaxy';
-          staff_name = 'Samsung Galaxy';
-        }
+      const rawDevLower = (String(device_name) + ' ' + String(staff_name) + ' ' + String(extractedFileName) + ' ' + String(data.caller_name || '')).toLowerCase();
+      if (rawDevLower.includes('iq') || rawDevLower.includes('vivo')) {
+        device_name = 'iQOO';
+        staff_name = 'iQOO';
+      } else if (rawDevLower.includes('oneplus')) {
+        device_name = 'OnePlus';
+        staff_name = 'OnePlus';
+      } else if (rawDevLower.includes('samsung')) {
+        device_name = 'Samsung Galaxy';
+        staff_name = 'Samsung Galaxy';
+      } else {
+        device_name = device_name || 'OnePlus';
+        staff_name = staff_name || device_name;
       }
-      if (!staff_name) staff_name = device_name;
 
       // Check if lead_id was explicitly supplied in payload
       let lead_id = data.lead_id || data.leadId || '';

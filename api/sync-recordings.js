@@ -892,6 +892,7 @@ module.exports = async (req, res) => {
           const rDev = (rec.deviceName || '').toLowerCase();
           const devMatch = (cDev.includes('oneplus') && rDev.includes('oneplus')) || 
                            (cDev.includes('samsung') && rDev.includes('samsung')) ||
+                           (cDev.includes('iq') && rDev.includes('iq')) ||
                            (!cDev || cDev === 'all');
           if (!devMatch) return false;
           const cTime = new Date(c.created_at || c.timestamp || c.time).getTime();
