@@ -7079,12 +7079,15 @@
 
     function isLeadDeleted(lead) {
       if (!lead) return true;
-      const dIds = getDeletedLeadIds();
-      if (lead.id && dIds.has(lead.id)) return true;
+      if (lead.id === 'lead-test-mohan') return true;
+      if (lead.name && (lead.name.includes('Mohan BNI ID 17') || lead.name === 'Mohan BNI ID 17')) return true;
       if (lead.phone) {
         const cleanP = lead.phone.toString().replace(/[^0-9]/g, '').slice(-10);
+        if (cleanP === '9803353372') return true;
         if (cleanP && getDeletedLeadPhones().has(cleanP)) return true;
       }
+      const dIds = getDeletedLeadIds();
+      if (lead.id && dIds.has(lead.id)) return true;
       return false;
     }
 
@@ -7208,9 +7211,17 @@
     // Purge fake auto-created phone leads permanently
     try {
       if (Array.isArray(leads)) {
-        const FAKE_AUTO_LEAD_IDS = new Set(['lead-phone-9803353372', 'lead-phone-8558055750', 'lead-phone-9877808859']);
+        const FAKE_AUTO_LEAD_IDS = new Set(['lead-phone-9803353372', 'lead-phone-8558055750', 'lead-phone-9877808859', 'lead-test-mohan']);
         const origLen = leads.length;
-        leads = leads.filter(l => l && !FAKE_AUTO_LEAD_IDS.has(l.id));
+        leads = leads.filter(l => {
+          if (!l) return false;
+          if (FAKE_AUTO_LEAD_IDS.has(l.id)) return false;
+          if (l.id === 'lead-test-mohan') return false;
+          if (l.name && (l.name.includes('Mohan BNI ID 17') || l.name === 'Mohan BNI ID 17')) return false;
+          const pClean = String(l.phone || '').replace(/\D/g, '').slice(-10);
+          if (pClean === '9803353372') return false;
+          return true;
+        });
         if (leads.length !== origLen) {
           localStorage.setItem('sri_sri_leads', JSON.stringify(leads));
         }
@@ -13189,6 +13200,13 @@
             const isSamsung = String(c.staff_name || c.device_name || c.deviceName || '').toLowerCase().includes('samsung');
             if (is31Oct && isSamsung) return false;
             if (c.id === 'call-log-1793442618941-958' || c.id === 'call-log-1793442320008-376' || c.id === 'call-log-1793425221000-779' || c.id === 'call-log-1793424900000-777') return false;
+        // Strict Cross-Device Phantom Suppression:
+        // +919256300700 belongs strictly to OnePlus; suppress any phantom duplicate triggers on Samsung or iQOO!
+        const pDigits = String(c.phone || c.caller_number || '').replace(/\D/g, '').slice(-10);
+        if (pDigits === '9256300700') {
+          const dev = String(c.deviceName || c.device_name || c.staff_name || '').toLowerCase();
+          if (dev.includes('samsung') || dev.includes('iq') || dev.includes('vivo')) return false;
+        }
             return !c.time?.includes('27 Oct') && !c.created_at?.includes('2026-10-27') && !c.recording_url?.includes('UklGRuRdAABX');
           });
           // Merge any bundled calls not in parsed
@@ -26129,7 +26147,7 @@
               <p>4. <b>Actions (+)</b> ➔ <b>Connectivity / Web</b> ➔ <b>HTTP Request</b> select karein:</p>
               <div class="pl-4 py-2 space-y-1 text-muted-custom font-mono text-[10px] bg-subtle rounded-xl border border-main/40">
                 <div>• Request Method: <strong class="text-emerald-400 font-bold">POST</strong></div>
-                <div>• Webhook URL: <code class="text-purple-300 font-bold">${webhookUrl}?staff_name=${encodeURIComponent(config.staffName)}&device_name=${encodeURIComponent(config.deviceName)}&customer_number={call_number}&call_duration={call_duration}&call_type=INBOUND</code></div>
+                <div>• Webhook URL: <code class="text-purple-300 font-bold">${webhookUrl}?staff_name=${encodeURIComponent(config.staffName)}&device_name=${encodeURIComponent(config.deviceName)}&customer_number={call_number}&call_duration={call_duration}&call_type={call_type}</code></div>
                 <div>• Content-Type: <strong class="text-blue-300">multipart/form-data</strong> (ya application/json)</div>
                 <div>• File to Attach / Send: <strong class="text-emerald-400">/Recordings/Call/</strong> (Latest .m4a file)</div>
               </div>
@@ -26138,7 +26156,7 @@
 
             <!-- 1-Click Copy Buttons -->
             <div class="flex flex-wrap items-center gap-2 pt-1">
-              <button type="button" onclick="navigator.clipboard.writeText('${webhookUrl}?staff_name=' + encodeURIComponent('${config.staffName}') + '&device_name=' + encodeURIComponent('${config.deviceName}') + '&customer_number={call_number}&call_duration={call_duration}&call_type=INBOUND'); showToast('✓ Auto-Upload Webhook URL copied!', 'success');" class="px-3.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-bold text-[11px] flex items-center gap-1 cursor-pointer">
+              <button type="button" onclick="navigator.clipboard.writeText('${webhookUrl}?staff_name=' + encodeURIComponent('${config.staffName}') + '&device_name=' + encodeURIComponent('${config.deviceName}') + '&customer_number={call_number}&call_duration={call_duration}&call_type={call_type}'); showToast('✓ Auto-Upload Webhook URL copied!', 'success');" class="px-3.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-bold text-[11px] flex items-center gap-1 cursor-pointer">
                 <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                 <span>📋 Copy Auto-Upload URL</span>
               </button>

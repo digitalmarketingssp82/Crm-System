@@ -501,7 +501,7 @@ module.exports = async (req, res) => {
 
       // Inbound is the universal default for phone companion sync
       let direction = 'INBOUND';
-      if (rawType.includes('OUTBOUND') || rawType.includes('DIALED') || rawType.includes('OUTGOING')) {
+      if (rawType.includes('OUT') || rawType.includes('DIAL') || rawType === '2' || rawType.includes('OUTGOING')) {
         direction = 'OUTBOUND';
       }
 
@@ -548,7 +548,7 @@ module.exports = async (req, res) => {
 
       // Find relevant lead by phone number if lead_id not supplied
       if (!lead_id && cleanCustomer) {
-        lead_id = 'lead-phone-' + cleanCustomer;
+        lead_id = '';
       }
 
       // If still no lead_id, generate fallback
