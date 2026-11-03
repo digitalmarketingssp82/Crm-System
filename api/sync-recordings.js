@@ -851,7 +851,8 @@ function parseDriveRecordings(html, forcedDevice = "Auto") {
       timestamp: isoTimestamp,
       audioUrl: `/api/call-audio?id=${id}`,
       approxDuration,
-      deviceName: finalDevice
+      deviceName: finalDevice,
+      originFolderDevice: forcedDevice
     });
   });
 
@@ -933,33 +934,44 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Filter out phantom clones so cross-device duplication never occurs
-    calls = calls.filter(c => {
-      if (c.device_name === 'iQOO' && (c.id.startsWith('call-rec-') || (c.recording_url && c.recording_url.includes('api/call-audio')))) {
-        return false;
-      }
-      return true;
-    });
+    // Note: Legitimate iQOO recordings are preserved!
 
-    // Deduplicate drive recordings across multiple folders by file name
+        // Deduplicate drive recordings across multiple folders by file name
     // and determine authentic native device
-    const seenFileNames = new Set();
-    const uniqueRecs = [];
+    // Priority: If file is in iQOO dedicated folder (1w2jK16SCGJrNrk7D_UYTMljKD56oPG76), keep device as iQOO!
+    const seenFileNames = new Map();
     driveRecs.forEach(r => {
       const cleanName = (r.name || '').trim();
-      if (cleanName && seenFileNames.has(cleanName)) return; // skip copied clones!
-      if (cleanName) seenFileNames.add(cleanName);
+      if (!cleanName) return;
 
       const isSamsungFormat = cleanName.match(/^Call recording\s+/i);
-      const isVivoFormat = cleanName.match(/^(?:Record[_-])?(?:.+?[_-])?(?:\d{4}|\d{2})\d{4}[_-]\d{4,6}\.(aac|amr|mp3|m4a|wav|ogg)$/i) && !cleanName.match(/^[^\d]+-\d{10}\./);
+      const isVivoFormat = cleanName.match(/^(?:Record[_-])?(?:.+?[_-])?(?:\d{4}|\d{2})\d{4}[_-]\d{4,6}\.(aac|amr|mp3|m4a|wav|ogg)$/i);
       const isOnePlusFormat = cleanName.match(/^(?:(.+?)[_-])?(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})?\.(mp3|m4a|wav|aac)$/i) && !isSamsungFormat;
 
-      if (isSamsungFormat) r.deviceName = 'Samsung Galaxy';
-      else if (isOnePlusFormat) r.deviceName = 'OnePlus';
-      else if (isVivoFormat) r.deviceName = 'iQOO';
+      if (r.originFolderDevice && r.originFolderDevice === 'iQOO') {
+        r.deviceName = 'iQOO';
+      } else if (r.deviceName === 'iQOO') {
+        // already tagged iQOO
+      } else if (isSamsungFormat) {
+        r.deviceName = 'Samsung Galaxy';
+      } else if (isVivoFormat) {
+        r.deviceName = 'iQOO';
+      } else if (isOnePlusFormat) {
+        r.deviceName = 'OnePlus';
+      }
 
-      uniqueRecs.push(r);
+      // If already seen, dedicated folder takes precedence over auto/legacy folder
+      if (seenFileNames.has(cleanName)) {
+        const existing = seenFileNames.get(cleanName);
+        if (r.originFolderDevice === 'iQOO' || r.deviceName === 'iQOO') {
+          seenFileNames.set(cleanName, r);
+        }
+      } else {
+        seenFileNames.set(cleanName, r);
+      }
     });
+
+    const uniqueRecs = Array.from(seenFileNames.values());
 
     let attachedCount = 0;
     const CUTOFF_DATE = new Date('2026-10-20T00:00:00.000Z').getTime();
