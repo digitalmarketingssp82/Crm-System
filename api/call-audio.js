@@ -47,8 +47,9 @@ module.exports = async (req, res) => {
 
 function forwardAudio(sourceRes, targetRes) {
   const status = sourceRes.statusCode || 200;
+  const contentType = sourceRes.headers['content-type'] || 'audio/mpeg';
   const outHeaders = {
-    'Content-Type': 'audio/mp4',
+    'Content-Type': contentType,
     'Accept-Ranges': 'bytes',
     'Access-Control-Allow-Origin': '*',
     'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800'

@@ -753,6 +753,8 @@ function parseDriveRecordings(html, forcedDevice = "Auto") {
     const samsungMatch = name.match(/^Call recording\s+(.+?)_(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\.(m4a|mp3)$/i);
     // Pattern 2: OnePlus format: [Name/Number]-[YYMMDDHHMM].mp3
     const oneplusMatch = name.match(/^(?:(.+?)[_-])?(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})?\.(mp3|m4a|wav|aac)$/i);
+    // Pattern 3: Vivo / iQOO format: [Prefix]_[YYYYMMDD]_[HHMMSS].(aac|amr|mp3|m4a|wav) OR Record_[Prefix]_[YYMMDD]_[HHMMSS]
+    const vivoMatch = name.match(/^(?:Record[_-])?(?:(.+?)[_-])?(\d{4}|\d{2})(\d{2})(\d{2})[_-](\d{2})(\d{2})(\d{2})?\.(aac|amr|mp3|m4a|wav|ogg)$/i);
 
     if (samsungMatch) {
       deviceName = 'Samsung Galaxy';
@@ -792,6 +794,28 @@ function parseDriveRecordings(html, forcedDevice = "Auto") {
           phoneDigits = pMatch[1];
         } else {
           contactName = prefix.replace(/^Call recording\s+/i, '').trim();
+        }
+      }
+    } else if (vivoMatch) {
+      deviceName = 'iQOO';
+      const [_, prefix, yRaw, mm, dd, hh, min, ss] = vivoMatch;
+      const yy = yRaw.length === 4 ? yRaw : `20${yRaw}`;
+      yymmdd = `${yy}-${mm}-${dd}`;
+      const sec = ss || '00';
+      const d = new Date(`${yy}-${mm}-${dd}T${hh}:${min}:${sec}+05:30`);
+      if (!isNaN(d.getTime())) isoTimestamp = d.toISOString();
+      const mIdx = parseInt(mm, 10) - 1;
+      const hInt = parseInt(hh, 10);
+      const ampm = hInt >= 12 ? 'PM' : 'AM';
+      const h12 = hInt % 12 || 12;
+      formattedTime = `${parseInt(dd, 10)} ${months[mIdx]}, ${h12 < 10 ? '0' + h12 : h12}:${min} ${ampm}`;
+
+      if (prefix) {
+        const pMatch = prefix.match(/(?:\+?91)?([6-9]\d{9})/);
+        if (pMatch) {
+          phoneDigits = pMatch[1];
+        } else {
+          contactName = prefix.replace(/^Record[_-]/i, '').replace(/^Call recording\s+/i, '').trim();
         }
       }
     }
@@ -834,6 +858,14 @@ function parseDriveRecordings(html, forcedDevice = "Auto") {
   return recordings;
 }
 
+function sendResponse(res, statusCode, data) {
+  if (res.status && typeof res.status === 'function') {
+    return res.status(statusCode).json(data);
+  }
+  res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -867,12 +899,18 @@ module.exports = async (req, res) => {
       const html = await fetchDriveFolderHTML(fId);
       driveRecs = parseDriveRecordings(html);
     } else {
-      // Automatically aggregate all 3 dedicated device folders + legacy master folder
-      for (const f of DEVICE_FOLDERS) {
-        const html = await fetchDriveFolderHTML(f.id);
-        const recs = parseDriveRecordings(html, f.device);
-        driveRecs.push(...recs);
-      }
+      // Parallel fetch across all folders for fast sub-2s execution
+      const folderResults = await Promise.all(
+        DEVICE_FOLDERS.map(async f => {
+          try {
+            const html = await fetchDriveFolderHTML(f.id);
+            return parseDriveRecordings(html, f.device);
+          } catch(e) {
+            return [];
+          }
+        })
+      );
+      folderResults.forEach(recs => driveRecs.push(...recs));
     }
 
     // Read stored calls
@@ -895,22 +933,52 @@ module.exports = async (req, res) => {
       }
     }
 
+    // Filter out phantom clones so cross-device duplication never occurs
+    calls = calls.filter(c => {
+      if (c.device_name === 'iQOO' && (c.id.startsWith('call-rec-') || (c.recording_url && c.recording_url.includes('api/call-audio')))) {
+        return false;
+      }
+      return true;
+    });
+
+    // Deduplicate drive recordings across multiple folders by file name
+    // and determine authentic native device
+    const seenFileNames = new Set();
+    const uniqueRecs = [];
+    driveRecs.forEach(r => {
+      const cleanName = (r.name || '').trim();
+      if (cleanName && seenFileNames.has(cleanName)) return; // skip copied clones!
+      if (cleanName) seenFileNames.add(cleanName);
+
+      const isSamsungFormat = cleanName.match(/^Call recording\s+/i);
+      const isVivoFormat = cleanName.match(/^(?:Record[_-])?(?:.+?[_-])?(?:\d{4}|\d{2})\d{4}[_-]\d{4,6}\.(aac|amr|mp3|m4a|wav|ogg)$/i) && !cleanName.match(/^[^\d]+-\d{10}\./);
+      const isOnePlusFormat = cleanName.match(/^(?:(.+?)[_-])?(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})?\.(mp3|m4a|wav|aac)$/i) && !isSamsungFormat;
+
+      if (isSamsungFormat) r.deviceName = 'Samsung Galaxy';
+      else if (isOnePlusFormat) r.deviceName = 'OnePlus';
+      else if (isVivoFormat) r.deviceName = 'iQOO';
+
+      uniqueRecs.push(r);
+    });
+
     let attachedCount = 0;
     const CUTOFF_DATE = new Date('2026-10-20T00:00:00.000Z').getTime();
 
-    driveRecs.forEach(rec => {
+    uniqueRecs.forEach(rec => {
       let matchedCall = null;
 
       if (rec.phoneDigits && rec.phoneDigits.length === 10) {
         matchedCall = calls.find(c => {
+          if (c.drive_file_id && c.drive_file_id !== rec.id) return false;
+          if (c.hasAudio && c.drive_file_id !== rec.id) return false;
           const cNum = String(c.caller_number || c.phone || '').replace(/\D/g, '').slice(-10);
           if (cNum !== rec.phoneDigits) return false;
           if (rec.timestamp && (c.created_at || c.timestamp || c.time)) {
             const recTime = new Date(rec.timestamp).getTime();
             const callTime = new Date(c.created_at || c.timestamp || c.time).getTime();
-            return Math.abs(recTime - callTime) < 86400000;
+            return Math.abs(recTime - callTime) <= 1800000;
           }
-          return true;
+          return false;
         });
       }
 
@@ -918,8 +986,15 @@ module.exports = async (req, res) => {
         const cleanRecName = rec.contactName.toLowerCase().trim();
         if (cleanRecName.length >= 3 && cleanRecName !== 'direct phone call') {
           matchedCall = calls.find(c => {
+            if (c.drive_file_id && c.drive_file_id !== rec.id) return false;
+            if (c.hasAudio && c.drive_file_id !== rec.id) return false;
             const nameC = (c.caller_name || c.leadName || '').toLowerCase().trim();
-            if (nameC === cleanRecName) return true;
+            if (nameC !== cleanRecName) return false;
+            if (rec.timestamp && (c.created_at || c.timestamp || c.time)) {
+              const recTime = new Date(rec.timestamp).getTime();
+              const cTime = new Date(c.created_at || c.timestamp || c.time).getTime();
+              return Math.abs(recTime - cTime) <= 1800000;
+            }
             return false;
           });
         }
@@ -1005,17 +1080,19 @@ module.exports = async (req, res) => {
 
     const dedupedCalls = deduplicateCalls(calls);
 
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
+    try {
+      fs.writeFileSync(CALL_LOGS_FILE, JSON.stringify(dedupedCalls, null, 2), 'utf8');
+    } catch(e) {}
+
+    return sendResponse(res, 200, {
       success: true,
-      folderId,
+      folderId: explicitFolder || DEFAULT_FOLDER_ID,
       driveFilesCount: driveRecs.length,
       attachedCount,
       calls: dedupedCalls
-    }));
+    });
   } catch(err) {
     console.error('sync-recordings error:', err);
-    res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: false, error: err.message }));
+    return sendResponse(res, 500, { success: false, error: err.message });
   }
 };

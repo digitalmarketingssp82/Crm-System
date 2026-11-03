@@ -2437,6 +2437,11 @@
 
           <!-- Clean Action Buttons -->
           <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Add Device / Connect Phone (Admin Multi-Phone Setup) Button -->
+            <button type="button" onclick="openMultiPhoneSetupModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black transition flex items-center gap-1.5 shadow-md hover:shadow-lg cursor-pointer shrink-0" title="Admin: Connect or Add a New Calling Phone with step-by-step instructions">
+              <i data-lucide="smartphone" class="w-4 h-4"></i>
+              <span>📱 + Add Device</span>
+            </button>
             <!-- Drive Cloud Audio Sync Button -->
             <button type="button" id="crm-drive-sync-btn" onclick="syncRecordingsFromDrive()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition flex items-center gap-2 shadow-sm cursor-pointer shrink-0" title="Auto-sync audio recordings from connected Google Drive folder directly into CRM">
               <i data-lucide="cloud-download" class="w-4 h-4"></i>
@@ -23239,34 +23244,45 @@
       if (roleBanner) {
 
         if (isSuperAdmin) {
-          const allUsers = users || [];
-          const coordUser = allUsers.find(u => 
-            (u.role && (u.role.toLowerCase().includes('coordinator') || u.role.toLowerCase().includes('cordinator'))) || 
-            (u.email && (u.email.toLowerCase().includes('coordinator') || u.email.toLowerCase().includes('cordinator') || u.email.toLowerCase().includes('salescordinator')))
-          );
-          const coordHasRec = coordUser && Array.isArray(coordUser.permissions) && coordUser.permissions.includes('calls_listen_recording');
+          const coordPerms = getCoordinatorDevicePermissions();
 
-          roleBanner.className = 'p-3.5 rounded-2xl bg-amber-500/10 border border-gold/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+          roleBanner.className = 'p-3.5 rounded-2xl bg-amber-500/10 border border-gold/30 text-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3 shadow-xs';
           roleBanner.innerHTML = `
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-gold/20 text-gold flex items-center justify-center font-bold shrink-0">
                 <i data-lucide="crown" class="w-4 h-4"></i>
               </div>
               <div>
-                <span class="font-extrabold text-main block">Whole Team Call Directory (Owner / Admin Access)</span>
-                <span class="text-muted-custom block text-[11px]">All 3-4 physical calling phones dialed, received &amp; missed calls sync here in real-time.</span>
+                <span class="font-extrabold text-main block">Whole Team Call Directory (Admin Master Access)</span>
+                <span class="text-muted-custom block text-[11px]">Admin can listen to ALL recordings. Har single device ki permission Coordinator ko alag se dein:</span>
               </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="text-[11px] text-muted-custom font-semibold">Sales Coordinator Recordings:</span>
-              <button type="button" onclick="toggleCoordinatorRecordingPermission()" class="px-3 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1.5 cursor-pointer ${coordHasRec ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500 hover:text-white' : 'bg-rose-500/20 text-rose-400 border-rose-500/40 hover:bg-rose-500 hover:text-white'}" title="Click to Toggle Coordinator Recording Playback Access">
-                <i data-lucide="${coordHasRec ? 'unlock' : 'lock'}" class="w-3 h-3"></i>
-                <span>${coordHasRec ? 'Recording Allowed (ON)' : 'Recording Locked (OFF)'}</span>
+            <!-- Per-Device Coordinator Recording Permissions -->
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <span class="text-[11px] text-muted-custom font-bold flex items-center gap-1">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-gold"></i>
+                <span>Coordinator Recording Access:</span>
+              </span>
+              <!-- OnePlus Permission Toggle -->
+              <button type="button" onclick="toggleCoordinatorDevicePermission('OnePlus')" class="px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 cursor-pointer ${coordPerms['OnePlus'] ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500 hover:text-white' : 'bg-rose-500/20 text-rose-400 border-rose-500/40 hover:bg-rose-500 hover:text-white'}" title="Toggle Sales Coordinator recording playback for OnePlus calls">
+                <i data-lucide="${coordPerms['OnePlus'] ? 'check-circle-2' : 'lock'}" class="w-3 h-3"></i>
+                <span>OnePlus: ${coordPerms['OnePlus'] ? 'Allowed (ON)' : 'Locked (OFF)'}</span>
+              </button>
+              <!-- Samsung Galaxy Permission Toggle -->
+              <button type="button" onclick="toggleCoordinatorDevicePermission('Samsung Galaxy')" class="px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 cursor-pointer ${coordPerms['Samsung Galaxy'] ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500 hover:text-white' : 'bg-rose-500/20 text-rose-400 border-rose-500/40 hover:bg-rose-500 hover:text-white'}" title="Toggle Sales Coordinator recording playback for Samsung Galaxy calls">
+                <i data-lucide="${coordPerms['Samsung Galaxy'] ? 'check-circle-2' : 'lock'}" class="w-3 h-3"></i>
+                <span>Samsung: ${coordPerms['Samsung Galaxy'] ? 'Allowed (ON)' : 'Locked (OFF)'}</span>
+              </button>
+              <!-- iQOO Permission Toggle -->
+              <button type="button" onclick="toggleCoordinatorDevicePermission('iQOO')" class="px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 cursor-pointer ${coordPerms['iQOO'] ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500 hover:text-white' : 'bg-rose-500/20 text-rose-400 border-rose-500/40 hover:bg-rose-500 hover:text-white'}" title="Toggle Sales Coordinator recording playback for iQOO calls">
+                <i data-lucide="${coordPerms['iQOO'] ? 'check-circle-2' : 'lock'}" class="w-3 h-3"></i>
+                <span>iQOO: ${coordPerms['iQOO'] ? 'Allowed (ON)' : 'Locked (OFF)'}</span>
               </button>
             </div>
           `;
         } else if (loggedInUser && (loggedInUser.role && (loggedInUser.role.toLowerCase().includes('coordinator') || loggedInUser.role.toLowerCase().includes('cordinator')))) {
-          roleBanner.className = 'p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-xs flex items-center justify-between gap-3';
+          const coordPerms = getCoordinatorDevicePermissions();
+          roleBanner.className = 'p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-xs flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs';
           roleBanner.innerHTML = `
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold shrink-0">
@@ -23274,13 +23290,25 @@
               </div>
               <div>
                 <span class="font-extrabold text-main block">Sales Coordinator Calling View</span>
-                <span class="text-muted-custom block text-[11px]">Reviewing received &amp; dialed calls across the team. Recording access is managed by Admin.</span>
+                <span class="text-muted-custom block text-[11px]">Reviewing received &amp; dialed calls across the team. Audio access is configured per device by Admin.</span>
               </div>
             </div>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border shrink-0 flex items-center gap-1 ${canListenRecordings ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border-amber-500/40'}">
-              <i data-lucide="${canListenRecordings ? 'unlock' : 'lock'}" class="w-3 h-3"></i>
-              <span>${canListenRecordings ? 'Audio Playback: Allowed' : 'Audio Playback: Locked by Admin'}</span>
-            </span>
+            <!-- Per-Device Coordinator Badges -->
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <span class="text-[11px] text-muted-custom font-bold">Your Device Audio Access:</span>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1 ${coordPerms['OnePlus'] ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border-rose-500/40'}">
+                <i data-lucide="${coordPerms['OnePlus'] ? 'check-circle-2' : 'lock'}" class="w-3 h-3"></i>
+                <span>OnePlus: ${coordPerms['OnePlus'] ? 'Allowed' : 'Locked by Admin'}</span>
+              </span>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1 ${coordPerms['Samsung Galaxy'] ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border-rose-500/40'}">
+                <i data-lucide="${coordPerms['Samsung Galaxy'] ? 'check-circle-2' : 'lock'}" class="w-3 h-3"></i>
+                <span>Samsung: ${coordPerms['Samsung Galaxy'] ? 'Allowed' : 'Locked by Admin'}</span>
+              </span>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1 ${coordPerms['iQOO'] ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border-rose-500/40'}">
+                <i data-lucide="${coordPerms['iQOO'] ? 'check-circle-2' : 'lock'}" class="w-3 h-3"></i>
+                <span>iQOO: ${coordPerms['iQOO'] ? 'Allowed' : 'Locked by Admin'}</span>
+              </span>
+            </div>
           `;
         } else {
           roleBanner.className = 'p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-xs flex items-start sm:items-center justify-between gap-3';
@@ -23339,7 +23367,7 @@
         if (!c) return false;
         if (typeof isGhostCallRecord === 'function' && isGhostCallRecord(c)) return false;
         const num = String(c.caller_number || c.phone || '');
-        if (num.includes('9999988888') || num.includes('8000000000') || c.id === 'call-log-1793081339671-686') return false;
+        if (num.includes('9999988888') || num.includes('8000000000') || num.includes('9999900001') || c.id === 'call-log-1793081339671-686') return false;
         return true;
       });
 
@@ -23587,15 +23615,30 @@
               `}
             </td>
             <td class="p-3.5 whitespace-nowrap min-w-[220px]">
-              ${(recAudio) ? `
-                <div class="flex items-center gap-2.5">
-                  <button type="button" data-call-play-btn="${call.id}" onclick="playInlineCallAudio('${call.id}')" class="px-3.5 py-1.5 rounded-xl ${isPlayingThis ? 'bg-amber-500 text-slate-950 font-black animate-pulse shadow-md' : 'bg-emerald-600 hover:bg-emerald-700 text-white font-black'} text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs shrink-0" title="Listen Audio Recording Inside CRM">
-                    <i data-lucide="${isPlayingThis ? 'pause' : 'play'}" class="w-3.5 h-3.5 fill-current"></i>
-                    <span>${isPlayingThis ? 'Pause' : 'Play Recording'}</span>
-                  </button>
-                  <span class="font-mono font-black text-main text-xs">${formatCallDuration(call.duration || 45)}</span>
-                </div>
-              ` : isMissed ? `
+              ${(recAudio) ? (() => {
+                const canListenThis = (typeof canUserListenToDeviceRecording === 'function') ? canUserListenToDeviceRecording(call) : true;
+                const canDev = (typeof getCanonicalDeviceName === 'function') ? getCanonicalDeviceName(call.deviceName || call.device_name || call.staff_name) : 'Device';
+                if (!canListenThis) {
+                  return `
+                    <div class="flex items-center gap-2.5">
+                      <button type="button" onclick="showToast('Permission Restricted: Admin has locked recording playback for ' + '${escapeHtml(canDev)}' + '.', 'warning')" class="px-3 py-1.5 rounded-xl bg-subtle text-amber-500/80 dark:text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5 cursor-not-allowed shrink-0" title="Recording playback for ${escapeHtml(canDev)} is locked by Admin for Sales Coordinator">
+                        <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-500"></i>
+                        <span>🔒 Audio Locked</span>
+                      </button>
+                      <span class="font-mono font-black text-muted-custom text-xs">${formatCallDuration(call.duration || 45)}</span>
+                    </div>
+                  `;
+                }
+                return `
+                  <div class="flex items-center gap-2.5">
+                    <button type="button" data-call-play-btn="${call.id}" onclick="playInlineCallAudio('${call.id}')" class="px-3.5 py-1.5 rounded-xl ${isPlayingThis ? 'bg-amber-500 text-slate-950 font-black animate-pulse shadow-md' : 'bg-emerald-600 hover:bg-emerald-700 text-white font-black'} text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs shrink-0" title="Listen Audio Recording Inside CRM">
+                      <i data-lucide="${isPlayingThis ? 'pause' : 'play'}" class="w-3.5 h-3.5 fill-current"></i>
+                      <span>${isPlayingThis ? 'Pause' : 'Play Recording'}</span>
+                    </button>
+                    <span class="font-mono font-black text-main text-xs">${formatCallDuration(call.duration || 45)}</span>
+                  </div>
+                `;
+              })() : isMissed ? `
                 <span class="px-2.5 py-1 rounded-xl bg-subtle text-muted-custom border border-main text-xs font-bold flex items-center gap-1.5 w-max">
                   <i data-lucide="phone-missed" class="w-3 h-3 text-rose-500"></i>
                   <span>0s (Missed)</span>
@@ -23993,14 +24036,13 @@
     window.closeFloatingAudioBar = closeFloatingAudioBar;
 
     function playInlineCallAudio(callId) {
-      const isSuperAdmin = isCurrentUserSuperAdmin();
-      const canListen = isSuperAdmin || userHasPermission('calls_listen_recording');
-      if (!canListen) {
-        showToast('Permission Denied: Recording audio playback is restricted by Admin.', 'error');
-        return;
-      }
       const call = callLogs.find(c => c.id === callId);
       if (!call) return;
+      if (typeof canUserListenToDeviceRecording === 'function' && !canUserListenToDeviceRecording(call)) {
+        const canDev = (typeof getCanonicalDeviceName === 'function') ? getCanonicalDeviceName(call.deviceName || call.device_name || call.staff_name) : 'Device';
+        showToast('Permission Restricted: Admin has locked recording playback for ' + canDev + '.', 'warning');
+        return;
+      }
 
       const audioSrc = (call.recording_url && !call.recording_url.includes('UklGRuRdAABX') && call.recording_url.trim())
         ? call.recording_url
@@ -25934,6 +25976,31 @@
       showToast('✓ Naya Phone ' + nextNum + ' add ho gaya hai! Niche details aur step-by-step setup dekhein.', 'success');
     }
 
+
+    function switchBrandGuide(brandId) {
+      const brands = ['samsung', 'vivo', 'oneplus', 'xiaomi', 'foldersync'];
+      brands.forEach(b => {
+        const el = document.getElementById('brand-guide-' + b);
+        const btn = document.getElementById('brand-btn-' + b);
+        if (el) {
+          if (b === brandId) {
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
+          }
+        }
+        if (btn) {
+          if (b === brandId) {
+            btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gold text-slate-950 transition cursor-pointer shadow-xs flex items-center gap-1.5';
+          } else {
+            btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-subtle border border-main text-muted-custom hover:text-main transition cursor-pointer flex items-center gap-1.5';
+          }
+        }
+      });
+      if (window.lucide) lucide.createIcons();
+    }
+    window.switchBrandGuide = switchBrandGuide;
+
     function openMultiPhoneSetupModal() {
       const modal = document.getElementById('multi-phone-setup-modal');
       if (modal) {
@@ -26066,47 +26133,249 @@
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/15 text-blue-400 border border-blue-500/30">1-Time 3 Minute Setup</span>
           </div>
 
-          <!-- Voice Recording: Samsung Native Auto-Call Recording (100% Automatic) -->
-          <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/30 space-y-2.5 shadow-xs">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2 font-bold text-emerald-400 text-xs">
-                <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-xs flex items-center justify-center border border-emerald-500/30 shrink-0">🎙️</span>
-                <span>Automatic Call Voice Recording (Samsung Native Auto Record)</span>
+          <!-- BRAND-SPECIFIC RECORDING & HARDWARE SETUP SELECTOR -->
+          <div class="p-4 rounded-2xl bg-card border border-purple-500/30 space-y-3 shadow-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-main/50">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs">
+                  <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                </div>
+                <span class="text-xs font-bold text-main">Apne Phone Ka Brand Chunein (Hardware Auto-Recording &amp; Settings):</span>
               </div>
-              <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">100% Automatic · No Announcement</span>
+              <span class="text-[10px] text-purple-400 font-semibold">1-Click Brand Guides</span>
             </div>
-            <p class="text-[11px] text-main leading-relaxed">
-              Samsung Galaxy phones me built-in hardware <b>Auto Call Recording</b> hoti hai. Isse incoming &amp; outgoing calls ki crystal clear voice bina kisi app ya warning ke record hoti hai:
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
-              <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                  <i data-lucide="phone" class="w-3.5 h-3.5"></i>
-                  <span>1. Dialer Settings Kholein</span>
+
+            <!-- Brand Selection Buttons -->
+            <div class="flex flex-wrap gap-2" id="brand-guide-tabs">
+              <button type="button" onclick="switchBrandGuide('samsung')" id="brand-btn-samsung" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gold text-slate-950 transition cursor-pointer shadow-xs flex items-center gap-1.5">
+                <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+                <span>📱 Samsung Galaxy</span>
+              </button>
+              <button type="button" onclick="switchBrandGuide('vivo')" id="brand-btn-vivo" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-subtle border border-main text-muted-custom hover:text-main transition cursor-pointer flex items-center gap-1.5">
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                <span>⚡ Vivo / iQOO (Zaroori)</span>
+              </button>
+              <button type="button" onclick="switchBrandGuide('oneplus')" id="brand-btn-oneplus" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-subtle border border-main text-muted-custom hover:text-main transition cursor-pointer flex items-center gap-1.5">
+                <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+                <span>🔥 OnePlus / Oppo / Realme</span>
+              </button>
+              <button type="button" onclick="switchBrandGuide('xiaomi')" id="brand-btn-xiaomi" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-subtle border border-main text-muted-custom hover:text-main transition cursor-pointer flex items-center gap-1.5">
+                <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+                <span>📲 Xiaomi / Redmi / POCO</span>
+              </button>
+              <button type="button" onclick="switchBrandGuide('foldersync')" id="brand-btn-foldersync" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 transition cursor-pointer flex items-center gap-1.5">
+                <i data-lucide="cloud" class="w-3.5 h-3.5"></i>
+                <span>☁️ FolderSync (Auto Drive Upload)</span>
+              </button>
+            </div>
+
+            <!-- Brand 1: Samsung Galaxy Guide -->
+            <div id="brand-guide-samsung" class="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/30 space-y-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2 font-bold text-emerald-400 text-xs">
+                  <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-xs flex items-center justify-center border border-emerald-500/30 shrink-0">1</span>
+                  <span>Samsung Galaxy: Built-in Hardware Auto Call Recording</span>
                 </div>
-                <p class="text-muted-custom text-[10px]">Apne Samsung phone ka dialer kholein, upar right me <b>3 dots (⋮)</b> dabayein ➔ <b>Settings</b> par click karein.</p>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">100% Automatic · No Warning</span>
               </div>
-              <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                  <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                  <span>2. Record Calls Chunein</span>
+              <p class="text-[11px] text-main leading-relaxed">
+                Samsung Galaxy me native recording hoti hai jo dono taraf ki voice crystal-clear record karti hai bina kisi announcement ke:
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                    <span>1. Dialer Settings</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Samsung Phone dialer kholein ➔ <b>3 dots (⋮)</b> dabayein ➔ <b>Settings</b> par tap karein.</p>
                 </div>
-                <p class="text-muted-custom text-[10px]"><b>"Record calls"</b> me jayein ➔ <b>"Auto record calls"</b> ko <b>ON</b> karein aur <b>"All calls"</b> select karein.</p>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+                    <span>2. Record Calls On</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]"><b>"Record calls"</b> me jayein ➔ <b>"Auto record calls"</b> ko <b>ON</b> karein aur <b>"All calls"</b> chunein.</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <i data-lucide="battery-charging" class="w-3.5 h-3.5"></i>
+                    <span>3. Battery Unrestricted</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Settings ➔ Apps ➔ MacroDroid &amp; FolderSync ➔ Battery ➔ <b>"Unrestricted"</b> select karein.</p>
+                </div>
               </div>
-              <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
-                <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                  <i data-lucide="cloud-lightning" class="w-3.5 h-3.5"></i>
-                  <span>3. 100% Automatic Background Sync</span>
-                </div>
-                <p class="text-muted-custom text-[10px]">Call end hote hi MacroDroid phone ki voice recording background me CRM par auto-upload kar deta hai — aapko phone ya CRM me kuch bhi manually nahi dabana padega!</p>
+              <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 flex items-center gap-1.5">
+                <i data-lucide="folder" class="w-3.5 h-3.5 shrink-0"></i>
+                <span>Samsung Recording Folder: <b>/Internal storage/Recordings/Call/</b> (.m4a files)</span>
               </div>
             </div>
-            <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 flex flex-wrap items-center justify-between gap-2">
-              <span class="flex items-center gap-1.5">
-                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 shrink-0"></i>
-                <span>Samsung Phone recordings folder: <b>/Internal storage/Recordings/Call/</b> (Zero Manual Upload)</span>
-              </span>
-              <span class="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40">⚡ Hands-Free Auto Sync</span>
+
+            <!-- Brand 2: Vivo / iQOO Guide (CRITICAL) -->
+            <div id="brand-guide-vivo" class="p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-amber-500/10 border border-purple-500/30 space-y-2.5 hidden">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2 font-bold text-purple-400 text-xs">
+                  <span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 font-extrabold text-xs flex items-center justify-center border border-purple-500/30 shrink-0">2</span>
+                  <span>Vivo / iQOO: Secret Dialer Code &amp; iManager Setup (Zaroori)</span>
+                </div>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold">Must Follow for iQOO/Vivo</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-[11px] text-rose-300 space-y-1">
+                <div class="font-bold flex items-center gap-1.5 text-rose-400">
+                  <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                  <span>Kyu Zaroori Hai? (Why Default Vivo Fails):</span>
+                </div>
+                <p>Vivo/iQOO me default <i>Google Dialer</i> call recordings ko locked system me chupata hai. FolderSync unhe tabhi upload kar sakta hai jab aap Vivo ka native dialer ON karein:</p>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-purple-400 flex items-center gap-1.5">
+                    <i data-lucide="hash" class="w-3.5 h-3.5"></i>
+                    <span>1. Dialer Secret Code</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Keypad me dial karein: <code class="text-gold font-bold font-mono text-xs">*#*#556611#*#*</code> ➔ <b>"Enable Alternate Phone and Contacts"</b> ko <b>ON</b> karein aur Default Phone banayein.</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-purple-400 flex items-center gap-1.5">
+                    <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                    <span>2. Auto Call Record ON</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Naye Vivo dialer me <b>3 dots (⋮)</b> ➔ Call Settings ➔ <b>Record settings</b> ➔ <b>"Record all calls automatically"</b> chunein.</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-purple-400 flex items-center gap-1.5">
+                    <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                    <span>3. iManager Autostart</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Phone me <b>iManager</b> app kholein ➔ App management ➔ <b>Autostart</b> ➔ MacroDroid &amp; FolderSync dono ko <b>ON</b> karein.</p>
+                </div>
+              </div>
+              <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-[10px] text-purple-300 space-y-1">
+                <div class="font-bold flex items-center gap-1.5">
+                  <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                  <span>Background Power Management (Kill Hone Se Bachayein):</span>
+                </div>
+                <p>Settings ➔ Battery ➔ <b>Background power consumption management</b> ➔ MacroDroid aur FolderSync par tap karein ➔ <b>"High background power usage"</b> select karein. Phir Recent Apps screen me swipe down karke 🔒 Lock icon dabayein.</p>
+              </div>
+              <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 flex items-center gap-1.5">
+                <i data-lucide="folder" class="w-3.5 h-3.5 shrink-0"></i>
+                <span>Vivo/iQOO Recording Folder: <b>/Recordings/Call recordings/</b> (.mp3 ya .wav)</span>
+              </div>
+            </div>
+
+            <!-- Brand 3: OnePlus / Oppo / Realme Guide -->
+            <div id="brand-guide-oneplus" class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border border-amber-500/30 space-y-2.5 hidden">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2 font-bold text-amber-400 text-xs">
+                  <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-extrabold text-xs flex items-center justify-center border border-amber-500/30 shrink-0">3</span>
+                  <span>OnePlus / Oppo / Realme: OxygenOS / ColorOS Call Recording Setup</span>
+                </div>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">OxygenOS &amp; ColorOS</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-amber-400 flex items-center gap-1.5">
+                    <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                    <span>1. Auto Record All Calls</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">OnePlus Phone app kholein ➔ <b>3 dots (⋮)</b> ➔ Settings ➔ <b>Call recording</b> ➔ <b>"Record all calls"</b> ko <b>ON</b> karein.</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-amber-400 flex items-center gap-1.5">
+                    <i data-lucide="battery" class="w-3.5 h-3.5"></i>
+                    <span>2. App Battery Activity</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Settings ➔ Battery ➔ More settings ➔ <b>App battery management</b> ➔ MacroDroid aur FolderSync me <b>"Allow background activity"</b> aur <b>"Allow auto-launch"</b> ON karein.</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-amber-400 flex items-center gap-1.5">
+                    <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                    <span>3. Lock in Recent Tasks</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Recent apps screen kholein, MacroDroid aur FolderSync ke upar <b>3 dots</b> dabayein ➔ <b>Lock</b> chunein.</p>
+                </div>
+              </div>
+              <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 flex items-center gap-1.5">
+                <i data-lucide="folder" class="w-3.5 h-3.5 shrink-0"></i>
+                <span>OnePlus Recording Folder: <b>/Recordings/Call Recordings/</b> ya <b>/Music/Recordings/Call Recordings/</b> (.mp3)</span>
+              </div>
+            </div>
+
+            <!-- Brand 4: Xiaomi / Redmi / POCO Guide -->
+            <div id="brand-guide-xiaomi" class="p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-indigo-500/10 border border-blue-500/30 space-y-2.5 hidden">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2 font-bold text-blue-400 text-xs">
+                  <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 font-extrabold text-xs flex items-center justify-center border border-blue-500/30 shrink-0">4</span>
+                  <span>Xiaomi / Redmi / POCO: MIUI &amp; HyperOS Settings</span>
+                </div>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/40 font-bold">MIUI &amp; HyperOS</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-blue-400 flex items-center gap-1.5">
+                    <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                    <span>1. Call Recording</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Phone app ➔ Settings ➔ Call recording ➔ <b>"Record calls automatically"</b> ko <b>ON</b> karein.</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-blue-400 flex items-center gap-1.5">
+                    <i data-lucide="power" class="w-3.5 h-3.5"></i>
+                    <span>2. Autostart Permission</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Settings ➔ Apps ➔ Permissions ➔ <b>Autostart</b> me MacroDroid aur FolderSync dono ko ON karein.</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-blue-400 flex items-center gap-1.5">
+                    <i data-lucide="battery" class="w-3.5 h-3.5"></i>
+                    <span>3. Battery Saver Off</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Settings ➔ Battery ➔ App battery saver ➔ MacroDroid aur FolderSync dono me <b>"No restrictions"</b> chunein.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Brand 5: FolderSync Setup Guide (Automatic Cloud Voice Sync) -->
+            <div id="brand-guide-foldersync" class="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/30 space-y-2.5 hidden">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2 font-bold text-emerald-400 text-xs">
+                  <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-xs flex items-center justify-center border border-emerald-500/30 shrink-0">☁️</span>
+                  <span>FolderSync: Google Drive Auto-Sync Setup (Har Phone Ke Liye)</span>
+                </div>
+                <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">5-Minute Auto Sync</span>
+              </div>
+              <p class="text-[11px] text-main leading-relaxed">
+                FolderSync app phone me bani audio call recordings ko bina kisi manual kaam ke seedha Google Drive folder me auto-upload kar deti hai:
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+                    <span>1. Accounts (+)</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">FolderSync app kholein ➔ <b>Accounts</b> me jayein ➔ <b>Google Drive</b> connect karein.</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+                    <span>2. Folderpair Banayein</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]"><b>Folderpairs</b> (+) dabayein ➔ Account me <b>Google Drive</b> select karein.</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    <span>3. Sync Direction</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Sync type: <b class="text-gold">"To right folder"</b> (Phone ➔ Drive). Left folder me phone ka Call folder aur Right me Drive folder select karein.</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-card/80 border border-main space-y-1">
+                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                    <span>4. Scheduling</span>
+                  </div>
+                  <p class="text-muted-custom text-[10px]">Scheduling me <b>"Every 5 minutes"</b> lagayein aur <b>"Sync on file changes"</b> ON karein. Bas ho gaya!</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -26128,6 +26397,33 @@
             <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-300 flex items-start gap-2">
               <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
               <span><b>Zaroori Setting:</b> Phone ki <b>Settings -> Apps -> MacroDroid -> Battery Optimization</b> me jaake <b>"Unrestricted" / "Don't Optimize"</b> select karein taaki MacroDroid background me hamesha active rahe.</span>
+            </div>
+          </div>
+
+          <!-- Step: Macro - Outbound Dialed Calls (Phone Se Call Lagai) -->
+          <div class="p-4 rounded-2xl bg-card border border-amber-500/30 space-y-3 shadow-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2 font-bold text-amber-400 text-xs">
+                <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-extrabold text-xs flex items-center justify-center border border-amber-500/30 shrink-0">📞</span>
+                <span>Outbound Calls Macro: Phone Se Dial Ki Gayi Calls (Connected &amp; Not Picked)</span>
+              </div>
+              <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30 font-bold">100% Outbound Tracking</span>
+            </div>
+            <div class="space-y-1.5 text-[11px] text-main">
+              <p>1. MacroDroid me <b>"Add Macro" (+)</b> dabayein.</p>
+              <p>2. <b>Triggers (+)</b> ➔ <b>Call / SMS</b> ➔ <b>Call Ended</b> ➔ <b>Outgoing Call</b> ➔ <b>Any Number</b> select karein.</p>
+              <p>3. <b>Actions (+)</b> ➔ <b>Connectivity / Web</b> ➔ <b>HTTP Request</b> select karein:</p>
+              <div class="pl-4 py-2 space-y-1 text-muted-custom font-mono text-[10px] bg-subtle rounded-xl border border-main/40">
+                <div>• Request Method: <strong class="text-amber-400 font-bold">POST</strong> ya <strong class="text-amber-400 font-bold">GET</strong></div>
+                <div>• Webhook URL: <code class="text-purple-300 font-bold">${webhookUrl}?staff_name=${encodeURIComponent(config.staffName)}&device_name=${encodeURIComponent(config.deviceName)}&customer_number={call_number}&customer_name={call_name}&call_duration={call_duration}&direction=OUTBOUND&call_type=OUTBOUND</code></div>
+              </div>
+              <p class="text-[10px] text-amber-400 font-semibold pt-0.5">⚡ Phone se lagayi gayi har call (chahe baat hui ho ya saamne wale ne na uthai ho) turant CRM me Outbound track hogi!</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <button type="button" onclick="navigator.clipboard.writeText('${webhookUrl}?staff_name=' + encodeURIComponent('${config.staffName}') + '&device_name=' + encodeURIComponent('${config.deviceName}') + '&customer_number={call_number}&customer_name={call_name}&call_duration={call_duration}&direction=OUTBOUND&call_type=OUTBOUND'); showToast('✓ Outbound Dialed Webhook URL copied!', 'success');" class="px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-bold text-[11px] flex items-center gap-1 cursor-pointer">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>📋 Copy Outbound Webhook URL</span>
+              </button>
             </div>
           </div>
 
@@ -26285,6 +26581,89 @@
     }
 
     // ==================== SALES COORDINATOR CALL RECORDING PERMISSION TOGGLE ====================
+
+    // ==================== PER-DEVICE RECORDING PERMISSIONS ====================
+    function getCanonicalDeviceName(devName) {
+      const d = String(devName || '').toLowerCase();
+      if (d.includes('samsung')) return 'Samsung Galaxy';
+      if (d.includes('iq') || d.includes('vivo')) return 'iQOO';
+      return 'OnePlus';
+    }
+    window.getCanonicalDeviceName = getCanonicalDeviceName;
+
+    function getCoordinatorDevicePermissions() {
+      const defaults = {
+        'OnePlus': true,
+        'Samsung Galaxy': false,
+        'iQOO': false
+      };
+      let perms = safeStorageGet('sri_sri_coord_device_permissions', null);
+      if (!perms || typeof perms !== 'object') {
+        perms = JSON.parse(JSON.stringify(defaults));
+        safeStorageSet('sri_sri_coord_device_permissions', perms);
+      }
+      return perms;
+    }
+    window.getCoordinatorDevicePermissions = getCoordinatorDevicePermissions;
+
+    function canUserListenToDeviceRecording(callOrDevice) {
+      // 1. Super Admin has unrestricted master access to ALL devices!
+      if (isCurrentUserSuperAdmin()) return true;
+
+      // 2. Resolve canonical device name
+      let devName = '';
+      if (typeof callOrDevice === 'string') {
+        devName = callOrDevice;
+      } else if (callOrDevice && typeof callOrDevice === 'object') {
+        devName = callOrDevice.deviceName || callOrDevice.device_name || callOrDevice.staff_name || '';
+      }
+      const devKey = getCanonicalDeviceName(devName);
+
+      // 3. Sales Coordinator: Check per-device permissions set by Admin
+      const roleStr = String((loggedInUser && loggedInUser.role) || '').toLowerCase();
+      const emailStr = String((loggedInUser && loggedInUser.email) || '').toLowerCase();
+      const isCoord = roleStr.includes('coordinator') || roleStr.includes('cordinator') || emailStr.includes('coordinator') || emailStr.includes('salescordinator');
+
+      if (isCoord) {
+        const perms = getCoordinatorDevicePermissions();
+        return !!perms[devKey];
+      }
+
+      // 4. Other staff: Standard role check
+      return userHasPermission('calls_listen_recording');
+    }
+    window.canUserListenToDeviceRecording = canUserListenToDeviceRecording;
+
+    function toggleCoordinatorDevicePermission(deviceKey) {
+      if (!isCurrentUserSuperAdmin()) {
+        showToast('Permission Denied: Only Super Admin can change device recording permissions.', 'error');
+        return;
+      }
+      const canDev = getCanonicalDeviceName(deviceKey);
+      const perms = getCoordinatorDevicePermissions();
+      perms[canDev] = !perms[canDev];
+      safeStorageSet('sri_sri_coord_device_permissions', perms);
+
+      // Sync to coordinator user in users list
+      let allUsers = safeStorageGet('sri_sri_users', users || []);
+      const coord = allUsers.find(u => 
+        (u.role && (u.role.toLowerCase().includes('coordinator') || u.role.toLowerCase().includes('cordinator'))) || 
+        (u.email && (u.email.toLowerCase().includes('coordinator') || u.email.toLowerCase().includes('cordinator') || u.email.toLowerCase().includes('salescordinator')))
+      );
+      if (coord) {
+        coord.allowed_recording_devices = perms;
+        safeStorageSet('sri_sri_users', allUsers);
+        users = allUsers;
+        if (typeof syncUserToCloud === 'function') syncUserToCloud(coord);
+      }
+
+      const statusText = perms[canDev] ? 'ALLOWED (ON)' : 'LOCKED (OFF)';
+      showToast('Sales Coordinator recording access for "' + canDev + '" is now ' + statusText + '.', perms[canDev] ? 'success' : 'info');
+      renderTeamCallLogsTable();
+      if (typeof renderStaffManager === 'function') renderStaffManager();
+    }
+    window.toggleCoordinatorDevicePermission = toggleCoordinatorDevicePermission;
+
     function toggleCoordinatorRecordingPermission() {
       if (!isCurrentUserSuperAdmin()) {
         showToast('Only Super Admin can change Sales Coordinator permissions.', 'error');
