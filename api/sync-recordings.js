@@ -1,3 +1,54 @@
+let _cachedSyncData = null;
+let _cachedSyncTime = 0;
+
+const KNOWN_CONTACT_PHONES = {
+  'monu kitchen': '+916280251494',
+  'monu kitchen np': '+916280251494',
+  'parminder singh': '+918558055750',
+  'sushil kumar': '+919815045731',
+  'shr': '+917015274682',
+  'dinesh highland': '+917988695768',
+  'dinesh highland hn no 9': '+917988695768',
+  'jagjeevan gmb': '+919815045732',
+  'jagjeevan gmb mohali': '+919815045732',
+  'nikhil mishra': '+919151610556',
+  'tushar sharma': '+919501653648',
+  'anwarul sir': '+917357441912',
+  'anwarul sir plywood': '+917357441912',
+  'suresh chand': '+919876754841',
+  'rajni rani singla': '+919877865282',
+  'vikram jeet singh': '+918437816715',
+  'flipkart': '18002029898',
+  'flipkart customer service': '18002029898',
+  'sukhwinder singh': '+917814304573',
+  'asam ali': '+916284538873',
+  'satpal singh': '+917015920657',
+  'mohan bni': '+919803353372',
+  'mohan bni id 17': '+919803353372',
+  'megha kumari': '+917503238194',
+  'ranjeet kaur': '+919915911009',
+  'rakesh kumar singh': '+918146795795',
+  'rakesh kalra': '+918146795795',
+  'meenu saxena': '+918146367711',
+  'parag ravish': '+919877808859',
+  'parmjit singh': '+919876111118',
+  'shiv charan': '+919814015003',
+  'rupinder singh': '+917508648100',
+  'manga khan': '+919878685521',
+  'rajender': '+918745036534',
+  'kamlesh jaswal': '+919779947870',
+  'jaimal singh': '+919814017001'
+};
+
+function resolveContactNameToPhone(contactName) {
+  if (!contactName) return '';
+  const clean = String(contactName).toLowerCase().replace(/[\(\)\-]/g, ' ').replace(/\s+/g, ' ').trim();
+  for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
+    if (clean.includes(k) || k.includes(clean)) return p;
+  }
+  return '';
+}
+
 const KNOWN_DRIVE_MAPPINGS = {
   "1jHNtG1sSzcYxrgEZMwu-rXRCFr0LwOB_": {
     "name": "PARMINDER SINGH",
@@ -883,6 +934,11 @@ module.exports = async (req, res) => {
 
   const parsedUrl = url.parse(req.url, true);
   const explicitFolder = parsedUrl.query.folderId;
+  const nowMs = Date.now();
+  if (!parsedUrl.query.force && _cachedSyncData && (nowMs - _cachedSyncTime < 25000)) {
+    sendResponse(res, 200, _cachedSyncData);
+    return;
+  }
 
   const DEVICE_FOLDERS = [
     { id: '1BkI-nrwfevmsxnv7X-6BXruzz5RRaspC', device: 'OnePlus', name: 'OnePlus Calls' },
@@ -1054,7 +1110,8 @@ module.exports = async (req, res) => {
         if (recTime >= CUTOFF_DATE) {
           const isOnePlus = rec.deviceName === 'OnePlus';
           const cName = rec.contactName || (rec.phoneDigits ? 'Direct Phone Call' : (isOnePlus ? 'OnePlus Call (' + (rec.formattedTime || 'Recent') + ')' : 'Direct Customer Call'));
-          const cNum = rec.phone || (rec.contactName ? (rec.contactName + ' (Direct Call)') : 'Direct Phone Call');
+          const resolvedPhone = rec.phone || resolveContactNameToPhone(rec.contactName) || "";
+          const cNum = resolvedPhone || (rec.contactName ? rec.contactName : "Direct Phone Call");
           const devName = rec.deviceName || (isOnePlus ? 'OnePlus' : 'Samsung Galaxy');
           const newCall = {
             id: `call-rec-${rec.id}`,
@@ -1092,17 +1149,31 @@ module.exports = async (req, res) => {
 
     const dedupedCalls = deduplicateCalls(calls);
 
+    // Sanitize any missing phone numbers using KNOWN_CONTACT_PHONES
+    dedupedCalls.forEach(c => {
+      const curNum = c.caller_number || c.phone || '';
+      if (!curNum || !/\d{5,}/.test(curNum) || curNum.includes('Direct Call') || curNum.includes('Direct Phone')) {
+        const p = resolveContactNameToPhone(c.caller_name || c.leadName);
+        if (p) {
+          c.caller_number = p;
+          c.phone = p;
+        }
+      }
+    });
+
     try {
       fs.writeFileSync(CALL_LOGS_FILE, JSON.stringify(dedupedCalls, null, 2), 'utf8');
     } catch(e) {}
 
-    return sendResponse(res, 200, {
+    _cachedSyncTime = Date.now();
+    _cachedSyncData = {
       success: true,
       folderId: explicitFolder || DEFAULT_FOLDER_ID,
       driveFilesCount: driveRecs.length,
       attachedCount,
       calls: dedupedCalls
-    });
+    };
+    return sendResponse(res, 200, _cachedSyncData);
   } catch(err) {
     console.error('sync-recordings error:', err);
     return sendResponse(res, 500, { success: false, error: err.message });

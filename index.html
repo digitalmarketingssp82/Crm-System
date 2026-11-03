@@ -25131,6 +25131,55 @@
       }
     }
 
+    
+    const KNOWN_CONTACT_PHONES = {
+      'monu kitchen': '+916280251494',
+      'monu kitchen np': '+916280251494',
+      'parminder singh': '+918558055750',
+      'sushil kumar': '+919815045731',
+      'shr': '+917015274682',
+      'dinesh highland': '+917988695768',
+      'dinesh highland hn no 9': '+917988695768',
+      'jagjeevan gmb': '+919815045732',
+      'jagjeevan gmb mohali': '+919815045732',
+      'nikhil mishra': '+919151610556',
+      'tushar sharma': '+919501653648',
+      'anwarul sir': '+917357441912',
+      'anwarul sir plywood': '+917357441912',
+      'suresh chand': '+919876754841',
+      'rajni rani singla': '+919877865282',
+      'vikram jeet singh': '+918437816715',
+      'flipkart': '18002029898',
+      'flipkart customer service': '18002029898',
+      'sukhwinder singh': '+917814304573',
+      'asam ali': '+916284538873',
+      'satpal singh': '+917015920657',
+      'mohan bni': '+919803353372',
+      'mohan bni id 17': '+919803353372',
+      'megha kumari': '+917503238194',
+      'ranjeet kaur': '+919915911009',
+      'rakesh kumar singh': '+918146795795',
+      'rakesh kalra': '+918146795795',
+      'meenu saxena': '+918146367711',
+      'parag ravish': '+919877808859',
+      'parmjit singh': '+919876111118',
+      'shiv charan': '+919814015003',
+      'rupinder singh': '+917508648100',
+      'manga khan': '+919878685521',
+      'rajender': '+918745036534',
+      'kamlesh jaswal': '+919779947870',
+      'jaimal singh': '+919814017001'
+    };
+
+    function resolveContactNameToPhone(contactName) {
+      if (!contactName) return '';
+      const clean = String(contactName).toLowerCase().replace(/[\(\)\-]/g, ' ').replace(/\s+/g, ' ').trim();
+      for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
+        if (clean.includes(k) || k.includes(clean)) return p;
+      }
+      return '';
+    }
+  
     async function syncRecordingsFromDrive(isSilent = false) {
       const roleStr = String((loggedInUser && loggedInUser.role) || '').toLowerCase();
       const emailStr = String((loggedInUser && loggedInUser.email) || '').toLowerCase();
@@ -25713,6 +25762,14 @@
                 dc.caller_number = km.phone;
                 dc.phone = km.phone;
                 dc.duration = km.dur;
+              }
+              const dNum = dc.caller_number || dc.phone || '';
+              if (!dNum || !/\d{5,}/.test(dNum) || dNum.includes('Direct Call') || dNum.includes('Direct Phone')) {
+                const p = resolveContactNameToPhone(dc.caller_name || dc.leadName);
+                if (p) {
+                  dc.caller_number = p;
+                  dc.phone = p;
+                }
               }
               const exIdx = callLogs.findIndex(c => isSamePhysicalCall(c, dc));
               if (exIdx === -1) {
@@ -26313,11 +26370,22 @@
           }
         }
         const effectiveLeadName = linkedLead ? linkedLead.name : (call.caller_name && !call.caller_name.startsWith("Direct Call") ? call.caller_name : (call.leadName && !call.leadName.startsWith("Direct Call") ? call.leadName : ""));
-        let effectivePhone = (linkedLead && linkedLead.phone) ? linkedLead.phone : (call.phone || call.caller_number || "—");
-        if (/[a-zA-Z]/.test(effectivePhone) || effectivePhone.replace(/\D/g, '').length < 5) {
-          if (linkedLead && linkedLead.phone) effectivePhone = linkedLead.phone;
-          else if (callPhoneClean && callPhoneClean.length >= 10) effectivePhone = '+91' + callPhoneClean;
-          else effectivePhone = '—';
+        let effectivePhone = (linkedLead && linkedLead.phone) ? linkedLead.phone : (call.phone || call.caller_number || "");
+        if (!effectivePhone || /[a-zA-Z]/.test(effectivePhone) || effectivePhone.replace(/\D/g, '').length < 7) {
+          if (linkedLead && linkedLead.phone) {
+            effectivePhone = linkedLead.phone;
+          } else if (callPhoneClean && callPhoneClean.length === 10) {
+            effectivePhone = '+91' + callPhoneClean;
+          } else {
+            const p = (typeof resolveContactNameToPhone === 'function') ? resolveContactNameToPhone(effectiveLeadName || call.caller_name || call.leadName) : '';
+            if (p) {
+              effectivePhone = p;
+              call.phone = p;
+              call.caller_number = p;
+            } else {
+              effectivePhone = '—';
+            }
+          }
         }
 
         return `
@@ -26370,8 +26438,8 @@
                 </div>
               `}
               <div class="flex items-center gap-2 mt-1">
-                <span onclick="editCallLogPhoneNumber('${call.id}')" title="Click to edit phone number" class="font-mono text-xs text-amber-600 dark:text-amber-400 font-extrabold select-text cursor-pointer hover:underline flex items-center gap-1 group">
-                  <span>${escapeHtml(effectivePhone)}</span>
+                <span onclick="editCallLogPhoneNumber('${call.id}')" title="Click to edit or add phone number" class="font-mono text-xs text-amber-600 dark:text-amber-400 font-extrabold select-text cursor-pointer hover:underline flex items-center gap-1 group">
+                  <span>${effectivePhone !== '—' ? escapeHtml(effectivePhone) : '<span class="text-amber-500 font-bold opacity-80">+91 · Click to Add Phone</span>'}</span>
                   <i data-lucide="pencil" class="w-2.5 h-2.5 text-muted-custom opacity-50 group-hover:opacity-100 transition"></i>
                 </span>
               </div>
@@ -28671,10 +28739,13 @@
     window.renderTeamCallLogsTable = renderTeamCallLogsTable;
     window.filterTeamCallLogs = filterTeamCallLogs;
     window.refreshTeamCallLogs = function() {
+      // 1. Instant local render (0ms response)
+      if (typeof renderTeamCallLogsTable === 'function') {
+        renderTeamCallLogsTable();
+      }
+      // 2. Background sync from Drive/Vercel (non-blocking)
       if (typeof syncRecordingsFromDrive === 'function') {
         syncRecordingsFromDrive(false);
-      } else if (typeof renderTeamCallLogsTable === 'function') {
-        renderTeamCallLogsTable();
       }
     };
     window.autoTranscribeCurrentCall = autoTranscribeCurrentCall;
@@ -29305,7 +29376,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2 font-bold text-emerald-900 dark:text-emerald-400 text-xs">
                 <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-900 font-black text-xs flex items-center justify-center border border-emerald-300 shrink-0">2</span>
-                <span>Macro 1 Banayein: Connected Calls + Automatic Voice Recording Upload</span>
+                <span>Macro 1: Connected Calls &amp; Inbound Call Log Webhook</span>
               </div>
               <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-950 font-bold border border-emerald-300">100% Automatic · Zero Manual Upload</span>
             </div>
@@ -29326,7 +29397,18 @@
                   <div class="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-300 dark:border-slate-800 font-mono text-[11px] text-slate-950 dark:text-slate-50 select-all break-all leading-relaxed shadow-2xs">${webhookUrl}?staff_name=${encodeURIComponent(config.staffName)}&device_name=${encodeURIComponent(config.deviceName)}&customer_number={call_number}&call_duration={call_duration}&call_type={call_type}</div>
                 </div>
               </div>
-              <p class="text-xs text-slate-800 dark:text-slate-200 font-normal pt-1">⚡ Is setting ke baad call end hote hi phone recording automatically CRM me pahunch jayegi, aapko manually upload karne ki zaroorat nahi padegi!</p>
+              <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700/60 text-xs text-slate-900 dark:text-slate-100 space-y-1 my-2">
+                <div class="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                  <span>⚠️ Zaroori Dhyaan Dein (EISDIR Error Se Bachne Ke Liye):</span>
+                </div>
+                <p class="font-normal text-slate-800 dark:text-slate-200 leading-relaxed">
+                  MacroDroid ke HTTP Request me <b>"File to Attach" / "Content Body File"</b> me koi bhi folder (jaise <code>/Recordings/Call</code>) <b>select ya attach mat karein</b>! Agar aap folder select karenge to Android <code>open failed: EISDIR (Is a directory)</code> error dega kyunki folder koi file nahi hoti.<br>
+                  • <b>MacroDroid ka kaam:</b> Sirf Call Log Webhook bhejna (Number, Name, Duration, Time).<br>
+                  • <b>Voice Recording Audio Upload ke liye:</b> Sirf <b>FolderSync</b> app use karein jo <code>/Recordings/Call/</code> folder ki sari audio files automatically Google Drive me upload karta hai!
+                </p>
+              </div>
+              <p class="text-xs text-slate-800 dark:text-slate-200 font-normal pt-1">⚡ Is setting ke baad call end hote hi call log turant CRM me pahunch jayegi!</p>
             </div>
 
             <!-- 1-Click Copy Buttons -->
