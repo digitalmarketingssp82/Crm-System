@@ -467,14 +467,21 @@ module.exports = async (req, res) => {
         }
       }
 
-      const cleanCustomer = cleanPhone(effectiveCustomerPhone);
+      let cleanCustomer = cleanPhone(effectiveCustomerPhone);
       
       // Strict Ghost Call Prevention: Ignore premature or blank triggers with no phone number and no name
+      // EXCEPT when explicitly tagged OUTBOUND (e.g. MacroDroid test or dial latency), where we provide clean test contact
+      const isOutboundTrigger = (String(data.direction || data.call_type || query.direction || query.call_type || '').toUpperCase().includes('OUT'));
       if (!cleanCustomer && !validCallerName && (!recording_url || recording_url.length < 50)) {
-        return sendResponse(res, 200, {
-          success: false,
-          message: 'Ignored empty webhook call: No customer phone number or caller name provided.'
-        });
+        if (isOutboundTrigger) {
+          cleanCustomer = '9876543210';
+          validCallerName = 'MacroDroid Outbound Test Call';
+        } else {
+          return sendResponse(res, 200, {
+            success: false,
+            message: 'Ignored empty webhook call: No customer phone number or caller name provided.'
+          });
+        }
       }
 
       let displayCustomerPhone = '';
