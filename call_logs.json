@@ -1,5 +1,24 @@
 [
   {
+    "id": "call-log-1793795559731-355",
+    "lead_id": "lead-incoming-1793795559731",
+    "caller_number": "+919888810811 (Harvinder)",
+    "caller_name": "Harvinder",
+    "receiver_number": "",
+    "call_duration": 25,
+    "recording_url": "",
+    "ai_summary": "",
+    "direction": "INBOUND",
+    "call_outcome": "Connected",
+    "staff_name": "iQOO",
+    "device_name": "iQOO",
+    "created_at": "2026-11-04T12:32:39.731Z",
+    "time": "04 Nov, 06:02 PM",
+    "outcome": "Connected",
+    "duration": 25,
+    "callOutcome": "Connected"
+  },
+  {
     "id": "call-rec-1Qd7sd0_lreRAf7fgObGukm15QfPIEvTF",
     "caller_number": "Sanju Sir Plywoods",
     "phone": "Sanju Sir Plywoods",

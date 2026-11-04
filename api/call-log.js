@@ -446,7 +446,7 @@ module.exports = async (req, res) => {
       const receiver_number = String(data.receiver_number || data.receiverNumber || data.to || data.To || data.dialed || '').trim();
       const customer_number = String(data.customer_number || data.customer_phone || data.phone || data.phone_number || '').trim();
       const rawCallerName = String(data.customer_name || data.customerName || data.caller_name || data.callerName || data.contact_name || data.name || data.company || '').trim();
-      const validCallerName = (rawCallerName && rawCallerName !== '{call_name}' && rawCallerName !== 'null' && rawCallerName !== 'undefined') ? rawCallerName : '';
+      let validCallerName = (rawCallerName && rawCallerName !== '{call_name}' && rawCallerName !== 'null' && rawCallerName !== 'undefined') ? rawCallerName : '';
 
       // Determine customer phone & handle spam / unknown / unsaved numbers cleanly
       let effectiveCustomerPhone = customer_number || caller_number || receiver_number || '';
@@ -473,15 +473,8 @@ module.exports = async (req, res) => {
       // EXCEPT when explicitly tagged OUTBOUND (e.g. MacroDroid test or dial latency), where we provide clean test contact
       const isOutboundTrigger = (String(data.direction || data.call_type || query.direction || query.call_type || '').toUpperCase().includes('OUT'));
       if (!cleanCustomer && !validCallerName && (!recording_url || recording_url.length < 50)) {
-        if (isOutboundTrigger) {
-          cleanCustomer = '9876543210';
-          validCallerName = 'MacroDroid Outbound Test Call';
-        } else {
-          return sendResponse(res, 200, {
-            success: false,
-            message: 'Ignored empty webhook call: No customer phone number or caller name provided.'
-          });
-        }
+        cleanCustomer = '9888810811';
+        validCallerName = isOutboundTrigger ? 'iQOO Outbound Test' : 'iQOO Companion Test';
       }
 
       let displayCustomerPhone = '';
@@ -654,8 +647,8 @@ module.exports = async (req, res) => {
       if (pendingOneplusRecIdx !== -1) {
         allLogs[pendingOneplusRecIdx].caller_number = displayCustomerPhone || cleanCustomer;
         allLogs[pendingOneplusRecIdx].phone = displayCustomerPhone || cleanCustomer;
-        allLogs[pendingOneplusRecIdx].caller_name = validCallerName || lead_name || cleanCustomer;
-        allLogs[pendingOneplusRecIdx].leadName = validCallerName || lead_name || cleanCustomer;
+        allLogs[pendingOneplusRecIdx].caller_name = validCallerName || cleanCustomer || 'Direct Customer';
+        allLogs[pendingOneplusRecIdx].leadName = validCallerName || cleanCustomer || 'Direct Customer';
         allLogs[pendingOneplusRecIdx].lead_id = lead_id || allLogs[pendingOneplusRecIdx].lead_id;
         if (call_duration > 0) allLogs[pendingOneplusRecIdx].call_duration = call_duration;
         allLogs[pendingOneplusRecIdx].call_outcome = call_outcome;
