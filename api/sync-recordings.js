@@ -70,6 +70,14 @@ function resolveContactNameToPhone(contactName) {
 }
 
 const KNOWN_DRIVE_MAPPINGS = {
+  "1on8TzhkXrnG2F-K8fA6SY9srlnNZSCpE": { "name": "+917942748821", "phone": "+917942748821", "dur": 26, "time": "05 Nov, 01:38 PM", "device": "OnePlus", "dir": "INBOUND", "file": "+917942748821-2611051337.mp3" },
+  "1HcI8qnsAsO4PmSvl9YVbD3pgQUSgU69e": { "name": "+918427761777", "phone": "+918427761777", "dur": 225, "time": "05 Nov, 01:35 PM", "device": "OnePlus", "dir": "INBOUND", "file": "+918427761777-2611051332.mp3" },
+  "1v6HE2E6CufBnzsJ9oBdmgjxJ_dCNHrvN": { "name": "9466609171", "phone": "+919466609171", "dur": 42, "time": "05 Nov, 01:21 PM", "device": "iQOO", "dir": "OUTBOUND", "file": "9466609171-2611051320.mp3" },
+  "1sAcuoUO6hJhFQIi0r8SGLOYnxwA-YLMa": { "name": "AKSHAY BHATNAGAR", "phone": "+918287589854", "dur": 51, "time": "05 Nov, 01:30 PM", "device": "OnePlus", "dir": "INBOUND", "file": "AKSHAY BHATNAGAR-2611051329.mp3" },
+  "12oZbi1MQ5TTcwimtmJU69f_bHvmjUB51": { "name": "Akash Gupta Ambala", "phone": "+919034236263", "dur": 34, "time": "05 Nov, 12:54 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Akash Gupta Ambala-2611051253.mp3" },
+  "1fDK3IyrKMBBa8CgqBfzT7MzKROp3mivN": { "name": "Fakir Chand", "phone": "+919465061786", "dur": 73, "time": "05 Nov, 12:56 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Fakir Chand-2611051232.mp3" },
+  "1LHCu17VhfALSe97YgZTv7MfUAn2hjmMS": { "name": "KIRANJOT SINGH", "phone": "+919872412345", "dur": 39, "time": "05 Nov, 02:56 PM", "device": "OnePlus", "dir": "INBOUND", "file": "KIRANJOT SINGH-2611051456.mp3" },
+  "1AzDIMD3Y961_qeeWC53TglNKM_ILQphF": { "name": "( Spam Alert From Jio) Mazed Mallick", "phone": "+918293805138", "dur": 45, "time": "05 Nov, 12:13 PM", "device": "OnePlus", "dir": "INBOUND", "file": "( Spam Alert From Jio) Mazed Mallick-2611051213.mp3" },
   "1mDYWSyB2RMebaSiYYc6Uky4ne6TCWh4Q": {
     "name": "Poonam (Harvinder)",
     "phone": "+919888810811",
@@ -794,7 +802,7 @@ try {
 function fetchDriveFolderHTML(folderId) {
   return new Promise((resolve, reject) => {
     // sort=14&direction=d sorts by Last Modified date descending to always get the newest call recordings first
-    const fetchUrl = `https://drive.google.com/drive/folders/${folderId}?sort=14&direction=d&_t=${Date.now()}`;
+    const fetchUrl = `https://drive.google.com/embeddedfolderview?id=${folderId}&sort=14&direction=d&_t=${Date.now()}`;
     https.get(fetchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -1149,6 +1157,9 @@ module.exports = async (req, res) => {
           matchedCall.audioUrl = rec.audioUrl;
           matchedCall.drive_file_id = rec.id;
           matchedCall.hasAudio = true;
+          matchedCall.outcome = 'Connected';
+          matchedCall.call_outcome = 'Connected';
+          matchedCall.callOutcome = 'Connected';
           if (!matchedCall.duration || matchedCall.duration === 0) {
             matchedCall.duration = rec.approxDuration;
           }
