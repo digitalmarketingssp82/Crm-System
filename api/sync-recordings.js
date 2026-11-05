@@ -1062,12 +1062,12 @@ module.exports = async (req, res) => {
 
       const isSamsungFormat = cleanName.match(/^Call recording\s+/i);
 
-      if (r.originFolderDevice === 'iQOO') {
+      if (r.originFolderDevice === 'iQOO' || r.deviceName === 'iQOO') {
         r.deviceName = 'iQOO';
       } else if (isSamsungFormat) {
         r.deviceName = 'Samsung Galaxy';
       } else {
-        r.deviceName = 'OnePlus';
+        r.deviceName = r.deviceName || 'OnePlus';
       }
 
       // If already seen, dedicated folder takes precedence over auto/legacy folder
@@ -1138,8 +1138,13 @@ module.exports = async (req, res) => {
       }
 
       if (matchedCall) {
-        if (KNOWN_DRIVE_MAPPINGS[rec.id] && KNOWN_DRIVE_MAPPINGS[rec.id].dir) { matchedCall.direction = KNOWN_DRIVE_MAPPINGS[rec.id].dir; matchedCall.call_type = KNOWN_DRIVE_MAPPINGS[rec.id].dir; }
-          if (!matchedCall.recording_url || matchedCall.recording_url.includes('UklGRuRdAABX')) {
+        if (!matchedCall.direction || matchedCall.direction === 'INBOUND') {
+          if (KNOWN_DRIVE_MAPPINGS[rec.id] && KNOWN_DRIVE_MAPPINGS[rec.id].dir) {
+            matchedCall.direction = KNOWN_DRIVE_MAPPINGS[rec.id].dir;
+            matchedCall.call_type = KNOWN_DRIVE_MAPPINGS[rec.id].dir;
+          }
+        }
+        if (!matchedCall.recording_url || matchedCall.recording_url.includes('UklGRuRdAABX')) {
           matchedCall.recording_url = rec.audioUrl;
           matchedCall.audioUrl = rec.audioUrl;
           matchedCall.drive_file_id = rec.id;
@@ -1151,7 +1156,16 @@ module.exports = async (req, res) => {
             matchedCall.caller_name = rec.contactName;
             matchedCall.leadName = rec.contactName;
           }
-          if (rec.deviceName) {
+          const existingDev = String(matchedCall.deviceName || matchedCall.device_name || matchedCall.staff_name || '').toLowerCase();
+          if (existingDev.includes('iq') || existingDev.includes('vivo')) {
+            matchedCall.deviceName = 'iQOO';
+            matchedCall.device_name = 'iQOO';
+            matchedCall.staff_name = 'iQOO';
+          } else if (existingDev.includes('samsung')) {
+            matchedCall.deviceName = 'Samsung Galaxy';
+            matchedCall.device_name = 'Samsung Galaxy';
+            matchedCall.staff_name = 'Samsung Galaxy';
+          } else if (rec.deviceName) {
             matchedCall.deviceName = rec.deviceName;
             matchedCall.device_name = rec.deviceName;
             matchedCall.staff_name = rec.deviceName;

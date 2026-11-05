@@ -24761,7 +24761,17 @@
         }
       }
 
-      // If calls are from DIFFERENT physical devices (e.g. OnePlus vs Samsung vs IQ Device): NEVER MERGE!
+      // Auto-attach Drive recording to companion phone call across shared Drive folder:
+      // When one record has an audio recording and the other does not, and phone numbers match within 30 minutes:
+      const aHasAudio = !!(recA || a.drive_file_id);
+      const bHasAudio = !!(recB || b.drive_file_id);
+      if (phoneA && phoneB && phoneA.length >= 7 && phoneA === phoneB && aHasAudio !== bHasAudio) {
+        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 1800000) {
+          return true; // Match and cleanly attach audio recording!
+        }
+      }
+
+      // If calls are from DIFFERENT physical devices: NEVER MERGE!
       if (devKeyA !== devKeyB) {
         return false;
       }
@@ -24787,8 +24797,6 @@
       }
 
       // 2. On the SAME device, merge audio recording with pending MacroDroid call record (when one has audio and the other does not)
-      const aHasAudio = !!(recA || a.drive_file_id);
-      const bHasAudio = !!(recB || b.drive_file_id);
       if (aHasAudio !== bHasAudio && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 900000) {
         if (phoneA && phoneB && phoneA === phoneB) return true;
         if (nameA && nameB && (nameA === nameB || nameA.includes(nameB) || nameB.includes(nameA)) && nameA !== 'direct phone call' && nameB !== 'direct phone call') return true;
@@ -24835,13 +24843,29 @@
             existing.drive_file_id = call.drive_file_id || existing.drive_file_id;
             existing.duration = call.duration || existing.duration || 45;
           }
-          // The real physical recording device wins! If either record is OnePlus, the merged call is OnePlus!
+          // Preserve real physical phone device (iQOO / Vivo takes top priority over generic Drive folder classification)
           const callDev = String(call.deviceName || call.device_name || call.staff_name || '').toLowerCase();
           const exDev = String(existing.deviceName || existing.device_name || existing.staff_name || '').toLowerCase();
-          if (callDev.includes('oneplus') || exDev.includes('oneplus')) {
+          if (callDev.includes('iq') || exDev.includes('iq') || callDev.includes('vivo') || exDev.includes('vivo')) {
+            existing.deviceName = 'iQOO';
+            existing.device_name = 'iQOO';
+            existing.staff_name = 'iQOO';
+          } else if (callDev.includes('samsung') || exDev.includes('samsung')) {
+            existing.deviceName = 'Samsung Galaxy';
+            existing.device_name = 'Samsung Galaxy';
+            existing.staff_name = 'Samsung Galaxy';
+          } else if (callDev.includes('oneplus') || exDev.includes('oneplus')) {
             existing.deviceName = 'OnePlus';
             existing.device_name = 'OnePlus';
             existing.staff_name = 'OnePlus';
+          }
+
+          // Preserve OUTBOUND direction!
+          const callDir = String(call.direction || call.call_type || '').toUpperCase();
+          const exDir = String(existing.direction || existing.call_type || '').toUpperCase();
+          if (callDir.includes('OUT') || exDir.includes('OUT')) {
+            existing.direction = 'OUTBOUND';
+            existing.call_type = 'OUTBOUND';
           }
           // Merge real phone number from whichever has it
           const callPhone = (typeof extractCleanPhoneNumber === 'function') ? extractCleanPhoneNumber(call.phone || call.caller_number) : String(call.phone || call.caller_number || '').replace(/\D/g, '').slice(-10);

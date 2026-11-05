@@ -281,33 +281,56 @@ async function syncCallLogToFirestore(callLogRecord) {
 
 async function getFirestoreCallLogs() {
   return new Promise((resolve) => {
-    https.get('https://firestore.googleapis.com/v1/projects/crm-f4bf7/databases/(default)/documents/call_logs', (res) => {
+    const postData = JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: 'call_logs' }],
+        orderBy: [{
+          field: { fieldPath: 'created_at' },
+          direction: 'DESCENDING'
+        }],
+        limit: 500
+      }
+    });
+
+    const req = https.request('https://firestore.googleapis.com/v1/projects/crm-f4bf7/databases/(default)/documents:runQuery', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      },
+      timeout: 8000
+    }, (res) => {
       let d = ''; res.on('data', c => d += c);
       res.on('end', () => {
         try {
           const parsed = JSON.parse(d);
-          if (!parsed.documents) return resolve([]);
-          const logs = parsed.documents.map(doc => {
-            const f = doc.fields || {};
+          if (!Array.isArray(parsed)) return resolve([]);
+          const logs = parsed.filter(item => item.document && item.document.fields).map(item => {
+            const f = item.document.fields;
             return {
               id: f.id?.stringValue || '',
               lead_id: f.lead_id?.stringValue || '',
               caller_number: f.caller_number?.stringValue || '',
+              caller_name: f.caller_name?.stringValue || '',
               receiver_number: f.receiver_number?.stringValue || '',
               call_duration: parseInt(f.call_duration?.integerValue || 0, 10),
               recording_url: f.recording_url?.stringValue || '',
               ai_summary: f.ai_summary?.stringValue || '',
               direction: f.direction?.stringValue || 'INBOUND',
               call_outcome: f.call_outcome?.stringValue || 'Connected',
-              staff_name: f.staff_name?.stringValue || 'Samsung Galaxy',
-              device_name: f.device_name?.stringValue || 'Samsung Galaxy',
+              staff_name: f.staff_name?.stringValue || 'OnePlus',
+              device_name: f.device_name?.stringValue || 'OnePlus',
               created_at: f.created_at?.stringValue || ''
             };
           });
           resolve(logs);
         } catch(e) { resolve([]); }
       });
-    }).on('error', () => resolve([]));
+    });
+    req.on('error', () => resolve([]));
+    req.on('timeout', () => { req.destroy(); resolve([]); });
+    req.write(postData);
+    req.end();
   });
 }
 
@@ -431,13 +454,21 @@ module.exports = async (req, res) => {
   // 2. POST (or GET with Call Parameters): Inbound Call Recording Webhook Handler
   if (req.method === 'POST' || isIncomingCallSync) {
     try {
-      // 1. Collect full body buffer if not already parsed (supports direct binary, urlencoded, and multipart uploads from Android)
+      // 1. Safely retrieve req.body without crashing on Vercel's JSON getter
+      let reqBody = null;
+      try {
+        reqBody = req.body;
+      } catch (e) {
+        reqBody = null;
+      }
+
+      // Collect full body buffer if not already parsed (supports direct binary, urlencoded, and multipart uploads from Android)
       let rawBuffer = null;
-      if (Buffer.isBuffer(req.body)) {
-        rawBuffer = req.body;
-      } else if (typeof req.body === 'string') {
-        rawBuffer = Buffer.from(req.body);
-      } else if (!req.body && req.readable) {
+      if (Buffer.isBuffer(reqBody)) {
+        rawBuffer = reqBody;
+      } else if (typeof reqBody === 'string') {
+        rawBuffer = Buffer.from(reqBody);
+      } else if (!reqBody && req.readable) {
         rawBuffer = await new Promise((resolve) => {
           const chunks = [];
           req.on('data', c => chunks.push(c));
@@ -450,8 +481,8 @@ module.exports = async (req, res) => {
       const cType = String((req.headers && req.headers['content-type']) || '').toLowerCase();
       
       // If JSON or parsed object
-      if (typeof req.body === 'object' && !Buffer.isBuffer(req.body) && req.body !== null) {
-        body = req.body;
+      if (typeof reqBody === 'object' && !Buffer.isBuffer(reqBody) && reqBody !== null) {
+        body = reqBody;
       } else if (rawBuffer && rawBuffer.length > 0) {
         const rawStr = rawBuffer.toString('utf8').trim();
         if (rawStr.startsWith('{') && rawStr.endsWith('}')) {
@@ -826,4 +857,11 @@ module.exports = async (req, res) => {
   }
 
   return sendResponse(res, 405, { error: 'Method not allowed' });
+};
+
+// Disable Vercel body parser to prevent 500 Invalid JSON when MacroDroid sends raw text or unquoted variables
+module.exports.config = {
+  api: {
+    bodyParser: false,
+  },
 };
