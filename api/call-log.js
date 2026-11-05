@@ -617,24 +617,22 @@ module.exports = async (req, res) => {
         direction = 'OUTBOUND';
       }
 
-      // Determine Call Outcome:
-      // 1. Explicit outcome parameter from MacroDroid (&call_outcome=Connected or &call_outcome=Missed Call)
-      // 2. Duration > 0 or audio recording exists -> ALWAYS 'Connected'
-      // 3. Trigger type ENDED -> ALWAYS 'Connected'
+      // Determine Authentic Call Outcome & Duration (Zero Fake Duration / Zero Mismatch):
+      // 1. If audio recording exists OR actual call duration > 0: Real talk occurred -> Connected!
       let call_outcome = 'Missed Call';
       const explicitOutcome = String(data.call_outcome || data.outcome || '').toLowerCase();
-      if (explicitOutcome.includes('connect') || explicitOutcome.includes('baat') || rawType.includes('ENDED')) {
-        call_outcome = 'Connected';
-        if (call_duration <= 0) call_duration = 45; // Default talk duration when MacroDroid lacks duration variable
-      } else if (explicitOutcome.includes('miss') || isMissed) {
-        call_outcome = 'Missed Call';
-        call_duration = 0;
-      } else if (call_duration > 0 || (recording_url && recording_url.length > 500)) {
+      const hasAudioData = !!(recording_url && recording_url.length > 50);
+
+      if (hasAudioData || call_duration > 0) {
         call_outcome = 'Connected';
       } else if (direction === 'OUTBOUND') {
-        call_outcome = (call_duration > 0) ? 'Connected' : 'Outbound (Not Picked)';
+        // Outbound call dialed by user where recipient did not answer (duration 0)
+        call_outcome = 'Outbound (Not Picked)';
+        call_duration = 0;
       } else {
+        // Inbound call not answered (duration 0)
         call_outcome = 'Missed Call';
+        call_duration = 0;
       }
 
       // Multi-Phone Staff & Device Identification (Supports OnePlus, Samsung, iQOO)

@@ -7319,8 +7319,8 @@
 
     function isLeadDeleted(lead) {
       if (!lead) return true;
-      if (lead.id === 'lead-test-mohan') return true;
-      if (lead.name && (lead.name.includes('Mohan BNI ID 17') || lead.name === 'Mohan BNI ID 17')) return true;
+      if (lead.id === 'lead-test-mohan' || lead.id === 'lead-test-write-1793097230798') return true;
+      if (lead.name && (lead.name.includes('Mohan BNI ID 17') || lead.name === 'Mohan BNI ID 17' || lead.name.toLowerCase().includes('test write lead'))) return true;
       if (lead.phone) {
         const cleanP = lead.phone.toString().replace(/[^0-9]/g, '').slice(-10);
         if (cleanP === '9803353372') return true;
@@ -7451,13 +7451,13 @@
     // Purge fake auto-created phone leads permanently
     try {
       if (Array.isArray(leads)) {
-        const FAKE_AUTO_LEAD_IDS = new Set(['lead-phone-9803353372', 'lead-phone-8558055750', 'lead-phone-9877808859', 'lead-test-mohan']);
+        const FAKE_AUTO_LEAD_IDS = new Set(['lead-phone-9803353372', 'lead-phone-8558055750', 'lead-phone-9877808859', 'lead-test-mohan', 'lead-test-write-1793097230798']);
         const origLen = leads.length;
         leads = leads.filter(l => {
           if (!l) return false;
           if (FAKE_AUTO_LEAD_IDS.has(l.id)) return false;
-          if (l.id === 'lead-test-mohan') return false;
-          if (l.name && (l.name.includes('Mohan BNI ID 17') || l.name === 'Mohan BNI ID 17')) return false;
+          if (l.id === 'lead-test-mohan' || l.id === 'lead-test-write-1793097230798') return false;
+          if (l.name && (l.name.includes('Mohan BNI ID 17') || l.name === 'Mohan BNI ID 17' || l.name.toLowerCase().includes('test write lead'))) return false;
           const pClean = String(l.phone || '').replace(/\D/g, '').slice(-10);
           if (pClean === '9803353372') return false;
           return true;
@@ -14726,6 +14726,14 @@
 
     function getStoredClientCallLogs() {
       const PHANTOM_CALL_IDS = new Set([
+        'call-log-1793871102399-315',
+        'call-log-1793871100522-384',
+        'call-log-1793870745254-327',
+        'call-log-1793870744125-106',
+        'call-log-1793870743178-968',
+        'call-log-1793870660053-120',
+        'call-log-1793870661068-160',
+        'call-log-1793863004200-384',
         'call-log-1793164320000-2801',
         'call-log-1793162599329-711',
         'call-log-1793181780000-2802',
@@ -14762,6 +14770,8 @@
         } else {
           parsed = parsed.filter(c => {
             if (!c || !c.id || PHANTOM_CALL_IDS.has(c.id)) return false;
+            const cName = String(c.caller_name || c.leadName || '').toLowerCase();
+            if (cName.includes('outbound test') || cName.includes('companion test') || cName.includes('test customer') || cName.includes('live iqoo test') || cName.includes('test unpicked') || cName.includes('test verification') || cName.includes('livetestcheck')) return false;
             const is31Oct = (c.time && c.time.includes('31 Oct')) || (c.created_at && c.created_at.includes('2026-10-31'));
             const isSamsung = String(c.staff_name || c.device_name || c.deviceName || '').toLowerCase().includes('samsung');
             if (is31Oct && isSamsung) return false;
@@ -23193,6 +23203,14 @@
       }
       isCallLogsInitialized = true;
       const PHANTOM_CALL_IDS = new Set([
+        'call-log-1793871102399-315',
+        'call-log-1793871100522-384',
+        'call-log-1793870745254-327',
+        'call-log-1793870744125-106',
+        'call-log-1793870743178-968',
+        'call-log-1793870660053-120',
+        'call-log-1793870661068-160',
+        'call-log-1793863004200-384',
         'call-log-1793442618941-958',
         'call-log-1793442320008-376',
         'call-log-1793425221000-779',
@@ -23263,7 +23281,10 @@
             !(c.phone && (c.phone.includes('7123127269') || c.phone.includes('7814214801') || c.phone.includes('7814214800'))) &&
             !(c.time && c.time.includes('27 Oct')) &&
             !(c.created_at && c.created_at.includes('2026-10-27')) &&
-            !(c.recording_url && c.recording_url.includes('UklGRuRdAABX'))
+            !(c.recording_url && c.recording_url.includes('UklGRuRdAABX')) &&
+            !String(c.caller_name || c.leadName || '').toLowerCase().includes('outbound test') &&
+            !String(c.caller_name || c.leadName || '').toLowerCase().includes('companion test') &&
+            !String(c.caller_number || c.phone || '').toLowerCase().includes('outbound test')
             );
           });
           // Merge any bundled calls that are missing from stored
@@ -23839,18 +23860,21 @@
       const id = String(c.id || '');
       const num = String(c.caller_number || c.phone || c.receiver_number || '');
       if (phoneCallOutcomes[id]) return phoneCallOutcomes[id];
-      if (num.includes('7814435761') || num.includes('7123127270') || id === 'call-log-1793170337104-403' || id === 'call-log-1793188414861-816') {
-        return 'Connected';
-      }
+
       const dur = parseInt(c.duration || c.call_duration || 0, 10);
-      if (dur > 0 || c.hasAudio || c.recording_url || c.audioUrl || c.drive_file_id) {
+      const hasAudio = !!(c.hasAudio || c.recording_url || c.audioUrl || c.drive_file_id);
+      const rawDir = String(c.direction || c.call_type || '').toUpperCase();
+      const isOut = rawDir.includes('OUT') || rawDir.includes('DIAL');
+
+      // 1. If audio recording exists OR actual call duration > 0: talk took place -> ALWAYS Connected!
+      if (hasAudio || dur > 0) {
         return 'Connected';
       }
-      if (num.includes('6239089562') || num.includes('7123127267') || num.includes('7814214801') || id === 'call-log-1793000256969-695') {
-        return 'Missed Call';
+
+      // 2. If duration is 0 and no audio: no conversation occurred!
+      if (isOut) {
+        return 'Outbound (Not Picked)';
       }
-      const raw = String(c.call_outcome || c.outcome || '').toLowerCase();
-      if (raw.includes('connect') || raw.includes('baat')) return 'Connected';
       return 'Missed Call';
     }
     window.getCallOutcomeForRecord = getCallOutcomeForRecord;
@@ -24967,6 +24991,50 @@
     }
     window.toggleCallDirection = toggleCallDirection;
 
+    function toggleCallOutcome(callId) {
+      if (!callId) return;
+      const targetList = (typeof callLogs !== 'undefined' && Array.isArray(callLogs)) ? callLogs : [];
+      const call = targetList.find(c => String(c.id) === String(callId));
+      if (!call) return;
+      const curExact = getCallOutcomeForRecord(call);
+      const isConnected = (curExact === 'Connected');
+      const rawDir = String(call.direction || call.call_type || 'INBOUND').toUpperCase();
+      const isOut = rawDir.includes('OUT') || rawDir.includes('DIAL');
+
+      let newOutcome = '';
+      if (isConnected) {
+        newOutcome = isOut ? 'Outbound (Not Picked)' : 'Missed Call';
+        call.duration = 0;
+        call.call_duration = 0;
+      } else {
+        newOutcome = 'Connected';
+        if (!call.duration || parseInt(call.duration, 10) === 0) {
+          call.duration = 45;
+          call.call_duration = 45;
+        }
+      }
+
+      phoneCallOutcomes[callId] = newOutcome;
+      call.call_outcome = newOutcome;
+      call.outcome = newOutcome;
+      call.callOutcome = newOutcome;
+
+      try {
+        const savedOutcomes = safeStorageGet('sri_sri_call_outcomes', {});
+        savedOutcomes[callId] = newOutcome;
+        safeStorageSet('sri_sri_call_outcomes', savedOutcomes);
+      } catch(e){}
+
+      safeStorageSet('sri_sri_call_logs', targetList);
+      try {
+        localStorage.setItem('crm_team_call_logs', JSON.stringify(targetList));
+      } catch(e){}
+
+      renderTeamCallLogsTable();
+      showToast('Call outcome updated to: ' + newOutcome, 'success');
+    }
+    window.toggleCallOutcome = toggleCallOutcome;
+
     function renderTeamCallLogsTable() {
       initCallLogs();
       renderCallModuleBanner();
@@ -25304,14 +25372,17 @@
         const exactOutcome = getCallOutcomeForRecord(call);
         call.outcome = exactOutcome;
         call.callOutcome = exactOutcome;
-        const isMissed = (exactOutcome === "Missed Call");
-        const isPlayingThis = (currentActiveCallAudioId === call.id);
-
         const recAudio = (call.recording_url && !call.recording_url.includes("UklGRuRdAABX") && call.recording_url.trim())
           ? call.recording_url
           : ((call.audioUrl && !call.audioUrl.includes("UklGRuRdAABX") && call.audioUrl.trim())
             ? call.audioUrl
             : (call.drive_file_id ? ("/api/call-audio?id=" + call.drive_file_id) : ""));
+
+        const durSec = parseInt(call.duration || call.call_duration || 0, 10);
+        const hasVoiceAudio = !!(recAudio && recAudio.length > 50);
+        const isNotConnected = (exactOutcome === "Missed Call" || exactOutcome.includes("Not Picked") || (!hasVoiceAudio && durSec === 0));
+        const isMissed = isNotConnected;
+        const isPlayingThis = (currentActiveCallAudioId === call.id);
 
         // Link to lead ONLY if caller already exists in the real leads database
         const callPhoneClean = (call.phone || call.caller_number || "").replace(/\D/g, "").slice(-10);
@@ -25387,9 +25458,8 @@
                 </div>
               ` : `
                 <div class="flex items-center gap-2">
-                  <span onclick="editCallLogCustomerName('${call.id}')" title="Click to edit contact name" class="font-black text-main text-sm cursor-pointer hover:text-gold transition flex items-center gap-1 group">
-                    <span>${escapeHtml(effectiveLeadName || "Direct Phone Call")}</span>
-                    <i data-lucide="pencil" class="w-2.5 h-2.5 text-muted-custom opacity-50 group-hover:opacity-100 transition"></i>
+                  <span class="font-black text-main text-sm">
+                    ${escapeHtml(effectiveLeadName || "Direct Phone Call")}
                   </span>
                   <button type="button" onclick="openNewLeadModal('${escapeHtml(call.phone && call.phone.match(/\d{5,}/) ? call.phone : "")}', '${escapeHtml(call.caller_name && !call.caller_name.startsWith("Direct Call") ? call.caller_name : "")}')" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-gold/20 text-gold border border-gold/40 hover:bg-gold hover:text-slate-950 transition cursor-pointer shrink-0" title="Convert Call to Lead">
                     + Create Lead
@@ -25397,9 +25467,8 @@
                 </div>
               `}
               <div class="flex items-center gap-2 mt-1">
-                <span onclick="editCallLogPhoneNumber('${call.id}')" title="Click to edit or add phone number" class="font-mono text-xs text-amber-600 dark:text-amber-400 font-extrabold select-text cursor-pointer hover:underline flex items-center gap-1 group">
-                  <span>${effectivePhone !== '—' ? escapeHtml(effectivePhone) : '<span class="text-amber-500 font-bold opacity-80">+91 · Click to Add Phone</span>'}</span>
-                  <i data-lucide="pencil" class="w-2.5 h-2.5 text-muted-custom opacity-50 group-hover:opacity-100 transition"></i>
+                <span class="font-mono text-xs text-amber-600 dark:text-amber-400 font-extrabold select-text">
+                  ${effectivePhone !== '—' ? escapeHtml(effectivePhone) : '<span class="text-slate-400 font-bold opacity-80">No Phone</span>'}
                 </span>
               </div>
             </td>
@@ -25431,17 +25500,11 @@
               })()}
             </td>
             <td class="p-3.5 whitespace-nowrap w-32">
-              ${isMissed ? `
-                <span class="px-3 py-1 rounded-full text-xs font-black ${isOut ? 'bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'} flex items-center gap-1.5 w-max">
-                  <span class="w-1.5 h-1.5 rounded-full ${isOut ? 'bg-amber-500' : 'bg-rose-500'}"></span>
-                  <span>${isOut ? 'Dialed: Not Picked' : 'Missed Call'}</span>
-                </span>
-              ` : `
-                <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 w-max">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Connected</span>
-                </span>
-              `}
+              <button type="button" onclick="toggleCallOutcome('${call.id}')" title="Click to flip Connected / Missed" class="px-3 py-1 rounded-full text-xs font-black ${isMissed ? (isOut ? 'bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30') : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'} flex items-center gap-1.5 w-max cursor-pointer hover:opacity-80 transition text-left">
+                <span class="w-1.5 h-1.5 rounded-full ${isMissed ? (isOut ? 'bg-amber-500' : 'bg-rose-500') : 'bg-emerald-500'}"></span>
+                <span>${isMissed ? (isOut ? 'Dialed: Not Picked' : 'Missed Call') : 'Connected'}</span>
+                <i data-lucide="arrow-left-right" class="w-2.5 h-2.5 opacity-40 ml-0.5"></i>
+              </button>
             </td>
             <td class="p-3.5 whitespace-nowrap min-w-[220px]">
               ${(recAudio) ? (() => {
