@@ -65,6 +65,12 @@ function parsePhoneTimestamp(rawDate, rawTime, rawFull) {
 }
 
 const PHANTOM_CALL_IDS = new Set([
+  'call-log-1793870745254-327', // 05 Nov probe test
+  'call-log-1793870744125-106', // 05 Nov probe test
+  'call-log-1793870743178-968', // 05 Nov probe test
+  'call-log-1793870660053-120', // 05 Nov probe test
+  'call-log-1793870661068-160', // 05 Nov probe test
+  'call-log-1793863004200-384', // 05 Nov test
   'call-log-1793699954352-282',
   'call-log-1793699741363-41',
   'call-log-1793442618941-958', // 31 Oct fake Samsung duplicate
@@ -387,7 +393,9 @@ module.exports = async (req, res) => {
       if (!c) return false;
       if (PHANTOM_CALL_IDS.has(c.id)) return false;
       const num = String(c.caller_number || c.phone || '');
+      const cName = String(c.caller_name || '').toLowerCase();
       if (num.includes('9999988888') || num.includes('8000000000') || c.id === 'call-log-1793081339671-686') return false;
+      if (cName.includes('outbound test') || cName.includes('companion test') || num.includes('outbound test') || num.includes('companion test')) return false;
       // Filter out blank premature ghost calls (e.g. from Call Recording trigger firing with no caller)
       const cNum = String(c.caller_number || c.phone || '').trim();
       const cName = String(c.caller_name || '').toLowerCase();
@@ -566,12 +574,17 @@ module.exports = async (req, res) => {
 
       let cleanCustomer = cleanPhone(effectiveCustomerPhone);
       
-      // Strict Ghost Call Prevention: Ignore premature or blank triggers with no phone number and no name
-      // EXCEPT when explicitly tagged OUTBOUND (e.g. MacroDroid test or dial latency), where we provide clean test contact
-      const isOutboundTrigger = (String(data.direction || data.call_type || query.direction || query.call_type || '').toUpperCase().includes('OUT'));
+      // Strict Ghost Call Prevention: When MacroDroid sends a test probe (no phone number and no recording)
+      // return 200 OK immediately so the phone sees green 200, but DO NOT inject fake calls into the CRM!
       if (!cleanCustomer && !validCallerName && (!recording_url || recording_url.length < 50)) {
-        cleanCustomer = '9888810811';
-        validCallerName = isOutboundTrigger ? 'iQOO Outbound Test' : 'iQOO Companion Test';
+        console.log('[MacroDroid Test Probe]: Verified connection without inserting phantom call log');
+        return sendResponse(res, 200, {
+          success: true,
+          message: 'MacroDroid Webhook Connection Verified - CRM Ready',
+          test: true,
+          status: 'ready',
+          device: device_name || 'iQOO'
+        });
       }
 
       let displayCustomerPhone = '';
