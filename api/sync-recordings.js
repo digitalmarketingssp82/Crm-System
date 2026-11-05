@@ -57,7 +57,18 @@ const KNOWN_CONTACT_PHONES = {
   'manga khan': '+919878685521',
   'rajender': '+918745036534',
   'kamlesh jaswal': '+919779947870',
-  'jaimal singh': '+919814017001'
+  'jaimal singh': '+919814017001',
+      'kiranjot singh': '+919872412345',
+      'kiranjot': '+919872412345',
+      'sanju sir plywoods': '+917814435761',
+      'sanju test': '+917814435761',
+      'daljinder baidwan': '+919814421127',
+      'ajay sharma': '+919813840800',
+      'manoj balai': '+919872019485',
+      'rajiv atri': '+919814120340',
+      'sachin digital marketing interview': '+919876543210',
+      'shweta malik': '+919814804391',
+      'gurpreet singh': '+917527055586',
 };
 
 function resolveContactNameToPhone(contactName) {

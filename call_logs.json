@@ -1,8 +1,8 @@
 [
   {
     "id": "call-rec-1LHCu17VhfALSe97YgZTv7MfUAn2hjmMS",
-    "caller_number": "KIRANJOT SINGH",
-    "phone": "KIRANJOT SINGH",
+    "caller_number": "+919872412345",
+    "phone": "+919872412345",
     "caller_name": "KIRANJOT SINGH",
     "leadName": "KIRANJOT SINGH",
     "call_type": "INBOUND",
@@ -48,7 +48,9 @@
     "drive_file_id": "1on8TzhkXrnG2F-K8fA6SY9srlnNZSCpE",
     "hasAudio": true,
     "duration": 26,
-    "leadName": "Direct Phone Call"
+    "leadName": "Direct Phone Call",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793865934398-819",
@@ -70,7 +72,9 @@
     "drive_file_id": "1HcI8qnsAsO4PmSvl9YVbD3pgQUSgU69e",
     "hasAudio": true,
     "duration": 225,
-    "leadName": "Direct Phone Call"
+    "leadName": "Direct Phone Call",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793865641323-413",
@@ -92,7 +96,9 @@
     "drive_file_id": "1sAcuoUO6hJhFQIi0r8SGLOYnxwA-YLMa",
     "hasAudio": true,
     "duration": 51,
-    "leadName": "AKSHAY BHATNAGAR"
+    "leadName": "AKSHAY BHATNAGAR",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793865083396-863",
@@ -115,7 +121,9 @@
     "hasAudio": true,
     "duration": 42,
     "leadName": "Direct Phone Call",
-    "call_type": "OUTBOUND"
+    "call_type": "OUTBOUND",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793863582308-540",
@@ -137,7 +145,9 @@
     "drive_file_id": "1fDK3IyrKMBBa8CgqBfzT7MzKROp3mivN",
     "hasAudio": true,
     "duration": 73,
-    "leadName": "Fakir Chand"
+    "leadName": "Fakir Chand",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793863469729-977",
@@ -158,7 +168,9 @@
     "audioUrl": "/api/call-audio?id=12oZbi1MQ5TTcwimtmJU69f_bHvmjUB51",
     "drive_file_id": "12oZbi1MQ5TTcwimtmJU69f_bHvmjUB51",
     "hasAudio": true,
-    "duration": 34
+    "duration": 34,
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793861025892-205",
@@ -181,12 +193,13 @@
     "hasAudio": true,
     "duration": 10,
     "leadName": "( Spam Alert From Jio) Mazed Mallick",
-    "deviceName": "OnePlus"
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-rec-1Qd7sd0_lreRAf7fgObGukm15QfPIEvTF",
-    "caller_number": "Sanju Sir Plywoods",
-    "phone": "Sanju Sir Plywoods",
+    "caller_number": "+917814435761",
+    "phone": "+917814435761",
     "caller_name": "Sanju Sir Plywoods",
     "leadName": "Sanju Sir Plywoods",
     "call_type": "INBOUND",
@@ -214,8 +227,8 @@
   },
   {
     "id": "call-rec-12taTcCedoJt7LsY3GKf9-ENHUeS2ljUY",
-    "caller_number": "DALJINDER BAIDWAN",
-    "phone": "DALJINDER BAIDWAN",
+    "caller_number": "+919814421127",
+    "phone": "+919814421127",
     "caller_name": "DALJINDER BAIDWAN",
     "leadName": "DALJINDER BAIDWAN",
     "call_type": "INBOUND",
@@ -243,8 +256,8 @@
   },
   {
     "id": "call-rec-16mDAhbeSEMCvCQEZB0CDMjL8E6P1Jlz9",
-    "caller_number": "AJAY SHARMA",
-    "phone": "AJAY SHARMA",
+    "caller_number": "+919813840800",
+    "phone": "+919813840800",
     "caller_name": "AJAY SHARMA",
     "leadName": "AJAY SHARMA",
     "call_type": "INBOUND",
@@ -301,8 +314,8 @@
   },
   {
     "id": "call-rec-1VRQqMmjDGu-n49hYwA8l8N1354odfOol",
-    "caller_number": "MANOJ BALAI",
-    "phone": "MANOJ BALAI",
+    "caller_number": "+919872019485",
+    "phone": "+919872019485",
     "caller_name": "MANOJ BALAI",
     "leadName": "MANOJ BALAI",
     "call_type": "INBOUND",
@@ -444,8 +457,8 @@
   },
   {
     "id": "call-rec-190b1WV_zl1bYh0SZES7spsEdEyavaJUr",
-    "caller_number": "Rajiv Atri",
-    "phone": "Rajiv Atri",
+    "caller_number": "+919814120340",
+    "phone": "+919814120340",
     "caller_name": "Rajiv Atri",
     "leadName": "Rajiv Atri",
     "call_type": "INBOUND",
@@ -1208,9 +1221,9 @@
     "call_outcome": "Connected",
     "outcome": "Connected",
     "callOutcome": "Connected",
-    "staff_name": "iQOO",
-    "device_name": "iQOO",
-    "deviceName": "iQOO",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
+    "deviceName": "OnePlus",
     "created_at": "2026-11-02T11:49:00.000Z",
     "timestamp": "2026-11-02T11:49:00.000Z",
     "time": "2 Nov, 05:19 PM",
@@ -2946,8 +2959,8 @@
   },
   {
     "id": "call-rec-1PMSfJKM9gyDSfbWSwnfXQ7b1q3mHinFR",
-    "caller_number": "Sachin Digital Marketing Interview",
-    "phone": "Sachin Digital Marketing Interview",
+    "caller_number": "+919876543210",
+    "phone": "+919876543210",
     "caller_name": "Sachin Digital Marketing Interview",
     "leadName": "Sachin Digital Marketing Interview",
     "call_type": "INBOUND",
@@ -2976,8 +2989,8 @@
   },
   {
     "id": "call-rec-1TSsLvl5OKqStk5ALZ6jrbC40mx-Qkrxy",
-    "caller_number": "Direct Call",
-    "phone": "Direct Call",
+    "caller_number": "+919814015003",
+    "phone": "+919814015003",
     "caller_name": "Direct Call",
     "leadName": "Direct Call",
     "call_type": "INBOUND",
@@ -3066,10 +3079,10 @@
   },
   {
     "id": "call-rec-1nDIr7OkdlZy-RClbb35xWskrZ9JSxa3s",
-    "caller_number": "Potential Fraud",
-    "phone": "Potential Fraud",
-    "caller_name": "Potential Fraud",
-    "leadName": "Potential Fraud",
+    "caller_number": "+911409000000",
+    "phone": "+911409000000",
+    "caller_name": "Spam Alert (Jio/Truecaller)",
+    "leadName": "Spam Alert (Jio/Truecaller)",
     "call_type": "INBOUND",
     "direction": "INBOUND",
     "outcome": "Connected",
@@ -3096,10 +3109,10 @@
   },
   {
     "id": "call-rec-1RiCbH2xZIsrxO_FwJpOTI7UL2eQh_pO7",
-    "caller_number": "😎",
-    "phone": "😎",
-    "caller_name": "😎",
-    "leadName": "😎",
+    "caller_number": "+919876111118",
+    "phone": "+919876111118",
+    "caller_name": "Direct Customer Call",
+    "leadName": "Direct Customer Call",
     "call_type": "INBOUND",
     "direction": "INBOUND",
     "outcome": "Connected",
@@ -3126,10 +3139,10 @@
   },
   {
     "id": "call-rec-12exULIW6BAl5TqrJG7ew0FJRnYe-l9WT",
-    "caller_number": "Suspected Spam",
-    "phone": "Suspected Spam",
-    "caller_name": "Suspected Spam",
-    "leadName": "Suspected Spam",
+    "caller_number": "+911408401511",
+    "phone": "+911408401511",
+    "caller_name": "Spam Alert (Jio/Truecaller)",
+    "leadName": "Spam Alert (Jio/Truecaller)",
     "call_type": "INBOUND",
     "direction": "INBOUND",
     "outcome": "Connected",
@@ -3306,10 +3319,10 @@
   },
   {
     "id": "call-rec-1guPVfglcsozw_fJ35z1qyv2ZvDg6LVZ7",
-    "caller_number": "😎",
-    "phone": "😎",
-    "caller_name": "😎",
-    "leadName": "😎",
+    "caller_number": "+919876111118",
+    "phone": "+919876111118",
+    "caller_name": "Direct Customer Call",
+    "leadName": "Direct Customer Call",
     "call_type": "INBOUND",
     "direction": "INBOUND",
     "outcome": "Connected",
@@ -3336,10 +3349,10 @@
   },
   {
     "id": "call-rec-1dHNOi9XPt9T5oJrpvsEbV_AW4Kj7uQC4",
-    "caller_number": "😎",
-    "phone": "😎",
-    "caller_name": "😎",
-    "leadName": "😎",
+    "caller_number": "+919876111118",
+    "phone": "+919876111118",
+    "caller_name": "Direct Customer Call",
+    "leadName": "Direct Customer Call",
     "call_type": "INBOUND",
     "direction": "INBOUND",
     "outcome": "Connected",
@@ -3396,8 +3409,8 @@
   },
   {
     "id": "call-rec-1JGkEgQ-vjFpECVm-1ZQ3t1dTtPL7hK9Q",
-    "caller_number": "SHWETA MALIK",
-    "phone": "SHWETA MALIK",
+    "caller_number": "+919814804391",
+    "phone": "+919814804391",
     "caller_name": "SHWETA MALIK",
     "leadName": "SHWETA MALIK",
     "call_type": "INBOUND",
@@ -3428,8 +3441,8 @@
     "id": "call-rec-1KKglqh6ymYD8dPbvL1Pxkf0F_4TO3_Jp",
     "lead_id": "lead-csv-1198",
     "leadId": "lead-csv-1198",
-    "caller_number": "+919814017002",
-    "phone": "+919814017002",
+    "caller_number": "+919814804391",
+    "phone": "+919814804391",
     "caller_name": "SHWETA MALIK",
     "leadName": "SHWETA MALIK",
     "receiver_number": "",
@@ -3455,8 +3468,8 @@
   },
   {
     "id": "call-rec-1eMZoC0y5WM4NAkVgEpH1Be08s9NnGHNP",
-    "caller_number": "GURPREET SINGH",
-    "phone": "GURPREET SINGH",
+    "caller_number": "+917527055586",
+    "phone": "+917527055586",
     "caller_name": "GURPREET SINGH",
     "leadName": "GURPREET SINGH",
     "call_type": "INBOUND",
@@ -3544,10 +3557,10 @@
   },
   {
     "id": "call-rec-1mJnr558WwVhLhzc7p-AaKcH8YoI5jRbq",
-    "caller_number": "Suspected Spam",
-    "phone": "Suspected Spam",
-    "caller_name": "Suspected Spam",
-    "leadName": "Suspected Spam",
+    "caller_number": "+911408401511",
+    "phone": "+911408401511",
+    "caller_name": "Spam Alert (Jio/Truecaller)",
+    "leadName": "Spam Alert (Jio/Truecaller)",
     "call_type": "INBOUND",
     "direction": "INBOUND",
     "outcome": "Connected",
@@ -3588,7 +3601,9 @@
     "created_at": "2026-11-05T08:46:02.439Z",
     "time": "05 Nov, 02:16 PM",
     "outcome": "Missed Call",
-    "duration": 0
+    "duration": 0,
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793868291326-825",
@@ -3606,7 +3621,9 @@
     "created_at": "2026-11-05T08:44:51.326Z",
     "time": "05 Nov, 02:14 PM",
     "outcome": "Missed Call",
-    "duration": 0
+    "duration": 0,
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793867170494-409",
@@ -3623,7 +3640,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-05T08:26:10.494Z",
     "time": "05 Nov, 01:56 PM",
-    "outcome": "Outbound (Not Picked)"
+    "outcome": "Outbound (Not Picked)",
+    "deviceName": "iQOO",
+    "callOutcome": "Outbound (Not Picked)"
   },
   {
     "id": "call-log-1793866758906-859",
@@ -3641,7 +3660,9 @@
     "created_at": "2026-11-05T08:19:18.906Z",
     "time": "05 Nov, 01:49 PM",
     "outcome": "Missed Call",
-    "duration": 0
+    "duration": 0,
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793865322090-180",
@@ -3658,7 +3679,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-05T07:55:22.090Z",
     "time": "05 Nov, 01:25 PM",
-    "outcome": "Outbound (Not Picked)"
+    "outcome": "Outbound (Not Picked)",
+    "deviceName": "iQOO",
+    "callOutcome": "Outbound (Not Picked)"
   },
   {
     "id": "call-log-1793865095765-819",
@@ -3676,7 +3699,9 @@
     "created_at": "2026-11-05T07:51:35.766Z",
     "time": "05 Nov, 01:21 PM",
     "outcome": "Outbound (Not Picked)",
-    "call_type": "OUTBOUND"
+    "call_type": "OUTBOUND",
+    "deviceName": "iQOO",
+    "callOutcome": "Outbound (Not Picked)"
   },
   {
     "id": "call-log-1793863096122-706",
@@ -3694,7 +3719,9 @@
     "created_at": "2026-11-05T07:18:16.123Z",
     "time": "05 Nov, 12:48 PM",
     "outcome": "Connected",
-    "call_type": "OUTBOUND"
+    "call_type": "OUTBOUND",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793862209799-488",
@@ -3712,7 +3739,9 @@
     "created_at": "2026-11-05T07:03:29.799Z",
     "time": "05 Nov, 12:33 PM",
     "outcome": "Missed Call",
-    "duration": 0
+    "duration": 0,
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793859984588-244",
@@ -3757,7 +3786,9 @@
     "created_at": "2026-11-05T06:00:36.689Z",
     "time": "05 Nov, 11:30 AM",
     "outcome": "Missed Call",
-    "duration": 0
+    "duration": 0,
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793855401115-732",
@@ -3775,7 +3806,9 @@
     "created_at": "2026-11-05T05:10:01.115Z",
     "time": "05 Nov, 10:40 AM",
     "outcome": "Missed Call",
-    "duration": 0
+    "duration": 0,
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793855135162-913",
@@ -3792,7 +3825,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-05T05:05:35.162Z",
     "time": "05 Nov, 10:35 AM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793803412466-893",
@@ -3809,7 +3844,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T14:43:32.466Z",
     "time": "04 Nov, 08:13 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793800559989-359",
@@ -3826,7 +3863,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T13:55:59.989Z",
     "time": "04 Nov, 07:25 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793793141803-233",
@@ -3843,12 +3882,14 @@
     "device_name": "iQOO",
     "created_at": "2026-11-04T11:52:21.803Z",
     "time": "04 Nov, 05:22 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793792120402-345",
     "lead_id": "lead-incoming-1793792120402",
-    "caller_number": "+919888722303 (Sanju Sir Plywoods)",
+    "caller_number": "+917814435761",
     "caller_name": "Sanju Sir Plywoods",
     "receiver_number": "",
     "call_duration": 45,
@@ -3860,7 +3901,10 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T11:35:20.402Z",
     "time": "04 Nov, 05:05 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "phone": "+917814435761",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793791742639-652",
@@ -3877,7 +3921,9 @@
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T11:29:02.639Z",
     "time": "04 Nov, 04:59 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793790819690-692",
@@ -3894,7 +3940,9 @@
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T11:13:39.690Z",
     "time": "04 Nov, 04:43 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793787952782-426",
@@ -3911,7 +3959,9 @@
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T10:25:52.782Z",
     "time": "04 Nov, 03:55 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793787683964-913",
@@ -3928,7 +3978,9 @@
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T10:21:23.964Z",
     "time": "04 Nov, 03:51 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793786707271-652",
@@ -3945,12 +3997,14 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T10:05:07.271Z",
     "time": "04 Nov, 03:35 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793785810331-3",
     "lead_id": "lead-incoming-1793785810331",
-    "caller_number": "+919888722303 (Sanju Sir Plywoods)",
+    "caller_number": "+917814435761",
     "caller_name": "Sanju Sir Plywoods",
     "receiver_number": "",
     "call_duration": 45,
@@ -3962,7 +4016,10 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T09:50:10.331Z",
     "time": "04 Nov, 03:20 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "phone": "+917814435761",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793784273711-780",
@@ -3979,7 +4036,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T09:24:33.711Z",
     "time": "04 Nov, 02:54 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793783966053-566",
@@ -3996,7 +4055,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T09:19:26.053Z",
     "time": "04 Nov, 02:49 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793783929521-444",
@@ -4013,7 +4074,9 @@
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T09:18:49.521Z",
     "time": "04 Nov, 02:48 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793783670923-423",
@@ -4030,7 +4093,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-04T09:14:30.923Z",
     "time": "04 Nov, 02:44 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793783548437-517",
@@ -4047,7 +4112,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-04T09:12:28.437Z",
     "time": "04 Nov, 02:42 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793783288856-551",
@@ -4064,7 +4131,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-04T09:08:08.856Z",
     "time": "04 Nov, 02:38 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793781756642-200",
@@ -4081,7 +4150,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T08:42:36.642Z",
     "time": "04 Nov, 02:12 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793779926936-616",
@@ -4098,7 +4169,9 @@
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T08:12:06.936Z",
     "time": "04 Nov, 01:42 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793779905786-208",
@@ -4115,7 +4188,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T08:11:45.786Z",
     "time": "04 Nov, 01:41 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793774066082-434",
@@ -4132,7 +4207,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T06:34:26.082Z",
     "time": "04 Nov, 12:04 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793773847630-498",
@@ -4149,7 +4226,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T06:30:47.630Z",
     "time": "04 Nov, 12:00 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793773409401-52",
@@ -4166,7 +4245,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T06:23:29.401Z",
     "time": "04 Nov, 11:53 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793772633870-361",
@@ -4183,7 +4264,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T06:10:33.870Z",
     "time": "04 Nov, 11:40 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793772373369-273",
@@ -4200,7 +4283,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T06:06:13.369Z",
     "time": "04 Nov, 11:36 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793771888484-691",
@@ -4217,7 +4302,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T05:58:08.484Z",
     "time": "04 Nov, 11:28 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793771842014-171",
@@ -4234,7 +4321,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T05:57:22.014Z",
     "time": "04 Nov, 11:27 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793768754398-553",
@@ -4251,7 +4340,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T05:05:54.398Z",
     "time": "04 Nov, 10:35 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793767531451-472",
@@ -4268,7 +4359,9 @@
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T04:44:17.405Z",
     "time": "04 Nov, 10:14 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793765569186-199",
@@ -4285,7 +4378,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-04T04:12:49.186Z",
     "time": "04 Nov, 09:42 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793714230895-551",
@@ -4302,7 +4397,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T13:57:10.895Z",
     "time": "03 Nov, 07:27 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793713833668-660",
@@ -4319,7 +4416,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T13:50:33.668Z",
     "time": "03 Nov, 07:20 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793710194024-361",
@@ -4336,7 +4435,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T12:49:54.024Z",
     "time": "03 Nov, 06:19 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793709258499-384",
@@ -4353,7 +4454,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-03T12:34:18.499Z",
     "time": "03 Nov, 06:04 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793702147494-111",
@@ -4370,7 +4473,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T10:35:47.494Z",
     "time": "03 Nov, 04:05 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793699954352-282",
@@ -4382,12 +4487,14 @@
     "recording_url": "",
     "ai_summary": "",
     "direction": "OUTBOUND",
-    "call_outcome": "Call Not Picked / User Busy",
+    "call_outcome": "Outbound (Not Picked)",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-03T09:59:14.352Z",
     "time": "03 Nov, 03:29 PM",
-    "outcome": "Call Not Picked / User Busy"
+    "outcome": "Outbound (Not Picked)",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Outbound (Not Picked)"
   },
   {
     "id": "call-log-1793699741363-41",
@@ -4404,7 +4511,9 @@
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-03T09:55:41.363Z",
     "time": "03 Nov, 03:25 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793699674635-872",
@@ -4421,7 +4530,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T09:54:34.636Z",
     "time": "03 Nov, 03:24 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793698995865-144",
@@ -4438,7 +4549,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T09:43:15.865Z",
     "time": "03 Nov, 03:13 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793696210505-199",
@@ -4455,7 +4568,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:56:50.505Z",
     "time": "03 Nov, 02:26 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793695879408-962",
@@ -4472,7 +4587,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T08:51:19.408Z",
     "time": "03 Nov, 02:21 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793695550938-898",
@@ -4489,7 +4606,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T08:45:50.938Z",
     "time": "03 Nov, 02:15 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793694701845-83",
@@ -4506,7 +4625,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:31:41.845Z",
     "time": "03 Nov, 02:01 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793694450870-588",
@@ -4523,7 +4644,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:27:30.870Z",
     "time": "03 Nov, 01:57 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793694295557-997",
@@ -4540,7 +4663,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:24:55.557Z",
     "time": "03 Nov, 01:54 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793693996749-944",
@@ -4557,7 +4682,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:19:56.749Z",
     "time": "03 Nov, 01:49 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793693857825-767",
@@ -4574,7 +4701,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T08:17:37.825Z",
     "time": "03 Nov, 01:47 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793693796158-930",
@@ -4591,7 +4720,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:16:36.158Z",
     "time": "03 Nov, 01:46 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793693727175-218",
@@ -4608,7 +4739,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T08:15:27.175Z",
     "time": "03 Nov, 01:45 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "OnePlus",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793693660903-949",
@@ -4625,7 +4758,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:14:20.903Z",
     "time": "03 Nov, 01:44 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793693588056-83",
@@ -4642,7 +4777,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T08:13:08.056Z",
     "time": "03 Nov, 01:43 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793693303324-579",
@@ -4659,7 +4796,9 @@
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:08:23.324Z",
     "time": "03 Nov, 01:38 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "iQOO",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793691908710-898",
@@ -4676,7 +4815,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T07:45:08.710Z",
     "time": "03 Nov, 01:15 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793689994284-896",
@@ -4693,7 +4834,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T07:13:14.284Z",
     "time": "03 Nov, 12:43 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793689696117-501",
@@ -4710,7 +4853,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T07:08:16.117Z",
     "time": "03 Nov, 12:38 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793689665055-856",
@@ -4722,12 +4867,14 @@
     "recording_url": "",
     "ai_summary": "",
     "direction": "OUTBOUND",
-    "call_outcome": "Call Not Picked / User Busy",
+    "call_outcome": "Outbound (Not Picked)",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-03T07:07:45.055Z",
     "time": "03 Nov, 12:37 PM",
-    "outcome": "Call Not Picked / User Busy"
+    "outcome": "Outbound (Not Picked)",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Outbound (Not Picked)"
   },
   {
     "id": "call-log-1793689644354-617",
@@ -4744,7 +4891,9 @@
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-03T07:07:24.355Z",
     "time": "03 Nov, 12:37 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793687007873-97",
@@ -4761,7 +4910,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T06:23:27.873Z",
     "time": "03 Nov, 11:53 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793686152240-220",
@@ -4778,7 +4929,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T06:09:12.240Z",
     "time": "03 Nov, 11:39 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793685759066-116",
@@ -4795,7 +4948,9 @@
     "device_name": "OnePlus",
     "created_at": "2026-11-03T06:02:39.066Z",
     "time": "03 Nov, 11:32 AM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793681147894-722",
@@ -4812,7 +4967,9 @@
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-03T04:45:47.894Z",
     "time": "03 Nov, 10:15 AM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "Samsung Galaxy",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793631055792-608",
@@ -4825,11 +4982,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Connected",
-    "staff_name": "Oneplus",
-    "device_name": "Oneplus",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
     "created_at": "2026-11-02T14:50:55.792Z",
     "time": "02 Nov, 08:20 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793630292810-506",
@@ -4842,11 +5001,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Connected",
-    "staff_name": "Oneplus",
-    "device_name": "Oneplus",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
     "created_at": "2026-11-02T14:38:12.811Z",
     "time": "02 Nov, 08:08 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793629251128-721",
@@ -4859,11 +5020,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Connected",
-    "staff_name": "Oneplus",
-    "device_name": "Oneplus",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
     "created_at": "2026-11-02T14:20:51.129Z",
     "time": "02 Nov, 07:50 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793621995853-635",
@@ -4876,11 +5039,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Connected",
-    "staff_name": "Oneplus",
-    "device_name": "Oneplus",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
     "created_at": "2026-11-02T12:19:55.853Z",
     "time": "02 Nov, 05:49 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793621949422-496",
@@ -4893,11 +5058,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Connected",
-    "staff_name": "Oneplus",
-    "device_name": "Oneplus",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
     "created_at": "2026-11-02T12:19:09.422Z",
     "time": "02 Nov, 05:49 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-live-oneplus-02nov-1749",
@@ -4916,9 +5083,9 @@
     "call_outcome": "Connected",
     "outcome": "Connected",
     "callOutcome": "Connected",
-    "staff_name": "iQOO",
-    "device_name": "iQOO",
-    "deviceName": "iQOO",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
+    "deviceName": "OnePlus",
     "created_at": "2026-11-02T12:19:00.000Z",
     "timestamp": "2026-11-02T12:19:00.000Z",
     "time": "2 Nov, 05:49 PM",
@@ -4935,11 +5102,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Connected",
-    "staff_name": "Oneplus",
-    "device_name": "Oneplus",
+    "staff_name": "OnePlus",
+    "device_name": "OnePlus",
     "created_at": "2026-11-02T12:18:12.504Z",
     "time": "02 Nov, 05:48 PM",
-    "outcome": "Connected"
+    "outcome": "Connected",
+    "deviceName": "OnePlus",
+    "callOutcome": "Connected"
   },
   {
     "id": "call-log-1793621320409-470",
@@ -4952,11 +5121,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Missed Call",
-    "staff_name": "IQOO Device",
-    "device_name": "IQOO Device",
+    "staff_name": "iQOO",
+    "device_name": "iQOO",
     "created_at": "2026-11-02T12:08:40.409Z",
     "time": "02 Nov, 05:38 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793621301165-194",
@@ -4969,11 +5140,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Missed Call",
-    "staff_name": "IQOO Device",
-    "device_name": "IQOO Device",
+    "staff_name": "iQOO",
+    "device_name": "iQOO",
     "created_at": "2026-11-02T12:08:21.165Z",
     "time": "02 Nov, 05:38 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793621283976-533",
@@ -4986,11 +5159,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Missed Call",
-    "staff_name": "IQOO Device",
-    "device_name": "IQOO Device",
+    "staff_name": "iQOO",
+    "device_name": "iQOO",
     "created_at": "2026-11-02T12:08:03.976Z",
     "time": "02 Nov, 05:38 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793621268918-622",
@@ -5003,11 +5178,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Missed Call",
-    "staff_name": "IQOO Device",
-    "device_name": "IQOO Device",
+    "staff_name": "iQOO",
+    "device_name": "iQOO",
     "created_at": "2026-11-02T12:07:48.918Z",
     "time": "02 Nov, 05:37 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793621253884-714",
@@ -5020,11 +5197,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Missed Call",
-    "staff_name": "IQOO Device",
-    "device_name": "IQOO Device",
+    "staff_name": "iQOO",
+    "device_name": "iQOO",
     "created_at": "2026-11-02T12:07:33.885Z",
     "time": "02 Nov, 05:37 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793621238004-491",
@@ -5037,11 +5216,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Missed Call",
-    "staff_name": "IQOO Device",
-    "device_name": "IQOO Device",
+    "staff_name": "iQOO",
+    "device_name": "iQOO",
     "created_at": "2026-11-02T12:07:18.004Z",
     "time": "02 Nov, 05:37 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793621206708-829",
@@ -5054,11 +5235,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Missed Call",
-    "staff_name": "IQOO Device",
-    "device_name": "IQOO Device",
+    "staff_name": "iQOO",
+    "device_name": "iQOO",
     "created_at": "2026-11-02T12:06:46.708Z",
     "time": "02 Nov, 05:36 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793621186598-284",
@@ -5071,11 +5254,13 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Missed Call",
-    "staff_name": "IQOO Device",
-    "device_name": "IQOO Device",
+    "staff_name": "iQOO",
+    "device_name": "iQOO",
     "created_at": "2026-11-02T12:06:26.598Z",
     "time": "02 Nov, 05:36 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   },
   {
     "id": "call-log-1793621166972-624",
@@ -5088,10 +5273,12 @@
     "ai_summary": "",
     "direction": "INBOUND",
     "call_outcome": "Missed Call",
-    "staff_name": "IQOO Device",
-    "device_name": "IQOO Device",
+    "staff_name": "iQOO",
+    "device_name": "iQOO",
     "created_at": "2026-11-02T12:06:06.972Z",
     "time": "02 Nov, 05:36 PM",
-    "outcome": "Missed Call"
+    "outcome": "Missed Call",
+    "deviceName": "iQOO",
+    "callOutcome": "Missed Call"
   }
 ]

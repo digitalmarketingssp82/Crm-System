@@ -638,7 +638,7 @@ module.exports = async (req, res) => {
       // Multi-Phone Staff & Device Identification (Supports OnePlus, Samsung, iQOO)
       let staff_name = data.staff_name || data.staff || data.device_name || query.staff_name || query.device_name || query.device || '';
       let device_name = data.device_name || data.device || data.staff_name || query.device_name || query.device || '';
-      const rawDevLower = (String(device_name) + ' ' + String(staff_name) + ' ' + String(extractedFileName) + ' ' + String(data.caller_name || '')).toLowerCase();
+      const rawDevLower = (String(device_name) + ' ' + String(staff_name) + ' ' + String(query.device || '') + ' ' + String(query.staff || '') + ' ' + String(extractedFileName)).toLowerCase();
       if (rawDevLower.includes('iq') || rawDevLower.includes('vivo')) {
         device_name = 'iQOO';
         staff_name = 'iQOO';
