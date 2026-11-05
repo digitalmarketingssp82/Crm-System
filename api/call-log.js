@@ -395,7 +395,6 @@ module.exports = async (req, res) => {
       const num = String(c.caller_number || c.phone || '');
       const cName = String(c.caller_name || '').toLowerCase();
       if (num.includes('9999988888') || num.includes('8000000000') || c.id === 'call-log-1793081339671-686') return false;
-      if (cName.includes('outbound test') || cName.includes('companion test') || num.includes('outbound test') || num.includes('companion test')) return false;
       // Filter out blank premature ghost calls (e.g. from Call Recording trigger firing with no caller)
       const cNum = String(c.caller_number || c.phone || '').trim();
       const cName = String(c.caller_name || '').toLowerCase();

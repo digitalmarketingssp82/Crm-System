@@ -19365,6 +19365,7 @@
       if (typeof callLogs !== 'undefined' && Array.isArray(callLogs)) {
         callLogs.unshift(newCallRecord);
         try {
+          saveStoredClientCallLogs(callLogs);
           localStorage.setItem('sri_sri_call_logs', JSON.stringify(callLogs));
         } catch(e) {}
       }
@@ -19374,6 +19375,11 @@
       } catch(e) {}
 
       if (typeof syncLeadToCloud === 'function') syncLeadToCloud(lead);
+      try {
+        if (typeof db !== 'undefined' && db && newCallRecord.id) {
+          db.collection('call_logs').doc(newCallRecord.id).set(newCallRecord, { merge: true }).catch(() => {});
+        }
+      } catch(e) {}
 
       closeModal('call-log-modal');
       if (currentSelectedLead && currentSelectedLead.id === lead.id) {
@@ -25178,7 +25184,9 @@
           });
           existing.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
           saveStoredClientCallLogs(existing);
-          initCallLogs();
+          callLogs = existing;
+          window.callLogs = existing;
+          initCallLogs(true);
 
           if (typeof currentActiveTab !== 'undefined' && currentActiveTab === 'call-logs') {
             renderTeamCallLogsTable();
@@ -25292,8 +25300,8 @@
 
     let callLogs = [];
     let isCallLogsInitialized = false;
-    function initCallLogs() {
-      if (isCallLogsInitialized && Array.isArray(callLogs) && callLogs.length > 0) {
+    function initCallLogs(force = false) {
+      if (!force && isCallLogsInitialized && Array.isArray(callLogs) && callLogs.length > 0) {
         return;
       }
       isCallLogsInitialized = true;
@@ -25934,12 +25942,8 @@
       '1gJ4DdglwBLPOM4iARsIVoC_N2UURkALg'
     ]);
     if (FAKE_DRIVE_IDS.has(driveId)) return true;
-    if (name.includes('sanju test') || ph.includes('7814435761')) return true;
-    if (name.includes('sachin') || ph.includes('9876543210')) return true;
-    if (name.includes('potential fraud') || name.includes('suspected spam') || ph.includes('spam') || ph.includes('fraud')) return true;
-    if (name.includes('outbound test') || name.includes('companion test') || ph.includes('outbound test') || ph.includes('companion test')) return true;
-    if (name.includes('oneplus direct call') || ph.includes('oneplus direct')) return true;
-    if (ph.includes('9999988888') || ph.includes('9999999999') || ph.includes('8000000000') || ph.includes('unknown')) return true;
+    if (name.includes('potential fraud') || name.includes('suspected spam') || ph.includes('suspected spam') || ph.includes('fraud')) return true;
+    if (ph.includes('9999988888') || ph.includes('9999999999') || ph.includes('8000000000')) return true;
     if (c.id === 'call-log-1793081339671-686' || c.id === 'call-log-1793170323765-551' || c.id === 'call-log-1793162593463-412') return true;
 
     // Genuine Google Drive recordings that are verified
@@ -26189,6 +26193,7 @@
           const data = await res.json();
           if (data && data.success && Array.isArray(data.calls)) {
             const KNOWN_DRIVE_MAPPINGS = {
+  "1dpRMXa_ZIYTzHGxFb-M6Sljwuoz0w1Sy": { "name": "Chetan Gumber", "phone": "Chetan Gumber", "dur": 45, "time": "05 Nov, 05:04 PM", "device": "OnePlus", "dir": "OUTBOUND", "file": "Chetan Gumber-2611051704.mp3" },
   "1on8TzhkXrnG2F-K8fA6SY9srlnNZSCpE": { "name": "+917942748821", "phone": "+917942748821", "dur": 26, "time": "05 Nov, 01:38 PM", "device": "OnePlus", "dir": "INBOUND", "file": "+917942748821-2611051337.mp3" },
   "1HcI8qnsAsO4PmSvl9YVbD3pgQUSgU69e": { "name": "+918427761777", "phone": "+918427761777", "dur": 225, "time": "05 Nov, 01:35 PM", "device": "OnePlus", "dir": "INBOUND", "file": "+918427761777-2611051332.mp3" },
   "1v6HE2E6CufBnzsJ9oBdmgjxJ_dCNHrvN": { "name": "9466609171", "phone": "+919466609171", "dur": 42, "time": "05 Nov, 01:21 PM", "device": "iQOO", "dir": "OUTBOUND", "file": "9466609171-2611051320.mp3" },
@@ -27430,13 +27435,57 @@
         });
       }
 
+      // High-Performance Instant Lead Maps for O(1) Ultra-Fast Lookup (Zero Hang / Smooth 60fps)
+      const leadsByPhone = new Map();
+      const leadsById = new Map();
+      const leadsByName = new Map();
+      if (Array.isArray(leads)) {
+        for (let i = 0; i < leads.length; i++) {
+          const l = leads[i];
+          if (!l || (typeof isLeadDeleted === 'function' && isLeadDeleted(l))) continue;
+          if (l.id) leadsById.set(l.id, l);
+          const pClean = String(l.phone || '').replace(/\D/g, '').slice(-10);
+          if (pClean && pClean.length === 10) leadsByPhone.set(pClean, l);
+          if (l.name) leadsByName.set(String(l.name).trim().toLowerCase(), l);
+        }
+      }
+
+      // Universal High-Accuracy Fast Search (Searches any name, phone number, digits, device, or notes)
       if (searchQuery) {
-        filtered = filtered.filter(c => 
-          (c.leadName && c.leadName.toLowerCase().includes(searchQuery)) ||
-          (c.phone && c.phone.toLowerCase().includes(searchQuery)) ||
-          (c.transcript && c.transcript.toLowerCase().includes(searchQuery)) ||
-          (c.aiSummary && c.aiSummary.toLowerCase().includes(searchQuery))
-        );
+        const cleanQDigits = searchQuery.replace(/\D/g, '');
+        filtered = filtered.filter(c => {
+          if (!c) return false;
+          const cName = String(c.caller_name || c.leadName || '').toLowerCase();
+          const cNum = String(c.caller_number || c.phone || '');
+          const cNumClean = cNum.replace(/\D/g, '');
+          const dev = String(c.deviceName || c.device_name || c.staff_name || '').toLowerCase();
+          const note = String(c.ai_summary || c.aiSummary || c.notes || c.transcript || '').toLowerCase();
+          const timeText = String(c.time || '').toLowerCase();
+          const outcomeText = String(c.outcome || c.call_outcome || c.callOutcome || '').toLowerCase();
+
+          // 1. Search in caller/contact name
+          if (cName.includes(searchQuery)) return true;
+          // 2. Search in phone number text
+          if (cNum.toLowerCase().includes(searchQuery)) return true;
+          // 3. Search in cleaned phone digits (e.g. typing 98888 or 98724)
+          if (cleanQDigits.length >= 3 && cNumClean.includes(cleanQDigits)) return true;
+          // 4. Search in device name (OnePlus, iQOO, Samsung)
+          if (dev.includes(searchQuery)) return true;
+          // 5. Search in notes or transcript
+          if (note.includes(searchQuery)) return true;
+          // 6. Search in time / date string
+          if (timeText.includes(searchQuery)) return true;
+          // 7. Search in outcome text
+          if (outcomeText.includes(searchQuery)) return true;
+
+          // 8. Search in linked lead profile
+          const cClean10 = cNumClean.slice(-10);
+          if (cClean10 && leadsByPhone.has(cClean10)) {
+            const ll = leadsByPhone.get(cClean10);
+            if (ll.name && ll.name.toLowerCase().includes(searchQuery)) return true;
+          }
+          return false;
+        });
       }
 
       // 4. Update KPI Stats (Total, Inbound, Outbound, Connected, Talk Time)
@@ -27498,19 +27547,19 @@
         const isMissed = isNotConnected;
         const isPlayingThis = (currentActiveCallAudioId === call.id);
 
-        // Link to lead ONLY if caller already exists in the real leads database
+        // Fast O(1) Lead Lookup (Zero UI freeze)
         const callPhoneClean = (call.phone || call.caller_number || "").replace(/\D/g, "").slice(-10);
         let linkedLead = null;
-        if (call.leadId && Array.isArray(leads)) {
-          linkedLead = leads.find(l => l && l.id === call.leadId && !isLeadDeleted(l));
+        if (call.leadId) {
+          linkedLead = leadsById.get(call.leadId);
         }
-        if (!linkedLead && callPhoneClean && callPhoneClean.length === 10 && Array.isArray(leads)) {
-          linkedLead = leads.find(l => l && !isLeadDeleted(l) && (l.phone || "").replace(/\D/g, "").slice(-10) === callPhoneClean);
+        if (!linkedLead && callPhoneClean && callPhoneClean.length === 10) {
+          linkedLead = leadsByPhone.get(callPhoneClean);
         }
-        if (!linkedLead && call.caller_name && Array.isArray(leads)) {
+        if (!linkedLead && call.caller_name) {
           const cNameClean = call.caller_name.trim().toLowerCase();
           if (cNameClean && cNameClean !== "direct phone call" && !cNameClean.includes("customer call") && !cNameClean.includes("unknown")) {
-            linkedLead = leads.find(l => l && !isLeadDeleted(l) && l.name && l.name.trim().toLowerCase() === cNameClean);
+            linkedLead = leadsByName.get(cNameClean);
           }
         }
         const effectiveLeadName = linkedLead ? linkedLead.name : (call.caller_name && !call.caller_name.startsWith("Direct Call") ? call.caller_name : (call.leadName && !call.leadName.startsWith("Direct Call") ? call.leadName : ""));
@@ -27869,8 +27918,12 @@
       updateTimetablePreview();
     }
 
+    let _callLogFilterDebounce = null;
     function filterTeamCallLogs() {
-      renderTeamCallLogsTable();
+      if (_callLogFilterDebounce) cancelAnimationFrame(_callLogFilterDebounce);
+      _callLogFilterDebounce = requestAnimationFrame(() => {
+        renderTeamCallLogsTable();
+      });
     }
 
     // Global references for attached call audio
@@ -28974,6 +29027,15 @@
             const dData = await dRes.json();
             if (dData && dData.success && Array.isArray(dData.calls)) {
               const KNOWN_DRIVE_MAP = {
+  "1dpRMXa_ZIYTzHGxFb-M6Sljwuoz0w1Sy": {
+    "name": "Chetan Gumber",
+    "phone": "Chetan Gumber",
+    "dur": 45,
+    "time": "05 Nov, 05:04 PM",
+    "device": "OnePlus",
+    "dir": "OUTBOUND",
+    "file": "Chetan Gumber-2611051704.mp3"
+  },
   "1jHNtG1sSzcYxrgEZMwu-rXRCFr0LwOB_": {
     "name": "PARMINDER SINGH",
     "phone": "+918558055750",
