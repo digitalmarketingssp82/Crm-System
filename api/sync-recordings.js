@@ -3,12 +3,15 @@ let _cachedSyncTime = 0;
 
 
 const KNOWN_OUTBOUND_CONTACTS = [
+  'poonam', 'harvinder',
   'anwarul', 'shr', 'sushil kumar', 'parminder singh', 'suresh chand',
   'rajni rani', 'mohan bni', 'parag ravish', 'dinesh highland', 'nikhil mishra',
   'jagjeevan', 'satpal singh', 'ranjeet kaur', 'vikram jeet', 'sukhwinder'
 ];
 
 const KNOWN_CONTACT_PHONES = {
+  'poonam': '+919888810811',
+  'harvinder': '+919888810811',
   'amardeep nijjar': '+919803030388',
   'harpreet singh': '+919877142366',
   'kulwant singh': '+919814421127',
@@ -67,6 +70,24 @@ function resolveContactNameToPhone(contactName) {
 }
 
 const KNOWN_DRIVE_MAPPINGS = {
+  "1mDYWSyB2RMebaSiYYc6Uky4ne6TCWh4Q": {
+    "name": "Poonam (Harvinder)",
+    "phone": "+919888810811",
+    "dur": 25,
+    "time": "04 Nov, 02:44 PM",
+    "device": "iQOO",
+    "dir": "OUTBOUND",
+    "file": "POONAM-2611041445.mp3"
+  },
+  "1tPx5V2Fy0LoiehKmOzIpLbixxO9BtJiT": {
+    "name": "Poonam (Harvinder)",
+    "phone": "+919888810811",
+    "dur": 30,
+    "time": "04 Nov, 02:46 PM",
+    "device": "iQOO",
+    "dir": "OUTBOUND",
+    "file": "POONAM-2611041446.mp3"
+  },
   "1jHNtG1sSzcYxrgEZMwu-rXRCFr0LwOB_": {
     "name": "PARMINDER SINGH",
     "phone": "+918558055750",
@@ -614,6 +635,14 @@ function isSamePhysicalCall(a, b) {
   if (a.id && b.id && a.id === b.id) return true;
   if (a.drive_file_id && b.drive_file_id && a.drive_file_id === b.drive_file_id) return true;
 
+  // CRITICAL GUARD 1: If both have drive_file_ids and they are different, they are different recordings!
+  if (a.drive_file_id && b.drive_file_id && a.drive_file_id !== b.drive_file_id) return false;
+
+  // CRITICAL GUARD 2: If both have distinct audio URLs, they can NEVER be merged!
+  const recA = a.recording_url || a.audioUrl || '';
+  const recB = b.recording_url || b.audioUrl || '';
+  if (recA && recB && recA !== recB && !recA.includes('Pending') && !recB.includes('Pending') && recA.length > 10 && recB.length > 10) return false;
+
   const pA = String(a.caller_number || a.phone || '').replace(/\D/g, '').slice(-10);
   const pB = String(b.caller_number || b.phone || '').replace(/\D/g, '').slice(-10);
 
@@ -628,10 +657,13 @@ function isSamePhysicalCall(a, b) {
   const isDevAOnePlus = devA.includes('oneplus') || devA.includes('one plus');
   const isDevBOnePlus = devB.includes('oneplus') || devB.includes('one plus');
 
+  const durA = Number(a.duration || a.call_duration || 0);
+  const durB = Number(b.duration || b.call_duration || 0);
+
   const outA = String(a.call_outcome || a.outcome || a.callOutcome || '').toLowerCase();
   const outB = String(b.call_outcome || b.outcome || b.callOutcome || '').toLowerCase();
-  const isMissedA = outA.includes('missed') || ((a.duration === 0 || a.call_duration === 0) && !a.recording_url && !a.audioUrl);
-  const isMissedB = outB.includes('missed') || ((b.duration === 0 || b.call_duration === 0) && !b.recording_url && !b.audioUrl);
+  const isMissedA = outA.includes('missed') || ((durA === 0) && !recA);
+  const isMissedB = outB.includes('missed') || ((durB === 0) && !recB);
 
   const tA = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
   const tB = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
@@ -645,31 +677,37 @@ function isSamePhysicalCall(a, b) {
     }
   }
 
-  // Deduplicate Samsung burst calls (multiple identical missed calls within 15 seconds)
-  if (!isDevAOnePlus && !isDevBOnePlus && isMissedA && isMissedB) {
+  // Deduplicate burst missed calls within 15 seconds
+  if (isMissedA && isMissedB) {
     if (pA && pB && pA === pB && tA > 0 && tB > 0 && Math.abs(tA - tB) <= 15000) {
       return true;
     }
   }
 
-  // If calls are from different physical devices and not phantom duplicates:
+  // If calls are from different physical devices:
   if (isDevAOnePlus !== isDevBOnePlus) {
     return false;
   }
 
-  // If one is Missed Call and the other is Connected:
-  if (isMissedA !== isMissedB) {
-    return false;
+  // CRITICAL GUARD 3: If both calls were connected with duration > 0, they are separate calls unless within 15 seconds (network retry packet)
+  if (durA > 0 && durB > 0 && !isMissedA && !isMissedB) {
+    if (tA > 0 && tB > 0 && Math.abs(tA - tB) <= 15000 && durA === durB) {
+      return true; // Exact duplicate webhook packet
+    }
+    return false; // Distinct conversations! Do NOT merge!
   }
 
-  // On the SAME device, if duplicate webhook fired for same phone within 2 minutes:
+  // On the SAME device:
+  // 1. Same phone number where one is Missed and one is Connected within 3 minutes (absorb phantom dial trigger)
   if (pA && pB && pA.length >= 7 && pA === pB) {
-    if (tA > 0 && tB > 0 && Math.abs(tA - tB) <= 120000) return true;
+    if (isMissedA !== isMissedB && tA > 0 && tB > 0 && Math.abs(tA - tB) <= 180000) {
+      return true;
+    }
   }
 
-  // On the SAME device, merge audio recording with pending MacroDroid call record
-  const aHasAudio = !!(a.recording_url || a.audioUrl || a.drive_file_id);
-  const bHasAudio = !!(b.recording_url || b.audioUrl || b.drive_file_id);
+  // 2. On the SAME device, merge audio recording with pending MacroDroid call record
+  const aHasAudio = !!(recA || a.drive_file_id);
+  const bHasAudio = !!(recB || b.drive_file_id);
   if (aHasAudio !== bHasAudio && tA > 0 && tB > 0 && Math.abs(tA - tB) <= 900000) {
     if (pA && pB && pA === pB) return true;
     const nameA = String(a.caller_name || a.leadName || '').toLowerCase().trim();
@@ -1048,9 +1086,9 @@ module.exports = async (req, res) => {
     const CUTOFF_DATE = new Date('2026-10-20T00:00:00.000Z').getTime();
 
     uniqueRecs.forEach(rec => {
-      let matchedCall = null;
+      let matchedCall = calls.find(c => c.drive_file_id === rec.id || (c.recording_url && c.recording_url.includes(rec.id)));
 
-      if (rec.phoneDigits && rec.phoneDigits.length === 10) {
+      if (!matchedCall && rec.phoneDigits && rec.phoneDigits.length === 10) {
         matchedCall = calls.find(c => {
           if (c.drive_file_id && c.drive_file_id !== rec.id) return false;
           if (c.hasAudio && c.drive_file_id !== rec.id) return false;

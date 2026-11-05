@@ -1,3 +1,69 @@
+
+function parsePhoneTimestamp(rawDate, rawTime, rawFull) {
+  let str = (rawFull || (rawDate ? (rawDate + ' ' + (rawTime || '')) : rawTime) || '').trim();
+  if (!str || str.includes('{system_time}') || str.includes('{call_date}')) {
+    return new Date();
+  }
+  
+  // 1. Epoch check
+  if (/^\d{10,13}$/.test(str)) {
+    const epoch = parseInt(str, 10);
+    return new Date(epoch < 1e11 ? epoch * 1000 : epoch);
+  }
+
+  // 2. Pure time e.g. '14:44:28' or '02:44 PM' or '14:44'
+  const timeOnlyRegex = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?$/i;
+  const timeMatch = str.match(timeOnlyRegex);
+  if (timeMatch) {
+    const now = new Date();
+    let hours = parseInt(timeMatch[1], 10);
+    const mins = parseInt(timeMatch[2], 10);
+    const secs = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+    const ampm = timeMatch[4] ? timeMatch[4].toLowerCase() : null;
+    if (ampm === 'pm' && hours < 12) hours += 12;
+    if (ampm === 'am' && hours === 12) hours = 0;
+    
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const nowIst = new Date(now.getTime() + istOffset);
+    const y = nowIst.getUTCFullYear();
+    const m = String(nowIst.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(nowIst.getUTCDate()).padStart(2, '0');
+    const hh = String(hours).padStart(2, '0');
+    const mm = String(mins).padStart(2, '0');
+    const ss = String(secs).padStart(2, '0');
+    return new Date(y + '-' + m + '-' + d + 'T' + hh + ':' + mm + ':' + ss + '+05:30');
+  }
+
+  // 3. Indian Date DD-MM-YYYY or DD/MM/YYYY with optional time
+  const dmyMatch = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?)?$/i);
+  if (dmyMatch) {
+    let day = parseInt(dmyMatch[1], 10);
+    let month = parseInt(dmyMatch[2], 10);
+    let year = parseInt(dmyMatch[3], 10);
+    if (year < 100) year += 2000;
+    let hours = dmyMatch[4] ? parseInt(dmyMatch[4], 10) : 12;
+    let mins = dmyMatch[5] ? parseInt(dmyMatch[5], 10) : 0;
+    let secs = dmyMatch[6] ? parseInt(dmyMatch[6], 10) : 0;
+    const ampm = dmyMatch[7] ? dmyMatch[7].toLowerCase() : null;
+    if (ampm === 'pm' && hours < 12) hours += 12;
+    if (ampm === 'am' && hours === 12) hours = 0;
+    
+    const y = year;
+    const m = String(month).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    const hh = String(hours).padStart(2, '0');
+    const mm = String(mins).padStart(2, '0');
+    const ss = String(secs).padStart(2, '0');
+    return new Date(y + '-' + m + '-' + d + 'T' + hh + ':' + mm + ':' + ss + '+05:30');
+  }
+
+  // 4. Standard ISO or fallback
+  const p = new Date(str);
+  if (!isNaN(p.getTime())) return p;
+
+  return new Date();
+}
+
 const PHANTOM_CALL_IDS = new Set([
   'call-log-1793699954352-282',
   'call-log-1793699741363-41',
@@ -522,7 +588,7 @@ module.exports = async (req, res) => {
       } else if (call_duration > 0 || (recording_url && recording_url.length > 500)) {
         call_outcome = 'Connected';
       } else if (direction === 'OUTBOUND') {
-        call_outcome = 'Call Not Picked / User Busy';
+        call_outcome = (call_duration > 0) ? 'Connected' : 'Outbound (Not Picked)';
       } else {
         call_outcome = 'Missed Call';
       }
@@ -566,24 +632,10 @@ module.exports = async (req, res) => {
       const callLogId = 'call-log-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
       // Extract accurate phone timestamp (support MacroDroid magic text variables or ISO date)
-      let phoneTimestamp = data.call_time_iso || data.created_at || data.timestamp || data.call_time || data.time || query.call_time || query.timestamp;
-      let callDateObj = new Date();
-      if (phoneTimestamp && phoneTimestamp !== '{system_time}' && phoneTimestamp !== '{call_date} {call_time}') {
-        let tsStr = String(phoneTimestamp).trim();
-        if (/^\d{10,13}$/.test(tsStr)) {
-          const epochNum = parseInt(tsStr, 10);
-          callDateObj = new Date(epochNum < 1e11 ? epochNum * 1000 : epochNum);
-        } else {
-          const curYear = new Date().getFullYear();
-          if (!tsStr.includes(String(curYear)) && !/^\d{4}/.test(tsStr)) {
-            tsStr = tsStr + ' ' + curYear;
-          }
-          const parsed = new Date(tsStr);
-          if (!isNaN(parsed.getTime())) {
-            callDateObj = parsed;
-          }
-        }
-      }
+      const rawDate = data.call_date || data.date || query.call_date || query.date || '';
+      const rawTime = data.call_time || data.time || query.call_time || query.time || '';
+      const rawFull = data.call_time_iso || data.created_at || data.timestamp || query.timestamp || '';
+      const callDateObj = parsePhoneTimestamp(rawDate, rawTime, rawFull);
       const callIso = callDateObj.toISOString();
       const callFormattedTime = formatCallLogTime(callIso);
 
@@ -608,6 +660,31 @@ module.exports = async (req, res) => {
 
       // 1. Persist to independent call_logs table / store
       const allLogs = getStoredCallLogs();
+
+      // Check if an audio recording from Google Drive already exists for this caller/phone
+      if (!callLogRecord.recording_url) {
+        const matchingRec = allLogs.find(l => {
+          if (!l.recording_url || l.recording_url.length < 5) return false;
+          const numMatch = cleanCustomer && cleanCustomer.length >= 10 && cleanPhone(l.caller_number || l.phone) === cleanCustomer;
+          const nameMatch = validCallerName && l.caller_name && (
+            l.caller_name.toLowerCase().includes(validCallerName.toLowerCase()) ||
+            validCallerName.toLowerCase().includes(l.caller_name.toLowerCase())
+          );
+          if (numMatch || nameMatch) {
+            const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
+            const thisTime = callDateObj.getTime();
+            return Math.abs(lTime - thisTime) <= 1800000;
+          }
+          return false;
+        });
+        if (matchingRec) {
+          callLogRecord.recording_url = matchingRec.recording_url;
+          callLogRecord.audioUrl = matchingRec.recording_url;
+          callLogRecord.drive_file_id = matchingRec.drive_file_id || '';
+          callLogRecord.hasAudio = true;
+          console.log(`[Call-Log Auto-Attach]: Auto-attached recording ${matchingRec.recording_url} to call ${cleanCustomer}`);
+        }
+      }
 
       // Auto-heal 1: If recording arrives for a recent call (within 10 minutes) that doesn't have audio yet, attach it directly!
       if (recording_url && cleanCustomer && cleanCustomer.length >= 10) {
@@ -663,7 +740,7 @@ module.exports = async (req, res) => {
         });
       }
 
-      // Auto-heal 3: Check for duplicate call event on the same device within 3 minutes
+      // Auto-heal 3: Check for duplicate call event on the same device
       if (cleanCustomer && cleanCustomer.length >= 7) {
         const recentSamePhoneIdx = allLogs.findIndex(l => {
           const lNum = cleanPhone(l.caller_number || l.phone);
@@ -673,7 +750,23 @@ module.exports = async (req, res) => {
           if (lDev && curDev && lDev !== curDev) return false; // Different device
           const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
           const curTime = callDateObj.getTime();
-          return Math.abs(curTime - lTime) <= 180000; // within 3 minutes
+          const diffMs = Math.abs(curTime - lTime);
+
+          const isNewMissed = (call_outcome === 'Missed Call' || call_duration === 0);
+          const isExMissed = (l.call_outcome === 'Missed Call' || l.outcome === 'Missed Call' || Number(l.call_duration || l.duration || 0) === 0);
+
+          // If both were connected with duration > 0, NEVER merge unless within 15 seconds with same duration (network duplicate packet)
+          if (!isNewMissed && !isExMissed && (call_duration > 0 && Number(l.call_duration || l.duration || 0) > 0)) {
+            return diffMs <= 15000 && call_duration === Number(l.call_duration || l.duration || 0);
+          }
+
+          // Merge if one was missed/dialed and one was connected within 3 minutes (absorb dial trigger)
+          if (isNewMissed !== isExMissed && diffMs <= 180000) return true;
+
+          // Merge if duplicate missed call burst within 15 seconds
+          if (isNewMissed && isExMissed && diffMs <= 15000) return true;
+
+          return false;
         });
 
         if (recentSamePhoneIdx !== -1) {
@@ -701,10 +794,10 @@ module.exports = async (req, res) => {
           }
           saveStoredCallLogs(allLogs);
           await syncCallLogToFirestore(ex);
-          console.log(`[Call-Log Auto-Heal 3]: Merged duplicate call for ${cleanCustomer} on ${device_name} within 3 minutes`);
+          console.log(`[Call-Log Auto-Heal 3]: Absorbed duplicate call trigger for ${cleanCustomer} on ${device_name}`);
           return sendResponse(res, 200, {
             success: true,
-            message: 'Merged duplicate call event within 3 minutes',
+            message: 'Absorbed duplicate call trigger',
             call_log: ex
           });
         }
