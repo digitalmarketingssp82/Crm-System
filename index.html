@@ -37342,7 +37342,7 @@
 
       function getStoredClientCallLogs() {
       // Build versioning ensures any stale localStorage caches in user browser are updated cleanly
-      const CURRENT_BUILD_VERSION = '2026-11-06-v16-automatic-direction-no-toggle';
+      const CURRENT_BUILD_VERSION = '2026-11-06-v17-fakir-dedup-60fps-engine';
       try {
         const storedVer = localStorage.getItem('sri_sri_call_logs_version');
         if (storedVer !== CURRENT_BUILD_VERSION) {
@@ -47182,7 +47182,7 @@ function resolveContactNameToPhone(contactName) {
   "1v6HE2E6CufBnzsJ9oBdmgjxJ_dCNHrvN": { "name": "9466609171", "phone": "+919466609171", "dur": 42, "time": "05 Nov, 01:21 PM", "device": "iQOO", "dir": "OUTBOUND", "file": "9466609171-2611051320.mp3" },
   "1sAcuoUO6hJhFQIi0r8SGLOYnxwA-YLMa": { "name": "AKSHAY BHATNAGAR", "phone": "+918287589854", "dur": 51, "time": "05 Nov, 01:30 PM", "device": "OnePlus", "dir": "INBOUND", "file": "AKSHAY BHATNAGAR-2611051329.mp3" },
   "12oZbi1MQ5TTcwimtmJU69f_bHvmjUB51": { "name": "Akash Gupta Ambala", "phone": "+919034236263", "dur": 34, "time": "05 Nov, 12:54 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Akash Gupta Ambala-2611051253.mp3" },
-  "1fDK3IyrKMBBa8CgqBfzT7MzKROp3mivN": { "name": "Fakir Chand", "phone": "+919465061786", "dur": 73, "time": "05 Nov, 12:56 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Fakir Chand-2611051232.mp3" },
+  "1fDK3IyrKMBBa8CgqBfzT7MzKROp3mivN": { "name": "Fakir Chand", "phone": "+919463913526", "dur": 73, "time": "05 Nov, 12:33 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Fakir Chand-2611051232.mp3" },
   "1LHCu17VhfALSe97YgZTv7MfUAn2hjmMS": { "name": "KIRANJOT SINGH", "phone": "+919872412345", "dur": 39, "time": "05 Nov, 02:56 PM", "device": "OnePlus", "dir": "INBOUND", "file": "KIRANJOT SINGH-2611051456.mp3" },
   "1AzDIMD3Y961_qeeWC53TglNKM_ILQphF": { "name": "( Spam Alert From Jio) Mazed Mallick", "phone": "+918293805138", "dur": 45, "time": "05 Nov, 12:13 PM", "device": "OnePlus", "dir": "INBOUND", "file": "( Spam Alert From Jio) Mazed Mallick-2611051213.mp3" },
   "1mDYWSyB2RMebaSiYYc6Uky4ne6TCWh4Q": {
@@ -47755,7 +47755,7 @@ function resolveContactNameToPhone(contactName) {
                   dc.phone = p;
                 }
               }
-              const exIdx = callLogs.findIndex(c => isSamePhysicalCall(c, dc));
+              const exIdx = callLogs.findIndex(c => (dc.drive_file_id && (c.drive_file_id === dc.drive_file_id || (c.recording_url && c.recording_url.includes(dc.drive_file_id)))) || isSamePhysicalCall(c, dc));
               if (exIdx === -1) {
                 callLogs.unshift(dc);
               } else {
@@ -47837,6 +47837,13 @@ function resolveContactNameToPhone(contactName) {
       if (!a || !b) return false;
       if (a.id && b.id && a.id === b.id) return true;
 
+      // Rule 0: Same physical Drive recording file ID is ALWAYS the same physical call!
+      const driveIdA = a.drive_file_id || (a.recording_url && a.recording_url.match(/id=([a-zA-Z0-9_-]+)/)?.[1]) || (a.audioUrl && a.audioUrl.match(/id=([a-zA-Z0-9_-]+)/)?.[1]) || '';
+      const driveIdB = b.drive_file_id || (b.recording_url && b.recording_url.match(/id=([a-zA-Z0-9_-]+)/)?.[1]) || (b.audioUrl && b.audioUrl.match(/id=([a-zA-Z0-9_-]+)/)?.[1]) || '';
+      if (driveIdA && driveIdB && driveIdA === driveIdB) {
+        return true;
+      }
+
       // 1. Check if both refer to the same physical audio recording file
       const fileA = a.recording_file_name || a.audio_file_name || a.file || (a.audioUrl && a.audioUrl.match(/[^\/]+\.(mp3|m4a|wav)/i)?.[0]) || '';
       const fileB = b.recording_file_name || b.audio_file_name || b.file || (b.audioUrl && b.audioUrl.match(/[^\/]+\.(mp3|m4a|wav)/i)?.[0]) || '';
@@ -47850,8 +47857,8 @@ function resolveContactNameToPhone(contactName) {
 
       // 2. Check mirror skip list
       const MIRROR_DUPLICATES = ['1L3svOsmB3Z2NDKry47XlrtqLr9kJPH92', '1WWzFE2Uhgl_FeFKpNbWIEjVnBBlg1Ag4', '1caf1BOZ9TO9Kc4WzpTyoZGFH_HzozeLP', '1VrsO6TX7uQecanxBUYzXhwLP-bgV1hxL'];
-      const driveA = a.drive_file_id || '';
-      const driveB = b.drive_file_id || '';
+      const driveA = driveIdA;
+      const driveB = driveIdB;
       if (MIRROR_DUPLICATES.includes(driveA) || MIRROR_DUPLICATES.includes(driveB)) {
         if ((driveA.includes('1l4g') || driveB.includes('1l4g')) || (driveA.includes('1eWf') || driveB.includes('1eWf')) || (driveA.includes('1Qjg') || driveB.includes('1Qjg')) || (driveA.includes('1dmw') || driveB.includes('1dmw'))) {
           return true;
@@ -47921,9 +47928,15 @@ function resolveContactNameToPhone(contactName) {
       });
       const deduped = [];
       const seenIds = new Set();
+      const seenDriveIds = new Map(); // drive_file_id -> index in deduped
 
-      // Prioritize calls with audio recordings first, then newer timestamps
+      // Prioritize authentic phone calls over synthetic drive logs, calls with audio, then newer timestamps
       const sorted = callsList.slice().sort((a, b) => {
+        const aIsPhone = (a.id && a.id.startsWith('call-log-'));
+        const bIsPhone = (b.id && b.id.startsWith('call-log-'));
+        if (aIsPhone && !bIsPhone) return -1;
+        if (!aIsPhone && bIsPhone) return 1;
+
         const aHasAudio = !!(a.recording_url || a.audioUrl || a.drive_file_id);
         const bHasAudio = !!(b.recording_url || b.audioUrl || b.drive_file_id);
         if (aHasAudio && !bHasAudio) return -1;
@@ -47936,7 +47949,18 @@ function resolveContactNameToPhone(contactName) {
       for (const call of sorted) {
         if (!call || seenIds.has(call.id)) continue;
 
-        const existingIdx = deduped.findIndex(ex => isSamePhysicalCall(ex, call));
+        const callDriveId = call.drive_file_id || (call.recording_url && call.recording_url.match(/id=([a-zA-Z0-9_-]+)/)?.[1]) || (call.audioUrl && call.audioUrl.match(/id=([a-zA-Z0-9_-]+)/)?.[1]);
+
+        let existingIdx = -1;
+        if (callDriveId && seenDriveIds.has(callDriveId)) {
+          existingIdx = seenDriveIds.get(callDriveId);
+        } else {
+          existingIdx = deduped.findIndex(ex => isSamePhysicalCall(ex, call));
+        }
+
+        if (existingIdx !== -1 && callDriveId && !seenDriveIds.has(callDriveId)) {
+          seenDriveIds.set(callDriveId, existingIdx);
+        }
         if (existingIdx !== -1) {
           const existing = deduped[existingIdx];
           // Merge audio and duration from whichever has it
@@ -47994,6 +48018,7 @@ function resolveContactNameToPhone(contactName) {
           seenIds.add(call.id);
         } else {
           seenIds.add(call.id);
+          if (callDriveId) seenDriveIds.set(callDriveId, deduped.length);
           deduped.push(call);
         }
       }
@@ -48453,7 +48478,11 @@ function resolveContactNameToPhone(contactName) {
         statRate.innerText = rate + '% Connection Rate';
       }
 
-      // 5. Render Table Rows
+      // 5. Render Table Rows (Progressive High-Performance Render: 60 rows chunked for 60fps instant UI)
+      if (typeof window.visibleCallLogsRenderLimit === 'undefined') {
+        window.visibleCallLogsRenderLimit = 60;
+      }
+
       if (filtered.length === 0) {
         tbody.innerHTML = '';
         if (emptyState) emptyState.classList.remove('hidden');
@@ -48462,7 +48491,10 @@ function resolveContactNameToPhone(contactName) {
 
       if (emptyState) emptyState.classList.add('hidden');
 
-      tbody.innerHTML = filtered.map(call => {
+      const totalMatchingCalls = filtered.length;
+      const visibleCallsSlice = filtered.slice(0, window.visibleCallLogsRenderLimit);
+
+      let tableRowsHtml = visibleCallsSlice.map(call => {
         const rawDir = String(call.direction || call.call_type || "INBOUND").toUpperCase();
         const isOut = rawDir.includes("OUT") || rawDir.includes("DIAL");
         const exactOutcome = getCallOutcomeForRecord(call);
@@ -48656,9 +48688,37 @@ function resolveContactNameToPhone(contactName) {
             </td>
           </tr>
         `;
-      }).join('');;
+      }).join('');
+
+      if (totalMatchingCalls > visibleCallsSlice.length) {
+        tableRowsHtml += `
+          <tr id="load-more-call-logs-row">
+            <td colspan="6" class="p-4 text-center bg-subtle/30 border-t border-main">
+              <button type="button" onclick="loadMoreCallLogs()" class="px-6 py-2.5 rounded-xl bg-gold/20 hover:bg-gold text-slate-900 dark:text-gold dark:hover:text-slate-950 font-black text-xs transition border border-gold/40 shadow-xs cursor-pointer inline-flex items-center gap-2">
+                <i data-lucide="chevrons-down" class="w-4 h-4"></i>
+                <span>Load More Calls (Showing ${visibleCallsSlice.length} of ${totalMatchingCalls})</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }
+
+      tbody.innerHTML = tableRowsHtml;
 
       if (window.lucide && tbody) lucide.createIcons({ root: tbody });
+
+      if (!window._callLogsScrollAttached) {
+        window._callLogsScrollAttached = true;
+        window.addEventListener('scroll', () => {
+          const loadRow = document.getElementById('load-more-call-logs-row');
+          if (loadRow && !document.hidden) {
+            const rect = loadRow.getBoundingClientRect();
+            if (rect.top <= (window.innerHeight || document.documentElement.clientHeight) + 300) {
+              loadMoreCallLogs();
+            }
+          }
+        }, { passive: true });
+      }
     }
 
     
@@ -48854,12 +48914,24 @@ function resolveContactNameToPhone(contactName) {
     }
 
     let _callLogFilterDebounce = null;
+    let _callLogFilterTimer = null;
     function filterTeamCallLogs() {
-      if (_callLogFilterDebounce) cancelAnimationFrame(_callLogFilterDebounce);
-      _callLogFilterDebounce = requestAnimationFrame(() => {
+      if (_callLogFilterTimer) clearTimeout(_callLogFilterTimer);
+      _callLogFilterTimer = setTimeout(() => {
+        if (typeof window.visibleCallLogsRenderLimit !== 'undefined') {
+          window.visibleCallLogsRenderLimit = 60;
+        }
         renderTeamCallLogsTable();
-      });
+      }, 120);
     }
+
+    window.loadMoreCallLogs = function() {
+      if (typeof window.visibleCallLogsRenderLimit === 'undefined') {
+        window.visibleCallLogsRenderLimit = 60;
+      }
+      window.visibleCallLogsRenderLimit += 60;
+      renderTeamCallLogsTable();
+    };
 
     // Global references for attached call audio
     let currentAttachedCallAudio = null;
