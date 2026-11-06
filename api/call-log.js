@@ -429,7 +429,8 @@ module.exports = async (req, res) => {
       const cHasAudio = !!(c.drive_file_id || c.recording_url || c.audioUrl);
       const cDir = String(c.direction || c.call_type || '').toUpperCase();
       const cIsInbound = cDir.includes('IN') || (!cDir.includes('OUT') && !cDir.includes('DIAL'));
-      if (cIsInbound && !cHasAudio) {
+      const cDur = parseInt(c.call_duration || c.duration || 0, 10);
+      if (cIsInbound && !cHasAudio && cDur === 0) {
         c.call_outcome = 'Missed Call';
         c.outcome = 'Missed Call';
         c.callOutcome = 'Missed Call';

@@ -17,109 +17,41 @@ try {
   }
 } catch (e) {}
 
-const KNOWN_OUTBOUND_CONTACTS = [
-  'poonam', 'harvinder',
-  'anwarul', 'shr', 'sushil kumar', 'parminder singh', 'suresh chand',
-  'rajni rani', 'mohan bni', 'parag ravish', 'dinesh highland', 'nikhil mishra',
-  'jagjeevan', 'satpal singh', 'ranjeet kaur', 'vikram jeet', 'sukhwinder'
-];
-
 const KNOWN_CONTACT_PHONES = {
-  "poonam": "+919888810811",
-  "harvinder": "+919888810811",
-  "poonam (harvinder)": "+919888810811",
-  "shakuntla devi": "+919872019485",
-  "shakuntla": "+919872019485",
-  "nil kamal devi": "+919872019485",
-  "sahil": "+919056279246",
-  "sahil sharma": "+919056279246",
-  "sahil vashisht": "+919780020307",
-  "surinder kumar": "+918910459215",
-  "surinder": "+918910459215",
-  "mr. surinder singh (w)": "+918910459215",
-  "chetan gumber": "+919814628661",
-  "chetan": "+919814628661",
-  "dr chetan nanda": "+919814628661",
-  "dispatch np": "+919815045700",
-  "kiranjot singh": "+919872412345",
-  "amardeep nijjar": "+919803030388",
-  "harpreet singh": "+919877142366",
-  "kulwant singh": "+919814421127",
-  "rajni bhat": "+919876521035",
-  "priyanka vasisht": "+917814941639",
-  "eshan gaur": "+919814120340",
-  "monu kitchen": "+916280251494",
-  "monu kitchen np": "+916280251494",
-  "parminder singh": "+918558055750",
-  "sushil kumar": "+919815045731",
-  "shr": "+917015274682",
-  "dinesh highland": "+917988695768",
-  "dinesh highland hn no 9": "+917988695768",
-  "jagjeevan gmb": "+919815045732",
-  "jagjeevan gmb mohali": "+919815045732",
-  "nikhil mishra": "+919151610556",
-  "tushar sharma": "+919501653648",
-  "anwarul sir": "+917357441912",
-  "anwarul sir plywood": "+917357441912",
-  "suresh chand": "+919876754841",
-  "rajni rani singla": "+919877865282",
-  "vikram jeet singh": "+918437816715",
-  "sukhwinder singh": "+917814304573",
-  "asam ali": "+916284538873",
-  "satpal singh": "+917015920657",
-  "mohan bni": "+919803353372",
-  "mohan bni id 17": "+919803353372",
-  "megha kumari": "+917503238194",
-  "ranjeet kaur": "+919915911009",
-  "rakesh kumar singh": "+918146795795",
-  "rakesh kalra": "+918146795795",
-  "meenu saxena": "+918146367711",
-  "parag ravish": "+919877808859",
-  "parmjit singh": "+919876111118",
-  "shiv charan": "+919814015003",
-  "rupinder singh": "+917508648100",
-  "manga khan": "+919878685521",
-  "jaimal singh": "+919814017001",
-  "shweta malik": "+919814804391",
-  "gurpreet singh": "+917527055586",
-  "fakir chand": "+919463913526",
-  "akash gupta ambala": "+919034236263",
-  "akshay bhatnagar": "+918287589854",
-  "manoj balai": "+919814015003",
-  "rajiv atri": "+919876543210",
-  "sanju sir plywoods": "+919814015003",
   "deepak": "+919999672763",
   "asha singh": "+919416336813",
   "mahesh tiwari": "+919914543333",
-  "mr. parag ravish (w)": "+919812793309",
+  "mr. parag ravish w": "+919812793309",
   "9779042289": "+919779042289",
   "rahul pal": "+918146559158",
   "harwinder singh": "+919592239595",
   "sundar kumar": "+917015904292",
   "vinod": "+916280033534",
+  "sahil sharma": "+919056279246",
   "sharuk": "+918340210442",
   "amin chand": "+918707019675",
   "raj singh saroha": "+919810970800",
   "rajinder": "+916239502257",
   "kriti sharma": "+919317561594",
-  "mr baldev singh thekedar mohali(w)": "+918699253575",
+  "mr. surinder singh w": "+918910459215",
+  "mr baldev singh thekedar mohali w": "+918699253575",
   "deepika sood": "+917580013001",
   "sujata": "+919872577586",
   "abhishek": "+919115124222",
   "z l mawlong": "+917085048482",
   "kuldeep singh": "+919855185075",
-  "nawendu  kumar jha": "+919780798550",
+  "nawendu kumar jha": "+919780798550",
   "pankaj mohan": "+917056115511",
   "sharma": "+919813094408",
   "kamal chadha": "+919888382543",
   "rajender s bedi": "+919814302105",
   "akshay sardana": "+919988205800",
-  "mr. akram,  (gmb)": "+919870007886",
+  "mr. akram, gmb": "+919870007886",
   "rahul": "+917973737878",
   "jasmin": "+918872853025",
   "kuljit": "+919878968681",
   "zubair thekedar mohali": "+918146278532",
-  "infinium doors & windows (r)": "+919817666664",
+  "infinium doors & windows r": "+919817666664",
   "anshumann bni": "+917529051800",
   "ajay sharma": "+919813840800",
   "ritesh kumar": "+918894341115",
@@ -131,10 +63,10 @@ const KNOWN_CONTACT_PHONES = {
   "pushpreet": "+918360570717",
   "naveen garg": "+919416035687",
   "m r puri": "+919780034968",
-  "mr. vikram mohi khurda (w)": "+918437816715",
+  "mr. vikram mohi khurda w": "+918437816715",
   "narinder": "+919650098446",
   "mr. ricky aerocity": "+918800634333",
-  "mr. gurpreet singh  bni": "+917527055586",
+  "mr. gurpreet singh bni": "+917527055586",
   "ankit": "+919463125137",
   "gourav garg": "+917814849075",
   "bharat": "+917009615993",
@@ -146,14 +78,15 @@ const KNOWN_CONTACT_PHONES = {
   "9780528097": "+918847383683",
   "ashish": "+919050315333",
   "avi handa": "+919780880484",
+  "gurpreet singh": "+917527055586",
   "babu babusingh": "+919876571885",
   "rishi pal": "+919355783100",
   "amritpal singh": "+919417777743",
   "rhythm": "+918556000945",
   "mr. anant": "+919815984006",
-  "mr. vijay r)": "+919815994778",
+  "mr. vijay r": "+919815994778",
   "vijay shekhawat": "+919780850852",
-  "mr. pawan  kumar": "+917837740503",
+  "mr. pawan kumar": "+917837740503",
   "aman badwal": "+917986698881",
   "ms. varinder kaur": "+918054301777",
   "kapil": "+919719956371",
@@ -190,11 +123,12 @@ const KNOWN_CONTACT_PHONES = {
   "girish prabhakar": "+919115552635",
   "charanjit singh": "+919814172939",
   "sanjay sharma": "+919417580303",
+  "dr chetan nanda": "+919814628661",
   "kavi khanna": "+919418025462",
   "ਤੇਰਾ ਦੀਪ": "+917347566793",
   "harminder singh": "+919466658259",
   "charanjit singh channi": "+919872673931",
-  "kanika  sharma": "+918699907006",
+  "kanika sharma": "+918699907006",
   "ravidutt attri": "+918510017010",
   "kanishka kaur anand": "+919914979782",
   "prenika arvind sharma": "+919469892569",
@@ -202,7 +136,7 @@ const KNOWN_CONTACT_PHONES = {
   "cozy home decor": "+919858290546",
   "manjeet singh sethi": "+919464236200",
   "butta salh": "+918872215515",
-  "mr. parag ravish h (w)": "+919812793309",
+  "mr. parag ravish h w": "+919812793309",
   "amit minglani": "+917696162838",
   "shohan": "+918626909793",
   "jaswinder singh badwal": "+918699440444",
@@ -236,10 +170,11 @@ const KNOWN_CONTACT_PHONES = {
   "viney negi": "+919569843730",
   "karanbir singh": "+919814680949",
   "bhupender singh siyal": "+919459240496",
+  "rakesh kalra": "+918146795795",
   "nikhil mehla": "+917009769443",
   "rakesh mittal": "+919988707737",
   "himmat singh": "+917009736903",
-  "mr.dilnawaz (mirza)": "+919592941583",
+  "mr.dilnawaz mirza": "+919592941583",
   "anju kumari": "+917667839765",
   "neeraj": "+918901450678",
   "lakhmir carpenter": "+919781144621",
@@ -247,7 +182,7 @@ const KNOWN_CONTACT_PHONES = {
   "ramesh negi": "+919817829739",
   "jaswant singh": "+919815655178",
   "amrinder singh virk": "+918054011377",
-  "mr. naveen(r)": "+919888123522",
+  "mr. naveen r": "+919888123522",
   "jaideep goyal": "+919876172999",
   "jugbir boora": "+917876500077",
   "baljinder singh": "+919592340007",
@@ -258,7 +193,7 @@ const KNOWN_CONTACT_PHONES = {
   "daud": "+918923669758",
   "kamaljeet": "+917988271228",
   "jagmeet singh": "+919872362995",
-  "mr. r.k  saini (w)": "+919646117704",
+  "mr. r.k saini w": "+919646117704",
   "amit bansal": "+919882327735",
   "ram sarup sharma": "+919876764572",
   "salman gmb": "+917500328124",
@@ -268,7 +203,7 @@ const KNOWN_CONTACT_PHONES = {
   "amrit singh carpenter": "+917340999407",
   "amrinder singh": "+917009534277",
   "amit singh thekedar": "+917015490176",
-  "amit carpenter (new)": "+919779147824",
+  "amit carpenter new": "+919779147824",
   "amir khan carpenter": "+916284450891",
   "amir ali carpenter": "+919870338779",
   "ajay thekedar": "+919501367006",
@@ -276,7 +211,7 @@ const KNOWN_CONTACT_PHONES = {
   "amrik singh saini carpenter": "+919988357080",
   "amrik carpenter falcon": "+919855870902",
   "amardeep singh carpenter": "+919803030388",
-  "amandeep singh new (chd) carpenter": "+918283846435",
+  "amandeep singh new chd carpenter": "+918283846435",
   "ajay kumar thekedar": "+919115019533",
   "ansan carpenter": "+919463343774",
   "afzal carpenter": "+919888394630",
@@ -284,7 +219,7 @@ const KNOWN_CONTACT_PHONES = {
   "alam carpenter.": "+917986674347",
   "shyam lal": "+917888722234",
   "kailash": "+919682534248",
-  "puran dhiman thekedar (ref by avtar thekedar)": "+917986979203",
+  "puran dhiman thekedar ref by avtar thekedar": "+917986979203",
   "jaggi": "+919878582117",
   "gurmail thekedar": "+919855156161",
   "meenu badhwar": "+919216712787",
@@ -316,14 +251,14 @@ const KNOWN_CONTACT_PHONES = {
   "mr. surjeet": "+918968847226",
   "shilpa pathak": "+919876764720",
   "pawan kumar": "+917837740503",
-  "ms. jasnoor (gmb)": "+919306461334",
+  "ms. jasnoor gmb": "+919306461334",
   "vikram gupta": "+919812043734",
   "jyoti": "+919115499939",
   "yogeshchd@rediffmail.com": "+919815717739",
   "mr. pavitar singh grewal": "+917888737518",
   "pavitar singh grewal": "+917888737518",
   "harvinder kumar": "+919805730626",
-  "mr. rajesh (w)": "+919814111536",
+  "mr. rajesh w": "+919814111536",
   "inderesh kumar": "+919888810998",
   "agantook": "+919501826762",
   "aakriti bhatt": "+919814606740",
@@ -331,6 +266,7 @@ const KNOWN_CONTACT_PHONES = {
   "aman rupal": "+919815928229",
   "सुभाष रघुवंशी": "+918219860971",
   "masti with khushi": "+918826750958",
+  "sahil vashisht": "+919780020307",
   "mr. kant mandi simla": "+918894892235",
   "varinder miglani": "+919814466788",
   "rahul kataria": "+917696219355",
@@ -339,7 +275,6 @@ const KNOWN_CONTACT_PHONES = {
   "musskan": "+918283825815",
   "jatinder singh": "+918699423766",
   "jay shri ram": "+919780595209",
-  "ks": "+918699555595",
   "sanjeev": "+919501017341",
   "sain ram shyam": "+918219670957",
   "mr. gurinder singh": "+919417472677",
@@ -348,7 +283,7 @@ const KNOWN_CONTACT_PHONES = {
   "hemant kumar": "+919041247270",
   "bipan bagga": "+917973686521",
   "nawjeet singh bedi": "+918918016233",
-  "mrs. surinder khatri (gmb)": "+919438370510",
+  "mrs. surinder khatri gmb": "+919438370510",
   "maninder pal mohali gmb": "+919417195964",
   "maan_praveenhnkiim.i": "+918146065105",
   "sanju test": "+917814435761",
@@ -364,7 +299,7 @@ const KNOWN_CONTACT_PHONES = {
   "sanjeev varshney": "+919815717361",
   "sumit gmb": "+918708960692",
   "ashwani": "+919465373633",
-  "mona gmb (mitesh mlp galleria)": "+918800760728",
+  "mona gmb mitesh mlp galleria": "+918800760728",
   "gagana btauli": "+918427795395",
   "gurcharan singh": "+919466077700",
   "kant hingorani": "+919816509682",
@@ -378,7 +313,7 @@ const KNOWN_CONTACT_PHONES = {
   "harbhajan singh": "+919653873013",
   "amit sehgal": "+919816019001",
   "tarika madan_test": "+919779744428",
-  "mr.dilpreet singh(m)": "+919914093335",
+  "mr.dilpreet singh m": "+919914093335",
   "harpreet saini": "+918054008482",
   "sudhir jain": "+918146367711",
   "anup": "+919418446856",
@@ -386,7 +321,7 @@ const KNOWN_CONTACT_PHONES = {
   "deepak panwar": "+919459024363",
   "mr. arvind": "+919416583677",
   "daksh arora": "+919816502727",
-  "krishna mohan - test": "+916591002242",
+  "krishna mohan test": "+916591002242",
   "sanjeev thakur": "+919971657598",
   "nikhil rajput": "+917807338154",
   "nirmita": "+917901856153",
@@ -398,23 +333,103 @@ const KNOWN_CONTACT_PHONES = {
   "priyanka rana": "+917206220489",
   "krishna test": "+918950281868",
   "mo irfan": "+917895188821",
-  "ramesh sharma": "+919418211206"
+  "ramesh sharma": "+919418211206",
+  "poonam": "+919888810811",
+  "harvinder": "+919888810811",
+  "poonam (harvinder)": "+919888810811",
+  "shakuntla devi": "+919872019485",
+  "shakuntla": "+919872019485",
+  "nil kamal devi": "+919872019485",
+  "sahil": "+919056279246",
+  "surinder kumar": "+918910459215",
+  "surinder": "+918910459215",
+  "mr. surinder singh (w)": "+918910459215",
+  "chetan gumber": "+919814628661",
+  "chetan": "+919814628661",
+  "dispatch np": "+919815045700",
+  "kiranjot singh": "+919872412345",
+  "amardeep nijjar": "+919803030388",
+  "harpreet singh": "+919877142366",
+  "kulwant singh": "+919814421127",
+  "rajni bhat": "+919876521035",
+  "priyanka vasisht": "+917814941639",
+  "eshan gaur": "+919814120340",
+  "monu kitchen": "+916280251494",
+  "monu kitchen np": "+916280251494",
+  "parminder singh": "+918558055750",
+  "sushil kumar": "+919815045731",
+  "shr": "+917015274682",
+  "dinesh highland": "+917988695768",
+  "dinesh highland hn no 9": "+917988695768",
+  "jagjeevan gmb": "+919815045732",
+  "jagjeevan gmb mohali": "+919815045732",
+  "nikhil mishra": "+919151610556",
+  "tushar sharma": "+919501653648",
+  "anwarul sir": "+917357441912",
+  "anwarul sir plywood": "+917357441912",
+  "suresh chand": "+919876754841",
+  "rajni rani singla": "+919877865282",
+  "vikram jeet singh": "+918437816715",
+  "sukhwinder singh": "+917814304573",
+  "asam ali": "+916284538873",
+  "satpal singh": "+917015920657",
+  "mohan bni": "+919803353372",
+  "mohan bni id 17": "+919803353372",
+  "megha kumari": "+917503238194",
+  "ranjeet kaur": "+919915911009",
+  "rakesh kumar singh": "+918146795795",
+  "meenu saxena": "+918146367711",
+  "parag ravish": "+919877808859",
+  "parmjit singh": "+919876111118",
+  "shiv charan": "+919814015003",
+  "rupinder singh": "+917508648100",
+  "manga khan": "+919878685521",
+  "jaimal singh": "+919814017001",
+  "shweta malik": "+919814804391",
+  "fakir chand": "+919463913526",
+  "akash gupta ambala": "+919034236263",
+  "akshay bhatnagar": "+918287589854",
+  "manoj balai": "+919814015003",
+  "rajiv atri": "+919876543210",
+  "sanju sir plywoods": "+919814015003",
+  "mr. parag ravish (w)": "+919812793309",
+  "mr baldev singh thekedar mohali(w)": "+918699253575",
+  "nawendu  kumar jha": "+919780798550",
+  "mr. akram,  (gmb)": "+919870007886",
+  "infinium doors & windows (r)": "+919817666664",
+  "mr. vikram mohi khurda (w)": "+918437816715",
+  "mr. gurpreet singh  bni": "+917527055586",
+  "mr. vijay r)": "+919815994778",
+  "mr. pawan  kumar": "+917837740503",
+  "kanika  sharma": "+918699907006",
+  "mr. parag ravish h (w)": "+919812793309",
+  "mr.dilnawaz (mirza)": "+919592941583",
+  "mr. naveen(r)": "+919888123522",
+  "mr. r.k  saini (w)": "+919646117704",
+  "amit carpenter (new)": "+919779147824",
+  "amandeep singh new (chd) carpenter": "+918283846435",
+  "puran dhiman thekedar (ref by avtar thekedar)": "+917986979203",
+  "ms. jasnoor (gmb)": "+919306461334",
+  "mr. rajesh (w)": "+919814111536",
+  "ks": "+918699555595",
+  "mrs. surinder khatri (gmb)": "+919438370510",
+  "mona gmb (mitesh mlp galleria)": "+918800760728",
+  "mr.dilpreet singh(m)": "+919914093335",
+  "krishna mohan - test": "+916591002242"
 };
 
 function resolveContactNameToPhone(contactName) {
   if (!contactName) return '';
-  const clean = String(contactName).toLowerCase().replace(/[\(\)\-]/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!clean || clean === 'direct phone call' || clean.includes('customer call') || clean.includes('unknown')) return '';
+  const str = String(contactName).toLowerCase().replace(/[\(\)\-\_]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!str || str === 'direct phone call' || str === 'direct customer call' || str === 'customer call') return '';
+  if (KNOWN_CONTACT_PHONES[str]) return KNOWN_CONTACT_PHONES[str];
+  const normalizedStr = str.replace(/[^a-z0-9]/g, '');
   for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
-    if (clean === k || clean.includes(k) || k.includes(clean)) return p;
-  }
-  const words = clean.split(' ').filter(w => w.length >= 3);
-  for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
-    if (words.some(w => k.includes(w))) return p;
+    const normalizedKey = k.replace(/[^a-z0-9]/g, '');
+    if (normalizedStr === normalizedKey) return p;
   }
   return '';
 }
-
 const KNOWN_DRIVE_MAPPINGS = {
   "1MrHgOcUlZU5qv3Le2-xncQGUYRvBOHQR": { "name": "Dispatch Np", "phone": "+919815045700", "dur": 45, "time": "6 Nov, 11:45 AM", "device": "OnePlus", "dir": "INBOUND", "file": "Dispatch Np-2611061145.mp3" },
   "1zb89USnVvWzzpPgRFGR8pZvvQ5HBzSZo": { "name": "Shakuntla Devi", "phone": "+919872019485", "dur": 45, "time": "6 Nov, 11:29 AM", "device": "OnePlus", "dir": "INBOUND", "file": "Shakuntla Devi-2611061129.mp3" },
@@ -619,14 +634,93 @@ function parseDriveRecordings(html, forcedDevice = "Auto") {
 }
 
 function deduplicateCalls(calls) {
-  const seen = new Set();
   const deduped = [];
-  calls.forEach(c => {
-    if (!c || !c.id) return;
-    if (seen.has(c.id)) return;
-    seen.add(c.id);
+  const seenIds = new Set();
+  const seenDriveIds = new Set();
+  const seenFileBases = new Set();
+  const seenPhoneTimes = new Map();
+  const seenNameTimes = new Map();
+
+  const MIRROR_DUPLICATES_TO_SKIP = new Set([
+    '1L3svOsmB3Z2NDKry47XlrtqLr9kJPH92',
+    '1WWzFE2Uhgl_FeFKpNbWIEjVnBBlg1Ag4',
+    '1caf1BOZ9TO9Kc4WzpTyoZGFH_HzozeLP',
+    '1VrsO6TX7uQecanxBUYzXhwLP-bgV1hxL',
+    '1RHY2u2oT5xQdtrWxYxGe2dhXXVRcEI15',
+    '1Ke-P02cvo9ClDNOa1tfnUaaM1eWGZEtH'
+  ]);
+
+  for (const c of calls) {
+    if (!c || !c.id) continue;
+    if (seenIds.has(c.id)) continue;
+
+    const driveId = c.drive_file_id || (c.recording_url && c.recording_url.match(/id=([a-zA-Z0-9_-]{20,})/)?.[1]);
+    if (driveId && MIRROR_DUPLICATES_TO_SKIP.has(driveId)) continue;
+    if (c.id && Array.from(MIRROR_DUPLICATES_TO_SKIP).some(mid => c.id.includes(mid))) continue;
+
+    if (driveId) {
+      if (seenDriveIds.has(driveId)) continue;
+      seenDriveIds.add(driveId);
+    }
+
+    const rawFile = c.recording_file_name || c.audio_file_name || c.file || '';
+    if (rawFile) {
+      const cleanBase = rawFile.replace(/\.(mp3|m4a|wav|aac|amr)$/i, '').trim().toLowerCase();
+      if (cleanBase) {
+        if (seenFileBases.has(cleanBase)) continue;
+        seenFileBases.add(cleanBase);
+      }
+    }
+
+    const d = new Date(c.date || c.timestamp || c.created_at);
+    const timeMs = d.getTime();
+    const phone = String(c.caller_number || c.phone || '').replace(/\D/g, '').slice(-10);
+    const name = String(c.caller_name || c.leadName || '').trim().toLowerCase();
+
+    if (phone && phone.length === 10 && !isNaN(timeMs)) {
+      const existingList = seenPhoneTimes.get(phone) || [];
+      const match = existingList.find(item => Math.abs(item.timeMs - timeMs) <= 180000);
+      if (match) {
+        if (c.hasAudio && !match.call.hasAudio) {
+          match.call.recording_url = c.recording_url;
+          match.call.audioUrl = c.audioUrl;
+          match.call.drive_file_id = c.drive_file_id;
+          match.call.hasAudio = true;
+          match.call.duration = c.duration;
+        }
+        if (c.deviceName === 'iQOO' && match.call.deviceName !== 'iQOO') {
+          match.call.deviceName = 'iQOO';
+          match.call.device_name = 'iQOO';
+          match.call.staff_name = 'iQOO';
+        }
+        continue;
+      } else {
+        existingList.push({ timeMs, call: c });
+        seenPhoneTimes.set(phone, existingList);
+      }
+    }
+
+    if (name && name !== 'direct phone call' && name !== 'customer call' && !name.includes('direct call') && !name.includes('customer') && !isNaN(timeMs)) {
+      const existingList = seenNameTimes.get(name) || [];
+      const match = existingList.find(item => Math.abs(item.timeMs - timeMs) <= 180000);
+      if (match) {
+        if (c.hasAudio && !match.call.hasAudio) {
+          match.call.recording_url = c.recording_url;
+          match.call.audioUrl = c.audioUrl;
+          match.call.drive_file_id = c.drive_file_id;
+          match.call.hasAudio = true;
+          match.call.duration = c.duration;
+        }
+        continue;
+      } else {
+        existingList.push({ timeMs, call: c });
+        seenNameTimes.set(name, existingList);
+      }
+    }
+
+    seenIds.add(c.id);
     deduped.push(c);
-  });
+  }
   return deduped;
 }
 
@@ -771,21 +865,7 @@ module.exports = async (req, res) => {
         }
       }
 
-      if (!matchedCall && rec.timestamp) {
-        const recTime = new Date(rec.timestamp).getTime();
-        matchedCall = calls.find(c => {
-          if (c.recording_url && !c.recording_url.includes('UklGRuRdAABX')) return false;
-          const cDev = (c.device_name || c.deviceName || c.staff_name || '').toLowerCase();
-          const rDev = (rec.deviceName || '').toLowerCase();
-          const devMatch = (cDev.includes('oneplus') && rDev.includes('oneplus')) || 
-                           (cDev.includes('samsung') && rDev.includes('samsung')) ||
-                           (cDev.includes('iq') && rDev.includes('iq')) ||
-                           (!cDev || cDev === 'all');
-          if (!devMatch) return false;
-          const cTime = new Date(c.created_at || c.timestamp || c.time).getTime();
-          return !isNaN(cTime) && Math.abs(recTime - cTime) <= 900000;
-        });
-      }
+      // Blind 15-minute timestamp matching removed to prevent cross-customer audio contamination
 
       if (matchedCall) {
         if (!matchedCall.direction || matchedCall.direction === 'INBOUND') {
@@ -830,8 +910,8 @@ module.exports = async (req, res) => {
         if (recTime >= CUTOFF_DATE) {
           const isOnePlus = rec.deviceName === 'OnePlus';
           const cName = rec.contactName || (rec.phoneDigits ? 'Direct Phone Call' : (isOnePlus ? 'OnePlus Call (' + (rec.formattedTime || 'Recent') + ')' : 'Direct Customer Call'));
-          const resolvedPhone = rec.phone || resolveContactNameToPhone(rec.contactName) || "";
-          const cNum = (resolvedPhone && /\d{7,}/.test(resolvedPhone)) ? resolvedPhone : ((rec.phoneDigits && rec.phoneDigits.length === 10) ? ('+91' + rec.phoneDigits) : (resolveContactNameToPhone(rec.contactName) || 'Direct Phone Call'));
+          let resolvedPhone = rec.phone || resolveContactNameToPhone(rec.contactName || rec.name) || "";
+          let cNum = (resolvedPhone && /\d{7,}/.test(resolvedPhone)) ? resolvedPhone : ((rec.phoneDigits && rec.phoneDigits.length === 10) ? ('+91' + rec.phoneDigits) : (resolveContactNameToPhone(rec.contactName) || ''));
           const devName = rec.deviceName || (isOnePlus ? 'OnePlus' : 'Samsung Galaxy');
           const newCall = {
             id: `call-rec-${rec.id}`,
@@ -839,8 +919,8 @@ module.exports = async (req, res) => {
             phone: cNum,
             caller_name: cName,
             leadName: cName,
-            call_type: ((KNOWN_DRIVE_MAPPINGS[rec.id] && KNOWN_DRIVE_MAPPINGS[rec.id].dir) || (KNOWN_OUTBOUND_CONTACTS.some(oc => (cName + ' ' + (rec.name||'')).toLowerCase().includes(oc)) ? 'OUTBOUND' : 'INBOUND')),
-            direction: ((KNOWN_DRIVE_MAPPINGS[rec.id] && KNOWN_DRIVE_MAPPINGS[rec.id].dir) || (KNOWN_OUTBOUND_CONTACTS.some(oc => (cName + ' ' + (rec.name||'')).toLowerCase().includes(oc)) ? 'OUTBOUND' : 'INBOUND')),
+            call_type: ((KNOWN_DRIVE_MAPPINGS[rec.id] && KNOWN_DRIVE_MAPPINGS[rec.id].dir) || 'INBOUND'),
+            direction: ((KNOWN_DRIVE_MAPPINGS[rec.id] && KNOWN_DRIVE_MAPPINGS[rec.id].dir) || 'INBOUND'),
             outcome: 'Connected',
             call_outcome: 'Connected',
             callOutcome: 'Connected',
