@@ -733,7 +733,7 @@ module.exports = async (req, res) => {
     const uniqueRecs = Array.from(seenFileNames.values());
 
     let attachedCount = 0;
-    const CUTOFF_DATE = new Date('2026-10-20T00:00:00.000Z').getTime();
+    const CUTOFF_DATE = 0; // No cutoff date: all historical recordings preserved
 
     uniqueRecs.forEach(rec => {
       let matchedCall = calls.find(c => c.drive_file_id === rec.id || (c.recording_url && c.recording_url.includes(rec.id)));
