@@ -5099,6 +5099,56 @@
   <!-- ============================================================= -->
   <!-- ========== MODAL 1: STAGE CHANGE CONFIRMATION POPUP ========= -->
   <!-- ============================================================= -->
+  
+  <!-- ==================== FOLLOWUP CALL REQUIRED WARNING MODAL ==================== -->
+  <div id="followup-call-required-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[100006] hidden flex items-center justify-center p-4">
+    <div class="bg-card w-full max-w-md rounded-3xl shadow-2xl p-6 border-2 border-amber-500/50 space-y-4 animate-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between pb-3 border-b border-main">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 border border-amber-500/40 flex items-center justify-center font-black">
+            <i data-lucide="phone-call" class="w-5 h-5 text-amber-500"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-main">Follow-up Call Required</h3>
+            <p class="text-[11px] text-amber-500 font-bold">Stage badhane se pehle call dial karna zaroori hai</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('followup-call-required-modal')" class="text-muted-custom hover:text-gold transition p-1 cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase font-bold text-muted-custom">Lead Name</span>
+          <span id="followup-req-lead-name" class="font-black text-sm text-main truncate max-w-[200px]">Client</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase font-bold text-muted-custom">Phone Number</span>
+          <span id="followup-req-lead-phone" class="font-mono font-black text-xs text-amber-500">+91 0000000000</span>
+        </div>
+        <div class="flex items-center justify-between border-t border-amber-500/20 pt-2">
+          <span class="text-[11px] uppercase font-bold text-muted-custom">Scheduled Follow-up</span>
+          <span id="followup-req-lead-time" class="font-bold text-xs text-main">Next Follow-up Call</span>
+        </div>
+        <div class="p-2.5 rounded-xl bg-card border border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium text-xs flex items-start gap-2">
+          <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-amber-500 mt-0.5"></i>
+          <span>Is lead ka follow-up call pending hai. Jab tak yahan se call dial nahi hoti ya baat nahi hoti, tab tak ye lead agle stage par move nahi hogi.</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2">
+        <button type="button" onclick="closeModal('followup-call-required-modal')" class="px-4 py-2.5 rounded-xl border border-main text-xs font-bold text-muted-custom hover:text-main transition cursor-pointer">
+          Cancel (Wapas Jayein)
+        </button>
+        <button type="button" id="followup-req-call-btn" onclick="executePendingFollowupCall()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-2 shadow-lg transition cursor-pointer">
+          <i data-lucide="phone-outgoing" class="w-4 h-4"></i>
+          <span>📞 Abhi Call Dial Karein</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="stage-change-confirm-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-card w-full max-w-md rounded-3xl shadow-2xl p-6 border border-main space-y-4 animate-in fade-in duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-main">
@@ -11240,6 +11290,13 @@
           if (lead.stageId === targetStageId) {
             showToast('Lead already in "' + targetStage.name + '"', 'info');
           } else {
+            // Check Follow-up Call Enforcement!
+            if (!checkLeadCanAdvanceStage(lead, targetStageId)) {
+              showToast('⚠️ Call Required: Is lead ka next follow-up pending hai! Agle stage par move karne se pehle call dial karein.', 'warning');
+              showFollowupCallRequiredModal(lead, targetStageId);
+              handleLeadCardDragEnd(e);
+              return;
+            }
             if (targetStage.isLost) {
               currentSelectedLead = lead;
               openLeadLossReasonModal(targetStage.id);
@@ -11534,6 +11591,180 @@
 
         const DEFAULT_BUNDLED_CALL_LOGS = [
   {
+    "id": "call-rec-1MrHgOcUlZU5qv3Le2-xncQGUYRvBOHQR",
+    "caller_number": "+919815045700",
+    "phone": "+919815045700",
+    "caller_name": "Dispatch Np",
+    "leadName": "Dispatch Np",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-06T06:15:00.000Z",
+    "timestamp": "2026-11-06T06:15:00.000Z",
+    "time": "6 Nov, 11:45 AM",
+    "recording_url": "/api/call-audio?id=1MrHgOcUlZU5qv3Le2-xncQGUYRvBOHQR",
+    "audioUrl": "/api/call-audio?id=1MrHgOcUlZU5qv3Le2-xncQGUYRvBOHQR",
+    "hasAudio": true,
+    "drive_file_id": "1MrHgOcUlZU5qv3Le2-xncQGUYRvBOHQR",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus",
+    "lead_id": "",
+    "leadId": "",
+    "ai_summary": "",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-rec-1zb89USnVvWzzpPgRFGR8pZvvQ5HBzSZo",
+    "caller_number": "+919872019485",
+    "phone": "+919872019485",
+    "caller_name": "Shakuntla Devi",
+    "leadName": "Shakuntla Devi",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-06T05:59:00.000Z",
+    "timestamp": "2026-11-06T05:59:00.000Z",
+    "time": "6 Nov, 11:29 AM",
+    "recording_url": "/api/call-audio?id=1zb89USnVvWzzpPgRFGR8pZvvQ5HBzSZo",
+    "audioUrl": "/api/call-audio?id=1zb89USnVvWzzpPgRFGR8pZvvQ5HBzSZo",
+    "hasAudio": true,
+    "drive_file_id": "1zb89USnVvWzzpPgRFGR8pZvvQ5HBzSZo",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus",
+    "lead_id": "",
+    "leadId": "",
+    "ai_summary": "",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-rec-1RWJvm1zXCyqKNf2Gm_Ozneh8AcbvgBrF",
+    "caller_number": "+918427761777",
+    "phone": "+918427761777",
+    "caller_name": "Direct Phone Call",
+    "leadName": "Direct Phone Call",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-06T05:57:00.000Z",
+    "timestamp": "2026-11-06T05:57:00.000Z",
+    "time": "6 Nov, 11:27 AM",
+    "recording_url": "/api/call-audio?id=1RWJvm1zXCyqKNf2Gm_Ozneh8AcbvgBrF",
+    "audioUrl": "/api/call-audio?id=1RWJvm1zXCyqKNf2Gm_Ozneh8AcbvgBrF",
+    "hasAudio": true,
+    "drive_file_id": "1RWJvm1zXCyqKNf2Gm_Ozneh8AcbvgBrF",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus",
+    "lead_id": "",
+    "leadId": "",
+    "ai_summary": "",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-rec-1_kF0SwikhBib9iJSqhxkAfN9EDUsB2m8",
+    "caller_number": "+919056279246",
+    "phone": "+919056279246",
+    "caller_name": "Sahil",
+    "leadName": "Sahil",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 28,
+    "call_duration": 28,
+    "created_at": "2026-11-06T05:24:00.000Z",
+    "timestamp": "2026-11-06T05:24:00.000Z",
+    "time": "6 Nov, 10:54 AM",
+    "recording_url": "/api/call-audio?id=1_kF0SwikhBib9iJSqhxkAfN9EDUsB2m8",
+    "audioUrl": "/api/call-audio?id=1_kF0SwikhBib9iJSqhxkAfN9EDUsB2m8",
+    "hasAudio": true,
+    "drive_file_id": "1_kF0SwikhBib9iJSqhxkAfN9EDUsB2m8",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus",
+    "lead_id": "",
+    "leadId": "",
+    "ai_summary": "",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-rec-1--a2nAnc2gSjjZaVsZij8A4KBY2EumFz",
+    "caller_number": "+918910459215",
+    "phone": "+918910459215",
+    "caller_name": "Surinder Kumar",
+    "leadName": "Surinder Kumar",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 28,
+    "call_duration": 28,
+    "created_at": "2026-11-05T12:59:00.000Z",
+    "timestamp": "2026-11-05T12:59:00.000Z",
+    "time": "5 Nov, 06:29 PM",
+    "recording_url": "/api/call-audio?id=1--a2nAnc2gSjjZaVsZij8A4KBY2EumFz",
+    "audioUrl": "/api/call-audio?id=1--a2nAnc2gSjjZaVsZij8A4KBY2EumFz",
+    "hasAudio": true,
+    "drive_file_id": "1--a2nAnc2gSjjZaVsZij8A4KBY2EumFz",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus",
+    "lead_id": "",
+    "leadId": "",
+    "ai_summary": "",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
+    "id": "call-rec-1dpRMXa_ZIYTzHGxFb-M6Sljwuoz0w1Sy",
+    "caller_number": "+919814628661",
+    "phone": "+919814628661",
+    "caller_name": "Chetan Gumber",
+    "leadName": "Chetan Gumber",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-05T11:34:00.000Z",
+    "timestamp": "2026-11-05T11:34:00.000Z",
+    "time": "05 Nov, 05:04 PM",
+    "recording_url": "/api/call-audio?id=1dpRMXa_ZIYTzHGxFb-M6Sljwuoz0w1Sy",
+    "audioUrl": "/api/call-audio?id=1dpRMXa_ZIYTzHGxFb-M6Sljwuoz0w1Sy",
+    "hasAudio": true,
+    "drive_file_id": "1dpRMXa_ZIYTzHGxFb-M6Sljwuoz0w1Sy",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus",
+    "lead_id": "",
+    "leadId": "",
+    "ai_summary": "",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
     "id": "call-rec-1LHCu17VhfALSe97YgZTv7MfUAn2hjmMS",
     "caller_number": "+919872412345",
     "phone": "+919872412345",
@@ -11584,7 +11815,8 @@
     "duration": 26,
     "leadName": "Direct Phone Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Connected",
+    "call_type": "INBOUND"
   },
   {
     "id": "call-log-1793865934398-819",
@@ -11608,7 +11840,8 @@
     "duration": 225,
     "leadName": "Direct Phone Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Connected",
+    "call_type": "INBOUND"
   },
   {
     "id": "call-log-1793865641323-413",
@@ -11632,7 +11865,8 @@
     "duration": 51,
     "leadName": "AKSHAY BHATNAGAR",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Connected",
+    "call_type": "INBOUND"
   },
   {
     "id": "call-log-1793865083396-863",
@@ -11681,7 +11915,8 @@
     "duration": 73,
     "leadName": "Fakir Chand",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Connected",
+    "call_type": "INBOUND"
   },
   {
     "id": "call-log-1793863469729-977",
@@ -11704,7 +11939,8 @@
     "hasAudio": true,
     "duration": 34,
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Connected",
+    "call_type": "INBOUND"
   },
   {
     "id": "call-log-1793861025892-205",
@@ -11728,7 +11964,8 @@
     "duration": 10,
     "leadName": "( Spam Alert From Jio) Mazed Mallick",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Connected",
+    "call_type": "INBOUND"
   },
   {
     "id": "call-rec-1Qd7sd0_lreRAf7fgObGukm15QfPIEvTF",
@@ -11753,7 +11990,7 @@
     "deviceName": "OnePlus",
     "device_name": "OnePlus",
     "staff_name": "OnePlus",
-    "lead_id": "",
+    "lead_id": "lead-incoming-1793792120402",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -11840,7 +12077,7 @@
     "deviceName": "OnePlus",
     "device_name": "OnePlus",
     "staff_name": "OnePlus",
-    "lead_id": "",
+    "lead_id": "lead-incoming-1793786707271",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -11898,7 +12135,7 @@
     "deviceName": "OnePlus",
     "device_name": "OnePlus",
     "staff_name": "OnePlus",
-    "lead_id": "",
+    "lead_id": "lead-incoming-1793783966053",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -11927,7 +12164,7 @@
     "deviceName": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
     "staff_name": "Samsung Galaxy",
-    "lead_id": "",
+    "lead_id": "lead-incoming-1793783929521",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -11956,7 +12193,7 @@
     "deviceName": "iQOO",
     "device_name": "iQOO",
     "staff_name": "iQOO",
-    "lead_id": "",
+    "lead_id": "lead-incoming-1793783670923",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -12042,7 +12279,7 @@
     "deviceName": "OnePlus",
     "device_name": "OnePlus",
     "staff_name": "OnePlus",
-    "lead_id": "",
+    "lead_id": "lead-incoming-1793779926936",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -12192,7 +12429,7 @@
     "deviceName": "OnePlus",
     "device_name": "OnePlus",
     "staff_name": "OnePlus",
-    "lead_id": "",
+    "lead_id": "lead-incoming-1793772373369",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -12342,7 +12579,7 @@
     "deviceName": "OnePlus",
     "device_name": "OnePlus",
     "staff_name": "OnePlus",
-    "lead_id": "",
+    "lead_id": "lead-incoming-1793695879408",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -12522,7 +12759,7 @@
     "deviceName": "OnePlus",
     "device_name": "OnePlus",
     "staff_name": "OnePlus",
-    "lead_id": "",
+    "lead_id": "lead-incoming-1793689994283",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -12552,7 +12789,7 @@
     "deviceName": "OnePlus",
     "device_name": "OnePlus",
     "staff_name": "OnePlus",
-    "lead_id": "",
+    "lead_id": "lead-incoming-1793689696117",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -12612,7 +12849,7 @@
     "deviceName": "OnePlus",
     "device_name": "OnePlus",
     "staff_name": "OnePlus",
-    "lead_id": "",
+    "lead_id": "lead-phone-6280251494",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -12732,7 +12969,7 @@
     "deviceName": "iQOO",
     "device_name": "iQOO",
     "staff_name": "iQOO",
-    "lead_id": "",
+    "lead_id": "lead-phone-6280251494",
     "leadId": "",
     "ai_summary": "",
     "aiSummary": "",
@@ -14852,6 +15089,35 @@
     "transcript": ""
   },
   {
+    "id": "call-rec-1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw",
+    "caller_number": "😎",
+    "phone": "😎",
+    "caller_name": "😎",
+    "leadName": "😎",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 28,
+    "call_duration": 28,
+    "created_at": "2026-10-23T12:27:50.000Z",
+    "timestamp": "2026-10-23T12:27:50.000Z",
+    "time": "23 Oct, 05:57 PM",
+    "recording_url": "/api/call-audio?id=1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw",
+    "audioUrl": "/api/call-audio?id=1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw",
+    "hasAudio": true,
+    "drive_file_id": "1l0W36bjGKFAeWcfwJ_X9XnKFxJ-aq6Hw",
+    "deviceName": "Samsung Galaxy",
+    "device_name": "Samsung Galaxy",
+    "staff_name": "Samsung Galaxy",
+    "lead_id": "",
+    "leadId": "",
+    "ai_summary": "",
+    "aiSummary": "",
+    "transcript": ""
+  },
+  {
     "id": "call-rec-1guPVfglcsozw_fJ35z1qyv2ZvDg6LVZ7",
     "caller_number": "+919876111118",
     "phone": "+919876111118",
@@ -15243,19 +15509,20 @@
     "caller_number": "+919888810811 (Poonam)",
     "caller_name": "Poonam",
     "receiver_number": "",
-    "call_duration": 30,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "OUTBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Outbound (Not Picked)",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-05T07:18:16.123Z",
     "time": "05 Nov, 12:48 PM",
-    "outcome": "Connected",
+    "outcome": "Outbound (Not Picked)",
     "call_type": "OUTBOUND",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Outbound (Not Picked)",
+    "duration": 0
   },
   {
     "id": "call-log-1793862209799-488",
@@ -15388,18 +15655,20 @@
     "caller_number": "+917807232047",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T13:55:59.989Z",
     "time": "04 Nov, 07:25 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793793141803-233",
@@ -15407,38 +15676,19 @@
     "caller_number": "+919999988888 (Test Customer iQOO)",
     "caller_name": "Test Customer iQOO",
     "receiver_number": "",
-    "call_duration": 35,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "OUTBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Outbound (Not Picked)",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-04T11:52:21.803Z",
     "time": "04 Nov, 05:22 PM",
-    "outcome": "Connected",
+    "outcome": "Outbound (Not Picked)",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793792120402-345",
-    "lead_id": "lead-incoming-1793792120402",
-    "caller_number": "+917814435761",
-    "caller_name": "Sanju Sir Plywoods",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "created_at": "2026-11-04T11:35:20.402Z",
-    "time": "04 Nov, 05:05 PM",
-    "outcome": "Connected",
-    "deviceName": "OnePlus",
-    "phone": "+917814435761",
-    "callOutcome": "Connected"
+    "callOutcome": "Outbound (Not Picked)",
+    "duration": 0
   },
   {
     "id": "call-log-1793791742639-652",
@@ -15446,18 +15696,20 @@
     "caller_number": "+919815899995",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T11:29:02.639Z",
     "time": "04 Nov, 04:59 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "Samsung Galaxy",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793790819690-692",
@@ -15465,18 +15717,20 @@
     "caller_number": "+919315341969",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T11:13:39.690Z",
     "time": "04 Nov, 04:43 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "Samsung Galaxy",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793787952782-426",
@@ -15484,18 +15738,20 @@
     "caller_number": "+919855099995",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T10:25:52.782Z",
     "time": "04 Nov, 03:55 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "Samsung Galaxy",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793787683964-913",
@@ -15517,43 +15773,26 @@
     "callOutcome": "Missed Call"
   },
   {
-    "id": "call-log-1793786707271-652",
-    "lead_id": "lead-incoming-1793786707271",
-    "caller_number": "+919056586198",
-    "caller_name": "",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "created_at": "2026-11-04T10:05:07.271Z",
-    "time": "04 Nov, 03:35 PM",
-    "outcome": "Connected",
-    "deviceName": "OnePlus",
-    "callOutcome": "Connected"
-  },
-  {
     "id": "call-log-1793785810331-3",
     "lead_id": "lead-incoming-1793785810331",
     "caller_number": "+917814435761",
     "caller_name": "Sanju Sir Plywoods",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T09:50:10.331Z",
     "time": "04 Nov, 03:20 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
     "phone": "+917814435761",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793784273711-780",
@@ -15561,75 +15800,20 @@
     "caller_number": "+919671695111 (Vipul Chandigarh)",
     "caller_name": "Vipul Chandigarh",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T09:24:33.711Z",
     "time": "04 Nov, 02:54 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793783966053-566",
-    "lead_id": "lead-incoming-1793783966053",
-    "caller_number": "+919592372009",
-    "caller_name": "",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "created_at": "2026-11-04T09:19:26.053Z",
-    "time": "04 Nov, 02:49 PM",
-    "outcome": "Connected",
-    "deviceName": "OnePlus",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793783929521-444",
-    "lead_id": "lead-incoming-1793783929521",
-    "caller_number": "+919855099995",
-    "caller_name": "",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "Samsung Galaxy",
-    "device_name": "Samsung Galaxy",
-    "created_at": "2026-11-04T09:18:49.521Z",
-    "time": "04 Nov, 02:48 PM",
-    "outcome": "Connected",
-    "deviceName": "Samsung Galaxy",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793783670923-423",
-    "lead_id": "lead-incoming-1793783670923",
-    "caller_number": "+919888810811",
-    "caller_name": "",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "iQOO",
-    "device_name": "iQOO",
-    "created_at": "2026-11-04T09:14:30.923Z",
-    "time": "04 Nov, 02:44 PM",
-    "outcome": "Connected",
-    "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793783548437-517",
@@ -15637,18 +15821,20 @@
     "caller_number": "+918847473862",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-04T09:12:28.437Z",
     "time": "04 Nov, 02:42 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793783288856-551",
@@ -15656,18 +15842,20 @@
     "caller_number": "+919354535416",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-04T09:08:08.856Z",
     "time": "04 Nov, 02:38 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793781756642-200",
@@ -15675,56 +15863,20 @@
     "caller_number": "+919814898438",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T08:42:36.642Z",
     "time": "04 Nov, 02:12 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793779926936-616",
-    "lead_id": "lead-incoming-1793779926936",
-    "caller_number": "+916280251494",
-    "caller_name": "",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "Samsung Galaxy",
-    "device_name": "Samsung Galaxy",
-    "created_at": "2026-11-04T08:12:06.936Z",
-    "time": "04 Nov, 01:42 PM",
-    "outcome": "Connected",
-    "deviceName": "Samsung Galaxy",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793779905786-208",
-    "lead_id": "lead-incoming-1793779905786",
-    "caller_number": "+916280251494 (Monu Kitchen Np)",
-    "caller_name": "Monu Kitchen Np",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "created_at": "2026-11-04T08:11:45.786Z",
-    "time": "04 Nov, 01:41 PM",
-    "outcome": "Connected",
-    "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793774066082-434",
@@ -15751,18 +15903,20 @@
     "caller_number": "+918170020777",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T06:30:47.630Z",
     "time": "04 Nov, 12:00 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793773409401-52",
@@ -15770,18 +15924,20 @@
     "caller_number": "+916284802326",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T06:23:29.401Z",
     "time": "04 Nov, 11:53 AM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793772633870-361",
@@ -15789,37 +15945,20 @@
     "caller_number": "+916284802326",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T06:10:33.870Z",
     "time": "04 Nov, 11:40 AM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793772373369-273",
-    "lead_id": "lead-incoming-1793772373369",
-    "caller_number": "+918031382192",
-    "caller_name": "",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "created_at": "2026-11-04T06:06:13.369Z",
-    "time": "04 Nov, 11:36 AM",
-    "outcome": "Connected",
-    "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793771888484-691",
@@ -15827,18 +15966,20 @@
     "caller_number": "+919779091284",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T05:58:08.484Z",
     "time": "04 Nov, 11:28 AM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793771842014-171",
@@ -15846,18 +15987,20 @@
     "caller_number": "+917696013856",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T05:57:22.014Z",
     "time": "04 Nov, 11:27 AM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793768754398-553",
@@ -15865,18 +16008,20 @@
     "caller_number": "+917006076696",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T05:05:54.398Z",
     "time": "04 Nov, 10:35 AM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793767531451-472",
@@ -15884,18 +16029,19 @@
     "caller_number": "+919876543210 (Test Customer Outbound)",
     "caller_name": "Test Customer Outbound",
     "receiver_number": "",
-    "call_duration": 25,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "OUTBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Outbound (Not Picked)",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-04T04:44:17.405Z",
     "time": "04 Nov, 10:14 AM",
-    "outcome": "Connected",
+    "outcome": "Outbound (Not Picked)",
     "deviceName": "Samsung Galaxy",
-    "callOutcome": "Connected"
+    "callOutcome": "Outbound (Not Picked)",
+    "duration": 0
   },
   {
     "id": "call-log-1793765569186-199",
@@ -15903,18 +16049,20 @@
     "caller_number": "+917017877403",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-04T04:12:49.186Z",
     "time": "04 Nov, 09:42 AM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793714230895-551",
@@ -15922,18 +16070,20 @@
     "caller_number": "+918968388196",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-03T13:57:10.895Z",
     "time": "03 Nov, 07:27 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793713833668-660",
@@ -15960,18 +16110,20 @@
     "caller_number": "+918146278532 (Zubair Thekedar)",
     "caller_name": "Zubair Thekedar",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-03T12:49:54.024Z",
     "time": "03 Nov, 06:19 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793709258499-384",
@@ -16036,18 +16188,19 @@
     "caller_number": "+919999900001 (LiveTestCheck)",
     "caller_name": "LiveTestCheck",
     "receiver_number": "",
-    "call_duration": 20,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "OUTBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Outbound (Not Picked)",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-03T09:55:41.363Z",
     "time": "03 Nov, 03:25 PM",
-    "outcome": "Connected",
+    "outcome": "Outbound (Not Picked)",
     "deviceName": "Samsung Galaxy",
-    "callOutcome": "Connected"
+    "callOutcome": "Outbound (Not Picked)",
+    "duration": 0
   },
   {
     "id": "call-log-1793699674635-872",
@@ -16055,18 +16208,20 @@
     "caller_number": "+919888873740",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-03T09:54:34.636Z",
     "time": "03 Nov, 03:24 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793698995865-144",
@@ -16093,37 +16248,20 @@
     "caller_number": "+911408401511",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:56:50.505Z",
     "time": "03 Nov, 02:26 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793695879408-962",
-    "lead_id": "lead-incoming-1793695879408",
-    "caller_number": "+916280251494 (Monu Kitchen Np)",
-    "caller_name": "Monu Kitchen Np",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "created_at": "2026-11-03T08:51:19.408Z",
-    "time": "03 Nov, 02:21 PM",
-    "outcome": "Connected",
-    "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793695550938-898",
@@ -16131,18 +16269,20 @@
     "caller_number": "+918595468079",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-03T08:45:50.938Z",
     "time": "03 Nov, 02:15 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793694701845-83",
@@ -16150,18 +16290,20 @@
     "caller_number": "+919872450479",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:31:41.845Z",
     "time": "03 Nov, 02:01 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793694450870-588",
@@ -16169,18 +16311,20 @@
     "caller_number": "+919216464145",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:27:30.870Z",
     "time": "03 Nov, 01:57 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793694295557-997",
@@ -16188,18 +16332,20 @@
     "caller_number": "+919814324006",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:24:55.557Z",
     "time": "03 Nov, 01:54 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793693996749-944",
@@ -16207,18 +16353,20 @@
     "caller_number": "+919815593284",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:19:56.749Z",
     "time": "03 Nov, 01:49 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793693857825-767",
@@ -16226,18 +16374,20 @@
     "caller_number": "+916284802326",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-03T08:17:37.825Z",
     "time": "03 Nov, 01:47 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793693796158-930",
@@ -16245,18 +16395,20 @@
     "caller_number": "+919896465464",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:16:36.158Z",
     "time": "03 Nov, 01:46 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793693727175-218",
@@ -16283,18 +16435,20 @@
     "caller_number": "+919888052431",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:14:20.903Z",
     "time": "03 Nov, 01:44 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793693588056-83",
@@ -16302,18 +16456,20 @@
     "caller_number": "+916284802326",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-03T08:13:08.056Z",
     "time": "03 Nov, 01:43 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793693303324-579",
@@ -16321,18 +16477,20 @@
     "caller_number": "+919876543299 (Live iQOO Test)",
     "caller_name": "Live iQOO Test",
     "receiver_number": "",
-    "call_duration": 35,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "iQOO",
     "device_name": "iQOO",
     "created_at": "2026-11-03T08:08:23.324Z",
     "time": "03 Nov, 01:38 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "iQOO",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793691908710-898",
@@ -16340,56 +16498,20 @@
     "caller_number": "+918047103835",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-03T07:45:08.710Z",
     "time": "03 Nov, 01:15 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793689994284-896",
-    "lead_id": "lead-incoming-1793689994283",
-    "caller_number": "+917357441912 (Anwarul Sir Plywood)",
-    "caller_name": "Anwarul Sir Plywood",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "created_at": "2026-11-03T07:13:14.284Z",
-    "time": "03 Nov, 12:43 PM",
-    "outcome": "Connected",
-    "deviceName": "OnePlus",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793689696117-501",
-    "lead_id": "lead-incoming-1793689696117",
-    "caller_number": "+916284802326",
-    "caller_name": "",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "created_at": "2026-11-03T07:08:16.117Z",
-    "time": "03 Nov, 12:38 PM",
-    "outcome": "Connected",
-    "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793689665055-856",
@@ -16416,18 +16538,19 @@
     "caller_number": "+919876543210 (Test Outbound Lead)",
     "caller_name": "Test Outbound Lead",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "OUTBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Outbound (Not Picked)",
     "staff_name": "Samsung Galaxy",
     "device_name": "Samsung Galaxy",
     "created_at": "2026-11-03T07:07:24.355Z",
     "time": "03 Nov, 12:37 PM",
-    "outcome": "Connected",
+    "outcome": "Outbound (Not Picked)",
     "deviceName": "Samsung Galaxy",
-    "callOutcome": "Connected"
+    "callOutcome": "Outbound (Not Picked)",
+    "duration": 0
   },
   {
     "id": "call-log-1793687007873-97",
@@ -16435,37 +16558,20 @@
     "caller_number": "+919877271849 (Dispatch Np)",
     "caller_name": "Dispatch Np",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-03T06:23:27.873Z",
     "time": "03 Nov, 11:53 AM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793686152240-220",
-    "lead_id": "lead-phone-6280251494",
-    "caller_number": "+916280251494 (Monu Kitchen Np)",
-    "caller_name": "Monu Kitchen Np",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "created_at": "2026-11-03T06:09:12.240Z",
-    "time": "03 Nov, 11:39 AM",
-    "outcome": "Connected",
-    "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793685759066-116",
@@ -16473,18 +16579,20 @@
     "caller_number": "+919911917533",
     "caller_name": "",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-03T06:02:39.066Z",
     "time": "03 Nov, 11:32 AM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793681147894-722",
@@ -16511,18 +16619,20 @@
     "caller_number": "+916280251494 (Monu Kitchen Np)",
     "caller_name": "Monu Kitchen Np",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-02T14:50:55.792Z",
     "time": "02 Nov, 08:20 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793630292810-506",
@@ -16530,37 +16640,20 @@
     "caller_number": "+916280251494 (Monu Kitchen Np)",
     "caller_name": "Monu Kitchen Np",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-02T14:38:12.811Z",
     "time": "02 Nov, 08:08 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-log-1793629251128-721",
-    "lead_id": "lead-phone-6280251494",
-    "caller_number": "+916280251494 (Monu Kitchen Np)",
-    "caller_name": "Monu Kitchen Np",
-    "receiver_number": "",
-    "call_duration": 45,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "INBOUND",
-    "call_outcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "created_at": "2026-11-02T14:20:51.129Z",
-    "time": "02 Nov, 07:50 PM",
-    "outcome": "Connected",
-    "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793621995853-635",
@@ -16568,18 +16661,20 @@
     "caller_number": "+919115151706 (Ram Logistic)",
     "caller_name": "Ram Logistic",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-02T12:19:55.853Z",
     "time": "02 Nov, 05:49 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793621949422-496",
@@ -16587,43 +16682,20 @@
     "caller_number": "+919115151706 (Ram Logistic)",
     "caller_name": "Ram Logistic",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-02T12:19:09.422Z",
     "time": "02 Nov, 05:49 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
-  },
-  {
-    "id": "call-live-oneplus-02nov-1749",
-    "caller_number": "+919115151706",
-    "phone": "+919115151706",
-    "caller_name": "Ram Logistic",
-    "leadName": "Ram Logistic",
-    "call_duration": 45,
-    "duration": 45,
-    "formattedDuration": "45s",
-    "recording_url": "",
-    "audioUrl": "",
-    "hasAudio": false,
-    "direction": "INBOUND",
-    "call_type": "INBOUND",
-    "call_outcome": "Connected",
-    "outcome": "Connected",
-    "callOutcome": "Connected",
-    "staff_name": "OnePlus",
-    "device_name": "OnePlus",
-    "deviceName": "OnePlus",
-    "created_at": "2026-11-02T12:19:00.000Z",
-    "timestamp": "2026-11-02T12:19:00.000Z",
-    "time": "2 Nov, 05:49 PM",
-    "formattedTime": "2 Nov, 05:49 PM"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793621892504-292",
@@ -16631,18 +16703,20 @@
     "caller_number": "+919115151706 (Ram Logistic)",
     "caller_name": "Ram Logistic",
     "receiver_number": "",
-    "call_duration": 45,
+    "call_duration": 0,
     "recording_url": "",
     "ai_summary": "",
     "direction": "INBOUND",
-    "call_outcome": "Connected",
+    "call_outcome": "Missed Call",
     "staff_name": "OnePlus",
     "device_name": "OnePlus",
     "created_at": "2026-11-02T12:18:12.504Z",
     "time": "02 Nov, 05:48 PM",
-    "outcome": "Connected",
+    "outcome": "Missed Call",
     "deviceName": "OnePlus",
-    "callOutcome": "Connected"
+    "callOutcome": "Missed Call",
+    "duration": 0,
+    "formattedDuration": "0s (Missed)"
   },
   {
     "id": "call-log-1793621320409-470",
@@ -16817,7 +16891,19 @@
   }
 ];
 
-    function getStoredClientCallLogs() {
+      function getStoredClientCallLogs() {
+      // Build versioning ensures any stale localStorage caches in user browser are updated cleanly
+      const CURRENT_BUILD_VERSION = '2026-11-06-v8-latest-sync';
+      try {
+        const storedVer = localStorage.getItem('sri_sri_call_logs_version');
+        if (storedVer !== CURRENT_BUILD_VERSION) {
+          localStorage.setItem('sri_sri_call_logs_version', CURRENT_BUILD_VERSION);
+          const freshBundled = JSON.parse(JSON.stringify(DEFAULT_BUNDLED_CALL_LOGS));
+          safeStorageSet('sri_sri_call_logs', freshBundled);
+          try { localStorage.setItem('sri_call_logs', JSON.stringify(freshBundled)); } catch(e){}
+          return freshBundled;
+        }
+      } catch(e) {}
       const PHANTOM_CALL_IDS = new Set([
         'call-log-1793871102399-315',
         'call-log-1793871100522-384',
@@ -16925,24 +17011,18 @@
           parsed.unshift(DEFAULT_BUNDLED_CALL_LOGS[0]);
         }
         parsed = parsed.filter(item => item && item.id && !PHANTOM_CALL_IDS.has(item.id) && !item.caller_number?.includes('9999988888') && !item.caller_number?.includes('9999999999') && !item.caller_name?.includes('Test Verification') && !item.time?.includes('27 Oct') && !item.created_at?.includes('2026-10-27') && !isGhostCallRecord(item));
+        // Zero Fake Data: Inbound calls without verified audio recordings are strictly Missed Calls with 0s duration
         parsed.forEach(item => {
-          if (item.caller_number?.includes('7123127270') || item.id === 'call-log-1793188414861-816') {
-            item.call_outcome = 'Connected';
-            item.outcome = 'Connected';
-            if (!item.call_duration || item.call_duration === 0) {
-              item.call_duration = 45;
-              item.duration = 45;
-            }
-          }
-        });
-        parsed.forEach(item => {
-          if (item.id === 'call-log-1793170337104-403' || item.caller_number?.includes('7814435761')) {
-            item.call_outcome = 'Connected';
-            item.outcome = 'Connected';
-            if (!item.call_duration || item.call_duration === 0) {
-              item.call_duration = 45;
-              item.duration = 45;
-            }
+          const dir = String(item.direction || item.call_type || '').toUpperCase();
+          const isInb = dir.includes('IN') || (!dir.includes('OUT') && !dir.includes('DIAL'));
+          const hasAud = !!(item.recording_url || item.drive_file_id || item.audioUrl);
+          if (isInb && !hasAud) {
+            item.call_outcome = 'Missed Call';
+            item.outcome = 'Missed Call';
+            item.callOutcome = 'Missed Call';
+            item.call_duration = 0;
+            item.duration = 0;
+            item.formattedDuration = '0s (Missed)';
           }
         });
         parsed.forEach(item => {
@@ -18161,6 +18241,84 @@
       return stage || { id: stageId, name: 'Stage', color: '#eab308' };
     }
 
+    
+    // ==================== FOLLOW-UP CALL STAGE ADVANCEMENT ENFORCEMENT ====================
+    let pendingAdvanceLead = null;
+    let pendingTargetStageId = null;
+
+    function checkLeadCanAdvanceStage(lead, targetStageId) {
+      if (!lead || !targetStageId) return true;
+      if (lead.stageId === targetStageId) return true;
+
+      const targetStage = getStageById(targetStageId, lead.pipelineId);
+      // Allow marking as lost if client explicitly marks Deal as Lost
+      if (targetStage && targetStage.isLost) return true;
+
+      // If lead does not have a scheduled follow-up, stage move is allowed
+      if (!lead.nextFollowUp) return true;
+
+      // If user has dialed the lead in this session or for this follow-up
+      if (lead._callDialedForFollowup === true) return true;
+
+      // If lead's last contact attempt is a call made for this follow-up
+      if (lead.lastContactAttempt && lead.lastContactAttempt.type === 'CALL') {
+        const callTime = new Date(lead.lastContactAttempt.time || lead.lastContactedAt || 0).getTime();
+        const schedTime = new Date(lead.nextFollowUp).getTime();
+        if (callTime >= (schedTime - 24 * 3600 * 1000) || callTime > 0) {
+          return true;
+        }
+      }
+
+      // Check if lead has any CALL log entry in activities
+      if (Array.isArray(lead.activities) && lead.activities.length > 0) {
+        const hasCallAct = lead.activities.some(a => {
+          const t = (a.type || '').toUpperCase();
+          return t === 'CALL' || t === 'CALL_LOG' || !!a.callOutcome;
+        });
+        if (hasCallAct) return true;
+      }
+
+      // Check if CRM call logs have a call for this lead's phone number
+      const rawLeadPhone = String(lead.phone || '').replace(/\D/g, '');
+      const leadDigits = rawLeadPhone.length >= 10 ? rawLeadPhone.slice(-10) : rawLeadPhone;
+      if (leadDigits && leadDigits.length >= 8) {
+        const logs = (typeof sriCallLogs !== 'undefined' && Array.isArray(sriCallLogs)) ? sriCallLogs : (typeof callLogs !== 'undefined' && Array.isArray(callLogs) ? callLogs : []);
+        const hasCallInLogs = logs.some(c => {
+          const numDigits = String(c.caller_number || c.phone || c.receiver_number || '').replace(/\D/g, '');
+          return numDigits.includes(leadDigits);
+        });
+        if (hasCallInLogs) return true;
+      }
+
+      // Block stage advance until call is dialed!
+      return false;
+    }
+
+    function showFollowupCallRequiredModal(lead, targetStageId) {
+      pendingAdvanceLead = lead;
+      pendingTargetStageId = targetStageId;
+      const nameEl = document.getElementById('followup-req-lead-name');
+      const phoneEl = document.getElementById('followup-req-lead-phone');
+      const timeEl = document.getElementById('followup-req-lead-time');
+      if (nameEl) nameEl.innerText = lead.name || 'Client';
+      if (phoneEl) phoneEl.innerText = lead.phone || 'No phone number';
+      if (timeEl) timeEl.innerText = lead.nextFollowUp ? formatFollowupDate(lead.nextFollowUp) : 'Scheduled Follow-up';
+
+      openModal('followup-call-required-modal');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function executePendingFollowupCall() {
+      if (!pendingAdvanceLead) return;
+      const targetLead = pendingAdvanceLead;
+      closeModal('followup-call-required-modal');
+      targetLead._callDialedForFollowup = true;
+      targetLead.lastCalledAt = new Date().toISOString();
+      safeStorageSet('sri_sri_leads', leads);
+      syncLeadToCloud(targetLead);
+      initiateCallWithLogging(targetLead.id);
+    }
+
     function updateLeadStage(newStageId) {
       if (!isCurrentUserSuperAdmin() && !userHasPermission('opp_move_stage')) { showToast('Permission Denied: You cannot move deal stages.', 'error'); return; }
       if (!currentSelectedLead) return;
@@ -18168,6 +18326,13 @@
 
       if (targetStage && targetStage.isLost) {
         openLeadLossReasonModal(newStageId);
+        return;
+      }
+
+      // Check Follow-up Call Enforcement!
+      if (!checkLeadCanAdvanceStage(currentSelectedLead, newStageId)) {
+        showToast('⚠️ Call Required: Is lead ka next follow-up pending hai! Agle stage par move karne se pehle call dial karein.', 'warning');
+        showFollowupCallRequiredModal(currentSelectedLead, newStageId);
         return;
       }
 
@@ -19185,6 +19350,8 @@
         return;
       }
       currentActiveLogLeadId = lead.id;
+      lead._callDialedForFollowup = true;
+      lead.lastCalledAt = new Date().toISOString();
 
       // 1. Dial phone number if present & configure direct dial buttons
       const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
@@ -19442,6 +19609,9 @@
         device: 'OnePlus'
       };
       lead.activities.unshift(newActivity);
+
+      lead._callDialedForFollowup = true;
+      lead.lastCalledAt = now.toISOString();
 
       // 2. Set last contact attempt attributes on lead
       lead.lastContactAttempt = {
@@ -25957,24 +26127,28 @@
   function getCallOutcomeForRecord(c) {
       if (!c) return 'Missed Call';
       const id = String(c.id || '');
-      const num = String(c.caller_number || c.phone || c.receiver_number || '');
       if (phoneCallOutcomes[id]) return phoneCallOutcomes[id];
 
-      const dur = parseInt(c.duration || c.call_duration || 0, 10);
-      const hasAudio = !!(c.hasAudio || c.recording_url || c.audioUrl || c.drive_file_id);
-      const rawDir = String(c.direction || c.call_type || '').toUpperCase();
+      const recAudio = (c.recording_url && !c.recording_url.includes("UklGRuRdAABX") && c.recording_url.trim())
+        || (c.audioUrl && !c.audioUrl.includes("UklGRuRdAABX") && c.audioUrl.trim())
+        || (c.drive_file_id ? ("/api/call-audio?id=" + c.drive_file_id) : "");
+      const hasVoiceAudio = !!(recAudio && recAudio.length > 50);
+      const rawDir = String(c.direction || c.call_type || 'INBOUND').toUpperCase();
       const isOut = rawDir.includes('OUT') || rawDir.includes('DIAL');
 
-      // 1. If audio recording exists OR actual call duration > 0: talk took place -> ALWAYS Connected!
-      if (hasAudio || dur > 0) {
+      // 1. If verified voice audio recording exists: genuine conversation occurred -> Connected!
+      if (hasVoiceAudio) {
         return 'Connected';
       }
 
-      // 2. If duration is 0 and no audio: no conversation occurred!
+      // 2. If NO audio recording exists on the device / Drive:
+      // Strictly prevent "Connected with No Audio"!
+      // When there is no voice recording, it means no talk took place (ringing only or unpicked).
       if (isOut) {
         return 'Outbound (Not Picked)';
+      } else {
+        return 'Missed Call';
       }
-      return 'Missed Call';
     }
     window.getCallOutcomeForRecord = getCallOutcomeForRecord;
 
@@ -26094,66 +26268,382 @@
 
     
     const KNOWN_CONTACT_PHONES = {
-  'amardeep nijjar': '+919803030388',
-  'harpreet singh': '+919877142366',
-  'kulwant singh': '+919814421127',
-  'rajni bhat': '+919876521035',
-  'priyanka vasisht': '+917814941639',
-  'eshan gaur': '+919814120340',
-  'nil kamal devi': '+919872019485',
-  'dispatch np': '+919815045700',
-  'hitinkumar kantilal udharej': '+919825012345',
-  'spam alert from jio': '+911409000000',
-      'monu kitchen': '+916280251494',
-      'monu kitchen np': '+916280251494',
-      'parminder singh': '+918558055750',
-      'sushil kumar': '+919815045731',
-      'shr': '+917015274682',
-      'dinesh highland': '+917988695768',
-      'dinesh highland hn no 9': '+917988695768',
-      'jagjeevan gmb': '+919815045732',
-      'jagjeevan gmb mohali': '+919815045732',
-      'nikhil mishra': '+919151610556',
-      'tushar sharma': '+919501653648',
-      'anwarul sir': '+917357441912',
-      'anwarul sir plywood': '+917357441912',
-      'suresh chand': '+919876754841',
-      'rajni rani singla': '+919877865282',
-      'vikram jeet singh': '+918437816715',
-      'flipkart': '18002029898',
-      'flipkart customer service': '18002029898',
-      'sukhwinder singh': '+917814304573',
-      'asam ali': '+916284538873',
-      'satpal singh': '+917015920657',
-      'mohan bni': '+919803353372',
-      'mohan bni id 17': '+919803353372',
-      'megha kumari': '+917503238194',
-      'ranjeet kaur': '+919915911009',
-      'rakesh kumar singh': '+918146795795',
-      'rakesh kalra': '+918146795795',
-      'meenu saxena': '+918146367711',
-      'parag ravish': '+919877808859',
-      'parmjit singh': '+919876111118',
-      'shiv charan': '+919814015003',
-      'rupinder singh': '+917508648100',
-      'manga khan': '+919878685521',
-      'rajender': '+918745036534',
-      'kamlesh jaswal': '+919779947870',
-      'jaimal singh': '+919814017001',
-      'kiranjot singh': '+919872412345',
-      'kiranjot': '+919872412345',
-      'sanju sir plywoods': '+917814435761',
-      'sanju test': '+917814435761',
-      'daljinder baidwan': '+919814421127',
-      'ajay sharma': '+919813840800',
-      'manoj balai': '+919872019485',
-      'rajiv atri': '+919814120340',
-      'sachin digital marketing interview': '+919876543210',
-      'shweta malik': '+919814804391',
-      'gurpreet singh': '+917527055586',
-    };
-
-    function resolveContactNameToPhone(contactName) {
+  "poonam": "+919888810811",
+  "harvinder": "+919888810811",
+  "poonam (harvinder)": "+919888810811",
+  "shakuntla devi": "+919872019485",
+  "shakuntla": "+919872019485",
+  "nil kamal devi": "+919872019485",
+  "sahil": "+919056279246",
+  "sahil sharma": "+919056279246",
+  "sahil vashisht": "+919780020307",
+  "surinder kumar": "+918910459215",
+  "surinder": "+918910459215",
+  "mr. surinder singh (w)": "+918910459215",
+  "chetan gumber": "+919814628661",
+  "chetan": "+919814628661",
+  "dr chetan nanda": "+919814628661",
+  "dispatch np": "+919815045700",
+  "kiranjot singh": "+919872412345",
+  "amardeep nijjar": "+919803030388",
+  "harpreet singh": "+919877142366",
+  "kulwant singh": "+919814421127",
+  "rajni bhat": "+919876521035",
+  "priyanka vasisht": "+917814941639",
+  "eshan gaur": "+919814120340",
+  "monu kitchen": "+916280251494",
+  "monu kitchen np": "+916280251494",
+  "parminder singh": "+918558055750",
+  "sushil kumar": "+919815045731",
+  "shr": "+917015274682",
+  "dinesh highland": "+917988695768",
+  "dinesh highland hn no 9": "+917988695768",
+  "jagjeevan gmb": "+919815045732",
+  "jagjeevan gmb mohali": "+919815045732",
+  "nikhil mishra": "+919151610556",
+  "tushar sharma": "+919501653648",
+  "anwarul sir": "+917357441912",
+  "anwarul sir plywood": "+917357441912",
+  "suresh chand": "+919876754841",
+  "rajni rani singla": "+919877865282",
+  "vikram jeet singh": "+918437816715",
+  "sukhwinder singh": "+917814304573",
+  "asam ali": "+916284538873",
+  "satpal singh": "+917015920657",
+  "mohan bni": "+919803353372",
+  "mohan bni id 17": "+919803353372",
+  "megha kumari": "+917503238194",
+  "ranjeet kaur": "+919915911009",
+  "rakesh kumar singh": "+918146795795",
+  "rakesh kalra": "+918146795795",
+  "meenu saxena": "+918146367711",
+  "parag ravish": "+919877808859",
+  "parmjit singh": "+919876111118",
+  "shiv charan": "+919814015003",
+  "rupinder singh": "+917508648100",
+  "manga khan": "+919878685521",
+  "jaimal singh": "+919814017001",
+  "shweta malik": "+919814804391",
+  "gurpreet singh": "+917527055586",
+  "fakir chand": "+919465061786",
+  "akash gupta ambala": "+919034236263",
+  "akshay bhatnagar": "+918287589854",
+  "manoj balai": "+919814015003",
+  "rajiv atri": "+919876543210",
+  "sanju sir plywoods": "+919814015003",
+  "deepak": "+919999672763",
+  "asha singh": "+919416336813",
+  "mahesh tiwari": "+919914543333",
+  "mr. parag ravish (w)": "+919812793309",
+  "9779042289": "+919779042289",
+  "rahul pal": "+918146559158",
+  "harwinder singh": "+919592239595",
+  "sundar kumar": "+917015904292",
+  "vinod": "+916280033534",
+  "sharuk": "+918340210442",
+  "amin chand": "+918707019675",
+  "raj singh saroha": "+919810970800",
+  "rajinder": "+916239502257",
+  "kriti sharma": "+919317561594",
+  "mr baldev singh thekedar mohali(w)": "+918699253575",
+  "deepika sood": "+917580013001",
+  "sujata": "+919872577586",
+  "abhishek": "+919115124222",
+  "z l mawlong": "+917085048482",
+  "kuldeep singh": "+919855185075",
+  "nawendu  kumar jha": "+919780798550",
+  "pankaj mohan": "+917056115511",
+  "sharma": "+919813094408",
+  "kamal chadha": "+919888382543",
+  "rajender s bedi": "+919814302105",
+  "akshay sardana": "+919988205800",
+  "mr. akram,  (gmb)": "+919870007886",
+  "rahul": "+917973737878",
+  "jasmin": "+918872853025",
+  "kuljit": "+919878968681",
+  "zubair thekedar mohali": "+918146278532",
+  "infinium doors & windows (r)": "+919817666664",
+  "anshumann bni": "+917529051800",
+  "ajay sharma": "+919813840800",
+  "ritesh kumar": "+918894341115",
+  "manpreet singh": "+919845634151",
+  "harsh tuli": "+919888885002",
+  "sumit": "+919355396112",
+  "devinder kumar": "+918219104443",
+  "shadi sharma": "+917042614964",
+  "pushpreet": "+918360570717",
+  "naveen garg": "+919416035687",
+  "m r puri": "+919780034968",
+  "mr. vikram mohi khurda (w)": "+918437816715",
+  "narinder": "+919650098446",
+  "mr. ricky aerocity": "+918800634333",
+  "mr. gurpreet singh  bni": "+917527055586",
+  "ankit": "+919463125137",
+  "gourav garg": "+917814849075",
+  "bharat": "+917009615993",
+  "pardeep": "+919717555183",
+  "rohil": "+919857100540",
+  "narendra kumar sharma": "+919413330331",
+  "rajiv": "+917355830001",
+  "rahul jain": "+919855556335",
+  "9780528097": "+918847383683",
+  "ashish": "+919050315333",
+  "avi handa": "+919780880484",
+  "babu babusingh": "+919876571885",
+  "rishi pal": "+919355783100",
+  "amritpal singh": "+919417777743",
+  "rhythm": "+918556000945",
+  "mr. anant": "+919815984006",
+  "mr. vijay r)": "+919815994778",
+  "vijay shekhawat": "+919780850852",
+  "mr. pawan  kumar": "+917837740503",
+  "aman badwal": "+917986698881",
+  "ms. varinder kaur": "+918054301777",
+  "kapil": "+919719956371",
+  "ranbir singh enq gmb": "+919876400058",
+  "mo malik": "+918650574618",
+  "suresh giri goswami": "+917889232706",
+  "mukesh kumar": "+919781385067",
+  "sunil kumar": "+919216407728",
+  "rajesh kumar": "+917207220620",
+  "manjinder kalsi": "+919056386554",
+  "8968844066": "+918968844066",
+  "mohan lal": "+919988584575",
+  "anjani electro trans": "+919996594597",
+  "sai gopal": "+917889017209",
+  "anand mohan": "+919814520530",
+  "rajesh sood": "+919915730979",
+  "karanbir s. khaira": "+919877001010",
+  "anant sidhu": "+919815984006",
+  "lakhmir singh": "+919417250172",
+  "pj singh": "+919815330910",
+  "nirmal sandhu": "+919872116633",
+  "vinod kumar": "+919466933955",
+  "akshay arora": "+918591144944",
+  "keshav": "+919780381412",
+  "surya uday shimla gmb": "+919857900002",
+  "rkg": "+919781921400",
+  "gopal krishan": "+919318970888",
+  "owais o": "+919888202005",
+  "virender kaur": "+918054301777",
+  "raj raj": "+919739391576",
+  "vivek mani": "+919041676751",
+  "gurkirpal dhatt": "+919815025500",
+  "r̊o̊ẙ": "+919876244893",
+  "girish prabhakar": "+919115552635",
+  "charanjit singh": "+919814172939",
+  "sanjay sharma": "+919417580303",
+  "kavi khanna": "+919418025462",
+  "ਤੇਰਾ ਦੀਪ": "+917347566793",
+  "harminder singh": "+919466658259",
+  "charanjit singh channi": "+919872673931",
+  "kanika  sharma": "+918699907006",
+  "ravidutt attri": "+918510017010",
+  "kanishka kaur anand": "+919914979782",
+  "prenika arvind sharma": "+919469892569",
+  "diwakar sahoonja": "+919876119212",
+  "cozy home decor": "+919858290546",
+  "manjeet singh sethi": "+919464236200",
+  "butta salh": "+918872215515",
+  "mr. parag ravish h (w)": "+919812793309",
+  "amit minglani": "+917696162838",
+  "shohan": "+918626909793",
+  "jaswinder singh badwal": "+918699440444",
+  "vikas sharma": "+919653363858",
+  "dhiraj kumar gupta": "+918262020986",
+  "wood work contrater": "+916397258831",
+  "pankaj gmb": "+918288857719",
+  "deep katoch": "+917018153152",
+  "aman kirpal": "+919876522285",
+  "ajay": "+916283197612",
+  "dheeraj grover": "+919814127823",
+  "gurmony singh": "+919915134413",
+  "ajit kumar": "+919534231148",
+  "satpal": "+919872202140",
+  "gaurav gandhi": "+919034099105",
+  "ravindra rathee": "+919416300581",
+  "janardhansharma5008": "+917458852977",
+  "manmohan": "+919815613421",
+  "rajkamal gandhi": "+919816428880",
+  "rajesh": "+919814111536",
+  "paramjit singh": "+919814203886",
+  "neha ji hw": "+919815984329",
+  "sanjay sood": "+919888000391",
+  "meenu": "+918146367711",
+  "anil": "+919877758533",
+  "ram kumar": "+919463019310",
+  "kailash singh": "+919988993402",
+  "avinash": "+919815690001",
+  "sukhvinder singh": "+917837053665",
+  "puneet arora": "+919896321531",
+  "viney negi": "+919569843730",
+  "karanbir singh": "+919814680949",
+  "bhupender singh siyal": "+919459240496",
+  "nikhil mehla": "+917009769443",
+  "rakesh mittal": "+919988707737",
+  "himmat singh": "+917009736903",
+  "mr.dilnawaz (mirza)": "+919592941583",
+  "anju kumari": "+917667839765",
+  "neeraj": "+918901450678",
+  "lakhmir carpenter": "+919781144621",
+  "himanshi singh": "+917986968080",
+  "ramesh negi": "+919817829739",
+  "jaswant singh": "+919815655178",
+  "amrinder singh virk": "+918054011377",
+  "mr. naveen(r)": "+919888123522",
+  "jaideep goyal": "+919876172999",
+  "jugbir boora": "+917876500077",
+  "baljinder singh": "+919592340007",
+  "sharanjit kaur": "+919878038078",
+  "gaurav pal": "+919416297670",
+  "jyoti parkash sharma": "+919815506660",
+  "ved parkashverma": "+919056416722",
+  "daud": "+918923669758",
+  "kamaljeet": "+917988271228",
+  "jagmeet singh": "+919872362995",
+  "mr. r.k  saini (w)": "+919646117704",
+  "amit bansal": "+919882327735",
+  "ram sarup sharma": "+919876764572",
+  "salman gmb": "+917500328124",
+  "angraj thekedar": "+919671494227",
+  "anand carpenter": "+919065379196",
+  "amritpal singh thekedar": "+918360184065",
+  "amrit singh carpenter": "+917340999407",
+  "amrinder singh": "+917009534277",
+  "amit singh thekedar": "+917015490176",
+  "amit carpenter (new)": "+919779147824",
+  "amir khan carpenter": "+916284450891",
+  "amir ali carpenter": "+919870338779",
+  "ajay thekedar": "+919501367006",
+  "ahsan carpenter": "+919463343774",
+  "amrik singh saini carpenter": "+919988357080",
+  "amrik carpenter falcon": "+919855870902",
+  "amardeep singh carpenter": "+919803030388",
+  "amandeep singh new (chd) carpenter": "+918283846435",
+  "ajay kumar thekedar": "+919115019533",
+  "ansan carpenter": "+919463343774",
+  "afzal carpenter": "+919888394630",
+  "abdul carpenter": "+919888610909",
+  "alam carpenter.": "+917986674347",
+  "shyam lal": "+917888722234",
+  "kailash": "+919682534248",
+  "puran dhiman thekedar (ref by avtar thekedar)": "+917986979203",
+  "jaggi": "+919878582117",
+  "gurmail thekedar": "+919855156161",
+  "meenu badhwar": "+919216712787",
+  "nachhattar singh": "+919417117300",
+  "jaspreet singh narang": "+919876938088",
+  "luxman singh": "+919050940350",
+  "vijay bahadur": "+917696552200",
+  "u d singh": "+919815970203",
+  "dinesh kumar": "+917988695768",
+  "kaushal": "+919915083500",
+  "deshraj": "+919217433747",
+  "majerkhan7860": "+917009005936",
+  "tarvinder kaur gmb": "+919417444750",
+  "reeva rohit narula": "+917015385902",
+  "jai ram": "+919855582580",
+  "rajesh kumar pkl gmb": "+919467529060",
+  "jag mohan": "+919416710063",
+  "mr. prabh,": "+917356345435",
+  "palwinder singh": "+919815040172",
+  "ankit aggarwal": "+919888224510",
+  "mr. kamalveer gill": "+919876147060",
+  "sohan lal carpenter": "+919814975477",
+  "mr. jaswant singh": "+919418169098",
+  "sharma interrior": "+917061004993",
+  "vikram.aingh": "+919878284231",
+  "ssharma": "+917814383266",
+  "bs136638": "+916280074130",
+  "harpreet": "+919877142366",
+  "mr. surjeet": "+918968847226",
+  "shilpa pathak": "+919876764720",
+  "pawan kumar": "+917837740503",
+  "ms. jasnoor (gmb)": "+919306461334",
+  "vikram gupta": "+919812043734",
+  "jyoti": "+919115499939",
+  "yogeshchd@rediffmail.com": "+919815717739",
+  "mr. pavitar singh grewal": "+917888737518",
+  "pavitar singh grewal": "+917888737518",
+  "harvinder kumar": "+919805730626",
+  "mr. rajesh (w)": "+919814111536",
+  "inderesh kumar": "+919888810998",
+  "agantook": "+919501826762",
+  "aakriti bhatt": "+919814606740",
+  "ajay singh rana": "+917018629523",
+  "aman rupal": "+919815928229",
+  "सुभाष रघुवंशी": "+918219860971",
+  "masti with khushi": "+918826750958",
+  "mr. kant mandi simla": "+918894892235",
+  "varinder miglani": "+919814466788",
+  "rahul kataria": "+917696219355",
+  "afjal": "+919888394630",
+  "gurdeep singh enq online": "+916284255137",
+  "musskan": "+918283825815",
+  "jatinder singh": "+918699423766",
+  "jay shri ram": "+919780595209",
+  "ks": "+918699555595",
+  "sanjeev": "+919501017341",
+  "sain ram shyam": "+918219670957",
+  "mr. gurinder singh": "+919417472677",
+  "aaqib javid": "+916239760082",
+  "vinod sharma": "+919418298915",
+  "hemant kumar": "+919041247270",
+  "bipan bagga": "+917973686521",
+  "nawjeet singh bedi": "+918918016233",
+  "mrs. surinder khatri (gmb)": "+919438370510",
+  "maninder pal mohali gmb": "+919417195964",
+  "maan_praveenhnkiim.i": "+918146065105",
+  "sanju test": "+917814435761",
+  "rajeev garg": "+919729250246",
+  "rahul bansal": "+919555954849",
+  "amarjeet kaur": "+918360042131",
+  "proksh": "+918059445566",
+  "manish kumar": "+919779980836",
+  "saurabh sharma gmb": "+917508256531",
+  "naman gmb": "+919417807907",
+  "mr. ashwani bhardwaj": "+919465373633",
+  "jasnoor interior designer": "+919306461334",
+  "sanjeev varshney": "+919815717361",
+  "sumit gmb": "+918708960692",
+  "ashwani": "+919465373633",
+  "mona gmb (mitesh mlp galleria)": "+918800760728",
+  "gagana btauli": "+918427795395",
+  "gurcharan singh": "+919466077700",
+  "kant hingorani": "+919816509682",
+  "sonu": "+919915819349",
+  "rajnish chinta": "+918278835470",
+  "abhinav gohri": "+917015248378",
+  "manjit singh": "+918557011635",
+  "rajnish malik": "+919988401103",
+  "kailash bushari": "+918219977430",
+  "ajay kumar jain": "+919478630011",
+  "harbhajan singh": "+919653873013",
+  "amit sehgal": "+919816019001",
+  "tarika madan_test": "+919779744428",
+  "mr.dilpreet singh(m)": "+919914093335",
+  "harpreet saini": "+918054008482",
+  "sudhir jain": "+918146367711",
+  "anup": "+919418446856",
+  "mr. devender": "+919530723238",
+  "deepak panwar": "+919459024363",
+  "mr. arvind": "+919416583677",
+  "daksh arora": "+919816502727",
+  "krishna mohan - test": "+916591002242",
+  "sanjeev thakur": "+919971657598",
+  "nikhil rajput": "+917807338154",
+  "nirmita": "+917901856153",
+  "rajesh garg": "+919896670336",
+  "shyamlal": "+919805042024",
+  "priyanka sonker": "+917814941639",
+  "deepak yongma": "+917018503126",
+  "ravinder gupta": "+919418492666",
+  "priyanka rana": "+917206220489",
+  "krishna test": "+918950281868",
+  "mo irfan": "+917895188821",
+  "ramesh sharma": "+919418211206"
+};
+function resolveContactNameToPhone(contactName) {
       if (!contactName) return '';
       const clean = String(contactName).toLowerCase().replace(/[\(\)\-]/g, ' ').replace(/\s+/g, ' ').trim();
       for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
@@ -26193,7 +26683,9 @@
           const data = await res.json();
           if (data && data.success && Array.isArray(data.calls)) {
             const KNOWN_DRIVE_MAPPINGS = {
-  "1dpRMXa_ZIYTzHGxFb-M6Sljwuoz0w1Sy": { "name": "Chetan Gumber", "phone": "Chetan Gumber", "dur": 45, "time": "05 Nov, 05:04 PM", "device": "OnePlus", "dir": "OUTBOUND", "file": "Chetan Gumber-2611051704.mp3" },
+  "1dpRMXa_ZIYTzHGxFb-M6Sljwuoz0w1Sy": { "name": "Chetan Gumber", "phone": "+919814628661", "dur": 45, "time": "05 Nov, 05:04 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Chetan Gumber-2611051704.mp3" },
+  "1_kF0SwikhBib9iJSqhxkAfN9EDUsB2m8": { "name": "Sahil", "phone": "+919056279246", "dur": 28, "time": "6 Nov, 10:54 AM", "device": "OnePlus", "dir": "INBOUND", "file": "Sahil-2611061054.mp3" },
+  "1--a2nAnc2gSjjZaVsZij8A4KBY2EumFz": { "name": "Surinder Kumar", "phone": "+918910459215", "dur": 28, "time": "5 Nov, 06:29 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Surinder Kumar-2611051829.mp3" },
   "1on8TzhkXrnG2F-K8fA6SY9srlnNZSCpE": { "name": "+917942748821", "phone": "+917942748821", "dur": 26, "time": "05 Nov, 01:38 PM", "device": "OnePlus", "dir": "INBOUND", "file": "+917942748821-2611051337.mp3" },
   "1HcI8qnsAsO4PmSvl9YVbD3pgQUSgU69e": { "name": "+918427761777", "phone": "+918427761777", "dur": 225, "time": "05 Nov, 01:35 PM", "device": "OnePlus", "dir": "INBOUND", "file": "+918427761777-2611051332.mp3" },
   "1v6HE2E6CufBnzsJ9oBdmgjxJ_dCNHrvN": { "name": "9466609171", "phone": "+919466609171", "dur": 42, "time": "05 Nov, 01:21 PM", "device": "iQOO", "dir": "OUTBOUND", "file": "9466609171-2611051320.mp3" },
@@ -26787,7 +27279,7 @@
                 if (dc.recording_url) {
                   callLogs[exIdx].recording_url = dc.recording_url;
                   callLogs[exIdx].audioUrl = dc.recording_url;
-                  callLogs[exIdx].duration = dc.duration || callLogs[exIdx].duration || 45;
+                  callLogs[exIdx].duration = dc.duration || callLogs[exIdx].duration || 0;
                   callLogs[exIdx].drive_file_id = dc.drive_file_id || callLogs[exIdx].drive_file_id;
                 }
               }
@@ -26985,7 +27477,7 @@
             existing.recording_url = call.recording_url || call.audioUrl;
             existing.audioUrl = call.recording_url || call.audioUrl;
             existing.drive_file_id = call.drive_file_id || existing.drive_file_id;
-            existing.duration = call.duration || existing.duration || 45;
+            existing.duration = call.duration || existing.duration || 0;
           }
           // Preserve real physical phone device (iQOO / Vivo takes top priority over generic Drive folder classification)
           const callDev = String(call.deviceName || call.device_name || call.staff_name || '').toLowerCase();
@@ -27128,8 +27620,8 @@
       } else {
         newOutcome = 'Connected';
         if (!call.duration || parseInt(call.duration, 10) === 0) {
-          call.duration = 45;
-          call.call_duration = 45;
+          call.duration = 0;
+          call.call_duration = 0;
         }
       }
 
@@ -27570,7 +28062,7 @@
           } else if (callPhoneClean && callPhoneClean.length === 10) {
             effectivePhone = '+91' + callPhoneClean;
           } else {
-            const p = (typeof resolveContactNameToPhone === 'function') ? resolveContactNameToPhone(effectiveLeadName || call.caller_name || call.leadName) : '';
+            const p = (typeof resolveContactNameToPhone === 'function') ? resolveContactNameToPhone(effectiveLeadName || call.caller_name || call.leadName || call.phone || call.caller_number) : '';
             if (p) {
               effectivePhone = p;
               call.phone = p;
@@ -27679,7 +28171,7 @@
                         <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-500"></i>
                         <span>🔒 Audio Locked</span>
                       </button>
-                      <span class="font-mono font-black text-muted-custom text-xs">${formatCallDuration(call.duration || 45)}</span>
+                      <span class="font-mono font-black text-muted-custom text-xs">${Number(call.duration || call.call_duration || 0) > 0 ? formatCallDuration(call.duration || call.call_duration) : "0s"}</span>
                     </div>
                   `;
                 }
@@ -27689,7 +28181,7 @@
                       <i data-lucide="${isPlayingThis ? 'pause' : 'play'}" class="w-3.5 h-3.5 fill-current"></i>
                       <span>${isPlayingThis ? 'Pause' : 'Play Recording'}</span>
                     </button>
-                    <span class="font-mono font-black text-main text-xs">${formatCallDuration(call.duration || 45)}</span>
+                    <span class="font-mono font-black text-main text-xs">${Number(call.duration || call.call_duration || 0) > 0 ? formatCallDuration(call.duration || call.call_duration) : "0s"}</span>
                   </div>
                 `;
               })() : (isMissed || Number(call.duration || 0) === 0) ? `
@@ -27703,7 +28195,7 @@
                     <i data-lucide="volume-x" class="w-3 h-3 text-muted-custom"></i>
                     <span>No Audio</span>
                   </span>
-                  <span class="font-mono font-black text-muted-custom text-xs">${formatCallDuration(call.duration || 45)}</span>
+                  <span class="font-mono font-black text-muted-custom text-xs">${Number(call.duration || call.call_duration || 0) > 0 ? formatCallDuration(call.duration || call.call_duration) : "0s"}</span>
                 </div>
               `}
             </td>
@@ -28432,7 +28924,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   customer_number: call ? (call.phone || call.caller_number) : '',
-                  call_duration: call ? (call.duration || 45) : 45,
+                  call_duration: call ? (call.duration || 0) : 0,
                   recording_url: b64Data,
                   file_name: file.name,
                   device_name: 'Samsung Galaxy',
@@ -29029,7 +29521,25 @@
               const KNOWN_DRIVE_MAP = {
   "1dpRMXa_ZIYTzHGxFb-M6Sljwuoz0w1Sy": {
     "name": "Chetan Gumber",
-    "phone": "Chetan Gumber",
+    "phone": "+919814628661",
+    "dur": 45,
+    "time": "05 Nov, 05:04 PM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Chetan Gumber-2611051704.mp3"
+  },
+  "1_kF0SwikhBib9iJSqhxkAfN9EDUsB2m8": {
+    "name": "Sahil",
+    "phone": "+919056279246",
+    "dur": 28,
+    "time": "6 Nov, 10:54 AM",
+    "device": "OnePlus",
+    "dir": "INBOUND",
+    "file": "Sahil-2611061054.mp3"
+  },
+  "1--a2nAnc2gSjjZaVsZij8A4KBY2EumFz": {
+    "name": "Surinder Kumar",
+    "phone": "+918910459215",
     "dur": 45,
     "time": "05 Nov, 05:04 PM",
     "device": "OnePlus",
@@ -29631,13 +30141,16 @@
             if (!c || !c.id) return false;
             if (PHANTOM_IDS_SYNC.has(c.id)) return false;
             if (c.caller_number === 'Unknown Incoming Caller' || c.id === 'call-log-1793170323765-551') return false;
-            if (c.caller_number?.includes('7814435761') || c.id === 'call-log-1793170337104-403') {
-              c.call_outcome = 'Connected';
-              c.outcome = 'Connected';
-              if (!c.call_duration || c.call_duration === 0) {
-                c.call_duration = 45;
-                c.duration = 45;
-              }
+            const cDir = String(c.direction || c.call_type || '').toUpperCase();
+            const cIsInb = cDir.includes('IN') || (!cDir.includes('OUT') && !cDir.includes('DIAL'));
+            const cHasAud = !!(c.recording_url || c.drive_file_id || c.audioUrl);
+            if (cIsInb && !cHasAud) {
+              c.call_outcome = 'Missed Call';
+              c.outcome = 'Missed Call';
+              c.callOutcome = 'Missed Call';
+              c.call_duration = 0;
+              c.duration = 0;
+              c.formattedDuration = '0s (Missed)';
             }
             return true;
           });
@@ -29851,7 +30364,7 @@
                   receiver_number: remoteLog.receiver_number || '',
                   call_duration: dur,
                   duration: dur,
-                  formattedDuration: dur > 0 ? formatCallDuration(dur) : (out === 'Missed Call' ? '0s (Missed)' : '45s'),
+                  formattedDuration: dur > 0 ? formatCallDuration(dur) : (out === 'Missed Call' ? '0s (Missed)' : '0s (Not Connected)'),
                   recording_url: remoteLog.recording_url || remoteLog.audioUrl || '',
                   audioUrl: remoteLog.recording_url || remoteLog.audioUrl || '',
                   hasAudio: !!(remoteLog.recording_url || remoteLog.audioUrl || remoteLog.drive_file_id),
@@ -29959,7 +30472,7 @@
                 }
               } else {
                 // Standalone recording uploaded to Drive -> add as new OnePlus completed call!
-                const dur = dc.duration || 45;
+                const dur = dc.duration || 0;
                 const recPhone = dc.phone || dc.caller_number || 'Direct Phone Call';
                 const recName = dc.caller_name || 'Direct Phone Call';
                 existing.unshift({

@@ -162,6 +162,16 @@ function getStoredCallLogs() {
             c.audioUrl = '';
             c.hasAudio = false;
           }
+          const cDir = String(c.direction || c.call_type || '').toUpperCase();
+          const isInb = cDir.includes('IN') || (!cDir.includes('OUT') && !cDir.includes('DIAL'));
+          const hasAud = !!(c.recording_url || c.drive_file_id || c.audioUrl);
+          if (isInb && !hasAud) {
+            c.call_outcome = 'Missed Call';
+            c.outcome = 'Missed Call';
+            c.callOutcome = 'Missed Call';
+            c.call_duration = 0;
+            c.duration = 0;
+          }
           return c;
         });
       }
@@ -177,6 +187,16 @@ function getStoredCallLogs() {
             c.recording_url = '';
             c.audioUrl = '';
             c.hasAudio = false;
+          }
+          const cDir = String(c.direction || c.call_type || '').toUpperCase();
+          const isInb = cDir.includes('IN') || (!cDir.includes('OUT') && !cDir.includes('DIAL'));
+          const hasAud = !!(c.recording_url || c.drive_file_id || c.audioUrl);
+          if (isInb && !hasAud) {
+            c.call_outcome = 'Missed Call';
+            c.outcome = 'Missed Call';
+            c.callOutcome = 'Missed Call';
+            c.call_duration = 0;
+            c.duration = 0;
           }
           return c;
         });
@@ -397,7 +417,6 @@ module.exports = async (req, res) => {
       if (num.includes('9999988888') || num.includes('8000000000') || c.id === 'call-log-1793081339671-686') return false;
       // Filter out blank premature ghost calls (e.g. from Call Recording trigger firing with no caller)
       const cNum = String(c.caller_number || c.phone || '').trim();
-      const cName = String(c.caller_name || '').toLowerCase();
       const cDigits = cNum.replace(/\D/g, '');
       if (c.drive_file_id || c.recording_url) {
         // Real call with verified recording on Google Drive - ALWAYS KEEP!
@@ -405,19 +424,17 @@ module.exports = async (req, res) => {
         return false;
       }
       if (c.id === 'call-log-1793170323765-551' || c.id === 'call-log-1793162593463-412') return false;
-      if (c.id === 'call-log-1793188414861-816' || cNum.includes('7123127270')) {
-        c.call_outcome = 'Connected';
-        c.outcome = 'Connected';
-        if (!c.call_duration || c.call_duration === 0) { c.call_duration = 45; c.duration = 45; }
-      }
-      // Ensure real call from 7814435761 (sanju test) is displayed as Connected
-      if (c.id === 'call-log-1793170337104-403' || num.includes('7814435761')) {
-        c.call_outcome = 'Connected';
-        c.outcome = 'Connected';
-        if (!c.call_duration || c.call_duration === 0) {
-          c.call_duration = 45;
-          c.duration = 45;
-        }
+      
+      // Zero Fake Data: Inbound calls without verified audio recordings are Missed Calls with 0s duration
+      const cHasAudio = !!(c.drive_file_id || c.recording_url || c.audioUrl);
+      const cDir = String(c.direction || c.call_type || '').toUpperCase();
+      const cIsInbound = cDir.includes('IN') || (!cDir.includes('OUT') && !cDir.includes('DIAL'));
+      if (cIsInbound && !cHasAudio) {
+        c.call_outcome = 'Missed Call';
+        c.outcome = 'Missed Call';
+        c.callOutcome = 'Missed Call';
+        c.call_duration = 0;
+        c.duration = 0;
       }
       return true;
     });
