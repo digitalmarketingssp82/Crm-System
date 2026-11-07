@@ -828,36 +828,45 @@ module.exports = async (req, res) => {
       // 1. Persist to independent call_logs table / store
       const allLogs = getStoredCallLogs();
 
-      // Check if an audio recording from Google Drive already exists for this caller/phone
+      // Check if an unattached standalone audio recording from Google Drive exists for this caller/phone (within 3 minutes)
+      // STRICT: Never steal or clone recordings from another completed call to prevent duplicate recording assignments!
       if (!callLogRecord.recording_url) {
-        const matchingRec = allLogs.find(l => {
+        const matchingRecIdx = allLogs.findIndex(l => {
           if (!l.recording_url || l.recording_url.length < 5) return false;
+          // Must ONLY absorb unassigned synthetic drive recordings (call-rec-*), NEVER from an existing phone call!
+          if (!l.id || !l.id.startsWith('call-rec-')) return false;
           const numMatch = cleanCustomer && cleanCustomer.length >= 10 && cleanPhone(l.caller_number || l.phone) === cleanCustomer;
           const nameMatch = validCallerName && l.caller_name && (
-            l.caller_name.toLowerCase().includes(validCallerName.toLowerCase()) ||
-            validCallerName.toLowerCase().includes(l.caller_name.toLowerCase())
+            l.caller_name.toLowerCase().trim() === validCallerName.toLowerCase().trim()
           );
           if (numMatch || nameMatch) {
             const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
             const thisTime = callDateObj.getTime();
-            return Math.abs(lTime - thisTime) <= 1800000;
+            return Math.abs(lTime - thisTime) <= 180000; // Exact 3-minute physical call window
           }
           return false;
         });
-        if (matchingRec) {
+        if (matchingRecIdx !== -1) {
+          const matchingRec = allLogs[matchingRecIdx];
           callLogRecord.recording_url = matchingRec.recording_url;
           callLogRecord.audioUrl = matchingRec.recording_url;
           callLogRecord.drive_file_id = matchingRec.drive_file_id || '';
           callLogRecord.hasAudio = true;
-          console.log(`[Call-Log Auto-Attach]: Auto-attached recording ${matchingRec.recording_url} to call ${cleanCustomer}`);
+          if (matchingRec.duration > 0 && (!callLogRecord.call_duration || callLogRecord.call_duration === 0)) {
+            callLogRecord.call_duration = matchingRec.duration;
+            callLogRecord.duration = matchingRec.duration;
+          }
+          // Remove the synthetic standalone entry so it never appears as a duplicate
+          allLogs.splice(matchingRecIdx, 1);
+          console.log(`[Call-Log Auto-Attach]: Absorbed standalone recording ${matchingRec.recording_url} into new call for ${cleanCustomer}`);
         }
       }
 
-      // Auto-heal 1: If recording arrives for a recent call (within 10 minutes) that doesn't have audio yet, attach it directly!
+      // Auto-heal 1: If recording arrives for a recent call (within 3 minutes) that doesn't have audio yet, attach it directly!
       if (recording_url && cleanCustomer && cleanCustomer.length >= 10) {
         const recentPendingAudioIdx = allLogs.findIndex(l => {
           const isSameNum = cleanPhone(l.caller_number) === cleanCustomer;
-          const isRecent = (Date.now() - new Date(l.created_at).getTime() < 10 * 60 * 1000);
+          const isRecent = (Date.now() - new Date(l.created_at).getTime() < 3 * 60 * 1000);
           return isSameNum && isRecent && (!l.recording_url || l.recording_url.length < 100);
         });
         if (recentPendingAudioIdx !== -1) {
@@ -885,7 +894,7 @@ module.exports = async (req, res) => {
         if (!isOneplusRec) return false;
         const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
         const curTime = callDateObj.getTime();
-        return Math.abs(curTime - lTime) <= 900000; // within 15 mins
+        return Math.abs(curTime - lTime) <= 180000; // within 3 mins
       });
 
       if (pendingOneplusRecIdx !== -1) {

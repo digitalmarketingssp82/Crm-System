@@ -8971,7 +8971,13 @@
       if (tabId === 'conversation') updateConversationViewState();
       if (tabId === 'phonebook') renderPhonebookTable();
       if (tabId === 'opportunities') renderOpportunities();
-      if (tabId === 'call-logs') { renderTeamCallLogsTable(); isCallLogsTabDirty = false; }
+      if (tabId === 'call-logs') { 
+        renderTeamCallLogsTable(); 
+        isCallLogsTabDirty = false; 
+        if (typeof syncLiveCallLogsBackground === 'function') {
+          setTimeout(syncLiveCallLogsBackground, 100);
+        }
+      }
       if (tabId === 'tasks') renderTasksList('PENDING');
       if (tabId === 'wa-templates') renderWaTemplates();
       if (tabId === 'wa-flow') renderFlowsList();
@@ -46689,6 +46695,11 @@
       try {
         localStorage.setItem('sri_sri_call_logs', JSON.stringify(callLogs));
       } catch(e) {}
+
+      // Immediately fetch live call logs and Google Drive recordings on load without waiting 30 seconds
+      if (typeof syncLiveCallLogsBackground === 'function') {
+        setTimeout(syncLiveCallLogsBackground, 300);
+      }
     }
 
     function generateSampleTranscriptForLead() { return 'Discussion notes pending. Use voice dictation mic or add notes.'; }
@@ -48247,22 +48258,22 @@ function resolveContactNameToPhone(contactName) {
         }
       }
 
-      // Auto-attach Drive recording to companion phone call across shared Drive folder:
+      // Auto-attach Drive recording to companion phone call across shared Drive folder (Strict 3-minute physical call window):
       const recA = a.recording_url || a.audioUrl || '';
       const recB = b.recording_url || b.audioUrl || '';
       const aHasAudio = !!(recA || a.drive_file_id);
       const bHasAudio = !!(recB || b.drive_file_id);
       if (phoneA && phoneB && phoneA.length >= 7 && phoneA === phoneB && aHasAudio !== bHasAudio) {
-        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 1800000) {
+        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 180000) {
           return true;
         }
       }
 
-      // Same device, missed vs connected or pending MacroDroid
+      // Same device, missed vs connected or pending MacroDroid (Strict 3-minute physical call window)
       const devKeyA = getDeviceKey(a.deviceName || a.device_name || a.staff_name);
       const devKeyB = getDeviceKey(b.deviceName || b.device_name || b.staff_name);
       if (devKeyA === devKeyB) {
-        if (aHasAudio !== bHasAudio && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 900000) {
+        if (aHasAudio !== bHasAudio && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 180000) {
           if (phoneA && phoneB && phoneA === phoneB) return true;
           if (nameA && nameB && nameA === nameB && nameA !== 'direct phone call') return true;
         }
@@ -51403,14 +51414,14 @@ function resolveContactNameToPhone(contactName) {
                   hasAudio: true,
                   drive_file_id: dc.drive_file_id,
                   audioFileName: dc.audioFileName || '',
-                  direction: 'INBOUND',
-                  call_type: 'INBOUND',
+                  direction: dc.direction || dc.call_type || 'INBOUND',
+                  call_type: dc.call_type || dc.direction || 'INBOUND',
                   call_outcome: 'Connected',
                   outcome: 'Connected',
                   callOutcome: 'Connected',
                   staff_name: dc.staff_name || dc.deviceName || dc.device_name || 'OnePlus',
-                  device_name: dc.deviceName || dc.device_name || 'OnePlus',
-                  deviceName: dc.deviceName || dc.device_name || 'OnePlus',
+                  device_name: dc.deviceName || dc.device_name || dc.staff_name || 'OnePlus',
+                  deviceName: dc.deviceName || dc.device_name || dc.staff_name || 'OnePlus',
                   created_at: dc.created_at || new Date().toISOString(),
                   timestamp: dc.created_at || new Date().toISOString(),
                   time: dc.time || (typeof formatCallLogTime === 'function' ? formatCallLogTime(dc.created_at) : '02 Nov')

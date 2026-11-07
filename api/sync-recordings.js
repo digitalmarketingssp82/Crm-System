@@ -878,8 +878,10 @@ module.exports = async (req, res) => {
 
       if (r.originFolderDevice === 'iQOO' || r.deviceName === 'iQOO') {
         r.deviceName = 'iQOO';
-      } else if (isSamsungFormat) {
+      } else if (r.originFolderDevice === 'Samsung Galaxy' || isSamsungFormat) {
         r.deviceName = 'Samsung Galaxy';
+      } else if (r.originFolderDevice === 'OnePlus' || r.deviceName === 'OnePlus') {
+        r.deviceName = 'OnePlus';
       } else {
         r.deviceName = r.deviceName || 'OnePlus';
       }
@@ -910,7 +912,7 @@ module.exports = async (req, res) => {
           if (rec.timestamp && (c.created_at || c.timestamp || c.time)) {
             const recTime = new Date(rec.timestamp).getTime();
             const callTime = new Date(c.created_at || c.timestamp || c.time).getTime();
-            return Math.abs(recTime - callTime) <= 1800000;
+            return Math.abs(recTime - callTime) <= 180000; // Strict 3-minute physical call pairing window
           }
           return false;
         });
@@ -927,7 +929,7 @@ module.exports = async (req, res) => {
             if (rec.timestamp && (c.created_at || c.timestamp || c.time)) {
               const recTime = new Date(rec.timestamp).getTime();
               const cTime = new Date(c.created_at || c.timestamp || c.time).getTime();
-              return Math.abs(recTime - cTime) <= 1800000;
+              return Math.abs(recTime - cTime) <= 180000; // Strict 3-minute physical call pairing window
             }
             return false;
           });
@@ -981,15 +983,17 @@ module.exports = async (req, res) => {
           const cName = rec.contactName || (rec.phoneDigits ? 'Direct Phone Call' : (isOnePlus ? 'OnePlus Call (' + (rec.formattedTime || 'Recent') + ')' : 'Direct Customer Call'));
           let resolvedPhone = rec.phone || resolveContactNameToPhone(rec.contactName || rec.name) || "";
           let cNum = (resolvedPhone && /\d{7,}/.test(resolvedPhone)) ? resolvedPhone : ((rec.phoneDigits && rec.phoneDigits.length === 10) ? ('+91' + rec.phoneDigits) : (resolveContactNameToPhone(rec.contactName) || ''));
-          const devName = rec.deviceName || (isOnePlus ? 'OnePlus' : 'Samsung Galaxy');
+          const isOutbound = /out|outgoing|dialed/i.test(rec.name || '') || /outbound/i.test(rec.direction || '') || !!(KNOWN_DRIVE_MAPPINGS[rec.id] && KNOWN_DRIVE_MAPPINGS[rec.id].dir === 'OUTBOUND');
+          const callDir = (KNOWN_DRIVE_MAPPINGS[rec.id] && KNOWN_DRIVE_MAPPINGS[rec.id].dir) || (isOutbound ? 'OUTBOUND' : (rec.direction || 'INBOUND'));
+          const devName = rec.deviceName || (isOnePlus ? 'OnePlus' : (rec.originFolderDevice || 'Samsung Galaxy'));
           const newCall = {
             id: `call-rec-${rec.id}`,
             caller_number: cNum,
             phone: cNum,
             caller_name: cName,
             leadName: cName,
-            call_type: ((KNOWN_DRIVE_MAPPINGS[rec.id] && KNOWN_DRIVE_MAPPINGS[rec.id].dir) || 'INBOUND'),
-            direction: ((KNOWN_DRIVE_MAPPINGS[rec.id] && KNOWN_DRIVE_MAPPINGS[rec.id].dir) || 'INBOUND'),
+            call_type: callDir,
+            direction: callDir,
             outcome: 'Connected',
             call_outcome: 'Connected',
             callOutcome: 'Connected',
