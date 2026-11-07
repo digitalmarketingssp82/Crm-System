@@ -18,7 +18,64 @@ try {
 } catch (e) {}
 
 const KNOWN_CONTACT_PHONES = {
+  "eaklovya chawla": "+919041444415",
+  "eaklovya": "+919041444415",
+  "mayur kheda": "+918054429147",
+  "mayur kheda thekedar": "+918054429147",
+  "monu thekedar": "+917986012851",
+  "munna thekedar": "+919814941693",
+  "sukhpreet sngh": "+918847684640",
+  "sukhpreet singh": "+918847684640",
+  "partap thekedar": "+917717273944",
+  "jaswinder thekedar": "+918872193535",
+  "jagtar singh thekedar": "+919517906829",
+  "jagtar jagdev": "+919781915721",
+  "gian chand thekedar": "+918872193535",
+  "avtar thekedar": "+917986979203",
+  "arvind thekedar": "+917986979203",
+  "anwarul khan": "+917357441912",
+  "anwarul": "+917357441912",
+  "anwarul sir": "+917357441912",
+  "anwarul sir plywood": "+917357441912",
+  "randeep": "+919872519259",
+  "renu kapoor": "+919876859703",
+  "harjeet punjabi": "+919872519259",
+  "gurpreet barnala": "+919877000020",
+  "gurdeep singh mohalli": "+919877000020",
+  "dilbar": "+919463206145",
+  "aliakabar ansari": "+919463206145",
+  "aliakabar": "+919463206145",
+  "carpanter rambabu": "+918729083796",
+  "rambabu kumar": "+918729083796",
+  "jassa singh marbella": "+917009602488",
+  "jassa singh": "+917009602488",
+  "jagjit singh": "+919779800140",
+  "jagjit 3034": "+919779800140",
+  "guru nanak auto parts": "+919814177752",
+  "karnail singh": "+919501036231",
+  "pal singh thekedar": "+918146559158",
+  "varun sec 82": "+918699391895",
+  "varun kumar": "+918699391895",
+  "sunil 144": "+919888800559",
+  "sunil kumar": "+919888800559",
+  "nirey plywood": "+919779122990",
+  "pawan thekedar": "+917837740503",
+  "ravi kumar": "+919812793309",
+  "mann singh": "+917529051800",
+  "aman 1615": "+919814066342",
   "deepak": "+919999672763",
+  "flipkart": "+9118002029898",
+  "flipkart customer service": "+9118002029898",
+  "emergency number": "112",
+  "kawaljeet": "+919814177752",
+  "parvinder dhiman": "+919501854050",
+  "krishan pal": "+919872673931",
+  "sherbaz khan": "+919876111118",
+  "saaransh saini": "+919877142366",
+  "karan makhija": "+919417110526",
+  "vijayalakshmy": "+918699555595",
+  "vijayalakshmy r": "+918699555595",
+"deepak": "+919999672763",
   "asha singh": "+919416336813",
   "mahesh tiwari": "+919914543333",
   "mr. parag ravish w": "+919812793309",
@@ -428,9 +485,21 @@ function resolveContactNameToPhone(contactName) {
     const normalizedKey = k.replace(/[^a-z0-9]/g, '');
     if (normalizedStr === normalizedKey) return p;
   }
+  for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
+    if (k.length >= 4 && (str.includes(k) || k.includes(str))) {
+      return p;
+    }
+  }
   return '';
 }
 const KNOWN_DRIVE_MAPPINGS = {
+  "1kEXZhk0_hNZO73IoWcXysD4EmIH__-ZY": { "name": "+917696013856", "phone": "+917696013856", "dur": 45, "time": "6 Nov, 04:48 PM", "device": "OnePlus", "dir": "INBOUND", "file": "+917696013856-2611061648.mp3" },
+  "1nXiA0L0TWdnhnkEwU0JaUmXe8tytCMha": { "name": "Eaklovya Chawla", "phone": "+919041444415", "dur": 45, "time": "6 Nov, 03:42 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Eaklovya Chawla-2611061542.mp3" },
+  "1LLWmAfmRqAEN7lfFKfzhgj81foxHNpPI": { "name": "Simran Ssp", "phone": "", "dur": 45, "time": "6 Nov, 03:21 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Simran Ssp-2611061521.mp3" },
+  "1WqPZk3XWZhM79sSHVd3yoL9huIGdbgi3": { "name": "Manjit Singh", "phone": "+918557011635", "dur": 45, "time": "6 Nov, 03:16 PM", "device": "OnePlus", "dir": "INBOUND", "file": "8557011635-2611061516.mp3" },
+  "1OcJAyBcng6ZqoajEUG_nbHUuYGYNeKvZ": { "name": "Manjit Singh", "phone": "+918557011635", "dur": 45, "time": "6 Nov, 03:14 PM", "device": "OnePlus", "dir": "INBOUND", "file": "8557011635-2611061514.mp3" },
+  "1THMn-UJt9_NQkuJHtX3CKlSBhGAkn7Ye": { "name": "Dispatch Np", "phone": "+919815045700", "dur": 45, "time": "6 Nov, 01:44 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Dispatch Np-2611061344.mp3" },
+  "1vaV9obaubEhvUGbMPHhjU6P8_t7EyUBa": { "name": "Dispatch Np", "phone": "+919815045700", "dur": 45, "time": "6 Nov, 01:16 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Dispatch Np-2611061316.mp3" },
   "1MrHgOcUlZU5qv3Le2-xncQGUYRvBOHQR": { "name": "Dispatch Np", "phone": "+919815045700", "dur": 45, "time": "6 Nov, 11:45 AM", "device": "OnePlus", "dir": "INBOUND", "file": "Dispatch Np-2611061145.mp3" },
   "1zb89USnVvWzzpPgRFGR8pZvvQ5HBzSZo": { "name": "Shakuntla Devi", "phone": "+919872019485", "dur": 45, "time": "6 Nov, 11:29 AM", "device": "OnePlus", "dir": "INBOUND", "file": "Shakuntla Devi-2611061129.mp3" },
   "1RWJvm1zXCyqKNf2Gm_Ozneh8AcbvgBrF": { "name": "+918427761777", "phone": "+918427761777", "dur": 45, "time": "6 Nov, 11:27 AM", "device": "OnePlus", "dir": "INBOUND", "file": "+918427761777-2611061127.mp3" },
@@ -539,28 +608,6 @@ function parseDriveRecordings(html, forcedDevice = "Auto") {
       } else {
         contactName = prefix.trim();
       }
-    } else if (vivoMatch) {
-      deviceName = 'iQOO';
-      const [_, prefix, yRaw, mm, dd, hh, min, ss] = vivoMatch;
-      const yy = yRaw.length === 4 ? yRaw : `20${yRaw}`;
-      yymmdd = `${yy}-${mm}-${dd}`;
-      const sec = ss || '00';
-      const d = new Date(`${yy}-${mm}-${dd}T${hh}:${min}:${sec}+05:30`);
-      if (!isNaN(d.getTime())) isoTimestamp = d.toISOString();
-      const mIdx = parseInt(mm, 10) - 1;
-      const hInt = parseInt(hh, 10);
-      const ampm = hInt >= 12 ? 'PM' : 'AM';
-      const h12 = hInt % 12 || 12;
-      formattedTime = `${parseInt(dd, 10)} ${months[mIdx]}, ${h12 < 10 ? '0' + h12 : h12}:${min} ${ampm}`;
-
-      if (prefix) {
-        const pMatch = prefix.match(/(?:\+?91)?([6-9]\d{9})/);
-        if (pMatch) {
-          phoneDigits = pMatch[1];
-        } else {
-          contactName = prefix.replace(/^Record[_-]/i, '').replace(/^Call recording\s+/i, '').trim();
-        }
-      }
     } else if (oneplusMatch) {
       deviceName = 'OnePlus';
       isOnePlus = true;
@@ -581,6 +628,28 @@ function parseDriveRecordings(html, forcedDevice = "Auto") {
           phoneDigits = pMatch[1];
         } else {
           contactName = prefix.replace(/^Call recording\s+/i, '').trim();
+        }
+      }
+    } else if (vivoMatch) {
+      deviceName = 'iQOO';
+      const [_, prefix, yRaw, mm, dd, hh, min, ss] = vivoMatch;
+      const yy = yRaw.length === 4 ? yRaw : `20${yRaw}`;
+      yymmdd = `${yy}-${mm}-${dd}`;
+      const sec = ss || '00';
+      const d = new Date(`${yy}-${mm}-${dd}T${hh}:${min}:${sec}+05:30`);
+      if (!isNaN(d.getTime())) isoTimestamp = d.toISOString();
+      const mIdx = parseInt(mm, 10) - 1;
+      const hInt = parseInt(hh, 10);
+      const ampm = hInt >= 12 ? 'PM' : 'AM';
+      const h12 = hInt % 12 || 12;
+      formattedTime = `${parseInt(dd, 10)} ${months[mIdx]}, ${h12 < 10 ? '0' + h12 : h12}:${min} ${ampm}`;
+
+      if (prefix) {
+        const pMatch = prefix.match(/(?:\+?91)?([6-9]\d{9})/);
+        if (pMatch) {
+          phoneDigits = pMatch[1];
+        } else {
+          contactName = prefix.replace(/^Record[_-]/i, '').replace(/^Call recording\s+/i, '').trim();
         }
       }
     }

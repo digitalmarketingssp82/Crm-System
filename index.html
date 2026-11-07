@@ -164,6 +164,14 @@
     #tab-content-opportunities, #tab-content-call-logs, #tab-content-phonebook {
       contain: style;
     }
+    /* Sales Coordinator Top Header Cleanliness: Keep ONLY Theme Switcher & Add Client */
+    .is-coordinator-role #header-version-badge,
+    .is-coordinator-role #header-global-search,
+    .is-coordinator-role #header-channel-status-badge,
+    .is-coordinator-role #cloud-sync-status-badge,
+    .is-coordinator-role #btn-top-xilot-sync {
+      display: none !important;
+    }
     main {
       contain: layout style;
       transform: translateZ(0);
@@ -407,12 +415,12 @@
           <span id="breadcrumb-category">Workspace</span>
           <span class="text-muted-custom opacity-50">/</span>
           <span id="breadcrumb-current" class="text-main font-bold">Opportunities &amp; Sales Pipeline</span>
-          <span class="ml-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-gold border border-gold/40 inline-flex items-center gap-1.5 shadow-xs"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> v2.4 (Live Ads & Import Active)</span>
+          <span id="header-version-badge" class="ml-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-gold border border-gold/40 inline-flex items-center gap-1.5 shadow-xs"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> v2.4 (Live Ads & Import Active)</span>
         </div>
       </div>
 
       <!-- Center: Global Search Bar -->
-      <div class="hidden sm:flex items-center flex-1 max-w-md mx-6">
+      <div id="header-global-search" class="hidden sm:flex items-center flex-1 max-w-md mx-6">
         <div class="relative w-full">
           <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-custom"></i>
           <input type="search" id="global-search-input" name="search_global_crm_noautofill" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" oninput="handleGlobalSearch(this.value)" placeholder="Search clients, phone, orders, leads..." class="w-full pl-9 pr-12 py-1.5 md:py-2 text-xs rounded-xl bg-subtle border border-main text-main placeholder:text-muted-custom focus:outline-none focus:border-gold transition">
@@ -432,7 +440,7 @@
         </button>
 
         <!-- 3-Way Theme Switcher -->
-        <div class="hidden sm:flex items-center bg-subtle p-1 rounded-xl border border-main text-xs gap-1">
+        <div id="header-theme-switcher" class="hidden sm:flex items-center bg-subtle p-1 rounded-xl border border-main text-xs gap-1">
           <button onclick="setTheme('light')" id="btn-theme-light" class="theme-switch-btn px-2 py-1.5 rounded-lg text-muted-custom hover:text-main flex items-center gap-1 transition" title="Light Theme">
             <i data-lucide="sun" class="w-3.5 h-3.5"></i>
             <span class="text-[10px] font-bold hidden xl:inline">Light</span>
@@ -1234,41 +1242,51 @@
       <!-- ============================================================= -->
       <section id="tab-content-opportunities" class="space-y-4">
         
-        <!-- Pipeline Header & Search & Columns Switcher (Exact Match to Screenshot) -->
-        <div class="p-3.5 md:p-4 rounded-3xl bg-card border border-main shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <!-- Pipeline Header: Fluid 2-Tier Responsive Layout for All Resolutions -->
+        <div class="p-3.5 md:p-4 rounded-3xl bg-card border border-main shadow-sm space-y-3">
           
-          <!-- Left: Pipeline Selector, Search & Filters -->
-          <div class="flex flex-wrap items-center gap-2.5">
-            <!-- Pipeline Dropdown -->
-            <div class="relative">
-              <select id="opp-pipeline-select" onchange="changeActivePipeline(this.value)" class="text-sm font-bold bg-subtle text-main border border-main rounded-xl px-3 py-2 pr-8 focus:border-gold outline-none cursor-pointer appearance-none">
-                <!-- Dynamically populated pipelines -->
-              </select>
-              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-muted-custom">
-                <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+          <!-- Tier 1 (Top Bar): Pipeline Selector, Key Quick Views & Lead Action Buttons -->
+          <div class="flex flex-wrap items-center justify-between gap-2.5">
+            
+            <!-- Left: Pipeline Dropdown, Config & Total Leads Badge -->
+            <div class="flex items-center gap-2">
+              <div class="relative">
+                <select id="opp-pipeline-select" onchange="changeActivePipeline(this.value)" class="text-sm font-bold bg-subtle text-main border border-main rounded-xl px-3 py-2 pr-8 focus:border-gold outline-none cursor-pointer appearance-none max-w-[280px] sm:max-w-xs truncate">
+                  <!-- Dynamically populated pipelines -->
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-muted-custom">
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                </div>
               </div>
-            </div>
-            <button type="button" id="opp-btn-config-pipeline" onclick="showToast('Active Pipelines: ' + pipelines.map(p=>p.name).join(', '), 'info')" class="p-2 rounded-xl bg-subtle border border-main text-muted-custom hover:text-gold transition" title="Pipeline Configuration">
-              <i data-lucide="sliders" class="w-4 h-4"></i>
-            </button>
 
-            <!-- Search Opportunities Input (Protected against browser credential autofill) -->
-            <div class="relative flex items-center">
-              <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom pointer-events-none"></i>
-              <input type="search" id="opp-search-input" name="search_opp_filter_unique_rnd" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" onblur="if(!this.value) this.setAttribute('readonly','readonly')" oninput="debouncedRenderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="pl-8 pr-8 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none w-52 sm:w-72">
-              <button type="button" id="opp-search-clear-btn" onclick="clearOppSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-custom hover:text-gold text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center transition cursor-pointer" title="Clear search">✕</button>
-            </div>
-
-            <!-- Filters Button & Interactive Filter Dropdown Panel -->
-            <div class="relative">
-              <button type="button" id="btn-opp-filters" onclick="toggleOppFilters()" class="px-3 py-2 rounded-xl bg-subtle border border-main hover:bg-card text-xs font-bold text-main flex items-center gap-1.5 transition shadow-xs">
-                <i data-lucide="filter" class="w-3.5 h-3.5 text-gold"></i>
-                <span>Filters</span>
-                <span id="opp-filter-badge-count" class="hidden px-1.5 py-0.2 rounded-full bg-gold text-slate-950 font-extrabold text-[10px]">0</span>
+              <button type="button" id="opp-btn-config-pipeline" onclick="showToast('Active Pipelines: ' + pipelines.map(p=>p.name).join(', '), 'info')" class="p-2 rounded-xl bg-subtle border border-main text-muted-custom hover:text-gold transition shrink-0" title="Pipeline Configuration">
+                <i data-lucide="sliders" class="w-4 h-4"></i>
               </button>
 
-              <!-- INTERACTIVE ADVANCED FILTERS DROPDOWN PANEL -->
-              <div id="opp-filters-panel" class="hidden absolute left-0 mt-2 w-[340px] sm:w-[420px] p-4 rounded-3xl bg-card border border-main shadow-2xl z-50 space-y-3.5 text-xs animate-in fade-in duration-150">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-gold/10 text-gold border border-gold/30 shrink-0" id="opp-count-badge">0 Leads</span>
+            </div>
+
+            <!-- Right: View Modes, Filters, Import, Columns & Add New Lead -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- View Mode Switcher -->
+              <div class="flex items-center bg-subtle p-1 rounded-xl border border-main shrink-0">
+                <button onclick="setOpportunityViewMode('list')" id="btn-opp-view-list" class="p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 text-muted-custom hover:text-main" title="Table View">
+                  <i data-lucide="table" class="w-4 h-4"></i>
+                </button>
+                <button onclick="setOpportunityViewMode('kanban')" id="btn-opp-view-kanban" class="p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-card text-gold shadow-xs" title="Kanban Board">
+                  <i data-lucide="kanban" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <!-- Filters Button & Interactive Filter Dropdown Panel -->
+              <div class="relative shrink-0">
+                <button type="button" id="btn-opp-filters" onclick="toggleOppFilters()" class="px-3 py-2 rounded-xl bg-subtle border border-main hover:bg-card text-xs font-bold text-main flex items-center gap-1.5 transition shadow-xs cursor-pointer">
+                  <i data-lucide="filter" class="w-3.5 h-3.5 text-gold"></i>
+                  <span>Filters</span>
+                  <span id="opp-filter-badge-count" class="hidden px-1.5 py-0.2 rounded-full bg-gold text-slate-950 font-extrabold text-[10px]">0</span>
+                </button>
+
+                <div id="opp-filters-panel" class="hidden absolute left-0 mt-2 w-[340px] sm:w-[420px] p-4 rounded-3xl bg-card border border-main shadow-2xl z-50 space-y-3.5 text-xs animate-in fade-in duration-150">
                 
                 <!-- Panel Header -->
                 <div class="flex items-center justify-between pb-2 border-b border-main">
@@ -1372,43 +1390,20 @@
               </div>
             </div>
 
-            <!-- Quick Pending Calling Toggle Button -->
-            <button type="button" id="btn-opp-pending-calling" onclick="toggleOppPendingCallingFilter()" class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-500 flex items-center gap-1.5 transition shadow-xs cursor-pointer" title="Only show Pending Calling & Overdue Leads">
-              <i data-lucide="phone-call" class="w-3.5 h-3.5 text-amber-400"></i>
-              <span>Pending Calling</span>
-              <span id="opp-pending-calling-count" class="px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 font-extrabold text-[10px]">0</span>
-            </button>
-
-            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-gold/10 text-gold border border-gold/30" id="opp-count-badge">0 Leads</span>
-          </div>
-
-          <!-- Right: Views, Import Excel, Columns Menu & Add New Button -->
-          <div class="flex flex-wrap items-center gap-2">
-            
-            <!-- View Mode Switcher -->
-            <div class="flex items-center bg-subtle p-1 rounded-xl border border-main">
-              <button onclick="setOpportunityViewMode('list')" id="btn-opp-view-list" class="p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 text-muted-custom hover:text-main" title="Table View">
-                <i data-lucide="table" class="w-4 h-4"></i>
+              <!-- Import Excel / CSV Button -->
+              <button onclick="openImportModal()" id="opp-btn-import" class="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer" title="Import Leads from Excel or CSV with Field Mapping">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Import Excel</span>
               </button>
-              <button onclick="setOpportunityViewMode('kanban')" id="btn-opp-view-kanban" class="p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-card text-gold shadow-xs" title="Kanban Board">
-                <i data-lucide="kanban" class="w-4 h-4"></i>
-              </button>
-            </div>
 
-            <!-- Import Excel / CSV Button -->
-            <button onclick="openImportModal()" id="opp-btn-import" class="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs" title="Import Leads from Excel or CSV with Field Mapping">
-              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-              <span>Import Excel</span>
-            </button>
-
-            <!-- Columns Dropdown Menu (Exact Match to Screenshot) -->
-            <div class="relative">
-              <button type="button" id="btn-columns-menu" onclick="toggleColumnsDropdown()" class="px-3 py-2 bg-subtle hover:bg-card border border-main rounded-xl text-xs font-bold text-main flex items-center gap-1.5 transition shadow-xs">
-                <i data-lucide="columns" class="w-3.5 h-3.5 text-gold"></i>
-                <span>Columns</span>
-              </button>
-              
-              <div id="columns-dropdown-menu" class="hidden absolute right-0 mt-2 w-60 p-3 rounded-2xl bg-card border border-main shadow-2xl z-40 space-y-2 text-xs animate-in fade-in duration-150">
+              <!-- Columns Dropdown Menu -->
+              <div class="relative shrink-0">
+                <button type="button" id="btn-columns-menu" onclick="toggleColumnsDropdown()" class="px-3 py-2 bg-subtle hover:bg-card border border-main rounded-xl text-xs font-bold text-main flex items-center gap-1.5 transition shadow-xs cursor-pointer">
+                  <i data-lucide="columns" class="w-3.5 h-3.5 text-gold"></i>
+                  <span>Columns</span>
+                </button>
+                
+                <div id="columns-dropdown-menu" class="hidden absolute right-0 mt-2 w-60 p-3 rounded-2xl bg-card border border-main shadow-2xl z-40 space-y-2 text-xs animate-in fade-in duration-150">
                 <div class="flex items-center justify-between pb-1.5 border-b border-main text-[10px] font-bold uppercase text-muted-custom">
                   <span>Show columns</span>
                   <div class="flex items-center gap-1.5">
@@ -1443,15 +1438,32 @@
               </div>
             </div>
 
-            <!-- + Add New Button -->
-            <button onclick="openNewLeadModal()" id="opp-btn-add-lead" class="px-3.5 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
-              <i data-lucide="plus" class="w-4 h-4"></i>
-              <span>+ Add New</span>
+              <!-- + Add New Button -->
+              <button onclick="openNewLeadModal()" id="opp-btn-add-lead" class="px-3.5 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>+ Add New</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tier 2 (Bottom Bar): Adaptive Fluid Full-Width Search & Quick Pending Calling Toggle -->
+          <div class="flex flex-wrap sm:flex-nowrap items-center gap-2.5 pt-2 border-t border-main/40">
+            <!-- Fluid Search Opportunities Input -->
+            <div class="relative flex-1 min-w-[200px] flex items-center">
+              <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-custom pointer-events-none"></i>
+              <input type="search" id="opp-search-input" name="search_opp_filter_unique_rnd" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" onblur="if(!this.value) this.setAttribute('readonly','readonly')" oninput="debouncedRenderOpportunities()" placeholder="Search name, phone, notes in all pipelines..." class="w-full pl-8 pr-8 py-2 rounded-xl bg-subtle border border-main text-xs text-main placeholder-muted-custom focus:border-gold outline-none transition">
+              <button type="button" id="opp-search-clear-btn" onclick="clearOppSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-custom hover:text-gold text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center transition cursor-pointer" title="Clear search">✕</button>
+            </div>
+
+            <!-- Quick Pending Calling Toggle Button -->
+            <button type="button" id="btn-opp-pending-calling" onclick="toggleOppPendingCallingFilter()" class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-500 flex items-center gap-1.5 transition shadow-xs cursor-pointer shrink-0" title="Only show Pending Calling & Overdue Leads">
+              <i data-lucide="phone-call" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Pending Calling</span>
+              <span id="opp-pending-calling-count" class="px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 font-extrabold text-[10px]">0</span>
             </button>
           </div>
         </div>
 
-        <!-- Active Filter Badges Strip (shown when filters are active) -->
         <div id="opp-active-filters-bar" class="hidden flex flex-wrap items-center gap-2 text-xs -mt-2 pb-1">
           <span class="text-[11px] font-bold text-muted-custom flex items-center gap-1">
             <i data-lucide="filter" class="w-3.5 h-3.5 text-gold"></i>
@@ -1598,14 +1610,14 @@
         </div>
 
         <!-- Kanban Board Horizontal Navigation Bar -->
-        <div id="opp-kanban-nav-helper" class="px-3.5 py-2 rounded-2xl bg-card border border-main flex flex-wrap items-center justify-between gap-2 text-xs shadow-xs">
-          <div class="flex items-center gap-1.5 text-[11px] text-muted-custom">
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-gold font-bold">
+        <div id="opp-kanban-nav-helper" class="px-3.5 py-1.5 rounded-2xl bg-card border border-main flex items-center justify-between gap-2 text-xs shadow-xs">
+          <div class="flex items-center gap-1.5 text-[11px] text-muted-custom truncate">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-gold font-bold shrink-0">
               <i data-lucide="mouse" class="w-3.5 h-3.5"></i> Scroll
             </span>
-            <span>Niche/Upar scroll karne ke liye mouse wheel use karein • Left/Right slide karne ke liye:</span>
+            <span class="hidden sm:inline truncate">Niche/Upar scroll: mouse wheel • Left/Right slide stages:</span>
           </div>
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5 shrink-0">
             <button type="button" onclick="scrollOppTable('start')" class="px-2.5 py-1 rounded-lg bg-subtle border border-main hover:border-gold hover:text-gold text-main text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Scroll to First Stage">
               <i data-lucide="chevrons-left" class="w-3.5 h-3.5"></i> First
             </button>
@@ -1621,8 +1633,8 @@
           </div>
         </div>
 
-        <!-- 2. Kanban Board View Container -->
-        <div id="opp-kanban-view-container" class="flex gap-4 overflow-x-auto pb-6 custom-scrollbar touch-scroll min-h-[500px]">
+        <!-- 2. Kanban Board View Container (Fluid Responsive with Horizontal Scroll Padding) -->
+        <div id="opp-kanban-view-container" class="flex gap-4 overflow-x-auto pb-6 pr-8 custom-scrollbar touch-scroll min-h-[500px] snap-x snap-mandatory scroll-smooth">
           <!-- Dynamically populated Kanban columns -->
         </div>
 
@@ -2520,28 +2532,28 @@
 
           <!-- Clean Action Buttons -->
           <div class="flex flex-wrap items-center gap-2.5">
-            <!-- Add Device / Connect Phone (Admin Multi-Phone Setup) Button -->
-            <button type="button" onclick="openMultiPhoneSetupModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black transition flex items-center gap-1.5 shadow-md hover:shadow-lg cursor-pointer shrink-0" title="Admin: Connect or Add a New Calling Phone with step-by-step instructions">
+            <!-- Add Device / Connect Phone (Admin Multi-Phone Setup) Button (Admin Only) -->
+            <button type="button" id="call-log-btn-add-device" onclick="openMultiPhoneSetupModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black transition flex items-center gap-1.5 shadow-md hover:shadow-lg cursor-pointer shrink-0" title="Admin: Connect or Add a New Calling Phone with step-by-step instructions">
               <i data-lucide="smartphone" class="w-4 h-4"></i>
               <span>📱 + Add Device</span>
             </button>
-            <!-- Drive Cloud Audio Sync Button -->
+            <!-- Drive Cloud Audio Sync Button (Admin Only) -->
             <button type="button" id="crm-drive-sync-btn" onclick="syncRecordingsFromDrive()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition flex items-center gap-2 shadow-sm cursor-pointer shrink-0" title="Auto-sync audio recordings from connected Google Drive folder directly into CRM">
               <i data-lucide="cloud-download" class="w-4 h-4"></i>
               <span>☁️ Sync Drive Audio</span>
             </button>
-            <!-- Drive Folder Settings Button -->
+            <!-- Drive Folder Settings Button (Admin Only) -->
             <button type="button" id="crm-drive-folder-settings-btn" onclick="openDriveSettingsModal()" class="px-3 py-2 rounded-xl bg-card border border-main text-xs font-bold hover:border-gold hover:text-gold transition flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0" title="View or change Google Drive folder link in future">
               <i data-lucide="settings" class="w-3.5 h-3.5 text-muted-custom"></i>
               <span>⚙️ Drive Folder</span>
             </button>
             <!-- Refresh Calls Button -->
-            <button type="button" onclick="refreshTeamCallLogs()" class="px-3.5 py-2 rounded-xl bg-card border border-main text-xs font-black hover:border-gold hover:text-gold transition flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0">
+            <button type="button" id="call-log-btn-refresh" onclick="refreshTeamCallLogs()" class="px-3.5 py-2 rounded-xl bg-card border border-main text-xs font-black hover:border-gold hover:text-gold transition flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0">
               <i data-lucide="refresh-cw" class="w-4 h-4 text-gold"></i>
               <span>Refresh Calls</span>
             </button>
             <!-- New Call Modal Button -->
-            <button type="button" onclick="openNewCallLogModal()" class="px-4 py-2 rounded-xl bg-gold text-slate-950 text-xs font-black hover:bg-amber-400 transition flex items-center gap-1.5 shadow-md cursor-pointer shrink-0">
+            <button type="button" id="call-log-btn-new-call" onclick="openNewCallLogModal()" class="px-4 py-2 rounded-xl bg-gold text-slate-950 text-xs font-black hover:bg-amber-400 transition flex items-center gap-1.5 shadow-md cursor-pointer shrink-0">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>+ Log Call</span>
             </button>
@@ -7812,14 +7824,25 @@
       // 1. Header Channel Status Pill
       const headerBadge = document.getElementById('header-channel-status-badge');
       if (headerBadge) {
-        if (channelConfigs.whatsapp && channelConfigs.whatsapp.connected && channelConfigs.whatsapp.phone) {
-          headerBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>WhatsApp API: ' + channelConfigs.whatsapp.phone + '</span>';
-          headerBadge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:border-emerald-500 transition cursor-pointer";
+        const isCoord = typeof loggedInUser !== 'undefined' && loggedInUser && (
+          (loggedInUser.role || '').toLowerCase().includes('coordinator') ||
+          (loggedInUser.role || '').toLowerCase().includes('cordinator') ||
+          (loggedInUser.email || '').toLowerCase().includes('coordinator') ||
+          (loggedInUser.email || '').toLowerCase().includes('salescordinator')
+        );
+        if (isCoord) {
+          headerBadge.style.display = 'none';
         } else {
-          headerBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>WhatsApp API: Not Connected (Click to Connect)</span>';
-          headerBadge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border border-rose-500/40 bg-rose-500/10 text-rose-400 hover:border-gold transition cursor-pointer";
+          headerBadge.style.display = '';
+          if (channelConfigs.whatsapp && channelConfigs.whatsapp.connected && channelConfigs.whatsapp.phone) {
+            headerBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>WhatsApp API: ' + channelConfigs.whatsapp.phone + '</span>';
+            headerBadge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:border-emerald-500 transition cursor-pointer";
+          } else {
+            headerBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>WhatsApp API: Not Connected (Click to Connect)</span>';
+            headerBadge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border border-rose-500/40 bg-rose-500/10 text-rose-400 hover:border-gold transition cursor-pointer";
+          }
+          headerBadge.onclick = () => openChannelConfigModal('whatsapp');
         }
-        headerBadge.onclick = () => openChannelConfigModal('whatsapp');
       }
 
       // 2. Settings Badges
@@ -8091,6 +8114,7 @@
           appEl.style.display = 'flex';
         }
         updateUserSessionUI(loggedInUser);
+        applyUserPermissions(loggedInUser);
       } else {
         document.documentElement.classList.remove('is-authenticated');
         if (loginEl) {
@@ -8225,6 +8249,8 @@
       localStorage.removeItem('sri_sri_last_lead_modal');
       localStorage.setItem('sri_sri_manual_logout', 'true');
       document.documentElement.classList.remove('is-authenticated');
+      document.documentElement.classList.remove('is-coordinator-role');
+      document.body.classList.remove('is-coordinator-role');
       loggedInUser = null;
       checkSession();
       showToast('Logged out successfully.', 'info');
@@ -8275,6 +8301,7 @@
       const isManager = user.role === 'Manager' || roleLower.includes('manager');
 
       // 1. Navigation Visibility - Granular permission control configured by Admin
+      // Marketing & Forms are strictly hidden for Sales Coordinator as requested
       const navMap = [
         { id: 'nav-dashboard', allowed: true },
         { id: 'nav-conversation', allowed: isOwner || userHasPermission('conv_view_all') || userHasPermission('conv_reply') },
@@ -8282,33 +8309,69 @@
         { id: 'nav-opportunities', allowed: isOwner || userHasPermission('opp_view') },
         { id: 'nav-tasks', allowed: isOwner || userHasPermission('tasks_view') },
         { id: 'nav-call-logs', allowed: isOwner || userHasPermission('calls_view') },
-        { id: 'nav-broadcast-group', allowed: isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage') },
-        { id: 'nav-wa-templates', allowed: isOwner || userHasPermission('templates_manage') },
-        { id: 'nav-wa-flow', allowed: isOwner || userHasPermission('flows_manage') },
-        { id: 'nav-wa-broadcast', allowed: isOwner || userHasPermission('broadcast_launch') },
-        { id: 'nav-automation', allowed: isOwner || userHasPermission('workflow_automate') },
-        { id: 'nav-forms', allowed: isOwner || userHasPermission('leads_create') || userHasPermission('leads_import') },
-        { id: 'nav-media', allowed: isOwner || userHasPermission('conv_attach_files') },
+        { id: 'nav-broadcast-group', allowed: !isCoordinator && (isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage')) },
+        { id: 'nav-wa-templates', allowed: !isCoordinator && (isOwner || userHasPermission('templates_manage')) },
+        { id: 'nav-wa-flow', allowed: !isCoordinator && (isOwner || userHasPermission('flows_manage')) },
+        { id: 'nav-wa-broadcast', allowed: !isCoordinator && (isOwner || userHasPermission('broadcast_launch')) },
+        { id: 'nav-automation', allowed: !isCoordinator && (isOwner || userHasPermission('workflow_automate')) },
+        { id: 'nav-forms', allowed: !isCoordinator && (isOwner || userHasPermission('leads_create') || userHasPermission('leads_import')) },
+        { id: 'nav-media', allowed: !isCoordinator && (isOwner || userHasPermission('conv_attach_files')) },
         { id: 'nav-reports', allowed: isOwner || userHasPermission('reports_view') || userHasPermission('reports_staff_kpi') },
         { id: 'nav-apps', allowed: isOwner || userHasPermission('settings_apps') },
         { id: 'nav-account', allowed: true },
         { id: 'nav-settings', allowed: isOwner || userHasPermission('settings_channels') || userHasPermission('settings_team') || userHasPermission('settings_roles') || userHasPermission('settings_wallet') || userHasPermission('settings_apps') }
       ];
 
-      // Drive Cloud Audio Sync & Drive Folder Settings: STRICTLY Super Admin Only!
+      // Action buttons in Call Logs:
+      // Sales Coordinator: hide + Add Device, Drive Sync, Drive Folder, Refresh Calls, and + Log Call!
+      const btnAddDevice = document.getElementById('call-log-btn-add-device');
+      if (btnAddDevice) btnAddDevice.style.display = (isOwner && !isCoordinator) ? '' : 'none';
+
       const driveSyncBtn = document.getElementById('crm-drive-sync-btn');
       const driveFolderBtn = document.getElementById('crm-drive-folder-settings-btn');
-      if (driveSyncBtn) driveSyncBtn.style.display = isOwner ? '' : 'none';
-      if (driveFolderBtn) driveFolderBtn.style.display = isOwner ? '' : 'none';
+      if (driveSyncBtn) driveSyncBtn.style.display = (isOwner && !isCoordinator) ? '' : 'none';
+      if (driveFolderBtn) driveFolderBtn.style.display = (isOwner && !isCoordinator) ? '' : 'none';
+
+      const btnRefreshCalls = document.getElementById('call-log-btn-refresh');
+      if (btnRefreshCalls) btnRefreshCalls.style.display = isCoordinator ? 'none' : '';
+
+      const btnNewCall = document.getElementById('call-log-btn-new-call');
+      if (btnNewCall) btnNewCall.style.display = isCoordinator ? 'none' : '';
 
       navMap.forEach(item => {
         const el = document.getElementById(item.id);
         if (el) el.style.display = item.allowed ? '' : 'none';
       });
 
+      // 1b. Top Header Bar Role Visibility:
+      // Sales Coordinator: Keep ONLY 'Add Client' and 'Theme Switcher' (Light/Dark/Auto), hide Version badge, Global Search, WhatsApp API pill, Cloud Sync, Xilot Sync.
+      // Super Admin: Everything remains visible!
+      if (isCoordinator) {
+        document.documentElement.classList.add('is-coordinator-role');
+        document.body.classList.add('is-coordinator-role');
+      } else {
+        document.documentElement.classList.remove('is-coordinator-role');
+        document.body.classList.remove('is-coordinator-role');
+      }
+
+      const headerVersionBadge = document.getElementById('header-version-badge');
+      if (headerVersionBadge) headerVersionBadge.style.display = (isOwner && !isCoordinator) ? '' : 'none';
+
+      const headerGlobalSearch = document.getElementById('header-global-search');
+      if (headerGlobalSearch) headerGlobalSearch.style.display = isCoordinator ? 'none' : '';
+
+      const headerChannelBadge = document.getElementById('header-channel-status-badge');
+      if (headerChannelBadge) headerChannelBadge.style.display = isCoordinator ? 'none' : '';
+
+      const cloudSyncBadge = document.getElementById('cloud-sync-status-badge');
+      if (cloudSyncBadge) cloudSyncBadge.style.display = (isOwner && !isCoordinator) ? '' : 'none';
+
+      const xilotSyncBtn = document.getElementById('btn-top-xilot-sync');
+      if (xilotSyncBtn) xilotSyncBtn.style.display = (isOwner && !isCoordinator) ? '' : 'none';
+
       // 2. Sidebar Section Headers - Dynamically visible only if Admin granted permissions
       const canSales = isOwner || userHasPermission('opp_view') || userHasPermission('tasks_view') || userHasPermission('calls_view');
-      const canMarketing = isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage') || userHasPermission('workflow_automate') || userHasPermission('conv_attach_files');
+      const canMarketing = !isCoordinator && (isOwner || userHasPermission('broadcast_view') || userHasPermission('broadcast_launch') || userHasPermission('templates_manage') || userHasPermission('flows_manage') || userHasPermission('workflow_automate') || userHasPermission('conv_attach_files'));
       const canInsights = isOwner || userHasPermission('reports_view') || userHasPermission('reports_staff_kpi');
       const canSystem = isOwner || userHasPermission('settings_apps') || userHasPermission('settings_channels') || userHasPermission('settings_team') || userHasPermission('settings_roles') || userHasPermission('settings_wallet');
 
@@ -8811,6 +8874,14 @@
       }
       if (tabId === 'conversations') tabId = 'conversation';
       purgeBrowserAutofillFromSearchInputs();
+
+      const roleStr = String((loggedInUser && loggedInUser.role) || '').toLowerCase();
+      const emailStr = String((loggedInUser && loggedInUser.email) || '').toLowerCase();
+      const isCoord = roleStr.includes('coordinator') || roleStr.includes('cordinator') || emailStr.includes('coordinator') || emailStr.includes('salescordinator');
+      if (isCoord && (tabId === 'forms' || tabId.startsWith('wa-') || tabId === 'automation' || tabId === 'media')) {
+        tabId = 'call-logs';
+      }
+      try { applyUserPermissions(loggedInUser); } catch(e){}
 
       if (typeof isUserInitiated !== 'boolean') {
         isUserInitiated = !!(window.event && (window.event.type === 'click' || window.event.type === 'keydown'));
@@ -11371,6 +11442,69 @@
       }
     }
 
+    function createKanbanCardElement(lead, stageId) {
+      const card = document.createElement('div');
+      card.id = 'kanban-card-' + lead.id;
+
+      const urgency = getLeadUrgencyStatus(lead);
+      let cardBorderClass = 'border border-main shadow-xs hover:border-gold';
+      let topStrip = '';
+      if (urgency.isOverdue) {
+        cardBorderClass = 'border-2 border-rose-500/80 bg-rose-500/[0.04] shadow-[0_0_12px_rgba(244,63,94,0.2)] ring-1 ring-rose-500/40';
+        topStrip = '<div class="w-full h-1 bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 rounded-t-xl -mt-3.5 -mx-3.5 mb-2.5"></div>';
+      } else if (urgency.isDueSoon) {
+        cardBorderClass = 'border-2 border-amber-500/80 bg-amber-500/[0.04] shadow-[0_0_12px_rgba(245,158,11,0.2)] ring-1 ring-amber-500/40';
+        topStrip = '<div class="w-full h-1 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-t-xl -mt-3.5 -mx-3.5 mb-2.5"></div>';
+      } else if (urgency.isDueToday) {
+        cardBorderClass = 'border border-blue-500/40 bg-blue-500/[0.02] shadow-xs hover:border-blue-500';
+        topStrip = '<div class="w-full h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-t-xl -mt-3.5 -mx-3.5 mb-2"></div>';
+      }
+
+      card.className = `kanban-lead-card p-3.5 rounded-2xl bg-card ${cardBorderClass} cursor-grab active:cursor-grabbing transition space-y-2 relative`;
+      card.setAttribute('draggable', 'true');
+
+      card.ondragstart = (e) => {
+        if (e.target.closest('button, input, select, textarea, a')) {
+          e.preventDefault();
+          return false;
+        }
+        handleLeadCardDragStart(e, lead.id, stageId);
+      };
+      card.ondragend = (e) => handleLeadCardDragEnd(e);
+      card.onclick = (e) => {
+        if (e.target.closest('button, a, input')) return;
+        const sel = window.getSelection();
+        if (sel && sel.toString().trim().length > 0) return;
+        openLeadModal(lead.id);
+      };
+
+      const phoneBtn = lead.phone ? `<button type="button" onclick="initiateCallWithLogging('${lead.id}')" class="p-1 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Call & Log Outcome">${SVG_ICONS.phone}</button>` : '';
+      const waBtn = lead.phone ? `<button type="button" onclick="openWhatsAppComposerModal('${lead.id}')" class="p-1 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="Send WhatsApp Message & Log">${SVG_ICONS.messageCircle}</button>` : '';
+      const followupBtn = formatFollowupBadgeHtml(lead, true);
+
+      card.innerHTML = `
+        ${topStrip}
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-xs text-main truncate max-w-[155px] select-text cursor-text" title="${escapeJs(lead.name)}">${escapeHtml(lead.name)}</span>
+          <span class="text-[10px] font-medium text-gold shrink-0 select-text">${escapeHtml(lead.dealValue || lead.budget || '')}</span>
+        </div>
+        <div class="flex items-center justify-between text-[11px] font-mono text-muted-custom mt-1">
+          <span class="select-text cursor-text text-main/90 font-medium">${escapeHtml(lead.phone || 'No phone')}</span>
+          <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+            ${phoneBtn}
+            ${waBtn}
+            <button type="button" onclick="scheduleReattemptForLead('${lead.id}')" class="p-1 rounded-md bg-amber-500/15 text-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer font-bold" title="⏱️ Schedule Next Call / Reattempt">${SVG_ICONS.clock}</button>
+            ${isCurrentUserSuperAdmin() ? `<button type="button" onclick="event.stopPropagation(); deleteSingleLeadFromPhonebook('${lead.id}')" class="p-1 rounded-md bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition cursor-pointer" title="Delete Lead">${SVG_ICONS.trash}</button>` : ''}
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-1 border-t border-main/40 text-[10px] mt-1 gap-1">
+          <span class="text-muted-custom truncate">${escapeHtml(lead.clientType || 'Client')}</span>
+          <div class="shrink-0">${followupBtn}</div>
+        </div>
+      `;
+      return card;
+    }
+
     function renderOpportunityKanbanBoard(pipLeads, pipeline) {
       try {
         const container = document.getElementById('opp-kanban-view-container');
@@ -11383,118 +11517,79 @@
 
         const boardFrag = document.createDocumentFragment();
         stages.forEach(stg => {
-        const rawColLeads = pipLeads.filter(l => l.stageId === stg.id || (!l.stageId && l.stage && l.stage.trim().toLowerCase() === stg.name.trim().toLowerCase()));
-        const colLeads = sortKanbanLeadsByUrgency(rawColLeads);
+          const rawColLeads = pipLeads.filter(l => l.stageId === stg.id || (!l.stageId && l.stage && l.stage.trim().toLowerCase() === stg.name.trim().toLowerCase()));
+          const colLeads = sortKanbanLeadsByUrgency(rawColLeads);
 
-        // Count how many are overdue in this column
-        const now = new Date();
-        const nowMs = now.getTime();
-        const overdueCount = colLeads.filter(l => {
-          if (!l.nextFollowUp) return false;
-          const d = new Date(l.nextFollowUp);
-          return !isNaN(d.getTime()) && d.getTime() < nowMs;
-        }).length;
+          // Count overdue in this stage
+          const nowMs = Date.now();
+          const overdueCount = colLeads.filter(l => {
+            if (!l.nextFollowUp) return false;
+            const d = new Date(l.nextFollowUp);
+            return !isNaN(d.getTime()) && d.getTime() < nowMs;
+          }).length;
 
-        const col = document.createElement('div');
-        col.id = 'kanban-col-' + stg.id;
-        col.className = 'kanban-stage-col w-72 shrink-0 bg-subtle/40 rounded-3xl border border-main flex flex-col max-h-[75vh] overflow-hidden transition-all duration-200';
-        
-        // Drag and drop listeners on column
-        col.ondragover = (e) => handleKanbanColDragOver(e, stg.id);
-        col.ondragleave = (e) => handleKanbanColDragLeave(e, stg.id);
-        col.ondrop = (e) => handleKanbanColDrop(e, stg.id);
+          const col = document.createElement('div');
+          col.id = 'kanban-col-' + stg.id;
+          col.className = 'kanban-stage-col w-[290px] sm:w-[310px] lg:w-[325px] shrink-0 snap-start bg-subtle/40 rounded-3xl border border-main flex flex-col max-h-[75vh] overflow-hidden transition-all duration-200';
+          
+          col.ondragover = (e) => handleKanbanColDragOver(e, stg.id);
+          col.ondragleave = (e) => handleKanbanColDragLeave(e, stg.id);
+          col.ondrop = (e) => handleKanbanColDrop(e, stg.id);
 
-        col.innerHTML = `
-          <div class="p-3.5 border-b border-main flex items-center justify-between bg-card/60 cursor-grab active:cursor-grabbing select-none"
-               draggable="true"
-               ondragstart="handleStageDragStart(event, '${stg.id}')"
-               ondragend="handleStageDragEnd(event)"
-               title="Drag column header to reorder stages forward or backward">
-            <div class="flex items-center gap-2">
-              ${SVG_ICONS.grip}
-              <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${stg.color}"></span>
-              <h4 class="font-bold text-xs text-main truncate">${stg.name}</h4>
-            </div>
-            <div class="flex items-center gap-1.5">
-              ${overdueCount > 0 ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/20 text-rose-500 border border-rose-500/40 animate-pulse shadow-xs" title="${overdueCount} Overdue call(s) in ${escapeJs(stg.name)}">${overdueCount} 🚨 OVERDUE</span>` : ''}
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-card border border-main text-muted-custom">${colLeads.length}</span>
-            </div>
-          </div>
-          <div class="kanban-dropzone flex-1 min-h-0 p-3 overflow-y-auto custom-scrollbar space-y-2.5 min-h-[140px] max-h-[calc(75vh-56px)] transition-colors duration-150" style="overscroll-behavior-y: contain; touch-action: pan-y;" id="kanban-stage-${stg.id}"></div>
-        `;
-        boardFrag.appendChild(col);
-
-        const cardContainer = col.querySelector('#kanban-stage-' + stg.id);
-        cardContainer.ondragover = (e) => handleKanbanColDragOver(e, stg.id);
-        cardContainer.ondragleave = (e) => handleKanbanColDragLeave(e, stg.id);
-        cardContainer.ondrop = (e) => handleKanbanColDrop(e, stg.id);
-        const colCardFrag = document.createDocumentFragment();
-        colLeads.forEach(lead => {
-          const card = document.createElement('div');
-          card.id = 'kanban-card-' + lead.id;
-
-          const urgency = getLeadUrgencyStatus(lead);
-          let cardBorderClass = 'border border-main shadow-xs hover:border-gold';
-          let topStrip = '';
-          if (urgency.isOverdue) {
-            cardBorderClass = 'border-2 border-rose-500/80 bg-rose-500/[0.04] shadow-[0_0_12px_rgba(244,63,94,0.2)] ring-1 ring-rose-500/40';
-            topStrip = '<div class="w-full h-1 bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 rounded-t-xl -mt-3.5 -mx-3.5 mb-2.5"></div>';
-          } else if (urgency.isDueSoon) {
-            cardBorderClass = 'border-2 border-amber-500/80 bg-amber-500/[0.04] shadow-[0_0_12px_rgba(245,158,11,0.2)] ring-1 ring-amber-500/40';
-            topStrip = '<div class="w-full h-1 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-t-xl -mt-3.5 -mx-3.5 mb-2.5"></div>';
-          } else if (urgency.isDueToday) {
-            cardBorderClass = 'border border-blue-500/40 bg-blue-500/[0.02] shadow-xs hover:border-blue-500';
-            topStrip = '<div class="w-full h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-t-xl -mt-3.5 -mx-3.5 mb-2"></div>';
-          }
-
-          card.className = `kanban-lead-card p-3.5 rounded-2xl bg-card ${cardBorderClass} cursor-grab active:cursor-grabbing transition space-y-2 relative`;
-          card.setAttribute('draggable', 'true');
-
-          card.ondragstart = (e) => {
-            if (e.target.closest('button, input, select, textarea, a')) {
-              e.preventDefault();
-              return false;
-            }
-            handleLeadCardDragStart(e, lead.id, stg.id);
-          };
-          card.ondragend = (e) => handleLeadCardDragEnd(e);
-          card.onclick = (e) => {
-            if (e.target.closest('button, a, input')) return;
-            const sel = window.getSelection();
-            if (sel && sel.toString().trim().length > 0) return;
-            openLeadModal(lead.id);
-          };
-
-          const phoneBtn = lead.phone ? `<button type="button" onclick="initiateCallWithLogging('${lead.id}')" class="p-1 rounded-md bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition cursor-pointer" title="Call & Log Outcome">${SVG_ICONS.phone}</button>` : '';
-          const waBtn = lead.phone ? `<button type="button" onclick="openWhatsAppComposerModal('${lead.id}')" class="p-1 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition cursor-pointer" title="Send WhatsApp Message & Log">${SVG_ICONS.messageCircle}</button>` : '';
-          const followupBtn = formatFollowupBadgeHtml(lead, true);
-
-          card.innerHTML = `
-            ${topStrip}
-            <div class="flex items-center justify-between">
-              <span class="font-medium text-xs text-main truncate max-w-[155px] select-text cursor-text" title="${escapeJs(lead.name)}">${lead.name}</span>
-              <span class="text-[10px] font-medium text-gold shrink-0 select-text">${lead.dealValue || lead.budget || ''}</span>
-            </div>
-            <div class="flex items-center justify-between text-[11px] font-mono text-muted-custom mt-1">
-              <span class="select-text cursor-text text-main/90 font-medium">${lead.phone || 'No phone'}</span>
-              <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-                ${phoneBtn}
-                ${waBtn}
-                <button type="button" onclick="scheduleReattemptForLead('${lead.id}')" class="p-1 rounded-md bg-amber-500/15 text-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer font-bold" title="⏱️ Schedule Next Call / Reattempt">${SVG_ICONS.clock}</button>
-                ${isCurrentUserSuperAdmin() ? `<button type="button" onclick="event.stopPropagation(); deleteSingleLeadFromPhonebook('${lead.id}')" class="p-1 rounded-md bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition cursor-pointer" title="Delete Lead">${SVG_ICONS.trash}</button>` : ''}
+          col.innerHTML = `
+            <div class="p-3.5 border-b border-main flex items-center justify-between bg-card/60 cursor-grab active:cursor-grabbing select-none"
+                 draggable="true"
+                 ondragstart="handleStageDragStart(event, '${stg.id}')"
+                 ondragend="handleStageDragEnd(event)"
+                 title="Drag column header to reorder stages forward or backward">
+              <div class="flex items-center gap-2">
+                ${SVG_ICONS.grip}
+                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${stg.color}"></span>
+                <h4 class="font-bold text-xs text-main truncate">${escapeHtml(stg.name)}</h4>
+              </div>
+              <div class="flex items-center gap-1.5">
+                ${overdueCount > 0 ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/20 text-rose-500 border border-rose-500/40 animate-pulse shadow-xs" title="${overdueCount} Overdue call(s) in ${escapeJs(stg.name)}">${overdueCount} 🚨 OVERDUE</span>` : ''}
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-card border border-main text-muted-custom">${colLeads.length}</span>
               </div>
             </div>
-            <div class="flex items-center justify-between pt-1 border-t border-main/40 text-[10px] mt-1 gap-1">
-              <span class="text-muted-custom truncate">${lead.clientType || 'Client'}</span>
-              <div class="shrink-0">${followupBtn}</div>
-            </div>
+            <div class="kanban-dropzone flex-1 min-h-0 p-3 overflow-y-auto custom-scrollbar space-y-2.5 min-h-[140px] max-h-[calc(75vh-56px)] transition-colors duration-150" style="overscroll-behavior-y: contain; touch-action: pan-y;" id="kanban-stage-${stg.id}"></div>
           `;
-          colCardFrag.appendChild(card);
+          boardFrag.appendChild(col);
+
+          const cardContainer = col.querySelector('#kanban-stage-' + stg.id);
+          cardContainer.ondragover = (e) => handleKanbanColDragOver(e, stg.id);
+          cardContainer.ondragleave = (e) => handleKanbanColDragLeave(e, stg.id);
+          cardContainer.ondrop = (e) => handleKanbanColDrop(e, stg.id);
+
+          // PERFORMANCE: Lightweight chunked card rendering (instant 60fps, zero hang on 200+ leads)
+          const CHUNK_SIZE = 25;
+          const initialChunk = colLeads.slice(0, CHUNK_SIZE);
+          const remainingChunk = colLeads.slice(CHUNK_SIZE);
+
+          const colCardFrag = document.createDocumentFragment();
+          initialChunk.forEach(lead => {
+            colCardFrag.appendChild(createKanbanCardElement(lead, stg.id));
+          });
+          cardContainer.appendChild(colCardFrag);
+
+          if (remainingChunk.length > 0) {
+            const moreBtn = document.createElement('button');
+            moreBtn.type = 'button';
+            moreBtn.className = 'w-full py-2 px-3 rounded-xl bg-subtle hover:bg-card border border-main hover:border-gold text-main text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer my-1';
+            moreBtn.innerHTML = `<span>+ View ${remainingChunk.length} more leads</span>`;
+            moreBtn.onclick = () => {
+              const moreFrag = document.createDocumentFragment();
+              remainingChunk.forEach(l => moreFrag.appendChild(createKanbanCardElement(l, stg.id)));
+              cardContainer.insertBefore(moreFrag, moreBtn);
+              moreBtn.remove();
+              if (window.lucide) lucide.createIcons({ root: cardContainer });
+            };
+            cardContainer.appendChild(moreBtn);
+          }
         });
-        cardContainer.appendChild(colCardFrag);
-      });
-      container.appendChild(boardFrag);
-      setupKanbanWheelScroll();
+        container.appendChild(boardFrag);
+        setupKanbanWheelScroll();
+        if (window.lucide) lucide.createIcons({ root: container });
       } catch(err) {
         console.error('Fatal error in renderOpportunityKanbanBoard:', err);
       }
@@ -11590,6 +11685,181 @@
     };
 
         const DEFAULT_BUNDLED_CALL_LOGS = [
+  {
+    "id": "call-rec-1kEXZhk0_hNZO73IoWcXysD4EmIH__-ZY",
+    "caller_number": "+917696013856",
+    "phone": "+917696013856",
+    "caller_name": "+917696013856",
+    "leadName": "+917696013856",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-06T11:18:00.000Z",
+    "timestamp": "2026-11-06T11:18:00.000Z",
+    "time": "6 Nov, 04:48 PM",
+    "recording_url": "/api/call-audio?id=1kEXZhk0_hNZO73IoWcXysD4EmIH__-ZY",
+    "audioUrl": "/api/call-audio?id=1kEXZhk0_hNZO73IoWcXysD4EmIH__-ZY",
+    "hasAudio": true,
+    "drive_file_id": "1kEXZhk0_hNZO73IoWcXysD4EmIH__-ZY",
+    "recording_file_name": "+917696013856-2611061648.mp3",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus"
+  },
+  {
+    "id": "call-rec-1nXiA0L0TWdnhnkEwU0JaUmXe8tytCMha",
+    "caller_number": "+919041444415",
+    "phone": "+919041444415",
+    "caller_name": "Eaklovya Chawla",
+    "leadName": "Eaklovya Chawla",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-06T10:12:00.000Z",
+    "timestamp": "2026-11-06T10:12:00.000Z",
+    "time": "6 Nov, 03:42 PM",
+    "recording_url": "/api/call-audio?id=1nXiA0L0TWdnhnkEwU0JaUmXe8tytCMha",
+    "audioUrl": "/api/call-audio?id=1nXiA0L0TWdnhnkEwU0JaUmXe8tytCMha",
+    "hasAudio": true,
+    "drive_file_id": "1nXiA0L0TWdnhnkEwU0JaUmXe8tytCMha",
+    "recording_file_name": "Eaklovya Chawla-2611061542.mp3",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus"
+  },
+  {
+    "id": "call-rec-1LLWmAfmRqAEN7lfFKfzhgj81foxHNpPI",
+    "caller_number": "",
+    "phone": "",
+    "caller_name": "Simran Ssp",
+    "leadName": "Simran Ssp",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-06T09:51:00.000Z",
+    "timestamp": "2026-11-06T09:51:00.000Z",
+    "time": "6 Nov, 03:21 PM",
+    "recording_url": "/api/call-audio?id=1LLWmAfmRqAEN7lfFKfzhgj81foxHNpPI",
+    "audioUrl": "/api/call-audio?id=1LLWmAfmRqAEN7lfFKfzhgj81foxHNpPI",
+    "hasAudio": true,
+    "drive_file_id": "1LLWmAfmRqAEN7lfFKfzhgj81foxHNpPI",
+    "recording_file_name": "Simran Ssp-2611061521.mp3",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus"
+  },
+  {
+    "id": "call-rec-1WqPZk3XWZhM79sSHVd3yoL9huIGdbgi3",
+    "caller_number": "+918557011635",
+    "phone": "+918557011635",
+    "caller_name": "Manjit Singh",
+    "leadName": "Manjit Singh",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-06T09:46:00.000Z",
+    "timestamp": "2026-11-06T09:46:00.000Z",
+    "time": "6 Nov, 03:16 PM",
+    "recording_url": "/api/call-audio?id=1WqPZk3XWZhM79sSHVd3yoL9huIGdbgi3",
+    "audioUrl": "/api/call-audio?id=1WqPZk3XWZhM79sSHVd3yoL9huIGdbgi3",
+    "hasAudio": true,
+    "drive_file_id": "1WqPZk3XWZhM79sSHVd3yoL9huIGdbgi3",
+    "recording_file_name": "8557011635-2611061516.mp3",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus"
+  },
+  {
+    "id": "call-rec-1OcJAyBcng6ZqoajEUG_nbHUuYGYNeKvZ",
+    "caller_number": "+918557011635",
+    "phone": "+918557011635",
+    "caller_name": "Manjit Singh",
+    "leadName": "Manjit Singh",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-06T09:44:00.000Z",
+    "timestamp": "2026-11-06T09:44:00.000Z",
+    "time": "6 Nov, 03:14 PM",
+    "recording_url": "/api/call-audio?id=1OcJAyBcng6ZqoajEUG_nbHUuYGYNeKvZ",
+    "audioUrl": "/api/call-audio?id=1OcJAyBcng6ZqoajEUG_nbHUuYGYNeKvZ",
+    "hasAudio": true,
+    "drive_file_id": "1OcJAyBcng6ZqoajEUG_nbHUuYGYNeKvZ",
+    "recording_file_name": "8557011635-2611061514.mp3",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus"
+  },
+  {
+    "id": "call-rec-1THMn-UJt9_NQkuJHtX3CKlSBhGAkn7Ye",
+    "caller_number": "+919815045700",
+    "phone": "+919815045700",
+    "caller_name": "Dispatch Np",
+    "leadName": "Dispatch Np",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-06T08:14:00.000Z",
+    "timestamp": "2026-11-06T08:14:00.000Z",
+    "time": "6 Nov, 01:44 PM",
+    "recording_url": "/api/call-audio?id=1THMn-UJt9_NQkuJHtX3CKlSBhGAkn7Ye",
+    "audioUrl": "/api/call-audio?id=1THMn-UJt9_NQkuJHtX3CKlSBhGAkn7Ye",
+    "hasAudio": true,
+    "drive_file_id": "1THMn-UJt9_NQkuJHtX3CKlSBhGAkn7Ye",
+    "recording_file_name": "Dispatch Np-2611061344.mp3",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus"
+  },
+  {
+    "id": "call-rec-1vaV9obaubEhvUGbMPHhjU6P8_t7EyUBa",
+    "caller_number": "+919815045700",
+    "phone": "+919815045700",
+    "caller_name": "Dispatch Np",
+    "leadName": "Dispatch Np",
+    "call_type": "INBOUND",
+    "direction": "INBOUND",
+    "outcome": "Connected",
+    "call_outcome": "Connected",
+    "callOutcome": "Connected",
+    "duration": 45,
+    "call_duration": 45,
+    "created_at": "2026-11-06T07:46:00.000Z",
+    "timestamp": "2026-11-06T07:46:00.000Z",
+    "time": "6 Nov, 01:16 PM",
+    "recording_url": "/api/call-audio?id=1vaV9obaubEhvUGbMPHhjU6P8_t7EyUBa",
+    "audioUrl": "/api/call-audio?id=1vaV9obaubEhvUGbMPHhjU6P8_t7EyUBa",
+    "hasAudio": true,
+    "drive_file_id": "1vaV9obaubEhvUGbMPHhjU6P8_t7EyUBa",
+    "recording_file_name": "Dispatch Np-2611061316.mp3",
+    "deviceName": "OnePlus",
+    "device_name": "OnePlus",
+    "staff_name": "OnePlus"
+  },
   {
     "id": "call-rec-1MiHWRMJmw_6fSU3RndxAqLK2E41ZisjP",
     "caller_number": "",
@@ -45568,6 +45838,17 @@
       const badge = document.getElementById('cloud-sync-status-badge');
       const text = document.getElementById('cloud-sync-status-text');
       if (!badge) return;
+      const isCoord = typeof loggedInUser !== 'undefined' && loggedInUser && (
+        (loggedInUser.role || '').toLowerCase().includes('coordinator') ||
+        (loggedInUser.role || '').toLowerCase().includes('cordinator') ||
+        (loggedInUser.email || '').toLowerCase().includes('coordinator') ||
+        (loggedInUser.email || '').toLowerCase().includes('salescordinator')
+      );
+      if (isCoord) {
+        badge.style.display = 'none';
+        return;
+      }
+      badge.style.display = '';
       if (isLive) {
         badge.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-xs cursor-pointer hover:bg-emerald-500/20 transition';
         badge.title = 'Google Firebase Realtime Database Connected • Project: crm-f4bf7 • Click to sync';
@@ -46731,7 +47012,64 @@
 
     
     const KNOWN_CONTACT_PHONES = {
+  "eaklovya chawla": "+919041444415",
+  "eaklovya": "+919041444415",
+  "mayur kheda": "+918054429147",
+  "mayur kheda thekedar": "+918054429147",
+  "monu thekedar": "+917986012851",
+  "munna thekedar": "+919814941693",
+  "sukhpreet sngh": "+918847684640",
+  "sukhpreet singh": "+918847684640",
+  "partap thekedar": "+917717273944",
+  "jaswinder thekedar": "+918872193535",
+  "jagtar singh thekedar": "+919517906829",
+  "jagtar jagdev": "+919781915721",
+  "gian chand thekedar": "+918872193535",
+  "avtar thekedar": "+917986979203",
+  "arvind thekedar": "+917986979203",
+  "anwarul khan": "+917357441912",
+  "anwarul": "+917357441912",
+  "anwarul sir": "+917357441912",
+  "anwarul sir plywood": "+917357441912",
+  "randeep": "+919872519259",
+  "renu kapoor": "+919876859703",
+  "harjeet punjabi": "+919872519259",
+  "gurpreet barnala": "+919877000020",
+  "gurdeep singh mohalli": "+919877000020",
+  "dilbar": "+919463206145",
+  "aliakabar ansari": "+919463206145",
+  "aliakabar": "+919463206145",
+  "carpanter rambabu": "+918729083796",
+  "rambabu kumar": "+918729083796",
+  "jassa singh marbella": "+917009602488",
+  "jassa singh": "+917009602488",
+  "jagjit singh": "+919779800140",
+  "jagjit 3034": "+919779800140",
+  "guru nanak auto parts": "+919814177752",
+  "karnail singh": "+919501036231",
+  "pal singh thekedar": "+918146559158",
+  "varun sec 82": "+918699391895",
+  "varun kumar": "+918699391895",
+  "sunil 144": "+919888800559",
+  "sunil kumar": "+919888800559",
+  "nirey plywood": "+919779122990",
+  "pawan thekedar": "+917837740503",
+  "ravi kumar": "+919812793309",
+  "mann singh": "+917529051800",
+  "aman 1615": "+919814066342",
   "deepak": "+919999672763",
+  "flipkart": "+9118002029898",
+  "flipkart customer service": "+9118002029898",
+  "emergency number": "112",
+  "kawaljeet": "+919814177752",
+  "parvinder dhiman": "+919501854050",
+  "krishan pal": "+919872673931",
+  "sherbaz khan": "+919876111118",
+  "saaransh saini": "+919877142366",
+  "karan makhija": "+919417110526",
+  "vijayalakshmy": "+918699555595",
+  "vijayalakshmy r": "+918699555595",
+"deepak": "+919999672763",
   "asha singh": "+919416336813",
   "mahesh tiwari": "+919914543333",
   "mr. parag ravish w": "+919812793309",
@@ -47140,6 +47478,11 @@ function resolveContactNameToPhone(contactName) {
         const normalizedKey = k.replace(/[^a-z0-9]/g, '');
         if (normalizedStr === normalizedKey) return p;
       }
+      for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
+        if (k.length >= 4 && (str.includes(k) || k.includes(str))) {
+          return p;
+        }
+      }
       return '';
     }
   
@@ -47174,6 +47517,18 @@ function resolveContactNameToPhone(contactName) {
           const data = await res.json();
           if (data && data.success && Array.isArray(data.calls)) {
             const KNOWN_DRIVE_MAPPINGS = {
+  "1kEXZhk0_hNZO73IoWcXysD4EmIH__-ZY": { "name": "+917696013856", "phone": "+917696013856", "dur": 45, "time": "6 Nov, 04:48 PM", "device": "OnePlus", "dir": "INBOUND", "file": "+917696013856-2611061648.mp3" },
+  "1nXiA0L0TWdnhnkEwU0JaUmXe8tytCMha": { "name": "Eaklovya Chawla", "phone": "+919041444415", "dur": 45, "time": "6 Nov, 03:42 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Eaklovya Chawla-2611061542.mp3" },
+  "1LLWmAfmRqAEN7lfFKfzhgj81foxHNpPI": { "name": "Simran Ssp", "phone": "", "dur": 45, "time": "6 Nov, 03:21 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Simran Ssp-2611061521.mp3" },
+  "1WqPZk3XWZhM79sSHVd3yoL9huIGdbgi3": { "name": "Manjit Singh", "phone": "+918557011635", "dur": 45, "time": "6 Nov, 03:16 PM", "device": "OnePlus", "dir": "INBOUND", "file": "8557011635-2611061516.mp3" },
+  "1OcJAyBcng6ZqoajEUG_nbHUuYGYNeKvZ": { "name": "Manjit Singh", "phone": "+918557011635", "dur": 45, "time": "6 Nov, 03:14 PM", "device": "OnePlus", "dir": "INBOUND", "file": "8557011635-2611061514.mp3" },
+  "1THMn-UJt9_NQkuJHtX3CKlSBhGAkn7Ye": { "name": "Dispatch Np", "phone": "+919815045700", "dur": 45, "time": "6 Nov, 01:44 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Dispatch Np-2611061344.mp3" },
+  "1vaV9obaubEhvUGbMPHhjU6P8_t7EyUBa": { "name": "Dispatch Np", "phone": "+919815045700", "dur": 45, "time": "6 Nov, 01:16 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Dispatch Np-2611061316.mp3" },
+  "1MrHgOcUlZU5qv3Le2-xncQGUYRvBOHQR": { "name": "Dispatch Np", "phone": "+919815045700", "dur": 45, "time": "6 Nov, 11:45 AM", "device": "OnePlus", "dir": "INBOUND", "file": "Dispatch Np-2611061145.mp3" },
+  "1zb89USnVvWzzpPgRFGR8pZvvQ5HBzSZo": { "name": "Shakuntla Devi", "phone": "+919872019485", "dur": 45, "time": "6 Nov, 11:29 AM", "device": "OnePlus", "dir": "INBOUND", "file": "Shakuntla Devi-2611061129.mp3" },
+  "1RWJvm1zXCyqKNf2Gm_Ozneh8AcbvgBrF": { "name": "+918427761777", "phone": "+918427761777", "dur": 45, "time": "6 Nov, 11:27 AM", "device": "OnePlus", "dir": "INBOUND", "file": "+918427761777-2611061127.mp3" },
+  "1_kF0SwikhBib9iJSqhxkAfN9EDUsB2m8": { "name": "Sahil", "phone": "+919056279246", "dur": 28, "time": "6 Nov, 10:54 AM", "device": "OnePlus", "dir": "INBOUND", "file": "Sahil-2611061054.mp3" },
+  "1--a2nAnc2gSjjZaVsZij8A4KBY2EumFz": { "name": "Surinder Kumar", "phone": "+918910459215", "dur": 28, "time": "5 Nov, 06:29 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Surinder Kumar-2611051829.mp3" },
   "1dpRMXa_ZIYTzHGxFb-M6Sljwuoz0w1Sy": { "name": "Chetan Gumber", "phone": "+919814628661", "dur": 45, "time": "05 Nov, 05:04 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Chetan Gumber-2611051704.mp3" },
   "1_kF0SwikhBib9iJSqhxkAfN9EDUsB2m8": { "name": "Sahil", "phone": "+919056279246", "dur": 28, "time": "6 Nov, 10:54 AM", "device": "OnePlus", "dir": "INBOUND", "file": "Sahil-2611061054.mp3" },
   "1--a2nAnc2gSjjZaVsZij8A4KBY2EumFz": { "name": "Surinder Kumar", "phone": "+918910459215", "dur": 28, "time": "5 Nov, 06:29 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Surinder Kumar-2611051829.mp3" },
@@ -47913,6 +48268,20 @@ function resolveContactNameToPhone(contactName) {
         }
       }
 
+      // Rule 3: Companion Phone + Recording Matcher
+      // Same physical device within 3 minutes where one record has genuine phone and the other has recording or specific contact name
+      if (devKeyA === devKeyB && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 180000) {
+        const hasPhoneA = phoneA && phoneA.length >= 7;
+        const hasPhoneB = phoneB && phoneB.length >= 7;
+        if ((hasPhoneA && !hasPhoneB) || (!hasPhoneA && hasPhoneB)) {
+          const isGenericA = !nameA || nameA === 'direct phone call' || nameA === 'customer call' || nameA.includes('direct call');
+          const isGenericB = !nameB || nameB === 'direct phone call' || nameB === 'customer call' || nameB.includes('direct call');
+          if (isGenericA || isGenericB) {
+            return true;
+          }
+        }
+      }
+
       return false;
     }
 
@@ -48138,13 +48507,30 @@ function resolveContactNameToPhone(contactName) {
         userHasPermission('calls_view') ||
         (loggedInUser && (roleStr.includes('super admin') || roleStr.includes('admin') || roleStr.includes('manager') || roleStr.includes('cordinator') || roleStr.includes('coordinator')));
 
+      // Strict Role Control for Call Logs Header Buttons:
+      // Sales Coordinator: hide Add Device, Drive Sync, Drive Folder, Refresh Calls, and + Log Call
+      const isOwner = isCurrentUserSuperAdmin();
+      const btnAddDev = document.getElementById('call-log-btn-add-device');
+      if (btnAddDev) btnAddDev.style.display = (isOwner && !isCoordinatorUser) ? '' : 'none';
+
+      const btnDriveSync = document.getElementById('crm-drive-sync-btn');
+      const btnDriveSettings = document.getElementById('crm-drive-folder-settings-btn');
+      if (btnDriveSync) btnDriveSync.style.display = (isOwner && !isCoordinatorUser) ? '' : 'none';
+      if (btnDriveSettings) btnDriveSettings.style.display = (isOwner && !isCoordinatorUser) ? '' : 'none';
+
+      const btnRefCalls = document.getElementById('call-log-btn-refresh');
+      if (btnRefCalls) btnRefCalls.style.display = isCoordinatorUser ? 'none' : '';
+
+      const btnNewC = document.getElementById('call-log-btn-new-call');
+      if (btnNewC) btnNewC.style.display = isCoordinatorUser ? 'none' : '';
+
       const isSuperAdmin = isCurrentUserSuperAdmin();
 
-      // Drive Cloud Audio Sync & Drive Folder Settings: STRICTLY Admin Only!
+      // Drive Cloud Audio Sync & Drive Folder Settings: STRICTLY Admin Only (Hidden for Sales Coordinator)!
       const driveSyncBtn = document.getElementById('crm-drive-sync-btn');
       const driveFolderBtn = document.getElementById('crm-drive-folder-settings-btn');
-      if (driveSyncBtn) driveSyncBtn.style.display = (isSuperAdmin || isCoordinatorUser) ? '' : 'none';
-      if (driveFolderBtn) driveFolderBtn.style.display = isSuperAdmin ? '' : 'none';
+      if (driveSyncBtn) driveSyncBtn.style.display = (isSuperAdmin && !isCoordinatorUser) ? '' : 'none';
+      if (driveFolderBtn) driveFolderBtn.style.display = (isSuperAdmin && !isCoordinatorUser) ? '' : 'none';
 
       // Sales Coordinator or regular staff can ONLY listen to recordings if Admin grants 'calls_listen_recording' permission!
       const canListenRecordings = isSuperAdmin || isCoordinatorUser || userHasPermission('calls_listen_recording');
@@ -48202,20 +48588,20 @@ function resolveContactNameToPhone(contactName) {
                 <span class="text-muted-custom block text-[11px]">Reviewing received &amp; dialed calls across the team. Audio access is configured per device by Admin.</span>
               </div>
             </div>
-            <!-- Per-Device Coordinator Badges -->
+            <!-- Per-Device Coordinator Badges (All 3 Devices Enabled) -->
             <div class="flex flex-wrap items-center gap-2 shrink-0">
               <span class="text-[11px] text-muted-custom font-bold">Your Device Audio Access:</span>
-              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1 ${coordPerms['OnePlus'] ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border-rose-500/40'}">
-                <i data-lucide="${coordPerms['OnePlus'] ? 'check-circle-2' : 'lock'}" class="w-3 h-3"></i>
-                <span>OnePlus: ${coordPerms['OnePlus'] ? 'Allowed' : 'Locked by Admin'}</span>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1 bg-emerald-500/20 text-emerald-400 border-emerald-500/40">
+                <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+                <span>OnePlus: Allowed</span>
               </span>
-              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1 ${coordPerms['Samsung Galaxy'] ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border-rose-500/40'}">
-                <i data-lucide="${coordPerms['Samsung Galaxy'] ? 'check-circle-2' : 'lock'}" class="w-3 h-3"></i>
-                <span>Samsung: ${coordPerms['Samsung Galaxy'] ? 'Allowed' : 'Locked by Admin'}</span>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1 bg-emerald-500/20 text-emerald-400 border-emerald-500/40">
+                <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+                <span>Samsung: Allowed</span>
               </span>
-              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1 ${coordPerms['iQOO'] ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border-rose-500/40'}">
-                <i data-lucide="${coordPerms['iQOO'] ? 'check-circle-2' : 'lock'}" class="w-3 h-3"></i>
-                <span>iQOO: ${coordPerms['iQOO'] ? 'Allowed' : 'Locked by Admin'}</span>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1 bg-emerald-500/20 text-emerald-400 border-emerald-500/40">
+                <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+                <span>iQOO: Allowed</span>
               </span>
             </div>
           `;
@@ -48598,7 +48984,25 @@ function resolveContactNameToPhone(contactName) {
               `}
               <div class="flex items-center gap-2 mt-1">
                 <span class="font-mono text-xs text-amber-600 dark:text-amber-400 font-extrabold select-text">
-                  ${effectivePhone !== '—' ? escapeHtml(effectivePhone) : '<span class="text-slate-400 font-bold opacity-80">No Phone</span>'}
+                  ${(() => {
+                    if (effectivePhone && effectivePhone !== '—') {
+                      return escapeHtml(effectivePhone);
+                    }
+                    const cNameLower = String(call.caller_name || call.leadName || '').toLowerCase();
+                    if (cNameLower.includes('spam') || String(call.phone || '').toLowerCase().includes('spam')) {
+                      return '<span class="text-rose-500 font-bold text-[11px] flex items-center gap-1"><i data-lucide="shield-alert" class="w-3 h-3"></i>Spam Warning (Carrier)</span>';
+                    }
+                    if (cNameLower.includes('emergency')) {
+                      return '<span class="text-rose-400 font-bold font-mono text-xs">112 (Emergency)</span>';
+                    }
+                    if (cNameLower.includes('flipkart')) {
+                      return '<span class="text-sky-500 font-bold font-mono text-xs">+9118002029898</span>';
+                    }
+                    if (call.caller_name && call.caller_name !== 'Direct Phone Call') {
+                      return '<span class="text-amber-500/80 font-bold text-[11px] flex items-center gap-1"><i data-lucide="contact-round" class="w-3 h-3"></i>Saved Contact</span>';
+                    }
+                    return '<span class="text-slate-400 font-bold opacity-80">No Phone</span>';
+                  })()}
                 </span>
               </div>
             </td>
@@ -49895,7 +50299,7 @@ function resolveContactNameToPhone(contactName) {
 
         // Source 1: Live Cloud Webhook API (ALWAYS fetch live cloud calls)
         try {
-          const endpointUrl = window.location.origin.includes('vercel.app') 
+          const endpointUrl = (window.location.origin.includes('vercel.app') || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
             ? '/api/webhook/call-log' 
             : 'https://crm-system-chi-amber.vercel.app/api/webhook/call-log';
           const vRes = await fetch(endpointUrl + '?t=' + Date.now()).catch(() => null);
@@ -52050,19 +52454,19 @@ function resolveContactNameToPhone(contactName) {
     function getCoordinatorDevicePermissions() {
       const defaults = {
         'OnePlus': true,
-        'Samsung Galaxy': false,
+        'Samsung Galaxy': true,
         'iQOO': true
       };
       let perms = safeStorageGet('sri_sri_coord_device_permissions', null);
       if (!perms || typeof perms !== 'object') {
         perms = JSON.parse(JSON.stringify(defaults));
-        safeStorageSet('sri_sri_coord_device_permissions', perms);
       } else {
-        if (perms['iQOO'] === undefined || perms['iQOO'] === false) {
-          perms['iQOO'] = true;
-          safeStorageSet('sri_sri_coord_device_permissions', perms);
-        }
+        // Ensure all three devices are always allowed for Sales Coordinator
+        perms['OnePlus'] = true;
+        perms['Samsung Galaxy'] = true;
+        perms['iQOO'] = true;
       }
+      safeStorageSet('sri_sri_coord_device_permissions', perms);
       return perms;
     }
     window.getCoordinatorDevicePermissions = getCoordinatorDevicePermissions;
@@ -52087,6 +52491,9 @@ function resolveContactNameToPhone(contactName) {
 
       if (isCoord) {
         const perms = getCoordinatorDevicePermissions();
+        if (devKey === 'Samsung Galaxy' || devKey === 'OnePlus' || devKey === 'iQOO') {
+          return true; // All 3 devices 100% allowed for Sales Coordinator
+        }
         return !!perms[devKey];
       }
 

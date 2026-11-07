@@ -360,6 +360,101 @@ async function getFirestoreCallLogs() {
   });
 }
 
+
+const KNOWN_CONTACT_PHONES = {
+  "eaklovya chawla": "+919041444415",
+  "eaklovya": "+919041444415",
+  "mayur kheda": "+918054429147",
+  "mayur kheda thekedar": "+918054429147",
+  "monu thekedar": "+917986012851",
+  "munna thekedar": "+919814941693",
+  "sukhpreet sngh": "+918847684640",
+  "sukhpreet singh": "+918847684640",
+  "partap thekedar": "+917717273944",
+  "jaswinder thekedar": "+918872193535",
+  "jagtar singh thekedar": "+919517906829",
+  "jagtar jagdev": "+919781915721",
+  "gian chand thekedar": "+918872193535",
+  "avtar thekedar": "+917986979203",
+  "arvind thekedar": "+917986979203",
+  "anwarul khan": "+917357441912",
+  "anwarul": "+917357441912",
+  "anwarul sir": "+917357441912",
+  "anwarul sir plywood": "+917357441912",
+  "randeep": "+919872519259",
+  "renu kapoor": "+919876859703",
+  "harjeet punjabi": "+919872519259",
+  "gurpreet barnala": "+919877000020",
+  "gurdeep singh mohalli": "+919877000020",
+  "dilbar": "+919463206145",
+  "aliakabar ansari": "+919463206145",
+  "aliakabar": "+919463206145",
+  "carpanter rambabu": "+918729083796",
+  "rambabu kumar": "+918729083796",
+  "jassa singh marbella": "+917009602488",
+  "jassa singh": "+917009602488",
+  "jagjit singh": "+919779800140",
+  "jagjit 3034": "+919779800140",
+  "guru nanak auto parts": "+919814177752",
+  "karnail singh": "+919501036231",
+  "pal singh thekedar": "+918146559158",
+  "varun sec 82": "+918699391895",
+  "varun kumar": "+918699391895",
+  "sunil 144": "+919888800559",
+  "sunil kumar": "+919888800559",
+  "nirey plywood": "+919779122990",
+  "pawan thekedar": "+917837740503",
+  "ravi kumar": "+919812793309",
+  "mann singh": "+917529051800",
+  "aman 1615": "+919814066342",
+  "deepak": "+919999672763",
+  "flipkart": "+9118002029898",
+  "flipkart customer service": "+9118002029898",
+  "emergency number": "112",
+  "kawaljeet": "+919814177752",
+  "parvinder dhiman": "+919501854050",
+  "krishan pal": "+919872673931",
+  "sherbaz khan": "+919876111118",
+  "saaransh saini": "+919877142366",
+  "karan makhija": "+919417110526",
+  "vijayalakshmy": "+918699555595",
+  "vijayalakshmy r": "+918699555595",
+  "manjit singh": "+918557011635",
+  "dispatch np": "+919815045700",
+  "shakuntla devi": "+919872019485",
+  "surinder kumar": "+918910459215",
+  "chetan gumber": "+919814628661",
+  "kiranjot singh": "+919872412345",
+  "fakir chand": "+919463913526",
+  "akash gupta ambala": "+919034236263",
+  "akshay bhatnagar": "+918287589854",
+  "parminder singh": "+918558055750",
+  "sushil kumar": "+919815045731",
+  "shr": "+917015274682",
+  "jagjeevan gmb": "+919815045732",
+  "jagjeevan gmb mohali": "+919815045732",
+  "sachin": "+917814435761",
+  "sachin digital marketing interview": "+917814435761"
+};
+
+function resolveContactNameToPhone(contactName) {
+  if (!contactName) return '';
+  const str = String(contactName).toLowerCase().replace(/[\(\)\-\_]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!str || str === 'direct phone call' || str === 'direct customer call' || str === 'customer call') return '';
+  if (KNOWN_CONTACT_PHONES[str]) return KNOWN_CONTACT_PHONES[str];
+  const normalizedStr = str.replace(/[^a-z0-9]/g, '');
+  for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
+    const normalizedKey = k.replace(/[^a-z0-9]/g, '');
+    if (normalizedStr === normalizedKey) return p;
+  }
+  for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
+    if (k.length >= 4 && (str.includes(k) || k.includes(str))) {
+      return p;
+    }
+  }
+  return '';
+}
+
 // ==================== MAIN WEBHOOK HANDLER ====================
 module.exports = async (req, res) => {
   // CORS & No-Cache Headers
@@ -515,8 +610,15 @@ module.exports = async (req, res) => {
       }
 
       // Merge all query parameters into body/data (supports MacroDroid URL query parameters directly)
-      for (const k of ['customer_number', 'caller_number', 'phone', 'number', 'caller_name', 'customer_name', 'call_duration', 'duration', 'staff_name', 'device_name', 'call_type', 'call_outcome', 'recording_url', 'file_name', 'filename', 'call_time', 'timestamp', 'time']) {
-        if (query[k] && !body[k]) body[k] = query[k];
+      for (const k of [
+        'customer_number', 'caller_number', 'phone', 'number', 'caller_name', 'customer_name', 'contact_name', 'name', 
+        'dialed', 'receiver_number', 'receiverNumber', 'to', 'To', 'from', 'From', 
+        'call_duration', 'duration', 'duration_seconds', 
+        'staff_name', 'device_name', 'device', 'staff', 
+        'direction', 'call_direction', 'type', 'call_type', 'call_outcome', 'outcome', 
+        'recording_url', 'file_name', 'filename', 'call_time', 'timestamp', 'time', 'date', 'call_date', 'call_time_iso'
+      ]) {
+        if (query[k] !== undefined && body[k] === undefined) body[k] = query[k];
       }
 
       console.log('[Call-Log Webhook Inbound Content-Type]:', cType);
@@ -557,17 +659,58 @@ module.exports = async (req, res) => {
         }
       }
 
-      // Extract Numbers
+      // Extract Numbers & Names
       let caller_number = String(data.caller_number || data.callerNumber || data.from || data.From || data.caller || '').trim();
       const receiver_number = String(data.receiver_number || data.receiverNumber || data.to || data.To || data.dialed || '').trim();
       const customer_number = String(data.customer_number || data.customer_phone || data.phone || data.phone_number || '').trim();
       const rawCallerName = String(data.customer_name || data.customerName || data.caller_name || data.callerName || data.contact_name || data.name || data.company || '').trim();
       let validCallerName = (rawCallerName && rawCallerName !== '{call_name}' && rawCallerName !== 'null' && rawCallerName !== 'undefined') ? rawCallerName : '';
 
+      // Extract Duration (in seconds)
+      const rawDuration = data.call_duration || data.duration || data.CallDuration || data.duration_seconds || 0;
+      let call_duration = parseInt(rawDuration, 10) || 0;
+
+      // Robust Direction Detection (Supports MacroDroid query params, body params, and Android event codes)
+      const rawType = String(
+        data.call_type || data.type || data.direction || data.call_direction || 
+        query.direction || query.call_direction || query.call_type || query.type || 
+        body.direction || body.call_direction || body.call_type || body.type || ''
+      ).toUpperCase();
+
+      const isOut = rawType.includes('OUT') || rawType.includes('DIAL') || rawType === '2' || rawType.includes('OUTGOING') || rawType.includes('MADE');
+      let direction = isOut ? 'OUTBOUND' : 'INBOUND';
+
+      // Duration & Connected Status
+      let isMissed = (data.is_missed === true || data.is_missed === 'true' || rawType.includes('MISSED') || String(data.call_outcome || '').toLowerCase().includes('missed'));
+      if (call_duration > 0) {
+        isMissed = false;
+      }
+
+      // Determine Authentic Call Outcome
+      let call_outcome = 'Missed Call';
+      const hasAudioData = !!(recording_url && recording_url.length > 50);
+
+      if (hasAudioData || call_duration > 0) {
+        call_outcome = 'Connected';
+      } else if (direction === 'OUTBOUND') {
+        call_outcome = 'Outbound (Not Picked)';
+        call_duration = 0;
+      } else {
+        call_outcome = 'Missed Call';
+        call_duration = 0;
+      }
+
       // Determine customer phone & handle spam / unknown / unsaved numbers cleanly
-      let effectiveCustomerPhone = customer_number || caller_number || receiver_number || '';
+      let effectiveCustomerPhone = customer_number || (isOut ? (receiver_number || data.dialed || query.dialed || caller_number) : (caller_number || receiver_number)) || '';
       if (effectiveCustomerPhone === '{call_number}' || effectiveCustomerPhone === '?' || effectiveCustomerPhone.toLowerCase() === 'unknown') {
         effectiveCustomerPhone = '';
+      }
+      // Auto-resolve from contact name if phone number variable was unresolved
+      if (!effectiveCustomerPhone && validCallerName) {
+        const resolved = resolveContactNameToPhone(validCallerName);
+        if (resolved) {
+          effectiveCustomerPhone = resolved;
+        }
       }
       // If missing from payload, extract from audio recording filename
       if (extractedFileName && (!effectiveCustomerPhone || effectiveCustomerPhone.length < 10)) {
@@ -607,43 +750,6 @@ module.exports = async (req, res) => {
         displayCustomerPhone = effectiveCustomerPhone;
       } else {
         displayCustomerPhone = 'Unknown Incoming Caller';
-      }
-
-      // Extract Duration (in seconds)
-      const rawDuration = data.call_duration || data.duration || data.CallDuration || data.duration_seconds || 0;
-      let call_duration = parseInt(rawDuration, 10) || 0;
-
-      // Extract Call Type & Direction (Inbound vs Outbound vs Missed)
-      let rawType = String(data.call_type || data.type || data.direction || data.call_direction || '').toUpperCase();
-      let isMissed = (data.is_missed === true || data.is_missed === 'true' || rawType.includes('MISSED') || String(data.call_outcome || '').toLowerCase().includes('missed'));
-
-      // If duration > 0, the parties actually talked, so it cannot be missed
-      if (call_duration > 0) {
-        isMissed = false;
-      }
-
-      // Inbound is the universal default for phone companion sync
-      let direction = 'INBOUND';
-      if (rawType.includes('OUT') || rawType.includes('DIAL') || rawType === '2' || rawType.includes('OUTGOING')) {
-        direction = 'OUTBOUND';
-      }
-
-      // Determine Authentic Call Outcome & Duration (Zero Fake Duration / Zero Mismatch):
-      // 1. If audio recording exists OR actual call duration > 0: Real talk occurred -> Connected!
-      let call_outcome = 'Missed Call';
-      const explicitOutcome = String(data.call_outcome || data.outcome || '').toLowerCase();
-      const hasAudioData = !!(recording_url && recording_url.length > 50);
-
-      if (hasAudioData || call_duration > 0) {
-        call_outcome = 'Connected';
-      } else if (direction === 'OUTBOUND') {
-        // Outbound call dialed by user where recipient did not answer (duration 0)
-        call_outcome = 'Outbound (Not Picked)';
-        call_duration = 0;
-      } else {
-        // Inbound call not answered (duration 0)
-        call_outcome = 'Missed Call';
-        call_duration = 0;
       }
 
       // Multi-Phone Staff & Device Identification (Supports OnePlus, Samsung, iQOO)
@@ -696,19 +802,27 @@ module.exports = async (req, res) => {
         id: callLogId,
         lead_id: String(lead_id),
         caller_number: String(displayCustomerPhone),
+        phone: cleanCustomer ? ('+91' + cleanCustomer) : (displayCustomerPhone || ''),
         caller_name: validCallerName,
+        leadName: validCallerName || displayCustomerPhone,
         receiver_number: String(receiver_number || ''),
         call_duration: call_duration,
+        duration: call_duration,
         recording_url: String(recording_url),
+        audioUrl: String(recording_url),
+        hasAudio: !!(recording_url && recording_url.length > 50),
         ai_summary: String(ai_summary),
         direction: direction,
+        call_type: direction,
         call_outcome: call_outcome,
+        outcome: call_outcome,
+        callOutcome: call_outcome,
         staff_name: staff_name,
         device_name: device_name,
+        deviceName: device_name,
         created_at: callIso,
-        time: callFormattedTime,
-        outcome: call_outcome,
-        duration: call_duration
+        timestamp: callIso,
+        time: callFormattedTime
       };
 
       // 1. Persist to independent call_logs table / store
