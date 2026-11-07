@@ -48231,8 +48231,8 @@ function resolveContactNameToPhone(contactName) {
         }
       }
 
-      const phoneA = (typeof extractCleanPhoneNumber === 'function') ? extractCleanPhoneNumber(a.caller_number || a.phone) : String(a.caller_number || a.phone || '').replace(/\D/g, '').slice(-10);
-      const phoneB = (typeof extractCleanPhoneNumber === 'function') ? extractCleanPhoneNumber(b.caller_number || b.phone) : String(b.caller_number || b.phone || '').replace(/\D/g, '').slice(-10);
+      const phoneA = (typeof extractCleanPhoneNumber === 'function') ? extractCleanPhoneNumber(a.caller_number || a.phone || a.receiver_number) : String(a.caller_number || a.phone || a.receiver_number || '').replace(/\D/g, '').slice(-10);
+      const phoneB = (typeof extractCleanPhoneNumber === 'function') ? extractCleanPhoneNumber(b.caller_number || b.phone || b.receiver_number) : String(b.caller_number || b.phone || b.receiver_number || '').replace(/\D/g, '').slice(-10);
 
       // STRICT RULE: If BOTH records have valid phone numbers and they are DIFFERENT, they can NEVER be the same physical call!
       if (phoneA && phoneB && phoneA.length >= 7 && phoneB.length >= 7 && phoneA !== phoneB) {
@@ -48242,46 +48242,50 @@ function resolveContactNameToPhone(contactName) {
       const timeA = getCallEpochMs(a);
       const timeB = getCallEpochMs(b);
 
-      // Same phone within 3 minutes => ALWAYS same call event (absorb multi-device duplicates & phantom badges)
+      const durA = (parseInt(a.duration || a.call_duration || 0, 10) || 0) * 1000;
+      const durB = (parseInt(b.duration || b.call_duration || 0, 10) || 0) * 1000;
+      const maxWindow = Math.max(300000, Math.max(durA, durB) + 180000); // 5 mins or call duration + 3 mins
+
+      // Same phone within call duration window => ALWAYS same call event (absorb multi-device duplicates & phantom badges)
       if (phoneA && phoneB && phoneA.length >= 7 && phoneA === phoneB) {
-        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 180000) {
+        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= maxWindow) {
           return true;
         }
       }
 
-      // Same non-generic contact name within 3 minutes => ALWAYS same call event
+      // Same non-generic contact name within window => ALWAYS same call event
       const nameA = String(a.caller_name || a.leadName || '').trim().toLowerCase();
       const nameB = String(b.caller_name || b.leadName || '').trim().toLowerCase();
       if (nameA && nameB && nameA === nameB && nameA !== 'direct phone call' && nameA !== 'customer call' && !nameA.includes('direct call')) {
-        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 180000) {
+        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= maxWindow) {
           return true;
         }
       }
 
-      // Auto-attach Drive recording to companion phone call across shared Drive folder (Strict 3-minute physical call window):
+      // Auto-attach Drive recording to companion phone call across shared Drive folder (Duration-aware window):
       const recA = a.recording_url || a.audioUrl || '';
       const recB = b.recording_url || b.audioUrl || '';
       const aHasAudio = !!(recA || a.drive_file_id);
       const bHasAudio = !!(recB || b.drive_file_id);
       if (phoneA && phoneB && phoneA.length >= 7 && phoneA === phoneB && aHasAudio !== bHasAudio) {
-        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 180000) {
+        if (timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= maxWindow) {
           return true;
         }
       }
 
-      // Same device, missed vs connected or pending MacroDroid (Strict 3-minute physical call window)
+      // Same device, missed vs connected or pending MacroDroid (Duration-aware window)
       const devKeyA = getDeviceKey(a.deviceName || a.device_name || a.staff_name);
       const devKeyB = getDeviceKey(b.deviceName || b.device_name || b.staff_name);
       if (devKeyA === devKeyB) {
-        if (aHasAudio !== bHasAudio && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 180000) {
+        if (aHasAudio !== bHasAudio && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= maxWindow) {
           if (phoneA && phoneB && phoneA === phoneB) return true;
           if (nameA && nameB && nameA === nameB && nameA !== 'direct phone call') return true;
         }
       }
 
       // Rule 3: Companion Phone + Recording Matcher
-      // Same physical device within 3 minutes where one record has genuine phone and the other has recording or specific contact name
-      if (devKeyA === devKeyB && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= 180000) {
+      // Same physical device within window where one record has genuine phone and the other has recording or specific contact name
+      if (devKeyA === devKeyB && timeA > 0 && timeB > 0 && Math.abs(timeA - timeB) <= maxWindow) {
         const hasPhoneA = phoneA && phoneA.length >= 7;
         const hasPhoneB = phoneB && phoneB.length >= 7;
         if ((hasPhoneA && !hasPhoneB) || (!hasPhoneA && hasPhoneB)) {
@@ -48904,13 +48908,13 @@ function resolveContactNameToPhone(contactName) {
             : (call.drive_file_id ? ("/api/call-audio?id=" + call.drive_file_id) : ""));
 
         const durSec = parseInt(call.duration || call.call_duration || 0, 10);
-        const hasVoiceAudio = !!(recAudio && recAudio.length > 50);
-        const isNotConnected = (exactOutcome === "Missed Call" || exactOutcome.includes("Not Picked") || (!hasVoiceAudio && durSec === 0));
+        const hasVoiceAudio = !!(recAudio && recAudio.trim().length > 10);
+        const isNotConnected = (!hasVoiceAudio && (exactOutcome === "Missed Call" || exactOutcome.includes("Not Picked") || durSec === 0));
         const isMissed = isNotConnected;
         const isPlayingThis = (currentActiveCallAudioId === call.id);
 
         // Fast O(1) Lead Lookup (Zero UI freeze)
-        const callPhoneClean = (call.phone || call.caller_number || "").replace(/\D/g, "").slice(-10);
+        const callPhoneClean = (call.phone || call.caller_number || call.receiver_number || "").replace(/\D/g, "").slice(-10);
         let linkedLead = null;
         if (call.leadId) {
           linkedLead = leadsById.get(call.leadId);
@@ -48926,7 +48930,8 @@ function resolveContactNameToPhone(contactName) {
         }
         const effectiveLeadName = linkedLead ? linkedLead.name : (call.caller_name && !call.caller_name.startsWith("Direct Call") ? call.caller_name : (call.leadName && !call.leadName.startsWith("Direct Call") ? call.leadName : ""));
         // Authentic Call Phone takes precedence over loose lead contact numbers!
-        let authenticCallPhone = (call.phone || call.caller_number || "").trim();
+        const isOutCall = String(call.direction || call.call_type || '').toUpperCase().includes('OUT');
+        let authenticCallPhone = (isOutCall ? (call.receiver_number || call.phone || call.caller_number) : (call.phone || call.caller_number || call.receiver_number) || "").trim();
         const authClean = authenticCallPhone.replace(/\D/g, "").slice(-10);
         let effectivePhone = (authClean.length === 10) ? authenticCallPhone : ((linkedLead && linkedLead.phone) ? linkedLead.phone : authenticCallPhone);
         if (!effectivePhone || /[a-zA-Z]/.test(effectivePhone) || effectivePhone.replace(/\D/g, '').length < 7) {
@@ -51382,6 +51387,9 @@ function resolveContactNameToPhone(contactName) {
                   existing[exIdx].hasAudio = true;
                   existing[exIdx].drive_file_id = dc.drive_file_id;
                   existing[exIdx].audioFileName = dc.audioFileName || '';
+                  existing[exIdx].outcome = 'Connected';
+                  existing[exIdx].call_outcome = 'Connected';
+                  existing[exIdx].callOutcome = 'Connected';
                   if (dc.duration > 0) {
                     existing[exIdx].duration = dc.duration;
                     existing[exIdx].call_duration = dc.duration;

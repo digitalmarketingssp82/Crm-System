@@ -907,12 +907,16 @@ module.exports = async (req, res) => {
         matchedCall = calls.find(c => {
           if (c.drive_file_id && c.drive_file_id !== rec.id) return false;
           if (c.hasAudio && c.drive_file_id !== rec.id) return false;
-          const cNum = String(c.caller_number || c.phone || '').replace(/\D/g, '').slice(-10);
+          const cNum = String(c.caller_number || c.phone || c.receiver_number || '').replace(/\D/g, '').slice(-10);
           if (cNum !== rec.phoneDigits) return false;
           if (rec.timestamp && (c.created_at || c.timestamp || c.time)) {
             const recTime = new Date(rec.timestamp).getTime();
             const callTime = new Date(c.created_at || c.timestamp || c.time).getTime();
-            return Math.abs(recTime - callTime) <= 180000; // Strict 3-minute physical call pairing window
+            const callDurMs = (parseInt(c.call_duration || c.duration || 0, 10) || 0) * 1000;
+            const diffStart = Math.abs(recTime - (callTime - callDurMs));
+            const diffEnd = Math.abs(recTime - callTime);
+            const maxDiff = Math.max(300000, callDurMs + 180000);
+            return diffStart <= maxDiff || diffEnd <= maxDiff;
           }
           return false;
         });
@@ -925,11 +929,15 @@ module.exports = async (req, res) => {
             if (c.drive_file_id && c.drive_file_id !== rec.id) return false;
             if (c.hasAudio && c.drive_file_id !== rec.id) return false;
             const nameC = (c.caller_name || c.leadName || '').toLowerCase().trim();
-            if (nameC !== cleanRecName) return false;
+            if (nameC !== cleanRecName && !nameC.includes(cleanRecName) && !cleanRecName.includes(nameC)) return false;
             if (rec.timestamp && (c.created_at || c.timestamp || c.time)) {
               const recTime = new Date(rec.timestamp).getTime();
-              const cTime = new Date(c.created_at || c.timestamp || c.time).getTime();
-              return Math.abs(recTime - cTime) <= 180000; // Strict 3-minute physical call pairing window
+              const callTime = new Date(c.created_at || c.timestamp || c.time).getTime();
+              const callDurMs = (parseInt(c.call_duration || c.duration || 0, 10) || 0) * 1000;
+              const diffStart = Math.abs(recTime - (callTime - callDurMs));
+              const diffEnd = Math.abs(recTime - callTime);
+              const maxDiff = Math.max(300000, callDurMs + 180000);
+              return diffStart <= maxDiff || diffEnd <= maxDiff;
             }
             return false;
           });

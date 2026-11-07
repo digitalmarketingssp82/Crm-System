@@ -672,9 +672,9 @@ module.exports = async (req, res) => {
 
       // Robust Direction Detection (Supports MacroDroid query params, body params, and Android event codes)
       const rawType = String(
-        data.call_type || data.type || data.direction || data.call_direction || 
-        query.direction || query.call_direction || query.call_type || query.type || 
-        body.direction || body.call_direction || body.call_type || body.type || ''
+        data.call_type || data.type || data.direction || data.call_direction || data.dir || data.call_state || data.action ||
+        query.direction || query.call_direction || query.call_type || query.type || query.dir || query.action ||
+        body.direction || body.call_direction || body.call_type || body.type || body.dir || ''
       ).toUpperCase();
 
       const isOut = rawType.includes('OUT') || rawType.includes('DIAL') || rawType === '2' || rawType.includes('OUTGOING') || rawType.includes('MADE');
@@ -688,7 +688,7 @@ module.exports = async (req, res) => {
 
       // Determine Authentic Call Outcome
       let call_outcome = 'Missed Call';
-      const hasAudioData = !!(recording_url && recording_url.length > 50);
+      const hasAudioData = !!(recording_url && recording_url.length > 10);
 
       if (hasAudioData || call_duration > 0) {
         call_outcome = 'Connected';
@@ -701,7 +701,7 @@ module.exports = async (req, res) => {
       }
 
       // Determine customer phone & handle spam / unknown / unsaved numbers cleanly
-      let effectiveCustomerPhone = customer_number || (isOut ? (receiver_number || data.dialed || query.dialed || caller_number) : (caller_number || receiver_number)) || '';
+      let effectiveCustomerPhone = customer_number || (isOut ? (receiver_number || data.dialed || query.dialed || query.to || query.number || query.phone || caller_number) : (caller_number || receiver_number)) || '';
       if (effectiveCustomerPhone === '{call_number}' || effectiveCustomerPhone === '?' || effectiveCustomerPhone.toLowerCase() === 'unknown') {
         effectiveCustomerPhone = '';
       }
@@ -828,21 +828,22 @@ module.exports = async (req, res) => {
       // 1. Persist to independent call_logs table / store
       const allLogs = getStoredCallLogs();
 
-      // Check if an unattached standalone audio recording from Google Drive exists for this caller/phone (within 3 minutes)
+      // Check if an unattached standalone audio recording from Google Drive exists for this caller/phone
       // STRICT: Never steal or clone recordings from another completed call to prevent duplicate recording assignments!
       if (!callLogRecord.recording_url) {
         const matchingRecIdx = allLogs.findIndex(l => {
           if (!l.recording_url || l.recording_url.length < 5) return false;
           // Must ONLY absorb unassigned synthetic drive recordings (call-rec-*), NEVER from an existing phone call!
           if (!l.id || !l.id.startsWith('call-rec-')) return false;
-          const numMatch = cleanCustomer && cleanCustomer.length >= 10 && cleanPhone(l.caller_number || l.phone) === cleanCustomer;
+          const numMatch = cleanCustomer && cleanCustomer.length >= 10 && cleanPhone(l.caller_number || l.phone || l.receiver_number) === cleanCustomer;
           const nameMatch = validCallerName && l.caller_name && (
             l.caller_name.toLowerCase().trim() === validCallerName.toLowerCase().trim()
           );
           if (numMatch || nameMatch) {
             const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
             const thisTime = callDateObj.getTime();
-            return Math.abs(lTime - thisTime) <= 180000; // Exact 3-minute physical call window
+            const maxDiff = Math.max(300000, (call_duration * 1000) + 180000);
+            return Math.abs(lTime - thisTime) <= maxDiff;
           }
           return false;
         });
@@ -852,34 +853,43 @@ module.exports = async (req, res) => {
           callLogRecord.audioUrl = matchingRec.recording_url;
           callLogRecord.drive_file_id = matchingRec.drive_file_id || '';
           callLogRecord.hasAudio = true;
+          callLogRecord.call_outcome = 'Connected';
+          callLogRecord.outcome = 'Connected';
+          callLogRecord.callOutcome = 'Connected';
           if (matchingRec.duration > 0 && (!callLogRecord.call_duration || callLogRecord.call_duration === 0)) {
             callLogRecord.call_duration = matchingRec.duration;
             callLogRecord.duration = matchingRec.duration;
           }
           // Remove the synthetic standalone entry so it never appears as a duplicate
           allLogs.splice(matchingRecIdx, 1);
-          console.log(`[Call-Log Auto-Attach]: Absorbed standalone recording ${matchingRec.recording_url} into new call for ${cleanCustomer}`);
+          console.log(`[Call-Log Auto-Attach]: Absorbed standalone recording ${matchingRec.recording_url} into new call for ${cleanCustomer} (${direction})`);
         }
       }
 
-      // Auto-heal 1: If recording arrives for a recent call (within 3 minutes) that doesn't have audio yet, attach it directly!
+      // Auto-heal 1: If recording arrives for a recent call that doesn't have audio yet, attach it directly!
       if (recording_url && cleanCustomer && cleanCustomer.length >= 10) {
         const recentPendingAudioIdx = allLogs.findIndex(l => {
-          const isSameNum = cleanPhone(l.caller_number) === cleanCustomer;
-          const isRecent = (Date.now() - new Date(l.created_at).getTime() < 3 * 60 * 1000);
-          return isSameNum && isRecent && (!l.recording_url || l.recording_url.length < 100);
+          const isSameNum = cleanPhone(l.caller_number || l.phone || l.receiver_number) === cleanCustomer;
+          const isRecent = (Date.now() - new Date(l.created_at).getTime() < 10 * 60 * 1000);
+          return isSameNum && isRecent && (!l.recording_url || l.recording_url.length < 10);
         });
         if (recentPendingAudioIdx !== -1) {
           allLogs[recentPendingAudioIdx].call_outcome = 'Connected';
           allLogs[recentPendingAudioIdx].outcome = 'Connected';
+          allLogs[recentPendingAudioIdx].callOutcome = 'Connected';
           allLogs[recentPendingAudioIdx].recording_url = recording_url;
-          if (call_duration) allLogs[recentPendingAudioIdx].call_duration = call_duration;
+          allLogs[recentPendingAudioIdx].audioUrl = recording_url;
+          allLogs[recentPendingAudioIdx].hasAudio = true;
+          if (call_duration) {
+            allLogs[recentPendingAudioIdx].call_duration = call_duration;
+            allLogs[recentPendingAudioIdx].duration = call_duration;
+          }
           if (ai_summary) allLogs[recentPendingAudioIdx].ai_summary = ai_summary;
           if (device_name) allLogs[recentPendingAudioIdx].device_name = device_name;
           if (staff_name) allLogs[recentPendingAudioIdx].staff_name = staff_name;
           saveStoredCallLogs(allLogs);
           await syncCallLogToFirestore(allLogs[recentPendingAudioIdx]);
-          console.log(`[Call-Log Auto-Heal]: Successfully attached audio recording & AI summary to existing call for ${cleanCustomer}`);
+          console.log(`[Call-Log Auto-Heal]: Successfully attached audio recording & AI summary to existing call for ${cleanCustomer} (${allLogs[recentPendingAudioIdx].direction})`);
           return sendResponse(res, 200, {
             success: true,
             message: 'Attached audio recording and AI summary to existing call',

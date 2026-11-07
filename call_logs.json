@@ -2416,26 +2416,6 @@
     "callOutcome": "Outbound (Not Picked)"
   },
   {
-    "id": "call-log-1793689644354-617",
-    "lead_id": "lead-incoming-1793689644354",
-    "caller_number": "+919876543210 (Test Outbound Lead)",
-    "caller_name": "Test Outbound Lead",
-    "receiver_number": "",
-    "call_duration": 0,
-    "recording_url": "",
-    "ai_summary": "",
-    "direction": "OUTBOUND",
-    "call_outcome": "Outbound (Not Picked)",
-    "staff_name": "Samsung Galaxy",
-    "device_name": "Samsung Galaxy",
-    "created_at": "2026-11-03T07:07:24.355Z",
-    "time": "03 Nov, 12:37 PM",
-    "outcome": "Outbound (Not Picked)",
-    "deviceName": "Samsung Galaxy",
-    "callOutcome": "Outbound (Not Picked)",
-    "duration": 0
-  },
-  {
     "id": "call-rec-1H8PySSY6BuH-cqfHyihct1MXn7nGAbp2",
     "caller_number": "+916284802326",
     "phone": "+916284802326",
