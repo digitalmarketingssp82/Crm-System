@@ -1,34 +1,46 @@
 const https = require('https');
 
+const XILOT_AUTO_SYNC_ENABLED = false;
+
 module.exports = async (req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-webhook-token');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // 1. Handle Meta & Xilot Webhook Verification (GET request)
+  // 1. Handle Direct Meta / Web Webhook Verification (GET request) - Xilot verification disabled
   if (req.method === 'GET') {
     const mode = req.query ? req.query['hub.mode'] : '';
     const token = req.query ? (req.query['hub.verify_token'] || req.query['token']) : '';
     const challenge = req.query ? req.query['hub.challenge'] : '';
 
-    if (mode === 'subscribe' && (token === 'sri_sri_ply_meta_verify_2026' || token === 'sri_xilot_live_sync_2026' || token === 'sri_web_inbound_key_99')) {
+    if (token === 'sri_xilot_live_sync_2026' && !XILOT_AUTO_SYNC_ENABLED) {
+      return res.status(403).json({
+        success: false,
+        disabled: true,
+        xilotAutoSync: false,
+        message: 'Xilot automatic lead sync is turned OFF.'
+      });
+    }
+
+    if (mode === 'subscribe' && (token === 'sri_sri_ply_meta_verify_2026' || token === 'sri_sri_verify_token_2026' || token === 'sri_web_inbound_key_99')) {
       console.log('[Webhook] Verification challenge accepted');
       return res.status(200).send(challenge);
     }
     return res.status(200).json({
       status: 'active',
-      service: 'Sri Sri Plywoods CRM - Xilot & Meta Live Lead Ingestion Engine',
+      xilotAutoSync: false,
+      service: 'Sri Sri Plywoods CRM - Direct Webhook Engine (Xilot Auto-Sync OFF)',
       supportedPipelines: ['p-walkin (Walkin-Sheet)', 'p-fb (Facebook Leads)', 'p-google (Google Leads)', 'p-whatsapp (WhatsApp Leads)'],
       time: new Date().toISOString()
     });
   }
 
-  // 2. Handle Incoming Lead Data (POST request from Xilot, Meta Ads, or Zapier)
+  // 2. Handle Incoming Lead Data (POST request)
   if (req.method === 'POST') {
     try {
       let body = req.body;
@@ -36,6 +48,50 @@ module.exports = async (req, res) => {
         try { body = JSON.parse(body); } catch(e){}
       }
       body = body || {};
+
+      // Block automatic Xilot webhook pushes (even if Xilot workflow is still active on Xilot's end)
+      const reqToken = String(
+        (req.query && (req.query.token || req.query.verify_token || req.query.secret || req.query['hub.verify_token'])) ||
+        (req.headers && (req.headers['x-webhook-token'] || req.headers['authorization'])) ||
+        body.token || body.verify_token || body.secret || ''
+      ).replace(/^Bearer\s+/i, '').trim();
+
+      const ua = String((req.headers && req.headers['user-agent']) || '').toLowerCase();
+      const rawPayloadStr = JSON.stringify(body).toLowerCase();
+
+      const isExplicitXilot =
+        reqToken === 'sri_xilot_live_sync_2026' ||
+        ua.includes('xilot') ||
+        ua.includes('apto') ||
+        ua.includes('leadconnector') ||
+        ua.includes('highlevel') ||
+        rawPayloadStr.includes('xilot') ||
+        rawPayloadStr.includes('apto') ||
+        rawPayloadStr.includes('ghl') ||
+        rawPayloadStr.includes('leadconnector');
+
+      const isDirectMetaOrWhatsApp =
+        body.object === 'page' ||
+        body.object === 'whatsapp_business_account' ||
+        (Array.isArray(body.entry) && body.entry[0] && Array.isArray(body.entry[0].changes));
+      const isDirectGoogleAds = Boolean(body.google_key || Array.isArray(body.user_column_data));
+      const isVerifiedDirectToken = [
+        'sri_sri_ply_meta_verify_2026',
+        'sri_sri_verify_token_2026',
+        'sri_google_lead_secret_789',
+        'sri_web_inbound_key_99',
+        'sri_sheets_sync_key_99'
+      ].includes(reqToken);
+
+      if (!XILOT_AUTO_SYNC_ENABLED && (isExplicitXilot || (!isDirectMetaOrWhatsApp && !isDirectGoogleAds && !isVerifiedDirectToken))) {
+        console.log('[Webhook Blocked]: Xilot automatic ingestion disabled. Ignoring incoming Xilot/unverified lead.');
+        return res.status(200).json({
+          success: false,
+          disabled: true,
+          xilotAutoSync: false,
+          message: 'Xilot automatic lead sync is disabled. No lead was created.'
+        });
+      }
 
       console.log('[Webhook Inbound Payload]:', JSON.stringify(body));
 
@@ -119,7 +175,7 @@ module.exports = async (req, res) => {
         adPlatform = 'Meta Ads';
       }
 
-      const leadId = 'lead-xilot-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+      const leadId = 'lead-webhook-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
       const nowIso = new Date().toISOString();
 
       // Firestore REST Document Schema
@@ -162,8 +218,8 @@ module.exports = async (req, res) => {
                   fields: {
                     id: { stringValue: 'act-' + Date.now() },
                     type: { stringValue: 'lead_created' },
-                    note: { stringValue: `Lead ingested real-time from Xilot (${source}) into "${pipelineName}" pipeline.` },
-                    author: { stringValue: 'Xilot Webhook Bridge' },
+                    note: { stringValue: `Lead ingested directly from ${source} into "${pipelineName}" pipeline.` },
+                    author: { stringValue: 'Direct Channel Webhook' },
                     timestamp: { stringValue: nowIso }
                   }
                 }
@@ -196,6 +252,7 @@ module.exports = async (req, res) => {
           hostname: 'firestore.googleapis.com',
           path: fUrl,
           method: 'POST',
+          timeout: 5000,
           headers: {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(postData)
@@ -213,6 +270,10 @@ module.exports = async (req, res) => {
           console.error('[Webhook Firestore Error]:', err);
           resolve(); // Resolve to avoid hanging webhook caller
         });
+        firestoreReq.on('timeout', () => {
+          firestoreReq.destroy();
+          resolve();
+        });
 
         firestoreReq.write(postData);
         firestoreReq.end();
@@ -220,7 +281,7 @@ module.exports = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: `Lead successfully received from Xilot and entered into "${pipelineName}" pipeline!`,
+        message: `Lead successfully received into "${pipelineName}" pipeline!`,
         leadId: leadId,
         pipelineId: pipelineId,
         pipelineName: pipelineName,

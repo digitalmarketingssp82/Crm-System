@@ -461,10 +461,10 @@
           <span id="cloud-sync-status-text">Cloud Sync Live</span>
         </div>
 
-        <!-- Live Xilot & Ads Webhook Sync Button -->
-        <button id="btn-top-xilot-sync" onclick="syncXilotLiveNow()" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 shadow-xs cursor-pointer hover:bg-amber-500/20 transition" title="Xilot & Meta Ads Live Ingestion • Click to pull fresh leads">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-          <span id="xilot-sync-status-text">Xilot Sync Live</span>
+        <!-- Xilot Auto-Sync Status Button (Paused / Manual Refresh Only) -->
+        <button id="btn-top-xilot-sync" onclick="syncXilotLiveNow()" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-subtle text-muted-custom border border-main/80 shadow-xs cursor-pointer hover:text-main hover:border-main transition" title="Xilot Automatic Lead Sync is OFF • Click to manually refresh Cloud Leads">
+          <i data-lucide="pause-circle" class="w-3.5 h-3.5"></i>
+          <span id="xilot-sync-status-text">Xilot Auto: OFF</span>
         </button>
 
         <!-- Quick Add Lead Button -->
@@ -5000,16 +5000,14 @@
         </div>
 
         <!-- Xilot Auto-Routing Notice Banner -->
-        <div id="xilot-routing-banner" class="hidden p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs space-y-1.5">
-          <div class="flex items-center gap-2 font-bold text-indigo-400">
-            <i data-lucide="git-merge" class="w-4 h-4"></i>
-            <span>Intelligent Dual-Channel Auto-Routing Active</span>
+        <div id="xilot-routing-banner" class="hidden p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs space-y-1.5">
+          <div class="flex items-center gap-2 font-bold text-rose-400">
+            <i data-lucide="pause-circle" class="w-4 h-4"></i>
+            <span>Xilot Automatic Lead Sync is Disabled (OFF)</span>
           </div>
           <p class="text-[11px] text-muted-custom leading-relaxed">
-            Whenever Xilot forwards leads to this CRM:
-            <br>• <strong class="text-emerald-400">Walk-in / Counter / Showroom:</strong> Auto-routes to <span class="font-bold text-main">"Walkin-Sheet"</span> pipeline in <em>"New Lead"</em> stage.
-            <br>• <strong class="text-blue-400">Meta / Facebook / Instagram Ads:</strong> Auto-routes to <span class="font-bold text-main">"Facebook Leads"</span> pipeline in <em>"New Lead"</em> stage.
-            <br>• Real-time chime alert triggers and repeat phone numbers update the existing customer file.
+            Xilot se automatic lead ingestion ab band (OFF) kar di gayi hai.
+            <br>• Manual CRM features (+ Add Client, Import Excel, Pipelines, Call Logs & Recordings) bilkul normal chal rahe hain.
           </p>
         </div>
 
@@ -7324,10 +7322,13 @@
     ];
     let leadForms = safeStorageGet('sri_sri_forms', defaultLeadForms);
 
+    const XILOT_AUTO_SYNC_ENABLED = false;
+
     // STRICT CHANNELS & INTEGRATIONS CONFIG (DEFAULT ALL NOT CONNECTED)
     const defaultChannelConfigs = {
       whatsapp: { connected: false, phone: '', wabaId: '', phoneNumberId: '', token: '', webhookUrl: 'https://crm-system-chi-amber.vercel.app/api/webhook', verifyToken: 'sri_sri_verify_token_2026' },
       instagram: { connected: false, handle: '', pageId: '', token: '' },
+      xilot: { connected: false, autoSync: false, webhookUrl: 'https://crm-system-chi-amber.vercel.app/api/webhook', verifyToken: 'sri_xilot_live_sync_2026', targetPipeline: 'p-walkin', defaultAssignee: '' },
       meta_ads: { connected: false, adAccountId: '', pageId: '', pageAccessToken: '', webhookUrl: 'https://crm-system-chi-amber.vercel.app/api/webhook', verifyToken: 'sri_sri_ply_meta_verify_2026', targetPipeline: 'p-fb', defaultAssignee: '' },
       google_ads: { connected: false, customerId: '', webhookKey: 'sri_google_lead_secret_789', webhookUrl: 'https://crm-system-chi-amber.vercel.app/api/webhook', targetPipeline: 'p-google', defaultAssignee: '' },
       website_webhook: { connected: false, secretKey: 'sri_web_inbound_key_99', webhookUrl: 'https://crm-system-chi-amber.vercel.app/api/webhook', verifyToken: 'sri_web_inbound_key_99', targetPipeline: 'p-walkin', defaultAssignee: '' },
@@ -7338,6 +7339,11 @@
       email: { connected: false, host: '', port: '587', email: '', password: '' }
     };
     let channelConfigs = safeStorageGet('sri_sri_channel_configs', defaultChannelConfigs);
+    if (!XILOT_AUTO_SYNC_ENABLED) {
+      const wasXilotOn = !!(channelConfigs.xilot && channelConfigs.xilot.connected);
+      channelConfigs.xilot = Object.assign({}, defaultChannelConfigs.xilot, channelConfigs.xilot || {}, { connected: false, autoSync: false });
+      if (wasXilotOn) safeStorageSet('sri_sri_channel_configs', channelConfigs);
+    }
     var channelsConfig = channelConfigs;
 
     // DATA STORES
@@ -43515,11 +43521,11 @@
         },
         {
           id: 'xilot',
-          name: 'Xilot / Apto Xilot (Walk-in & Ads Live Sync)',
-          desc: 'Direct real-time webhook & API bridge to automatically ingest Walk-in Sheet entries and Meta Ads leads directly from your Xilot account.',
+          name: 'Xilot / Apto Xilot (Auto-Sync: OFF)',
+          desc: 'Automatic Xilot lead sync is turned OFF. Manual CRM features (+ Add Client, Import Excel, Call Logs & Recordings) remain 100% working.',
           icon: 'cpu',
-          category: 'Live Auto-Sync',
-          isConn: !!(channelConfigs.xilot && channelConfigs.xilot.connected),
+          category: 'Auto-Sync Disabled',
+          isConn: XILOT_AUTO_SYNC_ENABLED && !!(channelConfigs.xilot && channelConfigs.xilot.connected),
           type: 'ads'
         },
         {
@@ -43987,42 +43993,50 @@
     async function syncXilotLiveNow() {
       const syncBtn = document.getElementById('btn-top-xilot-sync');
       const syncText = document.getElementById('xilot-sync-status-text');
-      if (syncText) syncText.innerText = 'Syncing...';
-      
+      if (syncText) syncText.innerText = 'Refreshing...';
+
       try {
         if (db) {
           const snapshot = await db.collection('crm_leads').get();
           if (!snapshot.empty) {
-            const cloudLeads = [];
+            const leadMap = new Map();
+            const deletedIds = getDeletedLeadIds();
             snapshot.forEach(doc => {
               const d = doc.data();
               if (d && !d._deleted) {
                 d.id = d.id || doc.id;
-                if (!isLeadDeleted(d)) {
-                  cloudLeads.push(d);
+                if (!isLeadDeleted(d) && !deletedIds.has(d.id)) {
+                  leadMap.set(d.id, d);
                 }
               }
             });
-            leads = cloudLeads.filter(l => !isLeadDeleted(l));
+            if (Array.isArray(leads)) {
+              leads.forEach(l => {
+                if (l && l.id && !leadMap.has(l.id) && !isLeadDeleted(l) && !deletedIds.has(l.id)) {
+                  leadMap.set(l.id, l);
+                }
+              });
+            }
+            leads = typeof deduplicateLeads === 'function' ? deduplicateLeads(Array.from(leadMap.values())) : Array.from(leadMap.values());
             safeStorageSet('sri_sri_leads', leads);
             renderOpportunities();
             renderPhonebookTable();
             if (typeof initDashboard === 'function') initDashboard();
             if (typeof playChimeSound === 'function') playChimeSound('success');
-            showToast(`✅ Live Sync Successful: ${leads.length} leads up-to-date across all pipelines!`, 'success');
+            showToast(`ℹ️ Xilot Auto-Sync OFF • Cloud Leads refreshed manually (${leads.length} leads).`, 'info');
           } else {
-            showToast('ℹ️ Live Cloud Database connected. No pending leads.', 'info');
+            showToast('ℹ️ Xilot Auto-Sync is OFF. Cloud Database connected.', 'info');
           }
         } else {
           renderOpportunities();
           renderPhonebookTable();
-          showToast(`ℹ️ Live Sync Active: ${leads.length} leads loaded across all pipelines.`, 'info');
+          showToast(`ℹ️ Xilot Auto-Sync is OFF. ${leads.length} local leads loaded.`, 'info');
         }
       } catch (err) {
         console.warn('Sync error:', err);
-        showToast('ℹ️ Realtime database listener is active (listening for new Xilot & Ads leads).', 'info');
+        showToast('ℹ️ Xilot Automatic Sync is OFF. Cloud Database is up-to-date.', 'info');
       } finally {
-        if (syncText) syncText.innerText = 'Live Sync Active';
+        if (syncText) syncText.innerText = 'Xilot Auto: OFF';
       }
     }
     window.syncXilotLiveNow = syncXilotLiveNow;
@@ -44045,7 +44059,12 @@
       const assSel = document.getElementById('ads-cfg-assignee');
       if (assSel) channelConfigs[p].defaultAssignee = assSel.value;
 
-      channelConfigs[p].connected = true;
+      if (p === 'xilot' && !XILOT_AUTO_SYNC_ENABLED) {
+        channelConfigs[p].connected = false;
+        channelConfigs[p].autoSync = false;
+      } else {
+        channelConfigs[p].connected = true;
+      }
       channelConfigs[p].webhookUrl = document.getElementById('ads-webhook-url').value;
       channelConfigs[p].verifyToken = document.getElementById('ads-verify-token').value;
 
@@ -44053,7 +44072,11 @@
       renderIntegrationsGrid();
       if (typeof renderAppsGrid === 'function') renderAppsGrid();
       closeModal('ads-integration-modal');
-      showToast(`${pDef.name} integration credentials saved and live sync activated!`, 'success');
+      if (p === 'xilot' && !XILOT_AUTO_SYNC_ENABLED) {
+        showToast('Xilot automatic lead sync is disabled (OFF). Settings saved.', 'info');
+      } else {
+        showToast(`${pDef.name} integration credentials saved and live sync activated!`, 'success');
+      }
     }
 
     function disconnectCurrentAdsPlatform() {
@@ -52742,8 +52765,8 @@ function resolveContactNameToPhone(contactName) {
         } catch(e){}
       });
 
-      // Background poller for local Xilot / Meta webhook server (port 3000)
-      if (window.location.protocol !== 'https:' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      // Xilot automatic background poller disabled (XILOT_AUTO_SYNC_ENABLED === false)
+      if (typeof XILOT_AUTO_SYNC_ENABLED !== 'undefined' && XILOT_AUTO_SYNC_ENABLED && window.location.protocol !== 'https:' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         let pollerFailCount = 0;
         setInterval(() => {
           if (pollerFailCount > 3) return; // Stop hammering if local node server isn't running
