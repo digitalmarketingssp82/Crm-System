@@ -756,10 +756,13 @@ module.exports = async (req, res) => {
       let staff_name = data.staff_name || data.staff || data.device_name || query.staff_name || query.device_name || query.device || '';
       let device_name = data.device_name || data.device || data.staff_name || query.device_name || query.device || '';
       const rawDevLower = (String(device_name) + ' ' + String(staff_name) + ' ' + String(query.device || '') + ' ' + String(query.staff || '') + ' ' + String(extractedFileName)).toLowerCase();
-      if (rawDevLower.includes('iq') || rawDevLower.includes('vivo')) {
+      if (/^Call recording\s+/i.test(String(extractedFileName)) || /\.m4a$/i.test(String(extractedFileName))) {
+        device_name = 'Samsung Galaxy';
+        staff_name = 'Samsung Galaxy';
+      } else if (rawDevLower.includes('iq') || rawDevLower.includes('vivo')) {
         device_name = 'iQOO';
         staff_name = 'iQOO';
-      } else if (rawDevLower.includes('oneplus')) {
+      } else if (rawDevLower.includes('oneplus') || rawDevLower.includes('one plus')) {
         device_name = 'OnePlus';
         staff_name = 'OnePlus';
       } else if (rawDevLower.includes('samsung')) {
@@ -828,13 +831,23 @@ module.exports = async (req, res) => {
       // 1. Persist to independent call_logs table / store
       const allLogs = getStoredCallLogs();
 
-      // Check if an unattached standalone audio recording from Google Drive exists for this caller/phone
-      // STRICT: Never steal or clone recordings from another completed call to prevent duplicate recording assignments!
+      // Check if an unattached standalone audio recording from Google Drive exists for this SAME device & caller/phone
+      // STRICT: Never steal or clone recordings across different physical devices!
+      const devNormKey = (d) => {
+        const s = String(d || '').toLowerCase();
+        if (s.includes('iq') || s.includes('vivo')) return 'iqoo';
+        if (s.includes('samsung')) return 'samsung';
+        if (s.includes('oneplus') || s.includes('one plus')) return 'oneplus';
+        return '';
+      };
+      const curDevKey = devNormKey(device_name);
       if (!callLogRecord.recording_url) {
         const matchingRecIdx = allLogs.findIndex(l => {
           if (!l.recording_url || l.recording_url.length < 5) return false;
           // Must ONLY absorb unassigned synthetic drive recordings (call-rec-*), NEVER from an existing phone call!
           if (!l.id || !l.id.startsWith('call-rec-')) return false;
+          const lDevKey = devNormKey(l.device_name || l.deviceName || l.staff_name);
+          if (curDevKey && lDevKey && curDevKey !== lDevKey) return false;
           const numMatch = cleanCustomer && cleanCustomer.length >= 10 && cleanPhone(l.caller_number || l.phone || l.receiver_number) === cleanCustomer;
           const nameMatch = validCallerName && l.caller_name && (
             l.caller_name.toLowerCase().trim() === validCallerName.toLowerCase().trim()
@@ -866,10 +879,12 @@ module.exports = async (req, res) => {
         }
       }
 
-      // Auto-heal 1: If recording arrives for a recent call that doesn't have audio yet, attach it directly!
+      // Auto-heal 1: If recording arrives for a recent call on the SAME device that doesn't have audio yet, attach it directly!
       if (recording_url && cleanCustomer && cleanCustomer.length >= 10) {
         const recentPendingAudioIdx = allLogs.findIndex(l => {
           const isSameNum = cleanPhone(l.caller_number || l.phone || l.receiver_number) === cleanCustomer;
+          const lDevKey = devNormKey(l.device_name || l.deviceName || l.staff_name);
+          if (curDevKey && lDevKey && curDevKey !== lDevKey) return false;
           const isRecent = (Date.now() - new Date(l.created_at).getTime() < 10 * 60 * 1000);
           return isSameNum && isRecent && (!l.recording_url || l.recording_url.length < 10);
         });
@@ -898,14 +913,14 @@ module.exports = async (req, res) => {
         }
       }
 
-      // Auto-heal 2: If a recording from OnePlus was previously synced with dummy/missing number, and MacroDroid now sends the real call details for that exact time, MERGE THEM!
-      const pendingOneplusRecIdx = allLogs.findIndex(l => {
+      // Auto-heal 2: If a recording from OnePlus was previously synced with dummy/missing number, and MacroDroid (OnePlus) now sends the real call details for that exact time, MERGE THEM!
+      const pendingOneplusRecIdx = (curDevKey === 'oneplus') ? allLogs.findIndex(l => {
         const isOneplusRec = (l.device_name === 'OnePlus' || l.deviceName === 'OnePlus') && (l.caller_number === 'Direct Phone Call' || (l.caller_name && l.caller_name.includes('OnePlus Call')));
         if (!isOneplusRec) return false;
         const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
         const curTime = callDateObj.getTime();
         return Math.abs(curTime - lTime) <= 180000; // within 3 mins
-      });
+      }) : -1;
 
       if (pendingOneplusRecIdx !== -1) {
         allLogs[pendingOneplusRecIdx].caller_number = displayCustomerPhone || cleanCustomer;
