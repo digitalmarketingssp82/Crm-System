@@ -12094,7 +12094,7 @@
     let _callLogsMemoryReady = false;
     function getStoredClientCallLogs(forceReload = false) {
       // Build versioning ensures any stale localStorage caches in user browser are updated cleanly
-      const CURRENT_BUILD_VERSION = '2026-11-12-v21-lightweight-perf-fix';
+      const CURRENT_BUILD_VERSION = '2026-11-12-v22-fix-index-shift-recordings';
       if (!forceReload && _callLogsMemoryReady && Array.isArray(sriCallLogs) && sriCallLogs.length > 0) {
         return sriCallLogs;
       }
@@ -20566,8 +20566,8 @@
         console.warn('Tasks cloud listener:', err.message);
       });
 
-      // 4. Call Logs Collection Realtime Sync (Capped to newest 150 docs to save Firestore quota & prevent snapshot lag)
-      db.collection('call_logs').orderBy('created_at', 'desc').limit(150).onSnapshot(snapshot => {
+      // 4. Call Logs Collection Realtime Sync (Newest 300 docs to save Firestore quota & preserve recent webhooks/audio)
+      db.collection('call_logs').orderBy('created_at', 'desc').limit(300).onSnapshot(snapshot => {
         if (!snapshot.empty) {
           if (window._hasLiveFirestoreCallLogs && snapshot.docChanges().length === 0) return;
           window._hasLiveFirestoreCallLogs = true;
@@ -20625,7 +20625,7 @@
           cloudLogs.forEach(cl => {
             const idx = exById.has(cl.id) ? exById.get(cl.id) : -1;
             if (idx === -1) {
-              existing.unshift(cl);
+              existing.push(cl);
               exById.set(cl.id, existing.length - 1);
               cloudChanged = true;
             } else {
@@ -22148,15 +22148,17 @@ function resolveContactNameToPhone(contactName) {
               let exIdx = (dc.drive_file_id && callIdxMaps.byDriveId.has(dc.drive_file_id)) ? callIdxMaps.byDriveId.get(dc.drive_file_id) : -1;
               if (exIdx === -1) exIdx = findMatchingCallIndex(callIdxMaps, callLogs, dc, dcMeta);
               if (exIdx === -1) {
-                callLogs.unshift(dc);
+                appendIndexedCall(callIdxMaps, callLogs, dc);
                 window._lastDedupedCallLogsRef = null;
               } else {
                 safeMergeCallRecord(callLogs[exIdx], dc);
               }
             });
 
-            // O(N) 4-Layer Deduplication pass
+            // O(N) 4-Layer Deduplication pass & newest-first sort
             callLogs = deduplicateCallRecords(callLogs);
+            callLogs.sort((a, b) => getCallEpochMs(b) - getCallEpochMs(a));
+            window._lastDedupedCallLogsRef = null;
 
             // Save to localStorage
             saveStoredClientCallLogs(callLogs);
@@ -22324,6 +22326,35 @@ function resolveContactNameToPhone(contactName) {
         if (m.isMirror) idx.mirrorIndices.push(i);
       }
       return idx;
+    }
+
+    /** Append a call record and register its index in idx without shifting existing array slots. */
+    function appendIndexedCall(idx, list, item) {
+      if (!item || !Array.isArray(list)) return -1;
+      const newIdx = list.length;
+      list.push(item);
+      if (!idx) return newIdx;
+      const m = extractCallMeta(item);
+      idx.metas.push(m);
+      if (item.id && !idx.byId.has(item.id)) idx.byId.set(item.id, newIdx);
+      if (m.driveId && !idx.byDriveId.has(m.driveId)) idx.byDriveId.set(m.driveId, newIdx);
+      if (m.fileBase && !idx.byFileBase.has(m.fileBase)) idx.byFileBase.set(m.fileBase, newIdx);
+      if (m.phone10 && m.phone10.length >= 7) {
+        if (!idx.byPhone.has(m.phone10)) idx.byPhone.set(m.phone10, []);
+        idx.byPhone.get(m.phone10).push(newIdx);
+      }
+      if (m.nameLower && !m.isGeneric) {
+        if (!idx.byName.has(m.nameLower)) idx.byName.set(m.nameLower, []);
+        idx.byName.get(m.nameLower).push(newIdx);
+      }
+      if (m.epoch > 0) {
+        const bk = m.devKey + '_' + Math.floor(m.epoch / 300000);
+        if (!idx.byDevBucket.has(bk)) idx.byDevBucket.set(bk, []);
+        idx.byDevBucket.get(bk).push(newIdx);
+        if (m.durMs > (idx.maxDurByDev.get(m.devKey) || 0)) idx.maxDurByDev.set(m.devKey, m.durMs);
+      }
+      if (m.isMirror) idx.mirrorIndices.push(newIdx);
+      return newIdx;
     }
 
     function findMatchingCallIndex(idx, list, cand, m) {
@@ -24636,7 +24667,7 @@ function resolveContactNameToPhone(contactName) {
                 normalizeCallRecordFields(dc);
                 const exIdx = findMatchingCallIndex(remIdxMaps, remoteCalls, dc, extractCallMeta(dc));
                 if (exIdx === -1) {
-                  remoteCalls.unshift(dc);
+                  appendIndexedCall(remIdxMaps, remoteCalls, dc);
                 } else {
                   safeMergeCallRecord(remoteCalls[exIdx], dc);
                 }
@@ -25028,7 +25059,7 @@ function resolveContactNameToPhone(contactName) {
                   timestamp: dc.created_at || new Date().toISOString(),
                   time: dc.time || (typeof formatCallLogTime === 'function' ? formatCallLogTime(dc.created_at) : '02 Nov')
                 });
-                existing.unshift(bgNewObj);
+                appendIndexedCall(bgIdxMaps, existing, bgNewObj);
                 hasChanges = true;
               }
             });
