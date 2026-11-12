@@ -259,53 +259,92 @@ async function generateAiCallSummary(audioUrl, callerNumber, callDuration) {
   return '';
 }
 
-// ==================== FIRESTORE CLOUD PERSISTENCE ====================
+// ==================== FIRESTORE CLOUD PERSISTENCE (WITH QUOTA-SAFE CACHE) ====================
+let _fsLogsCache = [];
+let _fsLogsCacheAt = 0;
+let _recentWebhookLogs = [];
+
+function _upsertRamWebhookLog(rec) {
+  if (!rec || !rec.id) return;
+  const idx = _recentWebhookLogs.findIndex(x => x.id === rec.id);
+  if (idx !== -1) _recentWebhookLogs[idx] = rec;
+  else {
+    _recentWebhookLogs.unshift(rec);
+    if (_recentWebhookLogs.length > 200) _recentWebhookLogs.length = 200;
+  }
+  if (_fsLogsCache.length > 0) {
+    const cIdx = _fsLogsCache.findIndex(x => x.id === rec.id);
+    if (cIdx !== -1) _fsLogsCache[cIdx] = rec;
+    else _fsLogsCache.unshift(rec);
+  }
+}
+
+async function _writeFirestoreCallDoc(docId, fieldsObj) {
+  const postData = JSON.stringify({ fields: fieldsObj });
+  const fUrl = '/v1/projects/crm-f4bf7/databases/(default)/documents/call_logs?documentId=' + encodeURIComponent(docId);
+  return new Promise((resolve) => {
+    const fReq = https.request({
+      hostname: 'firestore.googleapis.com',
+      path: fUrl,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      },
+      timeout: 8000
+    }, (res) => {
+      let body = '';
+      res.on('data', c => { if (body.length < 400) body += c; });
+      res.on('end', () => resolve({ status: res.statusCode, body }));
+    });
+    fReq.on('error', (e) => resolve({ status: 0, body: e.message }));
+    fReq.on('timeout', () => { fReq.destroy(); resolve({ status: 0, body: 'timeout' }); });
+    fReq.write(postData);
+    fReq.end();
+  });
+}
+
 async function syncCallLogToFirestore(callLogRecord) {
+  _upsertRamWebhookLog(callLogRecord);
   try {
-    const postData = JSON.stringify({
-      fields: {
-        id: { stringValue: callLogRecord.id },
-        lead_id: { stringValue: callLogRecord.lead_id },
-        caller_number: { stringValue: String(callLogRecord.caller_number || '') },
-        caller_name: { stringValue: String(callLogRecord.caller_name || '') },
-        receiver_number: { stringValue: String(callLogRecord.receiver_number || '') },
-        call_duration: { integerValue: String(callLogRecord.call_duration || 0) },
-        recording_url: { stringValue: String(callLogRecord.recording_url || '') },
-        ai_summary: { stringValue: String(callLogRecord.ai_summary || '') },
-        direction: { stringValue: String(callLogRecord.direction || 'INBOUND') },
-        call_outcome: { stringValue: String(callLogRecord.call_outcome || 'Connected') },
-        staff_name: { stringValue: String(callLogRecord.staff_name || 'Samsung Galaxy') },
-        device_name: { stringValue: String(callLogRecord.device_name || 'Samsung Galaxy') },
-        created_at: { stringValue: callLogRecord.created_at }
-      }
+    let recUrl = String(callLogRecord.recording_url || '');
+    const buildFields = (rUrl) => ({
+      id: { stringValue: callLogRecord.id },
+      lead_id: { stringValue: String(callLogRecord.lead_id || '') },
+      caller_number: { stringValue: String(callLogRecord.caller_number || '') },
+      caller_name: { stringValue: String(callLogRecord.caller_name || '') },
+      receiver_number: { stringValue: String(callLogRecord.receiver_number || '') },
+      call_duration: { integerValue: String(callLogRecord.call_duration || 0) },
+      recording_url: { stringValue: String(rUrl || '') },
+      drive_file_id: { stringValue: String(callLogRecord.drive_file_id || '') },
+      recording_file_name: { stringValue: String(callLogRecord.recording_file_name || '') },
+      ai_summary: { stringValue: String(callLogRecord.ai_summary || '') },
+      direction: { stringValue: String(callLogRecord.direction || 'INBOUND') },
+      call_outcome: { stringValue: String(callLogRecord.call_outcome || 'Connected') },
+      staff_name: { stringValue: String(callLogRecord.staff_name || 'Samsung Galaxy') },
+      device_name: { stringValue: String(callLogRecord.device_name || 'Samsung Galaxy') },
+      created_at: { stringValue: String(callLogRecord.created_at || new Date().toISOString()) }
     });
 
-    const fUrl = '/v1/projects/crm-f4bf7/databases/(default)/documents/call_logs?documentId=' + callLogRecord.id;
-    await new Promise((resolve) => {
-      const fReq = https.request({
-        hostname: 'firestore.googleapis.com',
-        path: fUrl,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(postData)
-        },
-        timeout: 8000
-      }, (res) => {
-        res.on('data', () => {});
-        res.on('end', () => resolve());
-      });
-      fReq.on('error', () => resolve());
-      fReq.on('timeout', () => { fReq.destroy(); resolve(); });
-      fReq.write(postData);
-      fReq.end();
-    });
+    // Guard Firestore 1MB per-doc size limit for base64 webhook payloads
+    let safeRec = recUrl;
+    if (safeRec.startsWith('data:audio') && Buffer.byteLength(safeRec, 'utf8') > 820000) {
+      safeRec = '';
+    }
+    const wr = await _writeFirestoreCallDoc(callLogRecord.id, buildFields(safeRec));
+    if (wr.status >= 400) {
+      console.warn('[Firestore Call Log Sync HTTP ' + wr.status + ']:', wr.body.slice(0, 180));
+    }
   } catch (err) {
     console.warn('[Firestore Call Log Sync Note]:', err.message);
   }
 }
 
-async function getFirestoreCallLogs() {
+async function getFirestoreCallLogs(forceFresh = false) {
+  const now = Date.now();
+  if (!forceFresh && _fsLogsCache.length > 0 && (now - _fsLogsCacheAt) < 90000) {
+    return _fsLogsCache;
+  }
   return new Promise((resolve) => {
     const postData = JSON.stringify({
       structuredQuery: {
@@ -314,7 +353,7 @@ async function getFirestoreCallLogs() {
           field: { fieldPath: 'created_at' },
           direction: 'DESCENDING'
         }],
-        limit: 500
+        limit: 100
       }
     });
 
@@ -328,19 +367,25 @@ async function getFirestoreCallLogs() {
     }, (res) => {
       let d = ''; res.on('data', c => d += c);
       res.on('end', () => {
+        if (res.statusCode !== 200) {
+          return resolve(_fsLogsCache);
+        }
         try {
           const parsed = JSON.parse(d);
-          if (!Array.isArray(parsed)) return resolve([]);
+          if (!Array.isArray(parsed)) return resolve(_fsLogsCache);
           const logs = parsed.filter(item => item.document && item.document.fields).map(item => {
             const f = item.document.fields;
+            const rec = f.recording_url?.stringValue || '';
             return {
-              id: f.id?.stringValue || '',
+              id: f.id?.stringValue || item.document.name.split('/').pop(),
               lead_id: f.lead_id?.stringValue || '',
               caller_number: f.caller_number?.stringValue || '',
               caller_name: f.caller_name?.stringValue || '',
               receiver_number: f.receiver_number?.stringValue || '',
               call_duration: parseInt(f.call_duration?.integerValue || 0, 10),
-              recording_url: f.recording_url?.stringValue || '',
+              recording_url: rec,
+              drive_file_id: f.drive_file_id?.stringValue || (rec.match(/id=([a-zA-Z0-9_-]{20,})/)?.[1] || ''),
+              recording_file_name: f.recording_file_name?.stringValue || '',
               ai_summary: f.ai_summary?.stringValue || '',
               direction: f.direction?.stringValue || 'INBOUND',
               call_outcome: f.call_outcome?.stringValue || 'Connected',
@@ -349,12 +394,14 @@ async function getFirestoreCallLogs() {
               created_at: f.created_at?.stringValue || ''
             };
           });
+          _fsLogsCache = logs;
+          _fsLogsCacheAt = Date.now();
           resolve(logs);
-        } catch(e) { resolve([]); }
+        } catch(e) { resolve(_fsLogsCache); }
       });
     });
-    req.on('error', () => resolve([]));
-    req.on('timeout', () => { req.destroy(); resolve([]); });
+    req.on('error', () => resolve(_fsLogsCache));
+    req.on('timeout', () => { req.destroy(); resolve(_fsLogsCache); });
     req.write(postData);
     req.end();
   });
@@ -476,9 +523,13 @@ module.exports = async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const query = { ...(parsedUrl.query || {}), ...(req.query || {}) };
   const isIncomingCallSync = !!(
-    query.customer_number || 
-    query.caller_number || 
-    (query.phone && query.call_duration !== undefined) || 
+    query.customer_number ||
+    query.caller_number ||
+    query.recording_url ||
+    query.recordingUrl ||
+    query.audio_url ||
+    query.audioUrl ||
+    (query.phone && (query.call_duration !== undefined || query.direction || query.call_type || query.outcome)) ||
     (query.call_duration !== undefined && (query.phone || query.number)) ||
     (query.call_type && query.customer_number)
   );
@@ -490,14 +541,24 @@ module.exports = async (req, res) => {
 
     let allLogs = getStoredCallLogs();
     try {
-      const cloudLogs = await getFirestoreCallLogs();
-      if (cloudLogs.length > 0) {
-        cloudLogs.forEach(cl => {
+      const cloudLogs = await getFirestoreCallLogs(!!(query.fresh || query.force));
+      const mergedExtra = [...cloudLogs, ..._recentWebhookLogs];
+      if (mergedExtra.length > 0) {
+        mergedExtra.forEach(cl => {
+          if (!cl || !cl.id) return;
           const exIdx = allLogs.findIndex(l => l.id === cl.id);
           if (exIdx === -1) {
             allLogs.push(cl);
           } else {
-            allLogs[exIdx] = cl;
+            const cur = allLogs[exIdx];
+            allLogs[exIdx] = {
+              ...cur,
+              ...cl,
+              recording_url: cl.recording_url || cur.recording_url || '',
+              audioUrl: cl.recording_url || cl.audioUrl || cur.audioUrl || cur.recording_url || '',
+              drive_file_id: cl.drive_file_id || cur.drive_file_id || '',
+              recording_file_name: cl.recording_file_name || cur.recording_file_name || ''
+            };
           }
         });
       }
@@ -642,19 +703,30 @@ module.exports = async (req, res) => {
       }
 
       let extractedFileName = query.file_name || query.filename || data.file_name || data.filename || '';
+      const _guessAudioMime = (fn, defMime) => {
+        const s = String(fn || '').toLowerCase();
+        if (s.endsWith('.mp3')) return 'audio/mpeg';
+        if (s.endsWith('.aac')) return 'audio/aac';
+        if (s.endsWith('.amr')) return 'audio/amr';
+        if (s.endsWith('.ogg') || s.endsWith('.opus')) return 'audio/ogg';
+        if (s.endsWith('.wav')) return 'audio/wav';
+        return defMime || 'audio/mp4';
+      };
       // If audio sent as direct binary or multipart/form-data from Android phone
       if (!recording_url && rawBuffer && rawBuffer.length > 500) {
         if (cType.includes('audio') || cType.includes('octet-stream')) {
-          recording_url = 'data:audio/mp4;base64,' + rawBuffer.toString('base64');
+          const mime = _guessAudioMime(extractedFileName, cType.includes('mpeg') ? 'audio/mpeg' : 'audio/mp4');
+          recording_url = 'data:' + mime + ';base64,' + rawBuffer.toString('base64');
         } else if (cType.includes('multipart')) {
           const bufStr = rawBuffer.toString('binary');
-          const fileMatch = bufStr.match(/filename="([^"]+)"[\r\n]+Content-Type: ([^\r\n]+)[\r\n]+[\r\n]+([\s\S]+?)(\r?\n--)/);
+          const fileMatch = bufStr.match(/filename="([^"]+)"[\s\S]*?\r?\n\r?\n([\s\S]+?)(?:\r?\n--|$)/);
           if (fileMatch) {
             extractedFileName = fileMatch[1];
-            const fileBytes = Buffer.from(fileMatch[3], 'binary');
-            recording_url = 'data:audio/mp4;base64,' + fileBytes.toString('base64');
+            const fileBytes = Buffer.from(fileMatch[2], 'binary');
+            const mime = _guessAudioMime(extractedFileName, 'audio/mp4');
+            recording_url = 'data:' + mime + ';base64,' + fileBytes.toString('base64');
           } else {
-            recording_url = 'data:audio/mp4;base64,' + rawBuffer.toString('base64');
+            recording_url = 'data:' + _guessAudioMime(extractedFileName, 'audio/mp4') + ';base64,' + rawBuffer.toString('base64');
           }
         }
       }
@@ -712,9 +784,10 @@ module.exports = async (req, res) => {
           effectiveCustomerPhone = resolved;
         }
       }
-      // If missing from payload, extract from audio recording filename
+      // If missing from payload, extract from audio recording filename (ignoring trailing YYMMDD_HHMMSS / YYMMDDHHMM stamps)
       if (extractedFileName && (!effectiveCustomerPhone || effectiveCustomerPhone.length < 10)) {
-        const fMatch = extractedFileName.match(/(\d{10})/);
+        const stem = extractedFileName.replace(/\.(m4a|mp3|wav|aac|amr|ogg|3gp)$/i, '').replace(/[_-]\d{6}[_-]\d{6}$/, '').replace(/-\d{10}$/, '');
+        const fMatch = stem.match(/(?:\+?91)?([6-9]\d{9})/);
         if (fMatch) effectiveCustomerPhone = fMatch[1];
       }
       // If still missing, check recent call log from same device/time
@@ -813,7 +886,9 @@ module.exports = async (req, res) => {
         duration: call_duration,
         recording_url: String(recording_url),
         audioUrl: String(recording_url),
-        hasAudio: !!(recording_url && recording_url.length > 50),
+        drive_file_id: String(recording_url).match(/id=([a-zA-Z0-9_-]{20,})/)?.[1] || '',
+        recording_file_name: String(extractedFileName || ''),
+        hasAudio: !!(recording_url && recording_url.length > 10),
         ai_summary: String(ai_summary),
         direction: direction,
         call_type: direction,
@@ -855,6 +930,7 @@ module.exports = async (req, res) => {
           if (numMatch || nameMatch) {
             const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
             const thisTime = callDateObj.getTime();
+            if (!lTime || !thisTime || isNaN(lTime) || isNaN(thisTime)) return false;
             const maxDiff = Math.max(300000, (call_duration * 1000) + 180000);
             return Math.abs(lTime - thisTime) <= maxDiff;
           }

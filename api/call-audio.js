@@ -19,30 +19,30 @@ module.exports = async (req, res) => {
     return res.end(JSON.stringify({ error: 'Missing audio file ID' }));
   }
 
-  const driveUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download`;
+  const driveUrl = `https://drive.usercontent.google.com/download?id=${encodeURIComponent(fileId)}&export=download&confirm=t`;
 
-  const headers = {};
+  const headers = { 'User-Agent': 'Mozilla/5.0' };
   if (req.headers && req.headers.range) {
     headers['Range'] = req.headers.range;
   }
 
-  https.get(driveUrl, { headers }, (driveRes) => {
-    // Follow redirect if Google Drive redirects
-    if (driveRes.statusCode >= 300 && driveRes.statusCode < 400 && driveRes.headers.location) {
-      https.get(driveRes.headers.location, { headers }, (redirectRes) => {
-        forwardAudio(redirectRes, res);
-      }).on('error', (err) => {
-        if (!res.headersSent) res.writeHead(502);
-        res.end(err.message);
-      });
-      return;
-    }
+  function fetchWithRedirects(targetUrl, depth = 0) {
+    https.get(targetUrl, { headers }, (driveRes) => {
+      if (driveRes.statusCode >= 300 && driveRes.statusCode < 400 && driveRes.headers.location && depth < 4) {
+        driveRes.resume();
+        let nextUrl = driveRes.headers.location;
+        try { nextUrl = new URL(nextUrl, targetUrl).toString(); } catch(e) {}
+        fetchWithRedirects(nextUrl, depth + 1);
+        return;
+      }
+      forwardAudio(driveRes, res);
+    }).on('error', (err) => {
+      if (!res.headersSent) res.writeHead(502);
+      res.end(err.message);
+    });
+  }
 
-    forwardAudio(driveRes, res);
-  }).on('error', (err) => {
-    if (!res.headersSent) res.writeHead(502);
-    res.end(err.message);
-  });
+  fetchWithRedirects(driveUrl, 0);
 };
 
 function forwardAudio(sourceRes, targetRes) {
