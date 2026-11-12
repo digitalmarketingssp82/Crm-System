@@ -467,9 +467,8 @@ const KNOWN_CONTACT_PHONES = {
   "vijayalakshmy": "+918699555595",
   "vijayalakshmy r": "+918699555595",
   "manjit singh": "+918557011635",
-  "dispatch np": "+919815045700",
+  "dispatch np": "+919877271849",
   "shakuntla devi": "+919872019485",
-  "surinder kumar": "+918910459215",
   "chetan gumber": "+919814628661",
   "kiranjot singh": "+919872412345",
   "fakir chand": "+919463913526",
@@ -480,23 +479,23 @@ const KNOWN_CONTACT_PHONES = {
   "shr": "+917015274682",
   "jagjeevan gmb": "+919815045732",
   "jagjeevan gmb mohali": "+919815045732",
-  "sachin": "+917814435761",
+  "sanju sir plywoods": "+919888722303",
   "sachin digital marketing interview": "+917814435761"
 };
 
 function resolveContactNameToPhone(contactName) {
   if (!contactName) return '';
-  const str = String(contactName).toLowerCase().replace(/[\(\)\-\_]/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!str || str === 'direct phone call' || str === 'direct customer call' || str === 'customer call') return '';
+  const cleanRaw = String(contactName)
+    .replace(/\([^)]*(?:spam|fraud|alert|jio)[^)]*\)/gi, ' ')
+    .replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/gu, ' ');
+  const str = cleanRaw.toLowerCase().replace(/[\(\)\-\_]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!str || str === 'direct phone call' || str === 'direct customer call' || str === 'customer call' || /^\+?[\d\s()-]{6,}$/.test(str)) return '';
   if (KNOWN_CONTACT_PHONES[str]) return KNOWN_CONTACT_PHONES[str];
   const normalizedStr = str.replace(/[^a-z0-9]/g, '');
-  for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
-    const normalizedKey = k.replace(/[^a-z0-9]/g, '');
-    if (normalizedStr === normalizedKey) return p;
-  }
-  for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
-    if (k.length >= 4 && (str.includes(k) || k.includes(str))) {
-      return p;
+  if (normalizedStr) {
+    for (const [k, p] of Object.entries(KNOWN_CONTACT_PHONES)) {
+      const normalizedKey = k.replace(/[^a-z0-9]/g, '');
+      if (normalizedStr === normalizedKey) return p;
     }
   }
   return '';
@@ -772,12 +771,19 @@ module.exports = async (req, res) => {
         call_duration = 0;
       }
 
-      // Determine customer phone & handle spam / unknown / unsaved numbers cleanly
+      // Determine customer phone cleanly (NEVER copy an unrelated recent caller's phone number!)
       let effectiveCustomerPhone = customer_number || (isOut ? (receiver_number || data.dialed || query.dialed || query.to || query.number || query.phone || caller_number) : (caller_number || receiver_number)) || '';
       if (effectiveCustomerPhone === '{call_number}' || effectiveCustomerPhone === '?' || effectiveCustomerPhone.toLowerCase() === 'unknown') {
         effectiveCustomerPhone = '';
       }
-      // Auto-resolve from contact name if phone number variable was unresolved
+      // If MacroDroid sent caller_name equal to raw digits (unsaved number), clear digit-only caller_name
+      if (validCallerName && /^\+?[\d\s()-]{6,}$/.test(validCallerName)) {
+        if (!effectiveCustomerPhone || effectiveCustomerPhone.replace(/\D/g, '').length < 7) {
+          effectiveCustomerPhone = validCallerName;
+        }
+        validCallerName = '';
+      }
+      // Auto-resolve from contact name ONLY via strict exact verified lookup
       if (!effectiveCustomerPhone && validCallerName) {
         const resolved = resolveContactNameToPhone(validCallerName);
         if (resolved) {
@@ -785,18 +791,10 @@ module.exports = async (req, res) => {
         }
       }
       // If missing from payload, extract from audio recording filename (ignoring trailing YYMMDD_HHMMSS / YYMMDDHHMM stamps)
-      if (extractedFileName && (!effectiveCustomerPhone || effectiveCustomerPhone.length < 10)) {
+      if (extractedFileName && (!effectiveCustomerPhone || effectiveCustomerPhone.replace(/\D/g, '').length < 10)) {
         const stem = extractedFileName.replace(/\.(m4a|mp3|wav|aac|amr|ogg|3gp)$/i, '').replace(/[_-]\d{6}[_-]\d{6}$/, '').replace(/-\d{10}$/, '');
         const fMatch = stem.match(/(?:\+?91)?([6-9]\d{9})/);
         if (fMatch) effectiveCustomerPhone = fMatch[1];
-      }
-      // If still missing, check recent call log from same device/time
-      const existingLogs = getStoredCallLogs();
-      if (!effectiveCustomerPhone && existingLogs.length > 0) {
-        const recentLog = existingLogs.find(l => l.caller_number && l.caller_number.length >= 10 && !l.caller_number.includes('Spam') && (Date.now() - new Date(l.created_at).getTime() < 10 * 60 * 1000));
-        if (recentLog) {
-          effectiveCustomerPhone = cleanPhone(recentLog.caller_number);
-        }
       }
 
       let cleanCustomer = cleanPhone(effectiveCustomerPhone);
@@ -814,16 +812,10 @@ module.exports = async (req, res) => {
         });
       }
 
-      let displayCustomerPhone = '';
-      if (cleanCustomer && cleanCustomer.length >= 10) {
-        displayCustomerPhone = '+91' + cleanCustomer + (validCallerName ? (' (' + validCallerName + ')') : '');
-      } else if (validCallerName) {
-        displayCustomerPhone = validCallerName + (effectiveCustomerPhone ? (' (' + effectiveCustomerPhone + ')') : '');
-      } else if (effectiveCustomerPhone) {
-        displayCustomerPhone = effectiveCustomerPhone;
-      } else {
-        displayCustomerPhone = 'Unknown Incoming Caller';
-      }
+      // Keep phone and name cleanly separated so name never leaks into phone or phone into name
+      const cleanPhoneFormatted = cleanCustomer
+        ? (cleanCustomer === '112' || /^1800/.test(cleanCustomer) ? cleanCustomer : '+91' + cleanCustomer)
+        : '';
 
       // Multi-Phone Staff & Device Identification (Supports OnePlus, Samsung, iQOO)
       let staff_name = data.staff_name || data.staff || data.device_name || query.staff_name || query.device_name || query.device || '';
@@ -877,10 +869,10 @@ module.exports = async (req, res) => {
       const callLogRecord = {
         id: callLogId,
         lead_id: String(lead_id),
-        caller_number: String(displayCustomerPhone),
-        phone: cleanCustomer ? ('+91' + cleanCustomer) : (displayCustomerPhone || ''),
+        caller_number: cleanPhoneFormatted,
+        phone: cleanPhoneFormatted,
         caller_name: validCallerName,
-        leadName: validCallerName || displayCustomerPhone,
+        leadName: validCallerName || 'Direct Phone Call',
         receiver_number: String(receiver_number || ''),
         call_duration: call_duration,
         duration: call_duration,
@@ -923,10 +915,15 @@ module.exports = async (req, res) => {
           if (!l.id || !l.id.startsWith('call-rec-')) return false;
           const lDevKey = devNormKey(l.device_name || l.deviceName || l.staff_name);
           if (curDevKey && lDevKey && curDevKey !== lDevKey) return false;
-          const numMatch = cleanCustomer && cleanCustomer.length >= 10 && cleanPhone(l.caller_number || l.phone || l.receiver_number) === cleanCustomer;
-          const nameMatch = validCallerName && l.caller_name && (
-            l.caller_name.toLowerCase().trim() === validCallerName.toLowerCase().trim()
-          );
+          const lPhoneClean = cleanPhone(l.caller_number || l.phone || l.receiver_number);
+          if (cleanCustomer && cleanCustomer.length >= 10 && lPhoneClean && lPhoneClean.length >= 10 && cleanCustomer !== lPhoneClean) {
+            return false;
+          }
+          const numMatch = cleanCustomer && cleanCustomer.length >= 10 && lPhoneClean === cleanCustomer;
+          const lNm = String(l.caller_name || '').toLowerCase().trim();
+          const curNm = String(validCallerName || '').toLowerCase().trim();
+          const isRealNm = (nm) => nm && nm.length >= 3 && nm !== 'direct phone call' && nm !== 'direct customer call' && nm !== 'customer call' && !/^\+?[\d\s()-]{6,}$/.test(nm);
+          const nameMatch = isRealNm(curNm) && isRealNm(lNm) && lNm === curNm;
           if (numMatch || nameMatch) {
             const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
             const thisTime = callDateObj.getTime();
@@ -989,20 +986,22 @@ module.exports = async (req, res) => {
         }
       }
 
-      // Auto-heal 2: If a recording from OnePlus was previously synced with dummy/missing number, and MacroDroid (OnePlus) now sends the real call details for that exact time, MERGE THEM!
-      const pendingOneplusRecIdx = (curDevKey === 'oneplus') ? allLogs.findIndex(l => {
-        const isOneplusRec = (l.device_name === 'OnePlus' || l.deviceName === 'OnePlus') && (l.caller_number === 'Direct Phone Call' || (l.caller_name && l.caller_name.includes('OnePlus Call')));
-        if (!isOneplusRec) return false;
+      // Auto-heal 2: Only merge into an unlabelled generic OnePlus recording within 90s when it has NO phone number & NO conflicting name
+      const pendingOneplusRecIdx = (curDevKey === 'oneplus' && cleanPhoneFormatted) ? allLogs.findIndex(l => {
+        const lDev = String(l.device_name || l.deviceName || '').toLowerCase();
+        const isOneplusGeneric = lDev.includes('oneplus') && !cleanPhone(l.caller_number || l.phone) &&
+          (!l.caller_name || l.caller_name === 'Direct Phone Call' || l.caller_name.includes('OnePlus Call'));
+        if (!isOneplusGeneric) return false;
         const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
         const curTime = callDateObj.getTime();
-        return Math.abs(curTime - lTime) <= 180000; // within 3 mins
+        return Math.abs(curTime - lTime) <= 90000;
       }) : -1;
 
       if (pendingOneplusRecIdx !== -1) {
-        allLogs[pendingOneplusRecIdx].caller_number = displayCustomerPhone || cleanCustomer;
-        allLogs[pendingOneplusRecIdx].phone = displayCustomerPhone || cleanCustomer;
-        allLogs[pendingOneplusRecIdx].caller_name = validCallerName || cleanCustomer || 'Direct Customer';
-        allLogs[pendingOneplusRecIdx].leadName = validCallerName || cleanCustomer || 'Direct Customer';
+        allLogs[pendingOneplusRecIdx].caller_number = cleanPhoneFormatted;
+        allLogs[pendingOneplusRecIdx].phone = cleanPhoneFormatted;
+        allLogs[pendingOneplusRecIdx].caller_name = validCallerName || 'Direct Phone Call';
+        allLogs[pendingOneplusRecIdx].leadName = validCallerName || 'Direct Phone Call';
         allLogs[pendingOneplusRecIdx].lead_id = lead_id || allLogs[pendingOneplusRecIdx].lead_id;
         if (call_duration > 0) allLogs[pendingOneplusRecIdx].call_duration = call_duration;
         allLogs[pendingOneplusRecIdx].call_outcome = call_outcome;
