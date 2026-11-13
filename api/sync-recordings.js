@@ -494,13 +494,13 @@ const KNOWN_DRIVE_MAPPINGS = {
   "1LHCu17VhfALSe97YgZTv7MfUAn2hjmMS": { "name": "KIRANJOT SINGH", "phone": "+919872412345", "dur": 39, "time": "5 Nov, 02:56 PM", "device": "OnePlus", "dir": "INBOUND", "file": "KIRANJOT SINGH-2611051456.mp3" },
   "1on8TzhkXrnG2F-K8fA6SY9srlnNZSCpE": { "name": "Direct Phone Call", "phone": "+917942748821", "dur": 26, "time": "05 Nov, 01:38 PM", "device": "OnePlus", "dir": "INBOUND", "file": "+917942748821-2611051337.mp3" },
   "1HcI8qnsAsO4PmSvl9YVbD3pgQUSgU69e": { "name": "Direct Phone Call", "phone": "+918427761777", "dur": 225, "time": "05 Nov, 01:35 PM", "device": "OnePlus", "dir": "INBOUND", "file": "+918427761777-2611051332.mp3" },
-  "1v6HE2E6CufBnzsJ9oBdmgjxJ_dCNHrvN": { "name": "Direct Phone Call", "phone": "+919466609171", "dur": 42, "time": "05 Nov, 01:21 PM", "device": "iQOO", "dir": "OUTBOUND", "file": "9466609171-2611051320.mp3" },
+  "1v6HE2E6CufBnzsJ9oBdmgjxJ_dCNHrvN": { "name": "Direct Phone Call", "phone": "+919466609171", "dur": 42, "time": "05 Nov, 01:21 PM", "device": "OnePlus", "dir": "INBOUND", "file": "9466609171-2611051320.mp3" },
   "1sAcuoUO6hJhFQIi0r8SGLOYnxwA-YLMa": { "name": "AKSHAY BHATNAGAR", "phone": "+918287589854", "dur": 51, "time": "05 Nov, 01:30 PM", "device": "OnePlus", "dir": "INBOUND", "file": "AKSHAY BHATNAGAR-2611051329.mp3" },
   "12oZbi1MQ5TTcwimtmJU69f_bHvmjUB51": { "name": "Akash Gupta Ambala", "phone": "+919034236263", "dur": 34, "time": "05 Nov, 12:54 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Akash Gupta Ambala-2611051253.mp3" },
   "1fDK3IyrKMBBa8CgqBfzT7MzKROp3mivN": { "name": "Fakir Chand", "phone": "+919463913526", "dur": 73, "time": "05 Nov, 12:33 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Fakir Chand-2611051232.mp3" },
   "1AzDIMD3Y961_qeeWC53TglNKM_ILQphF": { "name": "( Spam Alert From Jio) Mazed Mallick", "phone": "+918293805138", "dur": 45, "time": "05 Nov, 12:13 PM", "device": "OnePlus", "dir": "INBOUND", "file": "( Spam Alert From Jio) Mazed Mallick-2611051213.mp3" },
-  "1mDYWSyB2RMebaSiYYc6Uky4ne6TCWh4Q": { "name": "Poonam (Harvinder)", "phone": "+919888810811", "dur": 25, "time": "04 Nov, 02:44 PM", "device": "iQOO", "dir": "OUTBOUND", "file": "POONAM-2611041445.mp3" },
-  "1tPx5V2Fy0LoiehKmOzIpLbixxO9BtJiT": { "name": "Poonam (Harvinder)", "phone": "+919888810811", "dur": 30, "time": "04 Nov, 02:46 PM", "device": "iQOO", "dir": "OUTBOUND", "file": "POONAM-2611041446.mp3" },
+  "1mDYWSyB2RMebaSiYYc6Uky4ne6TCWh4Q": { "name": "Poonam (Harvinder)", "phone": "+919888810811", "dur": 25, "time": "04 Nov, 02:45 PM", "device": "OnePlus", "dir": "INBOUND", "file": "POONAM-2611041445.mp3" },
+  "1tPx5V2Fy0LoiehKmOzIpLbixxO9BtJiT": { "name": "Poonam (Harvinder)", "phone": "+919888810811", "dur": 30, "time": "04 Nov, 02:46 PM", "device": "OnePlus", "dir": "INBOUND", "file": "POONAM-2611041446.mp3" },
   "1jHNtG1sSzcYxrgEZMwu-rXRCFr0LwOB_": { "name": "PARMINDER SINGH", "phone": "+918558055750", "dur": 22, "time": "2 Nov, 05:12 PM", "device": "OnePlus", "dir": "INBOUND", "file": "PARMINDER SINGH-2611021712.mp3" },
   "1yXaNUei3OjuxgELlqKxydp85J0veX5nO": { "name": "Sushil Kumar", "phone": "+919815045731", "dur": 57, "time": "2 Nov, 04:50 PM", "device": "OnePlus", "dir": "INBOUND", "file": "Sushil Kumar-2611021650.mp3" },
   "1Mq7sdU7WhnfjEPS13ieba0bNYdIw__in": { "name": "Shr", "phone": "+917015274682", "dur": 21, "time": "2 Nov, 04:46 PM", "device": "OnePlus", "dir": "OUTBOUND", "file": "Shr-2611021646.mp3" }
@@ -752,8 +752,20 @@ function deduplicateCalls(calls) {
     '1dHNOi9XPt9T5oJrpvsEbV_AW4Kj7uQC4'
   ]);
 
+  const TEST_PHONES_TO_SKIP = new Set(['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001']);
+  const isSyntheticTestRecord = (c) => {
+    const cid = String(c.id || '').trim().toLowerCase();
+    if (cid === 'test-123') return true;
+    const p10 = String(c.caller_number || c.phone || '').replace(/\D/g, '').slice(-10);
+    const nm = String(c.caller_name || c.leadName || '').trim().toLowerCase();
+    if (TEST_PHONES_TO_SKIP.has(p10)) return true;
+    if (/^(test\s*customer|testprobe|livetestcheck|live\s*iqoo\s*test|iqoo\s*test\s*connection|test\s*unpicked\s*lead|test\s*outbound\s*lead|caller\s*(?:one|two))/i.test(nm)) return true;
+    return false;
+  };
+
   for (const c of calls) {
     if (!c || !c.id) continue;
+    if (isSyntheticTestRecord(c)) continue;
     if (seenIds.has(c.id)) continue;
 
     const driveId = c.drive_file_id || (c.recording_url && c.recording_url.match(/id=([a-zA-Z0-9_-]{20,})/)?.[1]);
@@ -767,8 +779,22 @@ function deduplicateCalls(calls) {
 
     const rawFile = c.recording_file_name || c.audio_file_name || c.file || '';
     if (rawFile) {
+      // Enforce format-authentic device assignment so mirrored/stale docs cannot stay on wrong device
+      if (/^Call recording\s+/i.test(rawFile) || /\.m4a$/i.test(rawFile)) {
+        c.deviceName = 'Samsung Galaxy';
+        c.device_name = 'Samsung Galaxy';
+        c.staff_name = 'Samsung Galaxy';
+      } else if (/^Record[_-]/i.test(rawFile) || /\.(aac|amr|ogg)$/i.test(rawFile)) {
+        c.deviceName = 'iQOO';
+        c.device_name = 'iQOO';
+        c.staff_name = 'iQOO';
+      } else if (/\.mp3$/i.test(rawFile) && /samsung/i.test(String(c.deviceName || c.device_name || ''))) {
+        c.deviceName = 'OnePlus';
+        c.device_name = 'OnePlus';
+        c.staff_name = 'OnePlus';
+      }
       const cleanBase = rawFile.replace(/\.(mp3|m4a|wav|aac|amr)$/i, '').trim().toLowerCase();
-      if (cleanBase) {
+      if (cleanBase && !/^(call_recording|recording|audio|voice|call|sound|unknown|untitled|record)$/i.test(cleanBase)) {
         if (seenFileBases.has(cleanBase)) continue;
         seenFileBases.add(cleanBase);
       }
@@ -949,10 +975,12 @@ module.exports = async (req, res) => {
       if (k === 'iqoo') return 'iQOO';
       if (k === 'samsung') return 'Samsung Galaxy';
       if (k === 'oneplus') return 'OnePlus';
-      return d || 'OnePlus';
+      const s = String(d || '').trim();
+      return s || 'Unassigned';
     };
 
-    // Deduplicate mirrored filenames across the 3 Drive folders WITHOUT letting F2_IQOO steal Samsung (.m4a) or OnePlus (.mp3) files
+    // Deduplicate mirrored filenames across the 3 Drive folders in two passes:
+    // Pass 1 records every folder containing a filename; Pass 2 assigns authentic device without F2_iQOO mirrors stealing Samsung (.m4a) or OnePlus (.mp3).
     const seenFileNames = new Map();
     driveRecs.forEach(r => {
       const cleanName = (r.name || '').trim();
@@ -960,19 +988,6 @@ module.exports = async (req, res) => {
 
       const isSamsungFormat = r.isNativeSamsungFile || /^Call recording\s+/i.test(cleanName) || /\.m4a$/i.test(cleanName);
       const isIqooFormat = r.isNativeIqooFile || /^Record[_-]/i.test(cleanName) || /\.(aac|amr|ogg)$/i.test(cleanName);
-
-      if (r.mappedDevice) {
-        r.deviceName = r.mappedDevice;
-      } else if (isSamsungFormat) {
-        r.deviceName = 'Samsung Galaxy';
-      } else if (isIqooFormat) {
-        r.deviceName = 'iQOO';
-      } else if (/\.mp3$/i.test(cleanName)) {
-        // .mp3 in F1_ONEPLUS (master/OnePlus) defaults to OnePlus; only iQOO if exclusively in F2_IQOO or explicit KNOWN_DRIVE_MAPPINGS
-        r.deviceName = (r.originFolderDevice === 'iQOO' || r.originFolderDevice === 'Samsung Galaxy') ? r.originFolderDevice : 'OnePlus';
-      } else {
-        r.deviceName = canonicalDevName(r.deviceName || r.originFolderDevice || 'OnePlus');
-      }
 
       const existing = seenFileNames.get(cleanName);
       if (!existing) {
@@ -986,17 +1001,40 @@ module.exports = async (req, res) => {
           seenFileNames.set(cleanName, r);
         } else if (isSamsungFormat && r.originFolderDevice === 'Samsung Galaxy') {
           r._folders = existing._folders;
-          r.deviceName = 'Samsung Galaxy';
           seenFileNames.set(cleanName, r);
         } else if (!isSamsungFormat && !isIqooFormat && r.originFolderDevice === 'OnePlus') {
           r._folders = existing._folders;
-          r.deviceName = 'OnePlus';
+          seenFileNames.set(cleanName, r);
+        } else if (isIqooFormat && r.originFolderDevice === 'iQOO') {
+          r._folders = existing._folders;
           seenFileNames.set(cleanName, r);
         }
       }
     });
 
     const uniqueRecs = Array.from(seenFileNames.values());
+    uniqueRecs.forEach(r => {
+      const cleanName = (r.name || '').trim();
+      const isSamsungFormat = r.isNativeSamsungFile || /^Call recording\s+/i.test(cleanName) || /\.m4a$/i.test(cleanName);
+      const isIqooFormat = r.isNativeIqooFile || /^Record[_-]/i.test(cleanName) || /\.(aac|amr|ogg)$/i.test(cleanName);
+      const folders = r._folders || new Set([r.originFolderDevice]);
+
+      if (r.mappedDevice) {
+        r.deviceName = canonicalDevName(r.mappedDevice);
+      } else if (isSamsungFormat) {
+        r.deviceName = 'Samsung Galaxy';
+      } else if (isIqooFormat) {
+        r.deviceName = 'iQOO';
+      } else if (/\.mp3$/i.test(cleanName)) {
+        // .mp3 belongs to OnePlus unless uploaded EXCLUSIVELY in F2_iQOO (never in F1_OnePlus or F3_Samsung)
+        const onlyInIqooFolder = folders.has('iQOO') && !folders.has('OnePlus') && !folders.has('Samsung Galaxy');
+        r.deviceName = onlyInIqooFolder ? 'iQOO' : 'OnePlus';
+      } else {
+        r.deviceName = canonicalDevName(r.deviceName || r.originFolderDevice || 'OnePlus');
+      }
+    });
+
+    const recByDriveId = new Map(uniqueRecs.map(r => [r.id, r]));
 
     // Build strictly unambiguous contact-name -> 10-digit phone lookup from existing calls + normalize existing device names
     const dynamicPhoneByName = new Map();
@@ -1009,11 +1047,37 @@ module.exports = async (req, res) => {
       c.deviceName = canonicalDevName(c.deviceName || c.device_name || c.staff_name);
       c.device_name = c.deviceName;
       c.staff_name = c.deviceName;
+      const cDid = c.drive_file_id || (c.recording_url && c.recording_url.match(/id=([a-zA-Z0-9_-]{20,})/)?.[1]) || '';
       const fn = c.recording_file_name || c.audioFileName || c.file || '';
       if (/^Call recording\s+/i.test(fn) || /\.m4a$/i.test(fn)) {
         c.deviceName = 'Samsung Galaxy';
         c.device_name = 'Samsung Galaxy';
         c.staff_name = 'Samsung Galaxy';
+      } else if (/^Record[_-]/i.test(fn) || /\.(aac|amr|ogg)$/i.test(fn)) {
+        c.deviceName = 'iQOO';
+        c.device_name = 'iQOO';
+        c.staff_name = 'iQOO';
+      } else if (cDid && recByDriveId.has(cDid)) {
+        const matchedRec = recByDriveId.get(cDid);
+        const recKey = normDevKey(matchedRec.deviceName);
+        const callKey = normDevKey(c.deviceName);
+        if (String(c.id || '').startsWith('call-log-') && recKey && callKey && recKey !== callKey) {
+          // Stale cached webhook holding another device's audio: strip audio so it re-attaches to its true phone!
+          c.recording_url = '';
+          c.audioUrl = '';
+          c.drive_file_id = '';
+          c.recording_file_name = '';
+          c.audioFileName = '';
+          c.hasAudio = false;
+        } else {
+          c.deviceName = matchedRec.deviceName;
+          c.device_name = matchedRec.deviceName;
+          c.staff_name = matchedRec.deviceName;
+        }
+      } else if (/\.mp3$/i.test(fn) && normDevKey(c.deviceName) !== 'oneplus') {
+        c.deviceName = 'OnePlus';
+        c.device_name = 'OnePlus';
+        c.staff_name = 'OnePlus';
       }
       const d10 = String(c.caller_number || c.phone || c.receiver_number || '').replace(/\D/g, '').slice(-10);
       const nm = String(c.caller_name || c.leadName || '').toLowerCase().replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
@@ -1089,11 +1153,8 @@ module.exports = async (req, res) => {
         return null;
       };
 
+      // Strict same-device recording matching only — never steal/attach one phone's audio onto another phone's webhook
       if (!matchedCall) matchedCall = findCallByPhoneOrName(true);
-      // Allow unmapped .mp3 in shared F1 master folder to match a webhook from another phone ONLY if that file is not Samsung .m4a and has no same-device webhook
-      if (!matchedCall && !rec.mappedDevice && !rec.isNativeSamsungFile && !rec.isNativeIqooFile) {
-        matchedCall = findCallByPhoneOrName(false);
-      }
 
       if (matchedCall) {
         if (!matchedCall.direction || matchedCall.direction === 'INBOUND') {
@@ -1122,14 +1183,15 @@ module.exports = async (req, res) => {
             matchedCall.phone = rec.phone;
             matchedCall.caller_number = rec.phone;
           }
-          // Preserve real webhook's physical device; use Samsung Galaxy strictly for .m4a
+          // Preserve format/folder-verified physical device; never mix OnePlus .mp3 into iQOO/Samsung or Samsung .m4a into others
           if (rec.mappedDevice) {
-            matchedCall.deviceName = rec.mappedDevice;
+            matchedCall.deviceName = canonicalDevName(rec.mappedDevice);
           } else if (rec.isNativeSamsungFile) {
             matchedCall.deviceName = 'Samsung Galaxy';
+          } else if (rec.isNativeIqooFile) {
+            matchedCall.deviceName = 'iQOO';
           } else {
-            const realDev = canonicalDevName(matchedCall.deviceName || matchedCall.device_name || rec.deviceName);
-            matchedCall.deviceName = realDev;
+            matchedCall.deviceName = canonicalDevName(rec.deviceName || matchedCall.deviceName || matchedCall.device_name);
           }
           matchedCall.device_name = matchedCall.deviceName;
           matchedCall.staff_name = matchedCall.deviceName;

@@ -321,8 +321,8 @@ async function syncCallLogToFirestore(callLogRecord) {
       ai_summary: { stringValue: String(callLogRecord.ai_summary || '') },
       direction: { stringValue: String(callLogRecord.direction || 'INBOUND') },
       call_outcome: { stringValue: String(callLogRecord.call_outcome || 'Connected') },
-      staff_name: { stringValue: String(callLogRecord.staff_name || 'Samsung Galaxy') },
-      device_name: { stringValue: String(callLogRecord.device_name || 'Samsung Galaxy') },
+      staff_name: { stringValue: String(callLogRecord.staff_name || callLogRecord.device_name || 'Unassigned Device') },
+      device_name: { stringValue: String(callLogRecord.device_name || callLogRecord.staff_name || 'Unassigned Device') },
       created_at: { stringValue: String(callLogRecord.created_at || new Date().toISOString()) }
     });
 
@@ -824,6 +824,12 @@ module.exports = async (req, res) => {
       if (/^Call recording\s+/i.test(String(extractedFileName)) || /\.m4a$/i.test(String(extractedFileName))) {
         device_name = 'Samsung Galaxy';
         staff_name = 'Samsung Galaxy';
+      } else if (/^Record[_-]/i.test(String(extractedFileName)) || /\.(aac|amr|ogg)$/i.test(String(extractedFileName))) {
+        device_name = 'iQOO';
+        staff_name = 'iQOO';
+      } else if (/\.mp3$/i.test(String(extractedFileName)) && !rawDevLower.includes('iq') && !rawDevLower.includes('vivo')) {
+        device_name = 'OnePlus';
+        staff_name = 'OnePlus';
       } else if (rawDevLower.includes('iq') || rawDevLower.includes('vivo')) {
         device_name = 'iQOO';
         staff_name = 'iQOO';
@@ -834,8 +840,8 @@ module.exports = async (req, res) => {
         device_name = 'Samsung Galaxy';
         staff_name = 'Samsung Galaxy';
       } else {
-        device_name = device_name || 'OnePlus';
-        staff_name = staff_name || device_name;
+        device_name = String(device_name || staff_name || '').trim() || 'Unassigned Device';
+        staff_name = String(staff_name || device_name || '').trim() || 'Unassigned Device';
       }
 
       // Check if lead_id was explicitly supplied in payload
