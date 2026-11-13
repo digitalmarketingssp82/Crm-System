@@ -307,6 +307,14 @@ async function _writeFirestoreCallDoc(docId, fieldsObj) {
 async function syncCallLogToFirestore(callLogRecord) {
   _upsertRamWebhookLog(callLogRecord);
   try {
+    if (!callLogRecord || !callLogRecord.id) return false;
+    const cid = String(callLogRecord.id || '').toLowerCase();
+    const cnm = String(callLogRecord.caller_name || '').toLowerCase();
+    const cph = String(callLogRecord.caller_number || callLogRecord.phone || '').replace(/\D/g, '');
+    const cdev = String(callLogRecord.device_name || callLogRecord.staff_name || '');
+    if (cid === 'test-123' || cdev === 'Unassigned Device' || ['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001', '9988776655', '9876500001'].some(p => cph.includes(p)) || /^(caller\s*(one|two)|unknown\s*dev|test\s*customer|testprobe|livetestcheck)/i.test(cnm)) {
+      return false;
+    }
     let recUrl = String(callLogRecord.recording_url || '');
     const buildFields = (rUrl) => ({
       id: { stringValue: callLogRecord.id },

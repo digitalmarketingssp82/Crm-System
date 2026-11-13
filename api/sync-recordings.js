@@ -752,14 +752,16 @@ function deduplicateCalls(calls) {
     '1dHNOi9XPt9T5oJrpvsEbV_AW4Kj7uQC4'
   ]);
 
-  const TEST_PHONES_TO_SKIP = new Set(['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001']);
+  const TEST_PHONES_TO_SKIP = new Set(['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001', '9988776655', '9876500001']);
   const isSyntheticTestRecord = (c) => {
     const cid = String(c.id || '').trim().toLowerCase();
     if (cid === 'test-123') return true;
     const p10 = String(c.caller_number || c.phone || '').replace(/\D/g, '').slice(-10);
     const nm = String(c.caller_name || c.leadName || '').trim().toLowerCase();
+    const dev = String(c.deviceName || c.device_name || '');
+    if (dev === 'Unassigned Device') return true;
     if (TEST_PHONES_TO_SKIP.has(p10)) return true;
-    if (/^(test\s*customer|testprobe|livetestcheck|live\s*iqoo\s*test|iqoo\s*test\s*connection|test\s*unpicked\s*lead|test\s*outbound\s*lead|caller\s*(?:one|two))/i.test(nm)) return true;
+    if (/^(test\s*customer|testprobe|livetestcheck|live\s*iqoo\s*test|iqoo\s*test\s*connection|test\s*unpicked\s*lead|test\s*outbound\s*lead|caller\s*(?:one|two)|unknown\s*dev)/i.test(nm)) return true;
     return false;
   };
 

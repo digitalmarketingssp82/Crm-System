@@ -12107,7 +12107,7 @@
     let _callLogsMemoryReady = false;
     function getStoredClientCallLogs(forceReload = false) {
       // Build versioning ensures any stale localStorage caches in user browser are updated cleanly
-      const CURRENT_BUILD_VERSION = '2026-11-12-v25-fix-cross-device-history';
+      const CURRENT_BUILD_VERSION = '2026-11-13-v26-clean-production';
       if (!forceReload && _callLogsMemoryReady && Array.isArray(sriCallLogs) && sriCallLogs.length > 0) {
         return sriCallLogs;
       }
@@ -12184,7 +12184,7 @@
           // Merge any bundled calls not in parsed in O(N)
           mergeBundledCallsInto(parsed, false);
         }
-        parsed = parsed.filter(item => item && item.id && item.id !== 'test-123' && !PHANTOM_CALL_IDS.has(item.id) && !item.caller_number?.includes('9999988888') && !item.caller_number?.includes('9999999999') && !item.caller_number?.includes('9876543210') && !item.caller_number?.includes('9876543211') && !item.caller_number?.includes('9876543299') && !item.caller_number?.includes('9999900001') && !item.caller_name?.includes('Test Verification') && !item.time?.includes('27 Oct') && !item.created_at?.includes('2026-10-27') && !isBadLegacyRecord(item) && !isGhostCallRecord(item));
+        parsed = parsed.filter(item => item && item.id && item.id !== 'test-123' && !PHANTOM_CALL_IDS.has(item.id) && !item.caller_number?.includes('9999988888') && !item.caller_number?.includes('9999999999') && !item.caller_number?.includes('9876543210') && !item.caller_number?.includes('9876543211') && !item.caller_number?.includes('9876543299') && !item.caller_number?.includes('9999900001') && !item.caller_number?.includes('9988776655') && !item.caller_number?.includes('9876500001') && !/^(caller\s*(one|two)|unknown\s*dev|test\s*customer|testprobe|livetestcheck)/i.test(item.caller_name || '') && item.deviceName !== 'Unassigned Device' && item.device_name !== 'Unassigned Device' && !item.caller_name?.includes('Test Verification') && !item.time?.includes('27 Oct') && !item.created_at?.includes('2026-10-27') && !isBadLegacyRecord(item) && !isGhostCallRecord(item));
         parsed.forEach(item => {
           const dir = String(item.direction || item.call_type || '').toUpperCase();
           const isInb = dir.includes('IN') || (!dir.includes('OUT') && !dir.includes('DIAL'));
@@ -20587,7 +20587,7 @@
               const clId = data.id || doc.id;
               const clPhoneClean = String(parsedPN.cleanPhone || data.caller_number || data.phone || '').replace(/\D/g, '').slice(-10);
               const clNameLower = String(parsedPN.cleanName || data.caller_name || '').trim().toLowerCase();
-              if (clId === 'test-123' || ['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001'].includes(clPhoneClean) || /^(test\s*customer|testprobe|livetestcheck|live\s*iqoo\s*test|iqoo\s*test\s*connection|test\s*unpicked\s*lead|test\s*outbound\s*lead)/i.test(clNameLower)) {
+              if (clId === 'test-123' || canDev === 'Unassigned Device' || ['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001', '9988776655', '9876500001'].includes(clPhoneClean) || /^(test\s*customer|testprobe|livetestcheck|live\s*iqoo\s*test|iqoo\s*test\s*connection|test\s*unpicked\s*lead|test\s*outbound\s*lead|caller\s*(?:one|two)|unknown\s*dev)/i.test(clNameLower)) {
                 return;
               }
               const clObj = {
@@ -20830,7 +20830,7 @@
       const _preInitSriLogs = (Array.isArray(sriCallLogs) && sriCallLogs.length > 0) ? sriCallLogs.slice() : [];
       try {
         const storedVerInit = localStorage.getItem('sri_sri_call_logs_version');
-        const INIT_BUILD_VERSION = '2026-11-12-v25-fix-cross-device-history';
+        const INIT_BUILD_VERSION = '2026-11-13-v26-clean-production';
         let stored = (storedVerInit === INIT_BUILD_VERSION) ? safeStorageGet('sri_sri_call_logs', null) : null;
         // Comprehensive check: if stored is missing, empty, or from an older build version, load clean bundled dataset
         if (!stored || !Array.isArray(stored) || stored.length === 0) {
@@ -24519,7 +24519,7 @@ function resolveContactNameToPhone(contactName) {
                   };
                   const rPhClean = String(callObj.caller_number || '').replace(/\D/g, '').slice(-10);
                   const rNmLower = String(callObj.caller_name || '').trim().toLowerCase();
-                  if (callObj.id === 'test-123' || ['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001'].includes(rPhClean) || /^(test\s*customer|testprobe|livetestcheck|live\s*iqoo\s*test|iqoo\s*test\s*connection|test\s*unpicked\s*lead|test\s*outbound\s*lead)/i.test(rNmLower)) return;
+                  if (callObj.id === 'test-123' || callObj.device_name === 'Unassigned Device' || ['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001', '9988776655', '9876500001'].includes(rPhClean) || /^(test\s*customer|testprobe|livetestcheck|live\s*iqoo\s*test|iqoo\s*test\s*connection|test\s*unpicked\s*lead|test\s*outbound\s*lead|caller\s*(?:one|two)|unknown\s*dev)/i.test(rNmLower)) return;
                   normalizeCallRecordFields(callObj);
                   const exIdx = remoteCalls.findIndex(r => r.id === id);
                   if (exIdx === -1) {
@@ -24760,7 +24760,7 @@ function resolveContactNameToPhone(contactName) {
               if (typeof isGhostCallRecord === 'function' && isGhostCallRecord(remoteLog)) return;
               const remPhClean = String(remoteLog.phone || remoteLog.caller_number || '').replace(/\D/g, '').slice(-10);
               const remNmLower = String(remoteLog.caller_name || remoteLog.leadName || '').trim().toLowerCase();
-              if (remoteLog.id === 'test-123' || ['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001'].includes(remPhClean) || /^(test\s*customer|testprobe|livetestcheck|live\s*iqoo\s*test|iqoo\s*test\s*connection|test\s*unpicked\s*lead|test\s*outbound\s*lead)/i.test(remNmLower)) return;
+              if (remoteLog.id === 'test-123' || remoteLog.device_name === 'Unassigned Device' || ['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001', '9988776655', '9876500001'].includes(remPhClean) || /^(test\s*customer|testprobe|livetestcheck|live\s*iqoo\s*test|iqoo\s*test\s*connection|test\s*unpicked\s*lead|test\s*outbound\s*lead|caller\s*(?:one|two)|unknown\s*dev)/i.test(remNmLower)) return;
 
               // STRICT: Zero phantom calls on Samsung Galaxy on 31 Oct!
               const is31Oct = (remoteLog.time && remoteLog.time.includes('31 Oct')) || (remoteLog.created_at && remoteLog.created_at.includes('2026-10-31'));
