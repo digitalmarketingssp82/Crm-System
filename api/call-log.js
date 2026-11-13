@@ -64,6 +64,35 @@ function parsePhoneTimestamp(rawDate, rawTime, rawFull) {
   return new Date();
 }
 
+function parseDurationSecs(val) {
+  if (val === null || val === undefined) return 0;
+  if (typeof val === 'number') return Math.max(0, Math.round(val));
+  const s = String(val).trim();
+  if (!s || s === '{call_duration}' || s === 'undefined' || s === 'null') return 0;
+
+  // Format HH:MM:SS
+  const hms = s.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+  if (hms) {
+    return parseInt(hms[1], 10) * 3600 + parseInt(hms[2], 10) * 60 + parseInt(hms[3], 10);
+  }
+  // Format MM:SS
+  const ms = s.match(/^(\d{1,2}):(\d{2})$/);
+  if (ms) {
+    return parseInt(ms[1], 10) * 60 + parseInt(ms[2], 10);
+  }
+  // Format like "45s" or "45 sec" or "2m 15s"
+  let totalSecs = 0;
+  let hasUnit = false;
+  const mMatch = s.match(/(\d+)\s*(?:m|min|minute)/i);
+  if (mMatch) { totalSecs += parseInt(mMatch[1], 10) * 60; hasUnit = true; }
+  const sMatch = s.match(/(\d+)\s*(?:s|sec|second)/i);
+  if (sMatch) { totalSecs += parseInt(sMatch[1], 10); hasUnit = true; }
+  if (hasUnit) return totalSecs;
+
+  const num = parseInt(s, 10);
+  return isNaN(num) ? 0 : Math.max(0, num);
+}
+
 const PHANTOM_CALL_IDS = new Set([
   'call-log-1793870745254-327', // 05 Nov probe test
   'call-log-1793870744125-106', // 05 Nov probe test
@@ -281,12 +310,12 @@ function _upsertRamWebhookLog(rec) {
 
 async function _writeFirestoreCallDoc(docId, fieldsObj) {
   const postData = JSON.stringify({ fields: fieldsObj });
-  const fUrl = '/v1/projects/crm-f4bf7/databases/(default)/documents/call_logs?documentId=' + encodeURIComponent(docId);
+  const fUrl = '/v1/projects/crm-f4bf7/databases/(default)/documents/call_logs/' + encodeURIComponent(docId);
   return new Promise((resolve) => {
     const fReq = https.request({
       hostname: 'firestore.googleapis.com',
       path: fUrl,
-      method: 'POST',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData)
@@ -312,7 +341,7 @@ async function syncCallLogToFirestore(callLogRecord) {
     const cnm = String(callLogRecord.caller_name || '').toLowerCase();
     const cph = String(callLogRecord.caller_number || callLogRecord.phone || '').replace(/\D/g, '');
     const cdev = String(callLogRecord.device_name || callLogRecord.staff_name || '');
-    if (cid === 'test-123' || cdev === 'Unassigned Device' || ['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001', '9988776655', '9876500001'].some(p => cph.includes(p)) || /^(caller\s*(one|two)|unknown\s*dev|test\s*customer|testprobe|livetestcheck)/i.test(cnm)) {
+    if (cid === 'test-123' || ['9999999999', '9999988888', '9876543210', '9876543211', '9876543299', '9999900001', '9988776655', '9876500001'].some(p => cph.includes(p)) || /^(caller\s*(one|two)|unknown\s*dev|test\s*customer|testprobe|livetestcheck)/i.test(cnm)) {
       return false;
     }
     let recUrl = String(callLogRecord.recording_url || '');
@@ -329,8 +358,8 @@ async function syncCallLogToFirestore(callLogRecord) {
       ai_summary: { stringValue: String(callLogRecord.ai_summary || '') },
       direction: { stringValue: String(callLogRecord.direction || 'INBOUND') },
       call_outcome: { stringValue: String(callLogRecord.call_outcome || 'Connected') },
-      staff_name: { stringValue: String(callLogRecord.staff_name || callLogRecord.device_name || 'Unassigned Device') },
-      device_name: { stringValue: String(callLogRecord.device_name || callLogRecord.staff_name || 'Unassigned Device') },
+      staff_name: { stringValue: String(callLogRecord.staff_name || callLogRecord.device_name || 'OnePlus') },
+      device_name: { stringValue: String(callLogRecord.device_name || callLogRecord.staff_name || 'OnePlus') },
       created_at: { stringValue: String(callLogRecord.created_at || new Date().toISOString()) }
     });
 
@@ -361,7 +390,7 @@ async function getFirestoreCallLogs(forceFresh = false) {
           field: { fieldPath: 'created_at' },
           direction: 'DESCENDING'
         }],
-        limit: 100
+        limit: 300
       }
     });
 
@@ -746,8 +775,8 @@ module.exports = async (req, res) => {
       let validCallerName = (rawCallerName && rawCallerName !== '{call_name}' && rawCallerName !== 'null' && rawCallerName !== 'undefined') ? rawCallerName : '';
 
       // Extract Duration (in seconds)
-      const rawDuration = data.call_duration || data.duration || data.CallDuration || data.duration_seconds || 0;
-      let call_duration = parseInt(rawDuration, 10) || 0;
+      const rawDuration = data.call_duration || data.duration || data.CallDuration || data.duration_seconds || query.call_duration || query.duration || 0;
+      let call_duration = parseDurationSecs(rawDuration);
 
       // Robust Direction Detection (Supports MacroDroid query params, body params, and Android event codes)
       const rawType = String(
@@ -848,8 +877,9 @@ module.exports = async (req, res) => {
         device_name = 'Samsung Galaxy';
         staff_name = 'Samsung Galaxy';
       } else {
-        device_name = String(device_name || staff_name || '').trim() || 'Unassigned Device';
-        staff_name = String(staff_name || device_name || '').trim() || 'Unassigned Device';
+        device_name = String(device_name || staff_name || '').trim();
+        if (!device_name || device_name === 'Unassigned Device') device_name = 'OnePlus';
+        staff_name = device_name;
       }
 
       // Check if lead_id was explicitly supplied in payload
@@ -1032,6 +1062,9 @@ module.exports = async (req, res) => {
 
       // Auto-heal 3: Check for duplicate call event on the same device
       if (cleanCustomer && cleanCustomer.length >= 7) {
+        let isOutboundEndMerge = false;
+        let elapsedCallSecs = 0;
+
         const recentSamePhoneIdx = allLogs.findIndex(l => {
           const lNum = cleanPhone(l.caller_number || l.phone);
           if (lNum !== cleanCustomer) return false;
@@ -1042,16 +1075,29 @@ module.exports = async (req, res) => {
           const curTime = callDateObj.getTime();
           const diffMs = Math.abs(curTime - lTime);
 
+          const lIsOut = String(l.direction || l.call_type || '').toUpperCase().includes('OUT') || l.call_outcome === 'Outbound (Not Picked)';
+          const isExZero = Number(l.call_duration || l.duration || 0) === 0;
+
+          // SPECIAL MERGE 1: Outbound Call Dialed -> Call Ended Webhook
+          // When an outbound call was dialed with 0s, and a subsequent call event arrives on the same device within 1 hour:
+          // This is the call-end event for the same physical outbound call!
+          if (lIsOut && isExZero && diffMs <= 3600000) {
+            isOutboundEndMerge = true;
+            elapsedCallSecs = Math.round(diffMs / 1000);
+            return true;
+          }
+
           const isNewMissed = (call_outcome === 'Missed Call' || call_duration === 0);
-          const isExMissed = (l.call_outcome === 'Missed Call' || l.outcome === 'Missed Call' || Number(l.call_duration || l.duration || 0) === 0);
+          const isExMissed = (l.call_outcome === 'Missed Call' || l.outcome === 'Missed Call' || isExZero);
 
           // If both were connected with duration > 0, NEVER merge unless within 15 seconds with same duration (network duplicate packet)
           if (!isNewMissed && !isExMissed && (call_duration > 0 && Number(l.call_duration || l.duration || 0) > 0)) {
             return diffMs <= 15000 && call_duration === Number(l.call_duration || l.duration || 0);
           }
 
-          // Merge if one was missed/dialed and one was connected within 3 minutes (absorb dial trigger)
-          if (isNewMissed !== isExMissed && diffMs <= 180000) return true;
+          // Merge if one was missed/dialed and one was connected on the same phone number within 1 hour
+          const maxMergeDiff = Math.max(3600000, Math.max(call_duration, Number(l.call_duration || l.duration || 0)) * 1000 + 300000);
+          if (isNewMissed !== isExMissed && diffMs <= maxMergeDiff) return true;
 
           // Merge if duplicate missed call burst within 15 seconds
           if (isNewMissed && isExMissed && diffMs <= 15000) return true;
@@ -1061,19 +1107,40 @@ module.exports = async (req, res) => {
 
         if (recentSamePhoneIdx !== -1) {
           const ex = allLogs[recentSamePhoneIdx];
-          const isNewConnected = (call_outcome === 'Connected' || call_duration > 0 || recording_url);
-          const isExConnected = (ex.call_outcome === 'Connected' || ex.outcome === 'Connected' || (ex.call_duration && ex.call_duration > 0) || ex.recording_url);
 
-          // If either is connected, the merged call is Connected
-          if (isNewConnected || isExConnected) {
-            ex.call_outcome = 'Connected';
-            ex.outcome = 'Connected';
-            ex.callOutcome = 'Connected';
-            if (call_duration > (ex.call_duration || 0)) {
-              ex.call_duration = call_duration;
-              ex.duration = call_duration;
+          // If this was an outbound dial -> end merge
+          if (isOutboundEndMerge) {
+            ex.direction = 'OUTBOUND';
+            ex.call_type = 'OUTBOUND';
+            const finalDur = call_duration > 0 ? call_duration : (elapsedCallSecs >= 15 ? elapsedCallSecs : 0);
+            if (finalDur > 0 || recording_url) {
+              ex.call_outcome = 'Connected';
+              ex.outcome = 'Connected';
+              ex.callOutcome = 'Connected';
+              ex.call_duration = finalDur;
+              ex.duration = finalDur;
+            } else {
+              ex.call_outcome = 'Outbound (Not Picked)';
+              ex.outcome = 'Outbound (Not Picked)';
+              ex.callOutcome = 'Outbound (Not Picked)';
+              ex.call_duration = 0;
+              ex.duration = 0;
+            }
+          } else {
+            const isNewConnected = (call_outcome === 'Connected' || call_duration > 0 || recording_url);
+            const isExConnected = (ex.call_outcome === 'Connected' || ex.outcome === 'Connected' || (ex.call_duration && ex.call_duration > 0) || ex.recording_url);
+
+            // If either is connected, the merged call is Connected
+            if (isNewConnected || isExConnected) {
+              ex.call_outcome = 'Connected';
+              ex.outcome = 'Connected';
+              ex.callOutcome = 'Connected';
+              const bestDur = Math.max(call_duration, Number(ex.call_duration || ex.duration || 0));
+              ex.call_duration = bestDur;
+              ex.duration = bestDur;
             }
           }
+
           if (validCallerName && !validCallerName.startsWith('Direct') && (!ex.caller_name || ex.caller_name.startsWith('Direct'))) {
             ex.caller_name = validCallerName;
             ex.leadName = validCallerName;
@@ -1081,10 +1148,11 @@ module.exports = async (req, res) => {
           if (recording_url && !ex.recording_url) {
             ex.recording_url = recording_url;
             ex.audioUrl = recording_url;
+            ex.hasAudio = true;
           }
           saveStoredCallLogs(allLogs);
           await syncCallLogToFirestore(ex);
-          console.log(`[Call-Log Auto-Heal 3]: Absorbed duplicate call trigger for ${cleanCustomer} on ${device_name}`);
+          console.log(`[Call-Log Auto-Heal 3]: Absorbed duplicate call trigger for ${cleanCustomer} on ${device_name} (Connected=${ex.call_outcome}, dur=${ex.duration}s)`);
           return sendResponse(res, 200, {
             success: true,
             message: 'Absorbed duplicate call trigger',

@@ -19,7 +19,7 @@ function getRecentFirestoreCallsSafe(forceFresh = false) {
       structuredQuery: {
         from: [{ collectionId: 'call_logs' }],
         orderBy: [{ field: { fieldPath: 'created_at' }, direction: 'DESCENDING' }],
-        limit: 80
+        limit: 300
       }
     });
     const req = https.request('https://firestore.googleapis.com/v1/projects/crm-f4bf7/databases/(default)/documents:runQuery', {
@@ -1108,21 +1108,22 @@ module.exports = async (req, res) => {
       const recDevKey = normDevKey(rec.deviceName);
       let matchedCall = calls.find(c => c.drive_file_id === rec.id || (c.recording_url && c.recording_url.includes(rec.id)));
 
-      const matchesTimeWindow = (c) => {
-        if (!rec.timestamp || !(c.created_at || c.timestamp || c.time)) return false;
+      const matchesTimeWindow = (c, isExactPhone = false) => {
+        if (!rec.timestamp || !(c.created_at || c.timestamp || c.time)) return isExactPhone;
         const recTime = new Date(rec.timestamp).getTime();
         const callTime = new Date(c.created_at || c.timestamp || c.time).getTime();
-        if (isNaN(recTime) || isNaN(callTime)) return false;
+        if (isNaN(recTime) || isNaN(callTime)) return isExactPhone;
         const callDurMs = (parseInt(c.call_duration || c.duration || 0, 10) || 0) * 1000;
         const diffStart = Math.abs(recTime - (callTime - callDurMs));
         const diffEnd = Math.abs(recTime - callTime);
-        const maxDiff = Math.max(300000, callDurMs + 180000);
+        const baseWindow = isExactPhone ? 7200000 : 300000;
+        const maxDiff = Math.max(baseWindow, callDurMs + 600000);
         return diffStart <= maxDiff || diffEnd <= maxDiff;
       };
 
       const findCallByPhoneOrName = (requireSameDevice) => {
         if (rec.phoneDigits && rec.phoneDigits.length === 10) {
-          const hit = calls.find(c => {
+          const candidates = calls.filter(c => {
             if (c.drive_file_id && c.drive_file_id !== rec.id) return false;
             if (c.hasAudio && c.drive_file_id !== rec.id) return false;
             const cDevKey = normDevKey(c.deviceName || c.device_name || c.staff_name);
@@ -1130,9 +1131,17 @@ module.exports = async (req, res) => {
             if (!requireSameDevice && rec.isNativeSamsungFile && cDevKey && cDevKey !== 'samsung') return false;
             const cNum = String(c.caller_number || c.phone || c.receiver_number || '').replace(/\D/g, '').slice(-10);
             if (cNum !== rec.phoneDigits) return false;
-            return matchesTimeWindow(c);
+            return matchesTimeWindow(c, true);
           });
-          if (hit) return hit;
+          if (candidates.length > 0) {
+            const recTime = rec.timestamp ? new Date(rec.timestamp).getTime() : 0;
+            candidates.sort((a, b) => {
+              const aT = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
+              const bT = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
+              return Math.abs(recTime - aT) - Math.abs(recTime - bT);
+            });
+            return candidates[0];
+          }
         }
         if (rec.contactName) {
           const cleanRecName = rec.contactName.toLowerCase().trim();
@@ -1148,7 +1157,7 @@ module.exports = async (req, res) => {
               if (recHasPhone && cNum.length === 10 && cNum !== rec.phoneDigits) return false;
               const nameC = (c.caller_name || c.leadName || '').toLowerCase().trim();
               if (!nameC || nameC !== cleanRecName) return false;
-              return matchesTimeWindow(c);
+              return matchesTimeWindow(c, false);
             });
           }
         }
@@ -1170,12 +1179,14 @@ module.exports = async (req, res) => {
           matchedCall.audioUrl = rec.audioUrl;
           matchedCall.drive_file_id = rec.id;
           matchedCall.recording_file_name = rec.name;
+          matchedCall.audioFileName = rec.name;
           matchedCall.hasAudio = true;
           matchedCall.outcome = 'Connected';
           matchedCall.call_outcome = 'Connected';
           matchedCall.callOutcome = 'Connected';
           if (!matchedCall.duration || matchedCall.duration === 0) {
             matchedCall.duration = rec.approxDuration;
+            matchedCall.call_duration = rec.approxDuration;
           }
           if (rec.contactName && (!matchedCall.caller_name || matchedCall.caller_name === 'Direct Phone Call')) {
             matchedCall.caller_name = rec.contactName;
