@@ -413,21 +413,40 @@ async function getFirestoreCallLogs(forceFresh = false) {
           const logs = parsed.filter(item => item.document && item.document.fields).map(item => {
             const f = item.document.fields;
             const rec = f.recording_url?.stringValue || '';
+            const rawDurVal = f.call_duration?.stringValue || f.call_duration?.integerValue || f.duration?.stringValue || f.duration?.integerValue || 0;
+            const parsedDur = parseInt(rawDurVal, 10) || 0;
+            const rawDev = f.device_name?.stringValue || f.deviceName?.stringValue || f.staff_name?.stringValue || '';
+            let devName = 'OnePlus';
+            const sDev = rawDev.toLowerCase();
+            if (sDev.includes('iq') || sDev.includes('vivo')) devName = 'iQOO';
+            else if (sDev.includes('samsung')) devName = 'Samsung Galaxy';
+            const rawDir = String(f.direction?.stringValue || f.call_type?.stringValue || '').toUpperCase();
+            const isOut = rawDir.includes('OUT') || rawDir.includes('DIAL');
+            const rawOutcome = f.call_outcome?.stringValue || '';
+            const resolvedOutcome = rawOutcome || (parsedDur > 0 || rec ? 'Connected' : (isOut ? 'Outbound (Not Picked)' : 'Missed Call'));
             return {
               id: f.id?.stringValue || item.document.name.split('/').pop(),
               lead_id: f.lead_id?.stringValue || '',
               caller_number: f.caller_number?.stringValue || '',
+              phone: f.caller_number?.stringValue || '',
               caller_name: f.caller_name?.stringValue || '',
+              leadName: f.caller_name?.stringValue || '',
               receiver_number: f.receiver_number?.stringValue || '',
-              call_duration: parseInt(f.call_duration?.integerValue || 0, 10),
+              call_duration: parsedDur,
+              duration: parsedDur,
               recording_url: rec,
+              audioUrl: rec,
               drive_file_id: f.drive_file_id?.stringValue || (rec.match(/id=([a-zA-Z0-9_-]{20,})/)?.[1] || ''),
               recording_file_name: f.recording_file_name?.stringValue || '',
               ai_summary: f.ai_summary?.stringValue || '',
-              direction: f.direction?.stringValue || 'INBOUND',
-              call_outcome: f.call_outcome?.stringValue || 'Connected',
-              staff_name: f.staff_name?.stringValue || 'OnePlus',
-              device_name: f.device_name?.stringValue || 'OnePlus',
+              direction: isOut ? 'OUTBOUND' : 'INBOUND',
+              call_type: isOut ? 'OUTBOUND' : 'INBOUND',
+              call_outcome: resolvedOutcome,
+              outcome: resolvedOutcome,
+              callOutcome: resolvedOutcome,
+              staff_name: devName,
+              device_name: devName,
+              deviceName: devName,
               created_at: f.created_at?.stringValue || ''
             };
           });
@@ -616,7 +635,8 @@ module.exports = async (req, res) => {
       const cDir = String(c.direction || c.call_type || '').toUpperCase();
       const cIsInbound = cDir.includes('IN') || (!cDir.includes('OUT') && !cDir.includes('DIAL'));
       const cDur = parseInt(c.call_duration || c.duration || 0, 10);
-      if (cIsInbound && !cHasAudio && cDur === 0) {
+      const cOut = String(c.call_outcome || c.outcome || '').trim();
+      if (cIsInbound && !cHasAudio && cDur === 0 && (cOut === 'Missed Call' || !cOut)) {
         c.call_outcome = 'Missed Call';
         c.outcome = 'Missed Call';
         c.callOutcome = 'Missed Call';
@@ -791,10 +811,11 @@ module.exports = async (req, res) => {
       // Determine Authentic Call Outcome
       let call_outcome = 'Missed Call';
       const hasAudioData = !!(recording_url && recording_url.length > 10);
+      const rawOutVal = String(data.call_outcome || data.outcome || query.call_outcome || query.outcome || '').trim();
 
-      if (hasAudioData || call_duration > 0) {
+      if (hasAudioData || call_duration > 0 || rawOutVal === 'Connected' || rawOutVal.includes('Baat Hui') || rawOutVal.toLowerCase().includes('connected')) {
         call_outcome = 'Connected';
-      } else if (direction === 'OUTBOUND') {
+      } else if (direction === 'OUTBOUND' || rawOutVal.includes('Not Picked') || rawOutVal.includes('Busy')) {
         call_outcome = 'Outbound (Not Picked)';
         call_duration = 0;
       } else {
@@ -934,6 +955,13 @@ module.exports = async (req, res) => {
 
       // 1. Persist to independent call_logs table / store
       const allLogs = getStoredCallLogs();
+      if (Array.isArray(_recentWebhookLogs) && _recentWebhookLogs.length > 0) {
+        _recentWebhookLogs.forEach(rw => {
+          if (rw && rw.id && !allLogs.some(l => l.id === rw.id)) {
+            allLogs.unshift(rw);
+          }
+        });
+      }
 
       // Check if an unattached standalone audio recording from Google Drive exists for this SAME device & caller/phone
       // STRICT: Never steal or clone recordings across different physical devices!
@@ -1090,8 +1118,8 @@ module.exports = async (req, res) => {
           const maxMergeDiff = Math.max(3600000, Math.max(call_duration, Number(l.call_duration || l.duration || 0)) * 1000 + 300000);
           if (isNewMissed !== isExMissed && diffMs <= maxMergeDiff) return true;
 
-          // Merge if duplicate missed call burst within 15 seconds
-          if (isNewMissed && isExMissed && diffMs <= 15000) return true;
+          // Merge if duplicate missed call burst within 90 seconds (covers phone ring timeout)
+          if (isNewMissed && isExMissed && diffMs <= 90000) return true;
 
           return false;
         });

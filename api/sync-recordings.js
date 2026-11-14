@@ -41,7 +41,8 @@ function getRecentFirestoreCallsSafe(forceFresh = false) {
           if (!Array.isArray(parsed)) return resolve(_cachedFsRecentCalls);
           const logs = parsed.filter(item => item.document && item.document.fields).map(item => {
             const f = item.document.fields;
-            const dur = parseInt(f.call_duration?.integerValue || f.duration?.integerValue || 0, 10);
+            const rawDurVal = f.call_duration?.stringValue || f.call_duration?.integerValue || f.duration?.stringValue || f.duration?.integerValue || 0;
+            const dur = parseInt(rawDurVal, 10) || 0;
             const rec = f.recording_url?.stringValue || f.audioUrl?.stringValue || '';
             const did = f.drive_file_id?.stringValue || (rec.match(/id=([a-zA-Z0-9_-]{20,})/)?.[1] || '');
             return {
