@@ -7609,21 +7609,29 @@
     if (leads.length !== _preDedupCount) _leadsDirtyOnStartup = true;
 
     // Auto-seeding permanently disabled - deleted leads will NEVER come back!
-    // Purge fake auto-created phone leads permanently
+    // Purge fake auto-created phone leads and legacy test leads from localStorage permanently
     try {
       if (Array.isArray(leads)) {
-        const FAKE_AUTO_LEAD_IDS = new Set(['lead-phone-9803353372', 'lead-phone-8558055750', 'lead-phone-9877808859', 'lead-test-mohan', 'lead-test-write-1793097230798']);
+        const FAKE_AUTO_LEAD_IDS = new Set([
+          'lead-phone-9803353372', 'lead-phone-8558055750', 'lead-phone-9877808859',
+          'lead-test-mohan', 'lead-test-write-1793097230798',
+          'lead-csv-1278', 'lead-csv-1327', 'lead-csv-1314', 'lead-csv-1324'
+        ]);
         const origLen = leads.length;
         leads = leads.filter(l => {
           if (!l) return false;
           if (FAKE_AUTO_LEAD_IDS.has(l.id)) return false;
           if (l.id === 'lead-test-mohan' || l.id === 'lead-test-write-1793097230798') return false;
-          if (l.name && (l.name.includes('Mohan BNI ID 17') || l.name === 'Mohan BNI ID 17' || l.name.toLowerCase().includes('test write lead'))) return false;
+          const ln = String(l.name || '').trim().toLowerCase();
+          if (ln === 'test' || ln === 'sanju test' || ln === 'krishna test' || ln.includes('krishna mohan - test') || ln.includes('test customer') || ln.includes('outbound test') || ln.includes('companion test') || ln.includes('test write lead') || ln === 'mohan bni id 17') return false;
           const pClean = String(l.phone || '').replace(/\D/g, '').slice(-10);
           if (pClean === '9803353372') return false;
           return true;
         });
-        if (leads.length !== origLen) _leadsDirtyOnStartup = true;
+        if (leads.length !== origLen) {
+          _leadsDirtyOnStartup = true;
+          safeStorageSet('sri_sri_leads', leads);
+        }
       }
     } catch(e) {}
     
@@ -12104,7 +12112,7 @@
     let _callLogsMemoryReady = false;
     function getStoredClientCallLogs(forceReload = false) {
       // Build versioning ensures any stale localStorage caches in user browser are updated cleanly
-      const CURRENT_BUILD_VERSION = '2026-11-14-v31-call-outcome-and-direction-fix';
+      const CURRENT_BUILD_VERSION = '2026-11-14-v32-purge-test-lead-badges';
       if (!forceReload && _callLogsMemoryReady && Array.isArray(sriCallLogs) && sriCallLogs.length > 0) {
         return sriCallLogs;
       }
@@ -20840,7 +20848,7 @@
       const _preInitSriLogs = (Array.isArray(sriCallLogs) && sriCallLogs.length > 0) ? sriCallLogs.slice() : [];
       try {
         const storedVerInit = localStorage.getItem('sri_sri_call_logs_version');
-        const INIT_BUILD_VERSION = '2026-11-14-v31-call-outcome-and-direction-fix';
+        const INIT_BUILD_VERSION = '2026-11-14-v32-purge-test-lead-badges';
         let stored = (storedVerInit === INIT_BUILD_VERSION) ? safeStorageGet('sri_sri_call_logs', null) : null;
         // Comprehensive check: if stored is missing, empty, or from an older build version, load clean bundled dataset
         if (!stored || !Array.isArray(stored) || stored.length === 0) {
@@ -23066,6 +23074,12 @@ function resolveContactNameToPhone(contactName) {
         }
         if (!linkedLead && callPhoneClean && callPhoneClean.length === 10) {
           linkedLead = leadsByPhone.get(callPhoneClean) || null;
+        }
+        if (linkedLead) {
+          const lln = String(linkedLead.name || '').trim().toLowerCase();
+          if (lln === 'test' || lln === 'sanju test' || lln === 'krishna test' || lln.includes('test') || lln === 'mohan bni id 17' || linkedLead.id === 'lead-csv-1278' || linkedLead.id === 'lead-csv-1327') {
+            linkedLead = null;
+          }
         }
 
         // Authentic phone number strictly preserved — never borrow or swap phone numbers by name!
