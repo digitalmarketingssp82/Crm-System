@@ -11908,8 +11908,7 @@
       const d = String(devName || '').toLowerCase().trim();
       if (d.includes('samsung')) return 'Samsung Galaxy';
       if (d.includes('iq') || d.includes('vivo')) return 'iQOO';
-      if (d.includes('oneplus') || d.includes('one plus')) return 'OnePlus';
-      return (devName && String(devName).trim() !== 'Unassigned Device') ? String(devName).trim() : 'OnePlus';
+      return 'OnePlus';
     }
     window.getCanonicalDeviceName = getCanonicalDeviceName;
 
@@ -11996,20 +11995,9 @@
           rec.caller_number = altParsed.cleanPhone;
           rec.phone = altParsed.cleanPhone;
         } else {
-          // Clear any non-phone label text stuck in phone/caller_number; resolve only via exact match
-          let resolved = '';
-          const candNm = rec.caller_name || rec.leadName || cleanName || '';
-          const nmLower = candNm.toLowerCase();
-          if (candNm && !nmLower.includes('spam alert from jio') && !nmLower.includes('suspected spam') && !nmLower.includes('potential fraud')) {
-            try {
-              const strippedNm = candNm.replace(/^\([^)]*spam[^)]*\)\s*/i, '').trim();
-              if (typeof resolveContactNameToPhone === 'function') {
-                resolved = resolveContactNameToPhone(strippedNm || candNm);
-              }
-            } catch(e) {}
-          }
-          rec.caller_number = resolved || '';
-          rec.phone = resolved || '';
+          // If no phone digits present on this call, leave clean and never borrow someone else's phone number!
+          rec.caller_number = '';
+          rec.phone = '';
         }
       }
 
@@ -12041,6 +12029,21 @@
     function safeMergeCallRecord(target, incoming) {
       if (!target) return incoming;
       if (!incoming) return target;
+
+      // Prevent merging calls from different physical devices (OnePlus vs iQOO vs Samsung Galaxy)
+      const tDev = getCanonicalDeviceName(target.deviceName || target.device_name || target.staff_name);
+      const iDev = getCanonicalDeviceName(incoming.deviceName || incoming.device_name || incoming.staff_name);
+      if (tDev && iDev && tDev !== iDev) return target;
+
+      // Prevent merging calls with conflicting phone numbers
+      const tOut = String(target.direction || target.call_type || '').toUpperCase().includes('OUT');
+      const iOut = String(incoming.direction || incoming.call_type || '').toUpperCase().includes('OUT');
+      const tPh = parsePhoneAndName(tOut ? (target.receiver_number || target.phone || target.caller_number) : (target.caller_number || target.phone || target.receiver_number), target.caller_name);
+      const iPh = parsePhoneAndName(iOut ? (incoming.receiver_number || incoming.phone || incoming.caller_number) : (incoming.caller_number || incoming.phone || incoming.receiver_number), incoming.caller_name);
+      const t10 = tPh.cleanPhone.replace(/\D/g, '').slice(-10);
+      const i10 = iPh.cleanPhone.replace(/\D/g, '').slice(-10);
+      if (t10.length >= 7 && i10.length >= 7 && t10 !== i10) return target;
+
       const tAudio = target.recording_url || target.audioUrl || '';
       const iAudio = incoming.recording_url || incoming.audioUrl || '';
       if (iAudio && (!tAudio || tAudio.includes('Sync Pending') || tAudio.includes('UklGRuRdAABX'))) {
@@ -12079,30 +12082,18 @@
         target.direction = 'OUTBOUND';
         target.call_type = 'OUTBOUND';
       }
-      const tOut = String(target.direction || target.call_type || '').toUpperCase().includes('OUT');
-      const iOut = String(incoming.direction || incoming.call_type || '').toUpperCase().includes('OUT');
-      const tPh = parsePhoneAndName(tOut ? (target.receiver_number || target.phone || target.caller_number) : (target.caller_number || target.phone || target.receiver_number), target.caller_name);
-      const iPh = parsePhoneAndName(iOut ? (incoming.receiver_number || incoming.phone || incoming.caller_number) : (incoming.caller_number || incoming.phone || incoming.receiver_number), incoming.caller_name);
-      const t10 = tPh.cleanPhone.replace(/\D/g, '').slice(-10);
-      const i10 = iPh.cleanPhone.replace(/\D/g, '').slice(-10);
-      const phonesConflict = (t10.length >= 7 && i10.length >= 7 && t10 !== i10);
       if (iPh.cleanPhone && !tPh.cleanPhone) {
         target.caller_number = iPh.cleanPhone;
         target.phone = iPh.cleanPhone;
       }
       const iNm = incoming.caller_name || incoming.leadName || iPh.cleanName || '';
-      if (!phonesConflict && iNm && !isGenericCallerText(iNm) && isGenericCallerText(target.caller_name || target.leadName)) {
+      if (iNm && !isGenericCallerText(iNm) && isGenericCallerText(target.caller_name || target.leadName)) {
         target.caller_name = iNm;
         target.leadName = iNm;
       }
       const fname = target.recording_file_name || incoming.recording_file_name || target.audioFileName || incoming.audioFileName || '';
       const did = target.drive_file_id || incoming.drive_file_id || '';
-      const rawDev = (fname && (/\.m4a$/i.test(fname) || /^Call recording\b/i.test(fname)))
-        ? 'Samsung Galaxy'
-        : ((String(incoming.id || '').startsWith('call-log-') && (incoming.deviceName || incoming.device_name))
-          ? (incoming.deviceName || incoming.device_name)
-          : (target.deviceName || target.device_name || incoming.deviceName || incoming.device_name || target.staff_name || incoming.staff_name));
-      const canDev = getCanonicalDeviceName(rawDev, fname, did);
+      const canDev = getCanonicalDeviceName(target.deviceName || target.device_name || incoming.deviceName || incoming.device_name, fname, did);
       target.deviceName = canDev;
       target.device_name = canDev;
       target.staff_name = canDev;
@@ -12113,7 +12104,7 @@
     let _callLogsMemoryReady = false;
     function getStoredClientCallLogs(forceReload = false) {
       // Build versioning ensures any stale localStorage caches in user browser are updated cleanly
-      const CURRENT_BUILD_VERSION = '2026-11-13-v28-show-all-call-logs';
+      const CURRENT_BUILD_VERSION = '2026-11-14-v30-strict-device-audio-matching';
       if (!forceReload && _callLogsMemoryReady && Array.isArray(sriCallLogs) && sriCallLogs.length > 0) {
         return sriCallLogs;
       }
@@ -12195,7 +12186,7 @@
           const dir = String(item.direction || item.call_type || '').toUpperCase();
           const isInb = dir.includes('IN') || (!dir.includes('OUT') && !dir.includes('DIAL'));
           const hasAud = !!(item.recording_url || item.drive_file_id || item.audioUrl);
-          if (isInb && !hasAud) {
+          if (isInb && !hasAud && (!item.call_duration || Number(item.call_duration) === 0)) {
             item.call_outcome = 'Missed Call';
             item.outcome = 'Missed Call';
             item.callOutcome = 'Missed Call';
@@ -12287,14 +12278,13 @@
         }
 
         // STRICT ANTI-MISMATCH MATCHER:
-        // Only match by exact full name when the call log lacks a conflicting phone number!
+        // Only match by exact name when both lead and call log have NO conflicting phone numbers!
         const hasLogPhone = [log.phone, log.caller_number, log.receiver_number, log.customerPhone].some(v => String(v || '').replace(/\D/g, '').length >= 7);
-        if (lead.name && (!cleanLeadPhone || cleanLeadPhone.length < 7 || !hasLogPhone)) {
+        if (lead.name && (!cleanLeadPhone || cleanLeadPhone.length < 7) && !hasLogPhone) {
           const cleanLeadName = lead.name.trim().toLowerCase();
           const logName = String(log.caller_name || log.leadName || log.contactName || '').trim().toLowerCase();
           if (cleanLeadName.length >= 3 && logName.length >= 3 && !isGenericCallerText(logName) && !logName.includes('direct') && !logName.includes('customer') && !logName.includes('unknown') && !logName.includes('oneplus call')) {
             if (cleanLeadName === logName) return true;
-            if (cleanLeadName.startsWith(logName + ' ') || logName.startsWith(cleanLeadName + ' ')) return true;
           }
         }
         return false;
@@ -22134,11 +22124,10 @@ function resolveContactNameToPhone(contactName) {
     }
 
     function getDeviceKey(d) {
-      const s = String(d || '').toLowerCase();
-      if (s.includes('oneplus') || s.includes('one plus')) return 'oneplus';
-      if (s.includes('iq') || s.includes('iqoo') || s.includes('vivo')) return 'iqoo';
+      const s = String(d || '').toLowerCase().trim();
       if (s.includes('samsung')) return 'samsung';
-      return s.trim() || 'default';
+      if (s.includes('iq') || s.includes('iqoo') || s.includes('vivo')) return 'iqoo';
+      return 'oneplus';
     }
 
     const MIRROR_DUPLICATES_SET = new Set([
@@ -22169,9 +22158,12 @@ function resolveContactNameToPhone(contactName) {
     function isSamePhysicalCallMeta(mA, a, mB, b) {
       if (a.id && b.id && a.id === b.id) return true;
       if (mA.driveId && mB.driveId && mA.driveId === mB.driveId) return true;
+      // Strictly prevent merging different physical devices
+      if (mA.devKey !== mB.devKey) return false;
+      // Strictly prevent merging different phone numbers
       if (mA.phone10 && mB.phone10 && mA.phone10.length >= 7 && mB.phone10.length >= 7 && mA.phone10 !== mB.phone10) return false;
       if (mA.fileBase && mB.fileBase && mA.fileBase === mB.fileBase) {
-        if (!mA.isMirror && !mB.isMirror && mA.devKey !== 'default' && mB.devKey !== 'default' && mA.devKey !== mB.devKey) return false;
+        if (!mA.isMirror && !mB.isMirror && mA.devKey !== mB.devKey) return false;
         if (mA.epoch > 0 && mB.epoch > 0 && Math.abs(mA.epoch - mB.epoch) > 6 * 3600 * 1000) return false;
         return true;
       }
@@ -22180,17 +22172,14 @@ function resolveContactNameToPhone(contactName) {
       }
       // Never merge two DISTINCT non-mirror audio recordings with different filenames
       if (mA.fileBase && mB.fileBase && mA.fileBase !== mB.fileBase && !mA.isMirror && !mB.isMirror) return false;
-      // Never merge calls belonging to DIFFERENT physical phones (OnePlus vs Samsung Galaxy vs iQOO)
-      if (mA.devKey !== 'default' && mB.devKey !== 'default' && mA.devKey !== mB.devKey) return false;
-      if (mA.phone10 && mB.phone10 && mA.phone10.length >= 7 && mB.phone10.length >= 7 && mA.phone10 !== mB.phone10) return false;
       const isExactPhone = (mA.phone10 && mB.phone10 && mA.phone10.length >= 7 && mA.phone10 === mB.phone10);
       if (!isExactPhone) {
-        if (!mA.isGeneric && !mB.isGeneric && mA.nameLower && mA.nameLower === mB.nameLower && mA.epoch > 0 && mB.epoch > 0 && Math.abs(mA.epoch - mB.epoch) <= 300000) return true;
-        if (mA.devKey === mB.devKey && Math.abs(mA.epoch - mB.epoch) <= 90000 && (mA.hasAudio !== mB.hasAudio)) {
-          const hasPhA = mA.phone10 && mA.phone10.length >= 7;
-          const hasPhB = mB.phone10 && mB.phone10.length >= 7;
-          if (!hasPhA && !hasPhB && mA.isGeneric && mB.isGeneric) return true;
-        }
+        // If either call has a phone number and the other doesn't, NEVER merge by contact name alone!
+        const hasPhA = mA.phone10 && mA.phone10.length >= 7;
+        const hasPhB = mB.phone10 && mB.phone10.length >= 7;
+        if (hasPhA || hasPhB) return false;
+        // Only if BOTH lack phone numbers, exact same device, and non-generic contact name within 3 minutes:
+        if (!mA.isGeneric && !mB.isGeneric && mA.nameLower && mA.nameLower === mB.nameLower && mA.epoch > 0 && mB.epoch > 0 && Math.abs(mA.epoch - mB.epoch) <= 180000) return true;
         return false;
       }
 
@@ -22818,12 +22807,9 @@ function resolveContactNameToPhone(contactName) {
       const filterDevice = (deviceSelect ? deviceSelect.value : 'ALL');
       if (filterDevice && filterDevice !== 'ALL') {
         filtered = filtered.filter(c => {
-          const d = String(c.deviceName || c.device_name || c.staff_name || '').toLowerCase();
-          const target = filterDevice.toLowerCase();
-          if (target.includes('oneplus')) return d.includes('oneplus') || d.includes('one plus');
-          if (target.includes('samsung')) return d.includes('samsung');
-          if (target.includes('iq') || target.includes('vivo')) return d.includes('iq') || d.includes('vivo');
-          return true;
+          const dKey = getDeviceKey(c.deviceName || c.device_name || c.staff_name);
+          const targetKey = getDeviceKey(filterDevice);
+          return dKey === targetKey;
         });
       }
 
@@ -23040,36 +23026,21 @@ function resolveContactNameToPhone(contactName) {
         if (!linkedLead && callPhoneClean && callPhoneClean.length === 10) {
           linkedLead = leadsByPhone.get(callPhoneClean) || null;
         }
-        if (!linkedLead && !callPhoneClean && rawCallName) {
-          const candByName = leadsByName.get(rawCallName.toLowerCase());
-          if (candByName && candByName !== 'AMBIGUOUS') linkedLead = candByName;
-        }
 
-        let effectivePhone = parsedRowPN.cleanPhone || ((linkedLead && linkedLead.phone) ? (parsePhoneAndName(linkedLead.phone, '').cleanPhone || '') : '');
+        // Authentic phone number strictly preserved — never borrow or swap phone numbers by name!
+        let effectivePhone = parsedRowPN.cleanPhone || (callPhoneClean && callPhoneClean.length === 10 ? ('+91' + callPhoneClean) : '');
         if (!effectivePhone || effectivePhone.replace(/\D/g, '').length < 7) {
           if (effectivePhone === '112') {
             // Keep valid emergency number
-          } else if (linkedLead && linkedLead.phone) {
-            effectivePhone = parsePhoneAndName(linkedLead.phone, '').cleanPhone || '';
-          } else if (callPhoneClean && callPhoneClean.length === 10) {
-            effectivePhone = '+91' + callPhoneClean;
           } else {
-            const rawCandName = rawCallName || '';
-            const normKey = _normContactKey(rawCandName);
-            let p = (normKey && !normKey.includes('spam') && !normKey.includes('fraud') && contactPhoneByName.has(normKey)) ? contactPhoneByName.get(normKey) : '';
-            if (!p && rawCandName && !rawCandName.toLowerCase().includes('spam') && !rawCandName.toLowerCase().includes('fraud')) {
-              p = (typeof resolveContactNameToPhone === 'function') ? resolveContactNameToPhone(rawCandName.replace(/^\([^)]*spam[^)]*\)\s*/i, '').trim() || rawCandName) : '';
-            }
-            if (!p) {
-              const fnStem = String(call.recording_file_name || call.audioFileName || '')
-                .replace(/\.(m4a|mp3|wav|aac|amr)$/i, '')
-                .replace(/[_-]\d{6}[_-]\d{6}$/, '')
-                .replace(/-\d{10}$/, '')
-                .replace(/[\s\-().+]/g, '');
-              const dm = fnStem.match(/(?:^|[^0-9])(?:91)?([6-9]\d{9})(?:[^0-9]|$)/);
-              if (dm) p = '+91' + dm[1];
-            }
-            effectivePhone = p || '—';
+            // Extract from recording filename if present on this specific call
+            const fnStem = String(call.recording_file_name || call.audioFileName || '')
+              .replace(/\.(m4a|mp3|wav|aac|amr)$/i, '')
+              .replace(/[_-]\d{6}[_-]\d{6}$/, '')
+              .replace(/-\d{10}$/, '')
+              .replace(/[\s\-().+]/g, '');
+            const dm = fnStem.match(/(?:^|[^0-9])(?:91)?([6-9]\d{9})(?:[^0-9]|$)/);
+            effectivePhone = dm ? ('+91' + dm[1]) : (effectivePhone || '—');
           }
         }
 

@@ -194,7 +194,7 @@ function getStoredCallLogs() {
           const cDir = String(c.direction || c.call_type || '').toUpperCase();
           const isInb = cDir.includes('IN') || (!cDir.includes('OUT') && !cDir.includes('DIAL'));
           const hasAud = !!(c.recording_url || c.drive_file_id || c.audioUrl);
-          if (isInb && !hasAud) {
+          if (isInb && !hasAud && (!c.call_duration || Number(c.call_duration) === 0)) {
             c.call_outcome = 'Missed Call';
             c.outcome = 'Missed Call';
             c.callOutcome = 'Missed Call';
@@ -220,7 +220,7 @@ function getStoredCallLogs() {
           const cDir = String(c.direction || c.call_type || '').toUpperCase();
           const isInb = cDir.includes('IN') || (!cDir.includes('OUT') && !cDir.includes('DIAL'));
           const hasAud = !!(c.recording_url || c.drive_file_id || c.audioUrl);
-          if (isInb && !hasAud) {
+          if (isInb && !hasAud && (!c.call_duration || Number(c.call_duration) === 0)) {
             c.call_outcome = 'Missed Call';
             c.outcome = 'Missed Call';
             c.callOutcome = 'Missed Call';
@@ -465,14 +465,11 @@ const KNOWN_CONTACT_PHONES = {
   "anwarul": "+917357441912",
   "anwarul sir": "+917357441912",
   "anwarul sir plywood": "+917357441912",
-  "randeep": "+919872519259",
   "renu kapoor": "+919876859703",
   "harjeet punjabi": "+919872519259",
   "gurpreet barnala": "+919877000020",
   "gurdeep singh mohalli": "+919877000020",
-  "dilbar": "+919463206145",
   "aliakabar ansari": "+919463206145",
-  "aliakabar": "+919463206145",
   "carpanter rambabu": "+918729083796",
   "rambabu kumar": "+918729083796",
   "jassa singh marbella": "+917009602488",
@@ -491,11 +488,9 @@ const KNOWN_CONTACT_PHONES = {
   "ravi kumar": "+919812793309",
   "mann singh": "+917529051800",
   "aman 1615": "+919814066342",
-  "deepak": "+919999672763",
   "flipkart": "+9118002029898",
   "flipkart customer service": "+9118002029898",
   "emergency number": "112",
-  "kawaljeet": "+919814177752",
   "parvinder dhiman": "+919501854050",
   "krishan pal": "+919872673931",
   "sherbaz khan": "+919876111118",
@@ -513,7 +508,6 @@ const KNOWN_CONTACT_PHONES = {
   "akshay bhatnagar": "+918287589854",
   "parminder singh": "+918558055750",
   "sushil kumar": "+919815045731",
-  "shr": "+917015274682",
   "jagjeevan gmb": "+919815045732",
   "jagjeevan gmb mohali": "+919815045732",
   "sanju sir plywoods": "+919888722303",
@@ -877,9 +871,8 @@ module.exports = async (req, res) => {
         device_name = 'Samsung Galaxy';
         staff_name = 'Samsung Galaxy';
       } else {
-        device_name = String(device_name || staff_name || '').trim();
-        if (!device_name || device_name === 'Unassigned Device') device_name = 'OnePlus';
-        staff_name = device_name;
+        device_name = 'OnePlus';
+        staff_name = 'OnePlus';
       }
 
       // Check if lead_id was explicitly supplied in payload
@@ -945,11 +938,10 @@ module.exports = async (req, res) => {
       // Check if an unattached standalone audio recording from Google Drive exists for this SAME device & caller/phone
       // STRICT: Never steal or clone recordings across different physical devices!
       const devNormKey = (d) => {
-        const s = String(d || '').toLowerCase();
+        const s = String(d || '').toLowerCase().trim();
         if (s.includes('iq') || s.includes('vivo')) return 'iqoo';
         if (s.includes('samsung')) return 'samsung';
-        if (s.includes('oneplus') || s.includes('one plus')) return 'oneplus';
-        return '';
+        return 'oneplus';
       };
       const curDevKey = devNormKey(device_name);
       if (!callLogRecord.recording_url) {
@@ -958,7 +950,7 @@ module.exports = async (req, res) => {
           // Must ONLY absorb unassigned synthetic drive recordings (call-rec-*), NEVER from an existing phone call!
           if (!l.id || !l.id.startsWith('call-rec-')) return false;
           const lDevKey = devNormKey(l.device_name || l.deviceName || l.staff_name);
-          if (curDevKey && lDevKey && curDevKey !== lDevKey) return false;
+          if (curDevKey !== lDevKey) return false;
           const lPhoneClean = cleanPhone(l.caller_number || l.phone || l.receiver_number);
           if (cleanCustomer && cleanCustomer.length >= 10 && lPhoneClean && lPhoneClean.length >= 10 && cleanCustomer !== lPhoneClean) {
             return false;
@@ -1068,9 +1060,8 @@ module.exports = async (req, res) => {
         const recentSamePhoneIdx = allLogs.findIndex(l => {
           const lNum = cleanPhone(l.caller_number || l.phone);
           if (lNum !== cleanCustomer) return false;
-          const lDev = String(l.device_name || l.deviceName || '').toLowerCase();
-          const curDev = String(device_name || '').toLowerCase();
-          if (lDev && curDev && lDev !== curDev) return false; // Different device
+          const lDevKey = devNormKey(l.device_name || l.deviceName || l.staff_name);
+          if (curDevKey !== lDevKey) return false; // Different device
           const lTime = new Date(l.created_at || l.timestamp || 0).getTime();
           const curTime = callDateObj.getTime();
           const diffMs = Math.abs(curTime - lTime);
